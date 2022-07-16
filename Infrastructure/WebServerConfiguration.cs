@@ -2,17 +2,18 @@
 using Application.Api.v1.Monitoring;
 using Application.Constants;
 using Application.Interfaces.Database;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Serilog;
 
 namespace Infrastructure;
 
 public static class WebServerConfiguration
 {
-    // Certificate loading via appsettings.json => https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
+    // Certificate loading via appsettings.json =>
+    //   https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
     
     public static void ConfigureWebServer(this WebApplication app)
     {
@@ -21,6 +22,7 @@ public static class WebServerConfiguration
         
         app.ValidateDatabaseStructure();
         
+        app.ConfigureQualityOfLifeServices();
         app.ConfigureIdentityServices();
         app.ConfigureApiServices();
         app.MapApiEndpoints();
@@ -42,6 +44,22 @@ public static class WebServerConfiguration
         app.MapFallbackToPage("/_Host");
         
         app.UseSerilogRequestLogging();
+    }
+
+    private static void ValidateDatabaseStructure(this IHost app)
+    {
+        using var scope = app.Services.CreateAsyncScope();
+        var sqlAccess = scope.ServiceProvider.GetRequiredService<ISqlDataAccess>();
+        sqlAccess.EnsureDatabaseStructure();
+    }
+
+    private static void ConfigureQualityOfLifeServices(this IApplicationBuilder app)
+    {
+        app.UseHangfireDashboard("/jobs", new DashboardOptions
+        {
+            DashboardTitle = "Jobs",
+            // Authorization = new[] {new HangfireAuthorizationFilter()}
+        });
     }
 
     private static void ConfigureIdentityServices(this IApplicationBuilder app)
@@ -78,12 +96,5 @@ public static class WebServerConfiguration
         app.MapEndpointsUsers();
         app.MapEndpointsHealth();
         app.MapEndpointsWeather();
-    }
-
-    private static void ValidateDatabaseStructure(this IHost app)
-    {
-        using var scope = app.Services.CreateAsyncScope();
-        var sqlAccess = scope.ServiceProvider.GetRequiredService<ISqlDataAccess>();
-        sqlAccess.EnsureDatabaseStructure();
     }
 }

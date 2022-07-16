@@ -5,5 +5,5 @@ namespace Application.Interfaces.Example;
 
 public interface IWeatherForecast
 {
-    Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest startDate);
+    Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest startDate, int count = 100);
 }

@@ -2,8 +2,43 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?"/>
+<MudContainer>
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12">
+            <div class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudText Align="Align.Center" Typo="Typo.h2">@ApplicationName</MudText>
+            <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                @ApplicationName is a work in progress, more to come!
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
+                I'm an info alert with a link!
+                <MudLink Href="@($"{BaseAddress}/api")">
+                    Check out the API documentation using Swagger/OpenApi!
+                </MudLink>
+            </MudAlert>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">
+                We can view background jobs, execute them and check their status on the 
+                <MudLink Href="@($"{BaseAddress}/jobs")">Jobs Page</MudLink>
+            </MudAlert>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
+                I'm an error alert!
+            </MudAlert>
+        </MudItem>
+        <MudExpansionPanel Style="margin:5px;" Text="Documentation" MaxHeight="150">
+            Documentation will be coming soon!
+            <MudButton Variant="Variant.Text" DisableElevation="true" Color="Color.Secondary" Link="/info/getting-started">
+                I'll link to the documentation page!
+            </MudButton>
+        </MudExpansionPanel>
+    </MudGrid>
+</MudContainer>

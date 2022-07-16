@@ -2,18 +2,25 @@
 
 <PageTitle>Counter</PageTitle>
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-@code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
-
-}
+<MudContainer>
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12">
+            <div class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Outlined.LensBlur" Color="@_iconColor" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudText Align="Align.Center" Typo="Typo.h2">Counter</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
+                Current page count: @_currentCount
+            </MudAlert>
+        </MudItem>
+        <MudItem>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Custom.Uncategorized.Radioactive" Color="Color.Primary" OnClick="IncrementClick">
+                Click Me!
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

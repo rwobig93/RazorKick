@@ -1,11 +1,7 @@
-﻿using System.Reflection;
-using System;
-using Application.Interfaces.Database;
+﻿using Application.Interfaces.Database;
 using Application.Interfaces.Example;
 using Application.Mappings;
-using Application.Mappings.Example;
 using Asp.Versioning;
-using AutoMapper;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Services.Database;
@@ -13,7 +9,7 @@ using Infrastructure.Services.Example;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
+using MudBlazor.Services;
 
 namespace Infrastructure;
 
@@ -102,6 +98,7 @@ public static class DependencyInjection
             x.UseDarkDashboard();
         });
         services.AddHangfireServer();
+        services.AddMudServices();
 
         return services;
     }

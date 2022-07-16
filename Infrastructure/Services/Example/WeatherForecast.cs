@@ -11,9 +11,9 @@ public class WeatherForecast : IWeatherForecast
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    public Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest weatherRequest)
+    public Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest weatherRequest, int count)
     {
-        return Task.FromResult(Enumerable.Range(1, 5).Select(index => new WeatherDataResponse
+        return Task.FromResult(Enumerable.Range(1, count).Select(index => new WeatherDataResponse
         {
             Date = weatherRequest.StartDate.AddDays(index),
             TemperatureC = Random.Shared.Next(-20, 55),

@@ -5,7 +5,6 @@ using Application.Constants.Database;
 using Application.Interfaces.Database;
 using Dapper;
 using Microsoft.Extensions.Configuration;
-using Serilog;
 
 namespace Infrastructure.Services.Database;
 

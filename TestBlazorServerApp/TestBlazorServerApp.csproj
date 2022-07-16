@@ -16,11 +16,24 @@
       <PackageReference Include="Hangfire" Version="1.7.30" />
       <PackageReference Include="Hangfire.Core" Version="1.7.30" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
+      <PackageReference Include="MudBlazor" Version="6.0.11" />
       <PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
       <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
       <PackageReference Include="Serilog.Sinks.Seq" Version="5.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\FONT-LICENSE" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\css\open-iconic-bootstrap.min.css" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.eot" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.otf" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.svg" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.ttf" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.woff" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
+      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
     </ItemGroup>
 
 </Project>

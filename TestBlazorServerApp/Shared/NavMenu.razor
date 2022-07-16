@@ -1,40 +1,25 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">TestBlazorServerApp</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-
-}
+﻿<MudPaper Width="250px" Elevation="0" Class="py-3">
+    <MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
+        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
+            Home
+        </MudNavLink>
+        <MudListSubheader Class="mt-2 mb-n2">
+            Services
+        </MudListSubheader>
+        <MudNavLink Href="/api" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+            API
+        </MudNavLink>
+        <MudNavLink Href="/jobs" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
+            Jobs Dashboard
+        </MudNavLink>
+        <MudListSubheader Class="mt-2 mb-n2">
+            Examples
+        </MudListSubheader>
+        <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
+            Counter
+        </MudNavLink>
+        <MudNavLink Href="/fetchdata" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
+            Weather Forecasts
+        </MudNavLink>
+    </MudNavMenu>
+</MudPaper>
