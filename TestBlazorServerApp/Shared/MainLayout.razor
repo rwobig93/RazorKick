@@ -3,18 +3,32 @@
 
 <PageTitle>TestBlazorServerApp</PageTitle>
 
-<MudThemeProvider Theme="AppThemes.DarkTheme"/>
+<MudThemeProvider Theme="@_selectedTheme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+    <MudAppBar Dense="true" Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+        <MudMenu Icon="@Icons.Filled.Settings" Color="Color.Inherit" Dense="true" Direction="Direction.Left">
+            @foreach (var theme in GetAvailableThemes())
+            {
+                <div class="px-2">
+                    <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
+                                   OnClick="@((e) => ChangeTheme(theme.Theme))">
+                            @theme.FriendlyName
+                        </MudButton>
+                    </MudTooltip>
+                </div>
+            }
+        </MudMenu>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always"
+               Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false">
         <NavMenu/>
     </MudDrawer>
     <MudMainContent>

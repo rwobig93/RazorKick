@@ -1,25 +1,21 @@
-﻿<MudPaper Width="250px" Elevation="0" Class="py-3">
-    <MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
-        <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
-            Home
-        </MudNavLink>
-        <MudListSubheader Class="mt-2 mb-n2">
-            Services
-        </MudListSubheader>
+﻿<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
+        Home
+    </MudNavLink>
+    <MudNavGroup Title="Services" Expanded="true" Icon="@Icons.Rounded.ViewList">
         <MudNavLink Href="/api" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
             API
         </MudNavLink>
         <MudNavLink Href="/jobs" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
             Jobs Dashboard
         </MudNavLink>
-        <MudListSubheader Class="mt-2 mb-n2">
-            Examples
-        </MudListSubheader>
+    </MudNavGroup>
+    <MudNavGroup Title="Examples" Expanded="true" Icon="@Icons.Rounded.ViewList">
         <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
             Counter
         </MudNavLink>
         <MudNavLink Href="/fetchdata" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
             Weather Forecasts
         </MudNavLink>
-    </MudNavMenu>
-</MudPaper>
+    </MudNavGroup>
+</MudNavMenu>
