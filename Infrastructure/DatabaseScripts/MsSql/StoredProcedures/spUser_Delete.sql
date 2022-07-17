@@ -1,9 +1,9 @@
 ﻿CREATE OR ALTER PROCEDURE [dbo].[spUser_Delete]
-@Id int
+@Id UNIQUEIDENTIFIER
 AS
 begin
 --     archive instead in production
     delete
-    from dbo.[User]
+    from dbo.[Users]
     where Id = @Id;
 end

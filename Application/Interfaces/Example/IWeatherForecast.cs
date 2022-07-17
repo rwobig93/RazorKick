@@ -1,5 +1,5 @@
-﻿using Shared.ApiRequests.Example;
-using Shared.ApiResponses.Example;
+﻿using Shared.Requests.Example;
+using Shared.Responses.Example;
 
 namespace Application.Interfaces.Example;
 

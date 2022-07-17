@@ -27,6 +27,8 @@
       <PackageReference Include="Hangfire" Version="1.7.30" />
       <PackageReference Include="Hangfire.Core" Version="1.7.30" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
       <PackageReference Include="MudBlazor" Version="6.0.11" />
@@ -40,16 +42,22 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Features\Core" />
       <Folder Include="Middleware" />
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spExampleUser_Delete.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spExampleUser_Get.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spExampleUser_GetAll.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spExampleUser_Insert.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spExampleUser_Update.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spUser_Delete.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spUser_Get.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spUser_GetAll.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spUser_Insert.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\spUser_Update.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\User.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\ExampleUser.sql" />
     </ItemGroup>
 
 </Project>

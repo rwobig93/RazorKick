@@ -13,9 +13,9 @@ git clone https://github.com/rwobig93/TestBlazorServer.git
 
 - Shared
     - Enums
-    - Models
-    - ApiRequests
-    - ApiResponses
+    - Models (Generic Multi-Use)
+    - Requests (Api & Dto)
+    - Responses (Api & Dto)
     - ApiRoutes
 - Domain
     - Entities
@@ -34,6 +34,7 @@ git clone https://github.com/rwobig93/TestBlazorServer.git
     - Database Scripts
 - Server
     - UI
+    - Settings (UI Related)
 
 ## Acronyms / Solution Specific Language
 

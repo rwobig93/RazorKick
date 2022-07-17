@@ -1,10 +1,6 @@
-﻿using Application.Extensibility.Extensions;
-using Application.Interfaces.Example;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+﻿using Application.Interfaces.Example;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
-using Shared.ApiRequests.Example;
+using Shared.Requests.Example;
 
 namespace Application.Api.v1.Example;
 
@@ -12,7 +8,7 @@ public static class WeatherEndpoints
 {
     public static void MapEndpointsWeather(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/weather", GetForecastAsync).ApiVersionOne();
+        app.MapGet("/api/example/weather", GetForecastAsync).ApiVersionOne();
     }
 
     private static async Task<IResult> GetForecastAsync([FromQuery]WeatherForecastRequest? weatherRequest, IWeatherForecast weatherForecast)

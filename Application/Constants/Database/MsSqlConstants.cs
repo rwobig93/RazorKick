@@ -7,11 +7,18 @@ public static class MsSqlConstants
 
     public static class Tables
     {
-        public const string User = "User.sql";
+        public const string ExampleUser = "ExampleUser.sql";
+        public const string Users = "Users.sql";
     }
     
     public static class StoredProcedures
     {
+        public const string ExampleUserDelete = "spExampleUser_Delete.sql";
+        public const string ExampleUserGet = "spExampleUser_Get.sql";
+        public const string ExampleUserGetAll = "spExampleUser_GetAll.sql";
+        public const string ExampleUserCreate = "spExampleUser_Insert.sql";
+        public const string ExampleUserUpdate = "spExampleUser_Update.sql";
+        
         public const string UserDelete = "spUser_Delete.sql";
         public const string UserGet = "spUser_Get.sql";
         public const string UserGetAll = "spUser_GetAll.sql";

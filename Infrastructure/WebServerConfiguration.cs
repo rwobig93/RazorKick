@@ -1,4 +1,5 @@
 ﻿using Application.Api.v1.Example;
+using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
 using Application.Constants;
 using Application.Interfaces.Database;
@@ -93,8 +94,9 @@ public static class WebServerConfiguration
             .Build();
         
         // Map all active API endpoints
-        app.MapEndpointsUsers();
+        app.MapEndpointsExampleUsers();
         app.MapEndpointsHealth();
         app.MapEndpointsWeather();
+        app.MapEndpointsUsers();
     }
 }

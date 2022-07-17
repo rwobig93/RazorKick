@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-
-namespace Application.Mappings;
+﻿namespace Application.Mappings;
 
 public class BaseMapProfile : Profile
 {

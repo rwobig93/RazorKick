@@ -1,5 +1,4 @@
 ﻿using Application.Constants;
-using Microsoft.AspNetCore.Builder;
 
 namespace Application.Extensibility.Extensions;
 
