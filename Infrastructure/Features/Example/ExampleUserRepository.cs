@@ -17,17 +17,17 @@ public class ExampleUserRepository : IExampleUserRepository
     }
 
     public Task<IEnumerable<ExampleUser>> GetAllUsers() =>
-        _database.LoadData<ExampleUser, dynamic>(ExampleUserGetAll.DboFullName(), new { });
+        _database.LoadData<ExampleUser, dynamic>(ExampleUserGetAll.ToDboName(), new { });
 
     public async Task<ExampleUser?> GetUser(GetExampleUserRequest userRequest) =>
-        (await _database.LoadData<ExampleUser, dynamic>(ExampleUserGet.DboFullName(), userRequest)).FirstOrDefault();
+        (await _database.LoadData<ExampleUser, dynamic>(ExampleUserGet.ToDboName(), userRequest)).FirstOrDefault();
 
     public Task CreateUser(CreateExampleUserRequest userRequest) =>
-        _database.SaveData(ExampleUserCreate.DboFullName(), userRequest);
+        _database.SaveData(ExampleUserCreate.ToDboName(), userRequest);
 
     public Task UpdateUser(UpdateExampleUserRequest userRequest) =>
-        _database.SaveData(ExampleUserUpdate.DboFullName(), userRequest);
+        _database.SaveData(ExampleUserUpdate.ToDboName(), userRequest);
 
     public Task DeleteUser(DeleteExampleUserRequest userRequest) =>
-        _database.SaveData(ExampleUserDelete.DboFullName(), userRequest);
+        _database.SaveData(ExampleUserDelete.ToDboName(), userRequest);
 }

@@ -15,6 +15,8 @@ public static class UserEndpoints
         app.MapDelete("/api/user", DeleteUser).ApiVersionOne();
         app.MapPost("/api/user/register", Register).ApiVersionOne();
         app.MapPost("/api/user/update", UpdateUser).ApiVersionOne();
+        
+        // TODO: Add swagger endpoint viewer enrichment
     }
 
     private static async Task<IResult> Register(UserRegisterRequest registerRequest, IUserRepository repository)

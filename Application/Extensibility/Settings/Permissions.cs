@@ -11,7 +11,6 @@ public static class Permissions
         public const string Edit = "Permissions.Users.Edit";
         public const string Delete = "Permissions.Users.Delete";
         public const string Export = "Permissions.Users.Export";
-        public const string Search = "Permissions.Users.Search";
     }
 
     public static class Roles
@@ -20,16 +19,14 @@ public static class Permissions
         public const string Create = "Permissions.Roles.Create";
         public const string Edit = "Permissions.Roles.Edit";
         public const string Delete = "Permissions.Roles.Delete";
-        public const string Search = "Permissions.Roles.Search";
     }
 
-    public static class RoleClaims
+    public static class Claims
     {
-        public const string View = "Permissions.RoleClaims.View";
-        public const string Create = "Permissions.RoleClaims.Create";
-        public const string Edit = "Permissions.RoleClaims.Edit";
-        public const string Delete = "Permissions.RoleClaims.Delete";
-        public const string Search = "Permissions.RoleClaims.Search";
+        public const string View = "Permissions.Claims.View";
+        public const string Create = "Permissions.Claims.Create";
+        public const string Edit = "Permissions.Claims.Edit";
+        public const string Delete = "Permissions.Claims.Delete";
     }
     
     public static class Preferences
@@ -48,11 +45,11 @@ public static class Permissions
         public const string DevMenu = "Permissions.Developer.Menu";
     }
 
-    public static class AuditTrails
+    public static class Audit
     {
-        public const string View = "Permissions.AuditTrails.View";
-        public const string Export = "Permissions.AuditTrails.Export";
-        public const string Search = "Permissions.AuditTrails.Search";
+        public const string View = "Permissions.Audit.View";
+        public const string Export = "Permissions.Audit.Export";
+        public const string Search = "Permissions.Audit.Search";
     }
     
     /// <summary>

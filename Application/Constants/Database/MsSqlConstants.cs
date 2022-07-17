@@ -20,7 +20,8 @@ public static class MsSqlConstants
         public const string ExampleUserUpdate = "spExampleUser_Update.sql";
         
         public const string UserDelete = "spUser_Delete.sql";
-        public const string UserGet = "spUser_Get.sql";
+        public const string UserGetById = "spUser_GetById.sql";
+        public const string UserGetByUsername = "spUser_GetByUsername.sql";
         public const string UserGetAll = "spUser_GetAll.sql";
         public const string UserCreate = "spUser_Insert.sql";
         public const string UserUpdate = "spUser_Update.sql";

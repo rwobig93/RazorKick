@@ -8,6 +8,7 @@ using Application.Interfaces.Example;
 using Application.Mappings;
 using Application.Wrappers;
 using Asp.Versioning;
+using Domain.Entities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Features.Database;
@@ -15,6 +16,7 @@ using Infrastructure.Features.Example;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -65,6 +67,7 @@ public static class DependencyInjection
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddIdentity<User, Role>().AddDefaultTokenProviders();
         services.AddJwtAuthentication(configuration.GetApplicationSettings(services));
     }
 
@@ -111,7 +114,7 @@ public static class DependencyInjection
     
     private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration config)
     {
-        var key = Encoding.ASCII.GetBytes(config.Secret);
+        var key = Encoding.ASCII.GetBytes(config.Secret!);
         services
             .AddAuthentication(authentication =>
             {

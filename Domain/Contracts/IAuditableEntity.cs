@@ -6,7 +6,7 @@ public interface IAuditableEntity<TId> : IAuditableEntity, IEntity<TId>
 
 public interface IAuditableEntity : IEntity
 {
-    Guid? CreatedBy { get; set; }
+    Guid CreatedBy { get; set; }
 
     DateTime CreatedOn { get; set; }
 

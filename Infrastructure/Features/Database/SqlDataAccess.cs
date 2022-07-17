@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Reflection;
 using Application.Constants.Database;
+using Application.Extensibility.Extensions;
 using Application.Interfaces.Database;
 using Dapper;
 using Microsoft.Extensions.Configuration;
@@ -88,7 +89,8 @@ public class SqlDataAccess : ISqlDataAccess
 
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
-            where propertyValue is not null select $"{MsSqlConstants.PathTables}{propertyValue}").ToList()!;
+            where propertyValue is not null select 
+                $"{MsSqlConstants.PathTables}{propertyValue}").ToList()!;
     }
 
     private static List<string> GetAllStoredProceduresFullPaths()
@@ -98,6 +100,6 @@ public class SqlDataAccess : ISqlDataAccess
 
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
-            where propertyValue is not null select $"{MsSqlConstants.PathStoredProcedures}{propertyValue}").ToList()!;
+            where propertyValue is not null select propertyValue.ToDbScriptPathTable()).ToList()!;
     }
 }

@@ -19,6 +19,7 @@ git clone https://github.com/rwobig93/TestBlazorServer.git
     - ApiRoutes
 - Domain
     - Entities
+    - Models (Core)
     - Events
 - Application
     - Constants

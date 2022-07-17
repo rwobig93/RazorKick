@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using MudBlazor;
-using Shared.Models.Base;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;

@@ -1,6 +1,6 @@
 ﻿namespace Shared.Requests.Identity;
 
-public class GetUserRequest
+public class GetUserByIdRequest
 {
     public Guid Id { get; set; }
 }
