@@ -1,28 +1,17 @@
 ﻿using Domain.Contracts;
+using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities.Identity;
 
-public class Role : IAuditableEntity<Guid>
+public class AppRole : IdentityRole<Guid>, IAuditableEntity<Guid>
 {
-    public Guid Id { get; set; }
-
-    public string Name { get; set; } = null!;
-
-    public string? NormalizedName { get; set; }
-
-    public string ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
-    
+    public override Guid Id { get; set; }
     public string? Description { get; set; }
-    
     public Guid CreatedBy { get; set; }
-    
     public DateTime CreatedOn { get; set; }
-    
     public Guid? LastModifiedBy { get; set; }
-    
     public DateTime? LastModifiedOn { get; set; }
-
-    public ICollection<Claim> Claims { get; set; } = new List<Claim>();
+    public ICollection<AppRoleClaim> Claims { get; set; } = new List<AppRoleClaim>();
 
     public override string ToString()
     {

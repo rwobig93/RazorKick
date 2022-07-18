@@ -2,9 +2,9 @@ using Application.Interfaces.Example;
 using Shared.Requests.Example;
 using Shared.Responses.Example;
 
-namespace Infrastructure.Features.Example;
+namespace Infrastructure.Services.Example;
 
-public class WeatherForecast : IWeatherForecast
+public class WeatherService : IWeatherService
 {
     private static readonly string[] Summaries = new[]
     {

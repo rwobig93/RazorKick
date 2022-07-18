@@ -11,7 +11,7 @@ public static class WeatherEndpoints
         app.MapGet("/api/example/weather", GetForecastAsync).ApiVersionOne();
     }
 
-    private static async Task<IResult> GetForecastAsync([FromQuery]WeatherForecastRequest? weatherRequest, IWeatherForecast weatherForecast)
+    private static async Task<IResult> GetForecastAsync([FromQuery]WeatherForecastRequest? weatherRequest, IWeatherService weatherForecast)
     {
         try
         {

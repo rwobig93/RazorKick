@@ -15,7 +15,7 @@ public static class ExampleUsersEndpoints
         app.MapDelete("/api/example/user", DeleteUser).ApiVersionOne();
     }
 
-    private static async Task<IResult> GetAllUsers(IExampleUserRepository repository)
+    private static async Task<IResult> GetAllUsers(IExampleUserService repository)
     {
         try
         {
@@ -27,7 +27,7 @@ public static class ExampleUsersEndpoints
         }
     }
 
-    private static async Task<IResult> GetUser(int userId, IExampleUserRepository repository, IMapper mapper)
+    private static async Task<IResult> GetUser(int userId, IExampleUserService repository, IMapper mapper)
     {
         try
         {
@@ -44,7 +44,7 @@ public static class ExampleUsersEndpoints
         }
     }
 
-    private static async Task<IResult> CreateUser(CreateExampleUserRequest userRequest, IExampleUserRepository repository)
+    private static async Task<IResult> CreateUser(CreateExampleUserRequest userRequest, IExampleUserService repository)
     {
         try
         {
@@ -57,7 +57,7 @@ public static class ExampleUsersEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateUser(UpdateExampleUserRequest userRequest, IExampleUserRepository repository)
+    private static async Task<IResult> UpdateUser(UpdateExampleUserRequest userRequest, IExampleUserService repository)
     {
         try
         {
@@ -73,7 +73,7 @@ public static class ExampleUsersEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteUser(int userId, IExampleUserRepository repository)
+    private static async Task<IResult> DeleteUser(int userId, IExampleUserService repository)
     {
         try
         {

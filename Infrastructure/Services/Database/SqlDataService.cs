@@ -7,14 +7,14 @@ using Application.Interfaces.Database;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.Features.Database;
+namespace Infrastructure.Services.Database;
 
-public class SqlDataAccess : ISqlDataAccess
+public class SqlDataService : ISqlDataService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger _logger;
 
-    public SqlDataAccess(IConfiguration configuration, ILogger logger)
+    public SqlDataService(IConfiguration configuration, ILogger logger)
     {
         _configuration = configuration;
         _logger = logger;
@@ -36,14 +36,24 @@ public class SqlDataAccess : ISqlDataAccess
         return await connection.QueryAsync<TDataClass>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
     }
 
-    public async Task SaveData<TParameters>(
+    public async Task<int> LoadDataCount<TParameters>(
         string storedProcedure,
         TParameters parameters,
         string connectionId)
     {
         using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
 
-        await connection.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
+        return (await connection.QueryAsync<int>(storedProcedure, parameters, commandType: CommandType.StoredProcedure)).FirstOrDefault();
+    }
+
+    public async Task<int> SaveData<TParameters>(
+        string storedProcedure,
+        TParameters parameters,
+        string connectionId)
+    {
+        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+
+        return await connection.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
     }
 
     private void EnsureTablesExistence(string connectionId)

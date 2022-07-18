@@ -1,20 +1,13 @@
 ﻿using Domain.Contracts;
+using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities.Identity;
 
-public class User : IAuditableEntity<Guid>
+public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
 {
-    public Guid Id { get; set; }
+    public override Guid Id { get; set; }
     public string Username { get; set; } = null!;
-    public string? NormalizedUserName { get; set; }
-    public string? Email { get; set; }
-    public string? NormalizedEmail { get; set; }
-    public bool EmailConfirmed { get; set; }
-    public byte[] PasswordHash { get; set; } = null!;
     public byte[] PasswordSalt { get; set; } = null!;
-    public string? PhoneNumber { get; set; }
-    public bool PhoneNumberConfirmed { get; set; }
-    public bool TwoFactorEnabled { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }

@@ -4,6 +4,7 @@ using Application.Api.v1.Monitoring;
 using Application.Constants;
 using Application.Interfaces.Database;
 using Hangfire;
+using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,7 @@ public static class WebServerConfiguration
         
         app.ValidateDatabaseStructure();
         
-        app.ConfigureQualityOfLifeServices();
+        app.ConfigureCoreServices();
         app.ConfigureIdentityServices();
         app.ConfigureApiServices();
         app.MapApiEndpoints();
@@ -31,7 +32,11 @@ public static class WebServerConfiguration
 
     private static void ConfigureForEnvironment(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment()) return;
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+            return;
+        }
         app.UseExceptionHandler("/Error");
         app.UseHsts();
     }
@@ -45,16 +50,21 @@ public static class WebServerConfiguration
         app.MapFallbackToPage("/_Host");
         
         app.UseSerilogRequestLogging();
+        app.UseForwardedHeaders(new ForwardedHeadersOptions()
+        {
+            ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
+        });
+        app.UseMiddleware<ErrorHandlerMiddleware>();
     }
 
     private static void ValidateDatabaseStructure(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
-        var sqlAccess = scope.ServiceProvider.GetRequiredService<ISqlDataAccess>();
+        var sqlAccess = scope.ServiceProvider.GetRequiredService<ISqlDataService>();
         sqlAccess.EnsureDatabaseStructure();
     }
 
-    private static void ConfigureQualityOfLifeServices(this IApplicationBuilder app)
+    private static void ConfigureCoreServices(this IApplicationBuilder app)
     {
         app.UseHangfireDashboard("/jobs", new DashboardOptions
         {

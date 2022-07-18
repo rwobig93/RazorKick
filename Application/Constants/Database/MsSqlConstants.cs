@@ -25,5 +25,6 @@ public static class MsSqlConstants
         public const string UserGetAll = "spUser_GetAll.sql";
         public const string UserCreate = "spUser_Insert.sql";
         public const string UserUpdate = "spUser_Update.sql";
+        public const string UserCount = "spUser_GetCount.sql";
     }
 }

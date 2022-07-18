@@ -20,7 +20,7 @@ git clone https://github.com/rwobig93/TestBlazorServer.git
 - Domain
     - Entities
     - Models (Core)
-    - Events
+    - Exceptions
 - Application
     - Constants
     - Extensibility (Extensions, Exceptions, Converters, Settings, ect)

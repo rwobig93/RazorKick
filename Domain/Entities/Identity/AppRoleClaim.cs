@@ -2,7 +2,7 @@
 
 namespace Domain.Entities.Identity;
 
-public class Claim : IAuditableEntity<Guid>
+public class AppRoleClaim : IAuditableEntity<Guid>
 {
     public Guid Id { get; set; }
     
@@ -18,7 +18,7 @@ public class Claim : IAuditableEntity<Guid>
     
     public DateTime? LastModifiedOn { get; set; }
     
-    public virtual Role Role { get; set; } = null!;
+    public virtual AppRole Role { get; set; } = null!;
 
     public Guid RoleId { get; set; }
 

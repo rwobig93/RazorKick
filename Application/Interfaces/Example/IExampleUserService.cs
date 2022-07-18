@@ -3,7 +3,7 @@ using Shared.Requests.Example;
 
 namespace Application.Interfaces.Example;
 
-public interface IExampleUserRepository
+public interface IExampleUserService
 {
     Task<IEnumerable<ExampleUser>> GetAllUsers();
     Task<ExampleUser?> GetUser(GetExampleUserRequest userRequest);

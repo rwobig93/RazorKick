@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +25,8 @@
     <ItemGroup>
       <PackageReference Include="Asp.Versioning.Http" Version="6.0.0-preview.3" />
       <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+      <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
+      <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
       <PackageReference Include="Hangfire" Version="1.7.30" />
       <PackageReference Include="Hangfire.Core" Version="1.7.30" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
@@ -39,10 +42,6 @@
       <PackageReference Include="Serilog.Sinks.Seq" Version="5.1.1" />
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.2.3" />
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Middleware" />
     </ItemGroup>
 
     <ItemGroup>

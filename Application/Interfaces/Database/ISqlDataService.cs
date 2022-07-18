@@ -1,6 +1,6 @@
 ﻿namespace Application.Interfaces.Database;
 
-public interface ISqlDataAccess
+public interface ISqlDataService
 {
     public void EnsureDatabaseStructure(string connectionId = "DefaultConnection");
     
@@ -8,8 +8,13 @@ public interface ISqlDataAccess
         string storedProcedure,
         TParameters parameters,
         string connectionId = "DefaultConnection");
+    
+    public Task<int> LoadDataCount<TParameters>(
+        string storedProcedure,
+        TParameters parameters,
+        string connectionId = "DefaultConnection");
 
-    public Task SaveData<TParameters>(
+    public Task<int> SaveData<TParameters>(
         string storedProcedure,
         TParameters parameters,
         string connectionId = "DefaultConnection");

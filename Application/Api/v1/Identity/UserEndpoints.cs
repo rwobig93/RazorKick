@@ -19,11 +19,11 @@ public static class UserEndpoints
         // TODO: Add swagger endpoint viewer enrichment
     }
 
-    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IUserRepository repository)
+    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IUserService repository)
     {
         try
         {
-            await repository.RegisterUser(registerRequest);
+            await repository.RegisterAsync(registerRequest);
             return Results.Ok("Successfully registered user!");
         }
         catch (Exception ex)
@@ -32,7 +32,7 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> GetAllUsers(IExampleUserRepository repository)
+    private static async Task<IResult> GetAllUsers(IExampleUserService repository)
     {
         try
         {
@@ -44,7 +44,7 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> GetUser(int userId, IExampleUserRepository repository, IMapper mapper)
+    private static async Task<IResult> GetUser(int userId, IExampleUserService repository, IMapper mapper)
     {
         try
         {
@@ -61,7 +61,7 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> CreateUser(CreateExampleUserRequest userRequest, IExampleUserRepository repository)
+    private static async Task<IResult> CreateUser(CreateExampleUserRequest userRequest, IExampleUserService repository)
     {
         try
         {
@@ -74,7 +74,7 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateUser(UpdateExampleUserRequest userRequest, IExampleUserRepository repository)
+    private static async Task<IResult> UpdateUser(UpdateExampleUserRequest userRequest, IExampleUserService repository)
     {
         try
         {
@@ -90,7 +90,7 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteUser(int userId, IExampleUserRepository repository)
+    private static async Task<IResult> DeleteUser(int userId, IExampleUserService repository)
     {
         try
         {

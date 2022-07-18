@@ -5,13 +5,13 @@ using Domain.Entities.Example;
 using Shared.Requests.Example;
 using static Application.Constants.Database.MsSqlConstants.StoredProcedures;
 
-namespace Infrastructure.Features.Example;
+namespace Infrastructure.Services.Example;
 
-public class ExampleUserRepository : IExampleUserRepository
+public class ExampleUserService : IExampleUserService
 {
-    private readonly ISqlDataAccess _database;
+    private readonly ISqlDataService _database;
 
-    public ExampleUserRepository(ISqlDataAccess database)
+    public ExampleUserService(ISqlDataService database)
     {
         _database = database;
     }

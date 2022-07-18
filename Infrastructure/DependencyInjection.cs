@@ -5,15 +5,18 @@ using Application.Extensibility.Extensions;
 using Application.Extensibility.Settings;
 using Application.Interfaces.Database;
 using Application.Interfaces.Example;
+using Application.Interfaces.Identity;
 using Application.Mappings;
 using Application.Wrappers;
 using Asp.Versioning;
 using Domain.Entities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
-using Infrastructure.Features.Database;
-using Infrastructure.Features.Example;
+using Infrastructure.Services.Database;
+using Infrastructure.Services.Example;
+using Infrastructure.Services.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -34,12 +37,10 @@ public static class DependencyInjection
             lc.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
         
         builder.Services.AddBlazorServerCommon();
-        builder.Services.AddQualityOfLifeServices(builder.Configuration);
+        builder.Services.AddCoreServices(builder.Configuration);
         builder.Services.AddAuthServices(builder.Configuration);
 
-        builder.Services.AddCoreSingletonServices();
-        builder.Services.AddCoreTransientServices();
-        builder.Services.AddCoreScopedServices();
+        builder.Services.AddApplicationServices();
 
         builder.Services.AddApiServices();
         builder.Services.AddDatabaseServices();
@@ -53,7 +54,7 @@ public static class DependencyInjection
         services.AddServerSideBlazor();
     }
 
-    private static void AddQualityOfLifeServices(this IServiceCollection services, IConfiguration configuration)
+    private static void AddCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddAutoMapper(typeof(BaseMapProfile));
         services.AddHangfire(x =>
@@ -63,29 +64,33 @@ public static class DependencyInjection
         });
         services.AddHangfireServer();
         services.AddMudServices();
+
+        var mailConfig = configuration.GetMailSettings(services);
+        services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
+            .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
     }
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentity<User, Role>().AddDefaultTokenProviders();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
+            .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
+            .AddIdentity<AppUser, AppRole>(options =>
+            {
+                options.Password.RequiredLength = 12;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = true;
+                options.User.RequireUniqueEmail = true;
+            }).AddDefaultTokenProviders();
         services.AddJwtAuthentication(configuration.GetApplicationSettings(services));
     }
 
-    private static void AddCoreSingletonServices(this IServiceCollection services)
+    private static void AddApplicationServices(this IServiceCollection services)
     {
-        services.AddSingleton<IWeatherForecast, WeatherForecast>();
-    }
-
-    // ReSharper disable once UnusedParameter.Local
-    private static void AddCoreTransientServices(this IServiceCollection services)
-    {
-        
-    }
-
-    // ReSharper disable once UnusedParameter.Local
-    private static void AddCoreScopedServices(this IServiceCollection services)
-    {
-        
+        services.AddSingleton<IWeatherService, WeatherService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)
@@ -108,8 +113,8 @@ public static class DependencyInjection
 
     private static void AddDatabaseServices(this IServiceCollection services)
     {
-        services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
-        services.AddSingleton<IExampleUserRepository, ExampleUserRepository>();
+        services.AddSingleton<ISqlDataService, SqlDataService>();
+        services.AddSingleton<IExampleUserService, ExampleUserService>();
     }
     
     private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration config)
