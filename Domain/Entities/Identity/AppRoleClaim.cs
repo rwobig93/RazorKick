@@ -1,8 +1,9 @@
 ﻿using Domain.Contracts;
+using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities.Identity;
 
-public class AppRoleClaim : IAuditableEntity<Guid>
+public class AppRoleClaim : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
 {
     public Guid Id { get; set; }
     

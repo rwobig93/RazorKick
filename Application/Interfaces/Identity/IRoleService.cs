@@ -1,22 +1,30 @@
-﻿namespace Application.Interfaces.Identity;
+﻿using Application.Wrappers;
+using Shared.Requests.Identity;
+using Shared.Responses.Identity;
+
+namespace Application.Interfaces.Identity;
 
 public interface IRoleService
 {
-    // TODO: Implement this thing
-
-    // Task<<IEnumerable<RoleResponse>> GetAllAsync();
-    //
-    // Task<int> GetCountAsync();
-    //
-    // Task<Result<RoleResponse>> GetByIdAsync(string id);
-    //
-    // Task<Result<RoleResponse>> GetByNameAsync(string roleName);
-    //
-    // Task<Result<string>> SaveAsync(RoleRequest request);
-    //
-    // Task<Result<string>> DeleteAsync(string id);
-    //
-    // Task<Result<PermissionResponse>> GetAllPermissionsAsync(string roleId);
-    //
-    // Task<Result<string>> UpdatePermissionsAsync(PermissionRequest request);
+    Task<IResult<List<RoleResponse>>> GetAllAsync();
+    
+    Task<IResult<int>> GetCountAsync();
+    
+    Task<IResult<RoleResponse>> GetByIdAsync(string id);
+    
+    Task<IResult<RoleResponse>> GetByNameAsync(string roleName);
+    
+    Task<IResult<string>> CreateAsync(CreateRoleRequest request);
+    
+    Task<IResult<string>> UpdateAsync(UpdateRoleRequest request);
+    
+    Task<IResult<string>> DeleteAsync(string id);
+    
+    Task<IResult<PermissionsResponse>> GetAllPermissionsAsync(string roleId);
+    
+    Task<IResult<string>> AddPermissionsAsync(PermissionsRequest request);
+    
+    Task<IResult<string>> RemovePermissionsAsync(PermissionsRequest request);
+    
+    Task<IResult<string>> EnforcePermissionsAsync(PermissionsRequest request);
 }

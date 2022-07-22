@@ -1,18 +1,20 @@
-﻿namespace Application.Interfaces.Identity;
+﻿using Application.Wrappers;
+using Shared.Requests.Identity;
+using Shared.Responses.Identity;
+
+namespace Application.Interfaces.Identity;
 
 public interface IClaimService
 {
-    // TODO: Implement this thing
-    
-    // Task<Result<List<RoleClaimResponse>>> GetAllAsync();
-    //
-    // Task<int> GetCountAsync();
-    //
-    // Task<Result<RoleClaimResponse>> GetByIdAsync(int id);
-    //
-    // Task<Result<List<RoleClaimResponse>>> GetAllByRoleIdAsync(string roleId);
-    //
-    // Task<Result<string>> SaveAsync(RoleClaimRequest request);
-    //
-    // Task<Result<string>> DeleteAsync(int id);
+    Task<IResult<List<ClaimResponse>>> GetAllAsync();
+
+    Task<IResult<int>> GetCountAsync();
+
+    Task<IResult<ClaimResponse>> GetByIdAsync(int id);
+
+    Task<IResult<List<ClaimResponse>>> GetAllByRoleIdAsync(string roleId);
+
+    Task<IResult<string>> SaveAsync(ClaimRequest request);
+
+    Task<IResult<string>> DeleteAsync(int id);
 }

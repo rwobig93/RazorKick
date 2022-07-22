@@ -17,16 +17,16 @@ public interface IUserService
     Task DeleteAsync(DeleteUserRequest userRequest);
     // TODO: AddToRoleAsync, GetRolesAsync, ConfirmEmailAsync, ForgotPasswordAsync, ResetPasswordAsync, ExportToExcelAsync
 
-    Task<Result<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
-    Task<Result<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest refreshRequest);
+    Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
+    Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest refreshRequest);
 
-    Task<IResult<IdentityResult>> CreateAsync(UserRegisterRequest registerRequest, string password);
+    Task<IResult<IdentityResult>> CreateAsync(UserCreateRequest createRequest, string password);
 
-    Task<IResult<IdentityResult>> AddToRolesAsync(UserRoleRequest roleRequest);
+    Task<IResult<List<IdentityResult>>> AddToRolesAsync(UserRoleRequest roleRequest);
 
-    Task<IResult<IdentityResult>> RemoveFromRolesAsync(UserRoleRequest roleRequest);
+    Task<IResult<List<IdentityResult>>> RemoveFromRolesAsync(UserRoleRequest roleRequest);
 
-    Task<IResult> EnforceRolesAsync(UserRoleRequest roleRequest);
+    Task<IResult<IdentityResult>> EnforceRolesAsync(UserRoleRequest roleRequest);
 
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
 

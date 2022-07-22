@@ -20,15 +20,16 @@
     @DeletedOn datetime2,
     @IsActive BIT,
     @RefreshToken NVARCHAR(400),
-    @RefreshTokenExpiryTime datetime2
+    @RefreshTokenExpiryTime datetime2,
+    @AccountType int
 AS
 begin
     insert into dbo.[Users] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
                              PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, FirstName, LastName, CreatedBy,
                              ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                             IsActive, RefreshToken, RefreshTokenExpiryTime)
+                             IsActive, RefreshToken, RefreshTokenExpiryTime, AccountType)
     values (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
             @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @FirstName, @LastName, @CreatedBy,
             @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsActive,
-            @RefreshToken, @RefreshTokenExpiryTime);
+            @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
 end

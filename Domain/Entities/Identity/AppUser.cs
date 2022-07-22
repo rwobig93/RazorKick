@@ -1,5 +1,6 @@
 ﻿using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
+using Shared.Enums.Identity;
 
 namespace Domain.Entities.Identity;
 
@@ -20,4 +21,5 @@ public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
     public bool IsActive { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime RefreshTokenExpiryTime { get; set; }
+    public AccountType AccountType { get; set; } = AccountType.User;
 }

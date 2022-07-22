@@ -35,9 +35,10 @@ public class UserService : IUserService
     private readonly AppConfiguration _appConfig;
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IFluentEmail _mailService;
+    private readonly ICurrentUserService _currentUserService;
 
     public UserService(ISqlDataService database, IMapper mapper, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,
-        AppConfiguration appConfig, SignInManager<AppUser> signInManager, IFluentEmail mailService)
+        AppConfiguration appConfig, SignInManager<AppUser> signInManager, IFluentEmail mailService, ICurrentUserService currentUserService)
     {
         _database = database;
         _mapper = mapper;
@@ -46,6 +47,7 @@ public class UserService : IUserService
         _appConfig = appConfig;
         _signInManager = signInManager;
         _mailService = mailService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<IEnumerable<AppUser>> GetAllAsync() =>
@@ -66,7 +68,7 @@ public class UserService : IUserService
     public async Task DeleteAsync(DeleteUserRequest userRequest) =>
         await _database.SaveData(UserDelete.ToDboName(), userRequest);
 
-    public async Task<Result<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
+    public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
         var user = await _userManager.FindByNameAsync(loginRequest.Username);
         if (user == null)
@@ -98,7 +100,7 @@ public class UserService : IUserService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    public async Task<Result<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
+    public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
     {
         if (refreshRequest is null)
         {
@@ -121,28 +123,117 @@ public class UserService : IUserService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult<IdentityResult>> CreateAsync(UserRegisterRequest registerRequest, string password)
+    public async Task<IResult<IdentityResult>> CreateAsync(UserCreateRequest createRequest, string password)
     {
-        // TODO: Implement
-        throw new NotImplementedException();
+        var newUser = _mapper.Map<AppUser>(createRequest);
+        newUser.CreatedOn = DateTime.Now;
+        
+        var result = _userManager.CreateAsync(newUser, password);
+        return await Result<IdentityResult>.SuccessAsync(result.Result);
     }
 
-    public async Task<IResult<IdentityResult>> AddToRolesAsync(UserRoleRequest roleRequest)
+    public async Task<IResult<List<IdentityResult>>> AddToRolesAsync(UserRoleRequest roleRequest)
     {
-        // TODO: Implement
-        throw new NotImplementedException();
+        AppUser foundUser;
+        if (roleRequest.UserId is not null)
+            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
+        else if (roleRequest.Username is not null)
+            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
+        else if (roleRequest.Email is not null)
+            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
+        else
+            return await Result<List<IdentityResult>>.FailAsync("UserId, Username & Email are all empty, at least one is required");
+
+        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
+        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
+        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
+        
+        if (!userIsAdmin && requestContainsAdmin)
+            return await Result<List<IdentityResult>>.FailAsync("You aren't an admin so you cannot add admin to accounts");
+
+        var resultList = new List<IdentityResult>();
+        foreach (var role in roleRequest.RoleNames)
+        {
+            var result = await _userManager.AddToRoleAsync(foundUser, role);
+            resultList.Add(result);
+        }
+        
+        return await Result<List<IdentityResult>>.SuccessAsync(resultList);
     }
 
-    public async Task<IResult<IdentityResult>> RemoveFromRolesAsync(UserRoleRequest roleRequest)
+    public async Task<IResult<List<IdentityResult>>> RemoveFromRolesAsync(UserRoleRequest roleRequest)
     {
-        // TODO: Implement
-        throw new NotImplementedException();
+        AppUser foundUser;
+        if (roleRequest.UserId is not null)
+            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
+        else if (roleRequest.Username is not null)
+            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
+        else if (roleRequest.Email is not null)
+            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
+        else
+            return await Result<List<IdentityResult>>.FailAsync("UserId, Username & Email are all empty, at least one is required");
+
+        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
+        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
+        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
+        var requestIsForSelf = foundUser.Id == currentUser.Id;
+        var requestIsForDefaultAdmin = foundUser.Username == UserConstants.DefaultUsername;
+        
+        if (!userIsAdmin && requestContainsAdmin)
+            return await Result<List<IdentityResult>>.FailAsync("You aren't an admin so you cannot add or remove admin from accounts");
+
+        // Requiring another admin to remove admin access has the added benefit of there always being at least one non default admin
+        if (requestIsForSelf && userIsAdmin && !requestContainsAdmin)
+            return await Result<List<IdentityResult>>.FailAsync("You can't remove admin access from yourself, another admin will have to revoke your access");
+
+        if (requestIsForDefaultAdmin && !requestContainsAdmin)
+            return await Result<List<IdentityResult>>.FailAsync("Default admin cannot have admin access revoked");
+
+        var resultList = new List<IdentityResult>();
+        foreach (var role in roleRequest.RoleNames)
+        {
+            var result = await _userManager.RemoveFromRoleAsync(foundUser, role);
+            resultList.Add(result);
+        }
+        
+        return await Result<List<IdentityResult>>.SuccessAsync(resultList);
     }
 
-    public async Task<IResult> EnforceRolesAsync(UserRoleRequest roleRequest)
+    public async Task<IResult<IdentityResult>> EnforceRolesAsync(UserRoleRequest roleRequest)
     {
-        // TODO: Implement
-        throw new NotImplementedException();
+        AppUser foundUser;
+        if (roleRequest.UserId is not null)
+            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
+        else if (roleRequest.Username is not null)
+            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
+        else if (roleRequest.Email is not null)
+            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
+        else
+            return await Result<IdentityResult>.FailAsync("UserId, Username & Email are all empty, at least one is required");
+
+        var currentRoles = await _userManager.GetRolesAsync(foundUser);
+        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
+        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
+        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
+        var requestIsForSelf = foundUser.Id == currentUser.Id;
+        var requestIsForDefaultAdmin = foundUser.Username == UserConstants.DefaultUsername;
+        
+        if (!userIsAdmin && requestContainsAdmin)
+            return await Result<IdentityResult>.FailAsync("You aren't an admin so you cannot add or remove admin from accounts");
+
+        // Requiring another admin to remove admin access has the added benefit of there always being at least one non default admin
+        if (requestIsForSelf && userIsAdmin && !requestContainsAdmin)
+            return await Result<IdentityResult>.FailAsync("You can't remove admin access from yourself, another admin will have to revoke your access");
+
+        if (requestIsForDefaultAdmin && !requestContainsAdmin)
+            return await Result<IdentityResult>.FailAsync("Default admin cannot have admin access revoked");
+        
+        var removeResult = await _userManager.RemoveFromRolesAsync(foundUser, currentRoles);
+        if (!removeResult.Succeeded)
+            return await Result<IdentityResult>.FailAsync(removeResult.Errors.ToString()!);
+        
+        var enforceResult = await _userManager.AddToRolesAsync(foundUser, roleRequest.RoleNames);
+        return await Result<IdentityResult>.SuccessAsync(enforceResult);
     }
 
     async Task<IResult> IUserService.RegisterAsync(UserRegisterRequest registerRequest)

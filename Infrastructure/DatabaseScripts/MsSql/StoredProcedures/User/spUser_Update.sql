@@ -21,7 +21,8 @@
     @DeletedOn datetime2,
     @IsActive BIT,
     @RefreshToken NVARCHAR(400),
-    @RefreshTokenExpiryTime datetime2
+    @RefreshTokenExpiryTime datetime2,
+    @AccountType int
 AS
 begin
     update dbo.[Users]
@@ -30,6 +31,7 @@ begin
         PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @PhoneNumberConfirmed, TwoFactorEnabled = @TwoFactorEnabled,
         FirstName = @FirstName, LastName = @LastName, CreatedBy = @CreatedBy, ProfilePictureDataUrl = @ProfilePictureDataUrl,
         CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn, IsDeleted = @IsDeleted,
-        DeletedOn = @DeletedOn, IsActive = @IsActive, RefreshToken = @RefreshToken, RefreshTokenExpiryTime = @RefreshTokenExpiryTime
+        DeletedOn = @DeletedOn, IsActive = @IsActive, RefreshToken = @RefreshToken, RefreshTokenExpiryTime = @RefreshTokenExpiryTime,
+        AccountType = @AccountType
     where Id = @Id;
 end
