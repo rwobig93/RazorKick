@@ -5,6 +5,7 @@ using System.Text;
 using Application.Constants.Identity;
 using Application.Extensibility.Extensions;
 using Application.Extensibility.Settings;
+using Application.Extensibility.Utilities;
 using Application.Interfaces.Database;
 using Application.Interfaces.Identity;
 using Application.Wrappers;
@@ -20,57 +21,258 @@ using Shared.ApiRoutes.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 using static Application.Constants.Database.MsSqlConstants.StoredProcedures;
-using IResult = Application.Wrappers.IResult;
 
 namespace Infrastructure.Services.Identity;
 
-public class UserService : IUserService
+public class UserService : IUserService, IUserStore<AppUser>, IUserEmailStore<AppUser>, IUserPhoneNumberStore<AppUser>,
+    IUserTwoFactorStore<AppUser>, IUserPasswordStore<AppUser>
 {
     private const string InvalidErrorMessage = "The username and password combination provided is invalid";
 
     private readonly ISqlDataService _database;
     private readonly IMapper _mapper;
-    private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<AppRole> _roleManager;
     private readonly AppConfiguration _appConfig;
-    private readonly SignInManager<AppUser> _signInManager;
     private readonly IFluentEmail _mailService;
     private readonly ICurrentUserService _currentUserService;
 
-    public UserService(ISqlDataService database, IMapper mapper, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager,
-        AppConfiguration appConfig, SignInManager<AppUser> signInManager, IFluentEmail mailService, ICurrentUserService currentUserService)
+    public UserService(ISqlDataService database, IMapper mapper, AppConfiguration appConfig, IFluentEmail mailService,
+        ICurrentUserService currentUserService)
     {
         _database = database;
         _mapper = mapper;
-        _userManager = userManager;
-        _roleManager = roleManager;
         _appConfig = appConfig;
-        _signInManager = signInManager;
         _mailService = mailService;
         _currentUserService = currentUserService;
     }
 
-    public async Task<IEnumerable<AppUser>> GetAllAsync() =>
-        await _database.LoadData<AppUser, dynamic>(UserGetAll.ToDboName(), new { });
+    public async Task<IEnumerable<AppUser>> GetAllAsync()
+    {
+        return await _database.LoadData<AppUser, dynamic>(UserGetAll.ToDboName(), new { });
+    }
 
-    public async Task<int> GetCountAsync() =>
-        await _database.LoadDataCount<dynamic>(UserCount.ToDboName(), new {TableName = "Users"});
+    public async Task<int> GetCountAsync()
+    {
+        return await _database.LoadDataCount<dynamic>(UserCount.ToDboName(), new {TableName = "Users"});
+    }
 
-    public async Task<AppUser?> GetByIdAsync(GetUserByIdRequest userRequest) =>
-        (await _database.LoadData<AppUser, dynamic>(UserGetById.ToDboName(), userRequest)).FirstOrDefault();
+    public async Task<AppUser?> GetByIdAsync(GetUserByIdRequest userRequest)
+    {
+        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetById.ToDboName(), userRequest);
+        return foundUser.FirstOrDefault();
+    }
 
-    public async Task<AppUser?> GetByUsernameAsync(GetUserByUsernameRequest userRequest) =>
-        (await _database.LoadData<AppUser, dynamic>(UserGetByUsername.ToDboName(), userRequest)).FirstOrDefault();
+    public async Task<AppUser?> GetByUsernameAsync(GetUserByUsernameRequest userRequest)
+    {
+        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByUsername.ToDboName(), userRequest);
+        return foundUser.FirstOrDefault();
+    }
 
-    public async Task UpdateAsync(UpdateUserRequest userRequest) =>
+    public async Task<AppUser?> GetByEmailAsync(GetUserByEmailRequest userRequest)
+    {
+        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByEmail.ToDboName(), userRequest);
+        return foundUser.FirstOrDefault();
+    }
+
+    public async Task UpdateAsync(UpdateUserRequest userRequest)
+    {
         await _database.SaveData(UserUpdate.ToDboName(), userRequest);
+    }
 
-    public async Task DeleteAsync(DeleteUserRequest userRequest) =>
+    public async Task DeleteAsync(DeleteUserRequest userRequest)
+    {
         await _database.SaveData(UserDelete.ToDboName(), userRequest);
+    }
+
+    public async Task<string> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.Id.ToString());
+    }
+
+    public async Task<string> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.Username);
+    }
+
+    public async Task SetUserNameAsync(AppUser user, string userName, CancellationToken cancellationToken)
+    {
+        user.Username = userName;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<string> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.NormalizedUserName);
+    }
+
+    public async Task SetNormalizedUserNameAsync(AppUser user, string normalizedName, CancellationToken cancellationToken)
+    {
+        user.NormalizedUserName = normalizedName;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            user.CreatedOn = DateTime.Now;
+            await _database.SaveData(UserCreate.ToDboName(), user);
+            return await Task.FromResult(IdentityResult.Success);
+        }
+        catch (Exception ex)
+        {
+            return await Task.FromResult(IdentityResult.Failed(new IdentityError(){Code = ex.Source, Description = ex.Message}));
+        }
+    }
+
+    public async Task<IdentityResult> CreateAsync(AppUser user, string password, CancellationToken cancellationToken)
+    {
+        try
+        {
+            IdentityUtilities.GetPasswordHash(password, out var hash, out var salt);
+            user.PasswordSalt = salt;
+            user.PasswordHash = hash.ToString();
+            user.CreatedOn = DateTime.Now;
+            await _database.SaveData(UserCreate.ToDboName(), user);
+            return await Task.FromResult(IdentityResult.Success);
+        }
+        catch (Exception ex)
+        {
+            return await Task.FromResult(IdentityResult.Failed(new IdentityError(){Code = ex.Source, Description = ex.Message}));
+        }
+    }
+
+    public async Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            user.LastModifiedOn = DateTime.Now;
+            await _database.SaveData(UserUpdate.ToDboName(), user);
+            return await Task.FromResult(IdentityResult.Success);
+        }
+        catch (Exception ex)
+        {
+            return await Task.FromResult(IdentityResult.Failed(new IdentityError(){Code = ex.Source, Description = ex.Message}));
+        }
+    }
+
+    public async Task<IdentityResult> DeleteAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            user.DeletedOn = DateTime.Now;
+            await _database.SaveData(UserDelete.ToDboName(), user);
+            return await Task.FromResult(IdentityResult.Success);
+        }
+        catch (Exception ex)
+        {
+            return await Task.FromResult(IdentityResult.Failed(new IdentityError(){Code = ex.Source, Description = ex.Message}));
+        }
+    }
+
+    public async Task<AppUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
+    {
+        var id = Guid.Parse(userId);
+        return (await GetByIdAsync(new GetUserByIdRequest() {Id = id}))!;
+    }
+
+    public async Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+    {
+        return (await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = normalizedUserName}))!;
+    }
+
+    public async Task SetEmailAsync(AppUser user, string email, CancellationToken cancellationToken)
+    {
+        user.Email = email;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<string> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.Email);
+    }
+
+    public async Task<bool> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.EmailConfirmed);
+    }
+
+    public async Task SetEmailConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
+    {
+        user.EmailConfirmed = confirmed;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<AppUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+    {
+        var userRequest = new GetUserByEmailRequest() {Email = normalizedEmail};
+        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByEmail.ToDboName(), userRequest);
+        return foundUser.FirstOrDefault()!;
+    }
+
+    public async Task<string> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.NormalizedEmail);
+    }
+
+    public async Task SetNormalizedEmailAsync(AppUser user, string normalizedEmail, CancellationToken cancellationToken)
+    {
+        user.Email = normalizedEmail.ToLower();
+        user.NormalizedEmail = normalizedEmail;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task SetPhoneNumberAsync(AppUser user, string phoneNumber, CancellationToken cancellationToken)
+    {
+        user.PhoneNumber = phoneNumber;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<string> GetPhoneNumberAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.PhoneNumber);
+    }
+
+    public async Task<bool> GetPhoneNumberConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.PhoneNumberConfirmed);
+    }
+
+    public async Task SetPhoneNumberConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
+    {
+        user.PhoneNumberConfirmed = confirmed;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task SetTwoFactorEnabledAsync(AppUser user, bool enabled, CancellationToken cancellationToken)
+    {
+        user.TwoFactorEnabled = enabled;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<bool> GetTwoFactorEnabledAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.TwoFactorEnabled);
+    }
+
+    public async Task SetPasswordHashAsync(AppUser user, string passwordHash, CancellationToken cancellationToken)
+    {
+        user.PasswordHash = passwordHash;
+        await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task<string> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(user.PasswordHash);
+    }
+
+    public async Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(string.IsNullOrWhiteSpace(user.PasswordHash));
+    }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
-        var user = await _userManager.FindByNameAsync(loginRequest.Username);
+        var user = await GetByUsernameAsync(new GetUserByUsernameRequest(){Username = loginRequest.Username});
         if (user == null)
         {
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
@@ -83,7 +285,8 @@ public class UserService : IUserService
         {
             return await Result<UserLoginResponse>.FailAsync("Your email has not been confirmed, please confirm your email.");
         }
-        var passwordValid = await _userManager.CheckPasswordAsync(user, loginRequest.Password);
+        var passwordValid = IdentityUtilities.IsPasswordCorrect(
+            loginRequest.Password, System.Text.Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
         if (!passwordValid)
         {
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
@@ -92,7 +295,7 @@ public class UserService : IUserService
         user.RefreshToken = GenerateRefreshToken();
         // TODO: Add server setting for token expiration
         user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
-        await _userManager.UpdateAsync(user);
+        await UpdateAsync(user, CancellationToken.None);
 
         var token = await GenerateJwtAsync(user);
         var response = new UserLoginResponse() { Token = token, RefreshToken = user.RefreshToken,
@@ -100,51 +303,25 @@ public class UserService : IUserService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
-    {
-        if (refreshRequest is null)
-        {
-            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
-        }
-        var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
-        var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
-        var user = await _userManager.FindByEmailAsync(userEmail);
-        if (user == null)
-            return await Result<UserLoginResponse>.FailAsync("User Not Found.");
-        if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
-        var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
-        user.RefreshToken = GenerateRefreshToken();
-        await _userManager.UpdateAsync(user);
-
-        // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
-        var response = new UserLoginResponse { Token = token, RefreshToken = user.RefreshToken,
-            RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
-        return await Result<UserLoginResponse>.SuccessAsync(response);
-    }
-
-    public async Task<IResult<IdentityResult>> CreateAsync(UserCreateRequest createRequest, string password)
-    {
-        var newUser = _mapper.Map<AppUser>(createRequest);
-        newUser.CreatedOn = DateTime.Now;
-        
-        var result = _userManager.CreateAsync(newUser, password);
-        return await Result<IdentityResult>.SuccessAsync(result.Result);
-    }
-
     public async Task<IResult<List<IdentityResult>>> AddToRolesAsync(UserRoleRequest roleRequest)
     {
-        AppUser foundUser;
+        AppUser? foundUser;
         if (roleRequest.UserId is not null)
-            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
+            foundUser = await GetByIdAsync(new GetUserByIdRequest() {Id = (Guid)roleRequest.UserId});
         else if (roleRequest.Username is not null)
-            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
+            foundUser = await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = roleRequest.Username});
         else if (roleRequest.Email is not null)
-            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
+            foundUser = await GetByEmailAsync(new GetUserByEmailRequest() {Email = roleRequest.Email});
         else
             return await Result<List<IdentityResult>>.FailAsync("UserId, Username & Email are all empty, at least one is required");
 
-        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
+        if (foundUser is null)
+            return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
+
+        var currentUserId = Guid.Parse(_currentUserService.UserId);
+        if (currentUserId == Guid.Empty)
+            return await Result<List<IdentityResult>>.FailAsync("Internal Identity failure occurred, please contact the administrator");
+        var currentUser = await GetByIdAsync(new GetUserByIdRequest() {Id = currentUserId});
         var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
         
@@ -236,7 +413,7 @@ public class UserService : IUserService
         return await Result<IdentityResult>.SuccessAsync(enforceResult);
     }
 
-    async Task<IResult> IUserService.RegisterAsync(UserRegisterRequest registerRequest)
+    public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
     {
         var userWithSameUserName = await _userManager.FindByNameAsync(registerRequest.Username);
         if (userWithSameUserName != null)
@@ -275,7 +452,7 @@ public class UserService : IUserService
         return await Result<Guid>.SuccessAsync(newUser.Id, $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!");
     }
 
-    private async Task<string> GetEmailConfirmationUri(AppUser user)
+    public async Task<string> GetEmailConfirmationUri(AppUser user)
     {
         var confirmationCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var decodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationCode));
@@ -373,6 +550,34 @@ public class UserService : IUserService
             return await Result.FailAsync("An internal server error occurred, please contact the administrator");
 
         return await Result.SuccessAsync("Password reset was successful");
+    }
+
+    public void Dispose()
+    {
+        // Using Dapper, nothing to dispose
+    }
+
+    public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
+    {
+        if (refreshRequest is null)
+        {
+            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
+        }
+        var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
+        var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
+        var user = await _userManager.FindByEmailAsync(userEmail);
+        if (user == null)
+            return await Result<UserLoginResponse>.FailAsync("User Not Found.");
+        if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
+        var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
+        user.RefreshToken = GenerateRefreshToken();
+        await _userManager.UpdateAsync(user);
+
+        // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
+        var response = new UserLoginResponse { Token = token, RefreshToken = user.RefreshToken,
+            RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
+        return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
     private async Task<string> GenerateJwtAsync(AppUser user)

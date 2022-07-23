@@ -84,8 +84,16 @@ public static class DependencyInjection
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = true;
                 options.User.RequireUniqueEmail = true;
-            }).AddDefaultTokenProviders();
+            })
+            .AddUserStore<IUserService>()
+            .AddRoleStore<IRoleService>()
+            .AddDefaultTokenProviders();
         services.AddJwtAuthentication(configuration.GetApplicationSettings(services));
+        services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            // TODO: Add server configurable validation interval
+            options.ValidationInterval = TimeSpan.FromSeconds(2);
+        });
     }
 
     private static void AddApplicationServices(this IServiceCollection services)

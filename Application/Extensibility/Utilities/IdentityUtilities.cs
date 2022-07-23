@@ -10,6 +10,12 @@ public static class IdentityUtilities
         salt = hmac.Key;
         hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
     }
+    
+    public static void GetPasswordHash(string password, byte[] salt, out byte[] hash)
+    {
+        using var hmac = new HMACSHA512(salt);
+        hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+    }
 
     public static bool IsPasswordCorrect(string password, byte[] hash, byte[] salt)
     {

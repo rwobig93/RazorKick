@@ -8,5 +8,6 @@ public class AppUserProfile : BaseMapProfile
     public AppUserProfile()
     {
         CreateMap<AppUser, UserRegisterRequest>().ReverseMap();
+        CreateMap<AppUser, UserCreateRequest>().ReverseMap();
     }
 }
