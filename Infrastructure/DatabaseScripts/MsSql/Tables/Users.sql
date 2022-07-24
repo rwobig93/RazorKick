@@ -24,7 +24,8 @@ begin
         [IsActive] BIT NOT NULL,
         [RefreshToken] NVARCHAR(400) NULL,
         [RefreshTokenExpiryTime] datetime2 NULL,
-        [AccountType] int NOT NULL
+        [AccountType] int NOT NULL,
+        [Roles]
     )
     CREATE INDEX [IX_User_NormalizedUserName] ON [dbo].[Users] ([NormalizedUserName])
     CREATE INDEX [IX_User_NormalizedEmail] ON [dbo].[Users] ([NormalizedEmail])

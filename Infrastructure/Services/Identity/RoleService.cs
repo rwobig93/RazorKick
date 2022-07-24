@@ -8,7 +8,7 @@ using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 
-public class RoleService : IRoleService
+public class RoleService : IRoleStore<AppRole>
 {
     private readonly RoleManager<AppRole> _roleManager;
     private readonly UserManager<AppUser> _userManager;
@@ -30,58 +30,58 @@ public class RoleService : IRoleService
         _currentUserService = currentUserService;
     }
 
-    public async Task<IResult<List<RoleResponse>>> GetAllAsync()
+    public async Task<IdentityResult> CreateAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<int>> GetCountAsync()
+    public async Task<IdentityResult> UpdateAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<RoleResponse>> GetByIdAsync(string id)
+    public async Task<IdentityResult> DeleteAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<RoleResponse>> GetByNameAsync(string roleName)
+    public async Task<string> GetRoleIdAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> CreateAsync(CreateRoleRequest request)
+    public async Task<string> GetRoleNameAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> UpdateAsync(UpdateRoleRequest request)
+    public async Task SetRoleNameAsync(AppRole role, string roleName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> DeleteAsync(string id)
+    public async Task<string> GetNormalizedRoleNameAsync(AppRole role, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<PermissionsResponse>> GetAllPermissionsAsync(string roleId)
+    public async Task SetNormalizedRoleNameAsync(AppRole role, string normalizedName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> AddPermissionsAsync(PermissionsRequest request)
+    public async Task<AppRole> FindByIdAsync(string roleId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> RemovePermissionsAsync(PermissionsRequest request)
+    public async Task<AppRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<string>> EnforcePermissionsAsync(PermissionsRequest request)
+    public void Dispose()
     {
-        throw new NotImplementedException();
+        // Using Dapper, nothing to dispose
     }
 }

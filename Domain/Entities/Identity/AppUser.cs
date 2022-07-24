@@ -22,4 +22,5 @@ public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
     public string? RefreshToken { get; set; }
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
+    public List<AppRole> Roles { get; set; } = new();
 }

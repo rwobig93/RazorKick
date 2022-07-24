@@ -56,8 +56,18 @@
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetAll.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetByUsername.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Insert.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Search.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Update.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\Claims.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\ExampleUser.sql" />
+      <None Remove="DatabaseScripts\MsSql\Tables\Roles.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\Roles.sql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DatabaseScripts\MsSql\StoredProcedures\Claim" />
+      <Folder Include="DatabaseScripts\MsSql\StoredProcedures\Junction" />
+      <Folder Include="DatabaseScripts\MsSql\StoredProcedures\Role" />
     </ItemGroup>
 
 </Project>

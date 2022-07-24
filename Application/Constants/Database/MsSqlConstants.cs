@@ -10,6 +10,7 @@ public static class MsSqlConstants
         public const string ExampleUser = "ExampleUser.sql";
         public const string Users = "Users.sql";
         public const string Roles = "Roles.sql";
+        public const string UserRoleJunction = "UserRoleJunction.sql";
         public const string Validators = "Validators.sql";
     }
     
@@ -29,6 +30,7 @@ public static class MsSqlConstants
         public const string UserCreate = "spUser_Insert.sql";
         public const string UserUpdate = "spUser_Update.sql";
         public const string UserCount = "spUser_GetCount.sql";
+        public const string UserSearch = "spUser_Search.sql";
         
         // TODO: Create Sql Table & Stored Procedures
         public const string RoleDelete = "spRole_Delete.sql";
@@ -43,5 +45,11 @@ public static class MsSqlConstants
         public const string ValidatorDelete = "spValidator_Delete.sql";
         public const string ValidatorCreate = "spValidator_Insert.sql";
         public const string ValidatorGet = "spValidator_Get.sql";
+        
+        // TODO: Create Sql Table & Stored Procedures
+        public const string JunctionUserRoleDelete = "spJunction_UserRoleDelete.sql";
+        public const string JunctionUserRoleCreate = "spJunction_UserRoleInsert.sql";
+        public const string JunctionUserRoleGetForUser = "spJunction_UserRoleGetForUser.sql";
+        public const string JunctionUserRoleGetForRole = "spJunction_UserRoleGetForRole.sql";
     }
 }
