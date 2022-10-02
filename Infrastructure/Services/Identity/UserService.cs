@@ -24,7 +24,7 @@ using static Application.Constants.Database.MsSqlConstants.StoredProcedures;
 
 namespace Infrastructure.Services.Identity;
 
-public class UserService : IUserService, IUserStore<AppUser>, IUserEmailStore<AppUser>, IUserPhoneNumberStore<AppUser>,
+public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNumberStore<AppUser>,
     IUserTwoFactorStore<AppUser>, IUserPasswordStore<AppUser>
 {
     private const string InvalidErrorMessage = "The username and password combination provided is invalid";
@@ -273,24 +273,17 @@ public class UserService : IUserService, IUserStore<AppUser>, IUserEmailStore<Ap
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
         var user = await GetByUsernameAsync(new GetUserByUsernameRequest(){Username = loginRequest.Username});
-        if (user == null)
-        {
+        if (user is null)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
-        }
         if (!user.IsActive)
-        {
             return await Result<UserLoginResponse>.FailAsync("Your account is disabled, please contact the administrator.");
-        }
         if (!user.EmailConfirmed)
-        {
             return await Result<UserLoginResponse>.FailAsync("Your email has not been confirmed, please confirm your email.");
-        }
+        
         var passwordValid = IdentityUtilities.IsPasswordCorrect(
             loginRequest.Password, System.Text.Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
         if (!passwordValid)
-        {
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
-        }
 
         user.RefreshToken = GenerateRefreshToken();
         // TODO: Add server setting for token expiration
@@ -303,26 +296,30 @@ public class UserService : IUserService, IUserStore<AppUser>, IUserEmailStore<Ap
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
+    private async Task<AppUser?> GetUserFromProvidedIds(UserRoleRequest roleRequest)
+    {
+        if (roleRequest.UserId is not null)
+            return await GetByIdAsync(new GetUserByIdRequest() {Id = (Guid)roleRequest.UserId});
+        if (roleRequest.Username is not null)
+            return await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = roleRequest.Username});
+        if (roleRequest.Email is not null)
+            return await GetByEmailAsync(new GetUserByEmailRequest() {Email = roleRequest.Email});
+
+        return null;
+    }
+
     public async Task<IResult<List<IdentityResult>>> AddToRolesAsync(UserRoleRequest roleRequest)
     {
-        AppUser? foundUser;
-        if (roleRequest.UserId is not null)
-            foundUser = await GetByIdAsync(new GetUserByIdRequest() {Id = (Guid)roleRequest.UserId});
-        else if (roleRequest.Username is not null)
-            foundUser = await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = roleRequest.Username});
-        else if (roleRequest.Email is not null)
-            foundUser = await GetByEmailAsync(new GetUserByEmailRequest() {Email = roleRequest.Email});
-        else
-            return await Result<List<IdentityResult>>.FailAsync("UserId, Username & Email are all empty, at least one is required");
-
+        var foundUser = await GetUserFromProvidedIds(roleRequest);
         if (foundUser is null)
             return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
         var currentUserId = Guid.Parse(_currentUserService.UserId);
         if (currentUserId == Guid.Empty)
             return await Result<List<IdentityResult>>.FailAsync("Internal Identity failure occurred, please contact the administrator");
+        
         var currentUser = await GetByIdAsync(new GetUserByIdRequest() {Id = currentUserId});
-        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
+        var userIsAdmin = await IsInRoleAsync(currentUser, RoleConstants.AdminRole);
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
         
         if (!userIsAdmin && requestContainsAdmin)

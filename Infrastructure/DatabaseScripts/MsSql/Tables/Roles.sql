@@ -8,6 +8,4 @@ begin
         [LastModifiedBy] UNIQUEIDENTIFIER NULL,
         [LastModifiedOn] datetime2 NULL
     )
-    CREATE INDEX [IX_User_NormalizedUserName] ON [dbo].[Users] ([NormalizedUserName])
-    CREATE INDEX [IX_User_NormalizedEmail] ON [dbo].[Users] ([NormalizedEmail])
 end

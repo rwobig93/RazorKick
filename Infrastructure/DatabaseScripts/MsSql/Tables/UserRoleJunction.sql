@@ -5,8 +5,8 @@ begin
         [RoleId] UNIQUEIDENTIFIER NOT NULL,
         CONSTRAINT User_Role_PK PRIMARY KEY (UserId, RoleId),
         CONSTRAINT FK_User
-            FOREIGN KEY (UserId) REFERENCES dbo.[Users] (UserId),
+            FOREIGN KEY (UserId) REFERENCES dbo.[Users] (Id),
         CONSTRAINT FK_Role
-            FOREIGN KEY (RoleId) REFERENCES dbo.[Roles] (RoleId)
+            FOREIGN KEY (RoleId) REFERENCES dbo.[Roles] (Id)
     )
 end
