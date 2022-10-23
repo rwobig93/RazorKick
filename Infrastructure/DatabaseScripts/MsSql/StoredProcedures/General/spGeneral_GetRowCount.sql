@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[spUser_GetCount]
+CREATE OR ALTER PROCEDURE [dbo].[spAny_GetCount]
     @TableName NVARCHAR(50)
 AS
 begin

@@ -79,6 +79,7 @@ public class SqlDataService : ISqlDataService
         try
         {
             var assembly = Assembly.GetExecutingAssembly();
+            // TODO: Validate manifest resource stream syntax, currently extension methods are set to path.folder.sqlfilename.sql
             using var stream = assembly.GetManifestResourceStream(scriptPath);
             using var reader = new StreamReader(stream!);
             var procedureContents = reader.ReadToEnd();
@@ -99,8 +100,8 @@ public class SqlDataService : ISqlDataService
 
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
-            where propertyValue is not null select 
-                $"{MsSqlConstants.PathTables}{propertyValue}").ToList()!;
+            where propertyValue is not null
+            select propertyValue.ToDbScriptPathTable()).ToList();
     }
 
     private static List<string> GetAllStoredProceduresFullPaths()
@@ -110,6 +111,7 @@ public class SqlDataService : ISqlDataService
 
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
-            where propertyValue is not null select propertyValue.ToDbScriptPathTable()).ToList()!;
+            where propertyValue is not null
+            select propertyValue.ToDbScriptPathStoredProcedure()).ToList();
     }
 }

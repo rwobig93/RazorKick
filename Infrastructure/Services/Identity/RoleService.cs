@@ -70,12 +70,12 @@ public class RoleService : IRoleStore<AppRole>
         throw new NotImplementedException();
     }
 
-    public async Task<AppRole> FindByIdAsync(string roleId, CancellationToken cancellationToken)
+    public async Task<AppRole?> GetByIdAsync(string roleId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<AppRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
+    public async Task<AppRole?> GetByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

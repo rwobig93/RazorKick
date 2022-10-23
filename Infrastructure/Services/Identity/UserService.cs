@@ -34,15 +34,17 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     private readonly AppConfiguration _appConfig;
     private readonly IFluentEmail _mailService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRoleService _roleService;
 
     public UserService(ISqlDataService database, IMapper mapper, AppConfiguration appConfig, IFluentEmail mailService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService, IRoleService roleService)
     {
         _database = database;
         _mapper = mapper;
         _appConfig = appConfig;
         _mailService = mailService;
         _currentUserService = currentUserService;
+        _roleService = roleService;
     }
 
     public async Task<IEnumerable<AppUser>> GetAllAsync()
@@ -52,7 +54,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<int> GetCountAsync()
     {
-        return await _database.LoadDataCount<dynamic>(UserCount.ToDboName(), new {TableName = "Users"});
+        return await _database.LoadDataCount<dynamic>(GeneralGetTableRowCount.ToDboName(), new {TableName = "Users"});
     }
 
     public async Task<AppUser?> GetByIdAsync(GetUserByIdRequest userRequest)
@@ -71,6 +73,54 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     {
         var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByEmail.ToDboName(), userRequest);
         return foundUser.FirstOrDefault();
+    }
+
+    public async Task<bool> IsInRoleAsync(RoleMembershipRequest membershipValidationRequest)
+    {
+        var foundMembership = await _database.LoadData<AppUserRoleJunction, dynamic>(
+            JunctionUserRoleGetByUserRoleId.ToDboName(), membershipValidationRequest);
+        return foundMembership.FirstOrDefault() is not null;
+    }
+
+    public async Task<IResult> AddUserToRolesAsync(UserRoleRequest roleRequest)
+    {
+        var foundUser = GetUserFromProvidedIds(roleRequest);
+        if (foundUser.Result is null)
+            return await Result.FailAsync("A user account couldn't be found with the provided data, please try again");
+
+        var roleMessages = new List<string>();
+        var completeSuccess = true;
+        foreach (var roleName in roleRequest.RoleNames)
+        {
+            try
+            {
+                var foundRole = _roleService.GetByNameAsync(roleName);
+                if (foundRole.Result is null)
+                {
+                    roleMessages.Add($"Role '{roleName}' wasn't found");
+                    continue;
+                }
+
+                var alreadyHasRole = await IsInRoleAsync(
+                    new RoleMembershipRequest() {RoleId = foundRole.Result.Id, UserId = foundUser.Result.Id});
+                if (alreadyHasRole)
+                    continue;
+                
+                await _database.SaveData(JunctionUserRoleCreate.ToDboName(),
+                    new RoleMembershipRequest() {RoleId = foundRole.Result.Id, UserId = foundUser.Result.Id});
+                roleMessages.Add($"Successfully added role '{roleName}' to user '{foundUser.Result.Username}'");
+            }
+            catch (Exception ex)
+            {
+                roleMessages.Add($"Failure occurred attempting to add user '{foundUser.Result.Username}' to role '{roleName}: {ex.Message}");
+                completeSuccess = false;
+            }
+        }
+
+        if (!completeSuccess)
+            return await Result.FailAsync(roleMessages);
+
+        return await Result.SuccessAsync("Successfully added the provided user to all provided roles");
     }
 
     public async Task UpdateAsync(UpdateUserRequest userRequest)
@@ -319,17 +369,21 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<List<IdentityResult>>.FailAsync("Internal Identity failure occurred, please contact the administrator");
         
         var currentUser = await GetByIdAsync(new GetUserByIdRequest() {Id = currentUserId});
-        var userIsAdmin = await IsInRoleAsync(currentUser, RoleConstants.AdminRole);
+        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
+        var userIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = currentUser!.Id, RoleId = adminRole!.Id});
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
         
         if (!userIsAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync("You aren't an admin so you cannot add admin to accounts");
 
         var resultList = new List<IdentityResult>();
-        foreach (var role in roleRequest.RoleNames)
+        var result = await AddUserToRolesAsync(roleRequest);
+        foreach (var roleMessage in result.Messages)
         {
-            var result = await _userManager.AddToRoleAsync(foundUser, role);
-            resultList.Add(result);
+            // TODO: Identity result validation against _userManager to understand options for forward movement
+            var identityAddition = new IdentityResult() { };
+            identityAddition.Errors = new List<IdentityError>();
+            resultList.Add(roleMessage);
         }
         
         return await Result<List<IdentityResult>>.SuccessAsync(resultList);

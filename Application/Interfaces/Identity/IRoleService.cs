@@ -1,4 +1,5 @@
 ﻿using Application.Wrappers;
+using Domain.Entities.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 
@@ -10,9 +11,9 @@ public interface IRoleService
     
     Task<IResult<int>> GetCountAsync();
     
-    Task<IResult<RoleResponse>> GetByIdAsync(string id);
+    Task<AppRole?> GetByIdAsync(string id);
     
-    Task<IResult<RoleResponse>> GetByNameAsync(string roleName);
+    Task<AppRole?> GetByNameAsync(string roleName);
     
     Task<IResult<string>> CreateAsync(CreateRoleRequest request);
     

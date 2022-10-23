@@ -2,6 +2,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT
 begin
     CREATE TABLE [dbo].[Roles](
         [Id] UNIQUEIDENTIFIER NOT NULL PRIMARY KEY IDENTITY,
+        [Name] NVARCHAR(256) NOT NULL,
         [Description] NVARCHAR(4096) NOT NULL,
         [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
         [CreatedOn] datetime2 NOT NULL,
