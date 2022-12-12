@@ -1,9 +1,11 @@
 ﻿CREATE OR ALTER PROCEDURE [dbo].[spJunction_UR_Delete]
-@User_Role_PK UNIQUEIDENTIFIER
+    @UserId UNIQUEIDENTIFIER,
+    @RoleId UNIQUEIDENTIFIER
 AS
 begin
 --     archive instead in production
     delete
     from dbo.[User_Role_Junctions]
-    where User_Role_PK = @User_Role_PK;
+    where UserId = @UserId AND
+          RoleId = @RoleId;
 end
