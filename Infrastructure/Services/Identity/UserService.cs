@@ -57,21 +57,27 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return await _database.LoadDataCount<dynamic>(GeneralGetTableRowCount.ToDboName(), new {TableName = "Users"});
     }
 
-    public async Task<AppUser?> GetByIdAsync(GetUserByIdRequest userRequest)
+    public async Task<AppUser?> GetByIdAsync(Guid userId)
     {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetById.ToDboName(), userRequest);
+        var foundUser = await _database.LoadData<AppUser, dynamic>(
+            UserGetById.ToDboName(), 
+            new GetUserByIdRequest { Id = userId });
         return foundUser.FirstOrDefault();
     }
 
-    public async Task<AppUser?> GetByUsernameAsync(GetUserByUsernameRequest userRequest)
+    public async Task<AppUser?> GetByUsernameAsync(string username)
     {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByUsername.ToDboName(), userRequest);
+        var foundUser = await _database.LoadData<AppUser, dynamic>(
+            UserGetByUsername.ToDboName(), 
+            new GetUserByUsernameRequest() { Username = username});
         return foundUser.FirstOrDefault();
     }
 
-    public async Task<AppUser?> GetByEmailAsync(GetUserByEmailRequest userRequest)
+    public async Task<AppUser?> GetByEmailAsync(string emailAddress)
     {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByEmail.ToDboName(), userRequest);
+        var foundUser = await _database.LoadData<AppUser, dynamic>(
+            UserGetByEmail.ToDboName(),
+            new GetUserByEmailRequest() { Email = emailAddress });
         return foundUser.FirstOrDefault();
     }
 
@@ -82,45 +88,48 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return foundMembership.FirstOrDefault() is not null;
     }
 
-    public async Task<IResult> AddUserToRolesAsync(UserRoleRequest roleRequest)
+    public async Task<List<IResult>> AddUserToRolesAsync(UserRoleRequest roleRequest)
     {
-        var foundUser = GetUserFromProvidedIds(roleRequest);
-        if (foundUser.Result is null)
-            return await Result.FailAsync("A user account couldn't be found with the provided data, please try again");
+        var resultList = new List<IResult>();
+        
+        var foundUser = await GetUserFromProvidedIds(roleRequest);
+        if (foundUser is null)
+        {
+            resultList.Add(await Result.FailAsync("A user account couldn't be found with the provided data, please try again"));
+            return resultList;   
+        }
 
-        var roleMessages = new List<string>();
-        var completeSuccess = true;
         foreach (var roleName in roleRequest.RoleNames)
         {
             try
             {
-                var foundRole = _roleService.GetByNameAsync(roleName);
-                if (foundRole.Result is null)
+                var foundRole = await _roleService.GetByNameAsync(roleName);
+                if (foundRole is null)
                 {
-                    roleMessages.Add($"Role '{roleName}' wasn't found");
+                    resultList.Add(await Result.FailAsync($"Role '{roleName}' wasn't found"));
                     continue;
                 }
 
                 var alreadyHasRole = await IsInRoleAsync(
-                    new RoleMembershipRequest() {RoleId = foundRole.Result.Id, UserId = foundUser.Result.Id});
+                    new RoleMembershipRequest() {RoleId = foundRole.Id, UserId = foundUser.Id});
                 if (alreadyHasRole)
-                    continue;
-                
+                {
+                    resultList.Add(await Result.SuccessAsync($"User already has the '{roleName}' Role"));
+                    continue;   
+                }
+
                 await _database.SaveData(JunctionUserRoleCreate.ToDboName(),
-                    new RoleMembershipRequest() {RoleId = foundRole.Result.Id, UserId = foundUser.Result.Id});
-                roleMessages.Add($"Successfully added role '{roleName}' to user '{foundUser.Result.Username}'");
+                    new RoleMembershipRequest() {RoleId = foundRole.Id, UserId = foundUser.Id});
+                resultList.Add(await Result.SuccessAsync($"Successfully added role '{roleName}' to user '{foundUser.Username}'"));
             }
             catch (Exception ex)
             {
-                roleMessages.Add($"Failure occurred attempting to add user '{foundUser.Result.Username}' to role '{roleName}: {ex.Message}");
-                completeSuccess = false;
+                resultList.Add(await Result.
+                    FailAsync($"Failure occurred attempting to add user '{foundUser.Username}' to role '{roleName}: {ex.Message}"));
             }
         }
 
-        if (!completeSuccess)
-            return await Result.FailAsync(roleMessages);
-
-        return await Result.SuccessAsync("Successfully added the provided user to all provided roles");
+        return resultList;
     }
 
     public async Task UpdateAsync(UpdateUserRequest userRequest)
@@ -222,12 +231,12 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     public async Task<AppUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
         var id = Guid.Parse(userId);
-        return (await GetByIdAsync(new GetUserByIdRequest() {Id = id}))!;
+        return (await GetByIdAsync(id))!;
     }
 
     public async Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
-        return (await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = normalizedUserName}))!;
+        return (await GetByUsernameAsync(normalizedUserName))!;
     }
 
     public async Task SetEmailAsync(AppUser user, string email, CancellationToken cancellationToken)
@@ -322,7 +331,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
-        var user = await GetByUsernameAsync(new GetUserByUsernameRequest(){Username = loginRequest.Username});
+        var user = await GetByUsernameAsync(loginRequest.Username);
         if (user is null)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
         if (!user.IsActive)
@@ -331,7 +340,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<UserLoginResponse>.FailAsync("Your email has not been confirmed, please confirm your email.");
         
         var passwordValid = IdentityUtilities.IsPasswordCorrect(
-            loginRequest.Password, System.Text.Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
+            loginRequest.Password, Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
         if (!passwordValid)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
 
@@ -349,11 +358,11 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     private async Task<AppUser?> GetUserFromProvidedIds(UserRoleRequest roleRequest)
     {
         if (roleRequest.UserId is not null)
-            return await GetByIdAsync(new GetUserByIdRequest() {Id = (Guid)roleRequest.UserId});
+            return await GetByIdAsync((Guid) roleRequest.UserId);
         if (roleRequest.Username is not null)
-            return await GetByUsernameAsync(new GetUserByUsernameRequest() {Username = roleRequest.Username});
+            return await GetByUsernameAsync(roleRequest.Username);
         if (roleRequest.Email is not null)
-            return await GetByEmailAsync(new GetUserByEmailRequest() {Email = roleRequest.Email});
+            return await GetByEmailAsync(roleRequest.Email);
 
         return null;
     }
@@ -368,7 +377,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         if (currentUserId == Guid.Empty)
             return await Result<List<IdentityResult>>.FailAsync("Internal Identity failure occurred, please contact the administrator");
         
-        var currentUser = await GetByIdAsync(new GetUserByIdRequest() {Id = currentUserId});
+        var currentUser = await GetByIdAsync(currentUserId);
         var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
         var userIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = currentUser!.Id, RoleId = adminRole!.Id});
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
@@ -376,98 +385,80 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         if (!userIsAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync("You aren't an admin so you cannot add admin to accounts");
 
-        var resultList = new List<IdentityResult>();
-        var result = await AddUserToRolesAsync(roleRequest);
-        foreach (var roleMessage in result.Messages)
+        var roleResults = await AddUserToRolesAsync(roleRequest);
+        var identityResultList = new List<IdentityResult>();
+        var failureOccurred = false;
+        foreach (var roleResult in roleResults)
         {
-            // TODO: Identity result validation against _userManager to understand options for forward movement
-            var identityAddition = new IdentityResult() { };
-            identityAddition.Errors = new List<IdentityError>();
-            resultList.Add(roleMessage);
+            if (roleResult.Succeeded)
+            {
+                identityResultList.Add(IdentityResult.Success);
+                continue;
+            }
+            
+            identityResultList.Add(IdentityResult.Failed(roleResult.Messages.Select(x => 
+                new IdentityError() { Code = "RoleError", Description = x }).ToArray()));
+            failureOccurred = true;
         }
+
+        if (failureOccurred)
+            return await Result<List<IdentityResult>>.FailAsync(identityResultList);
         
-        return await Result<List<IdentityResult>>.SuccessAsync(resultList);
+        return await Result<List<IdentityResult>>.SuccessAsync(identityResultList);
     }
 
     public async Task<IResult<List<IdentityResult>>> RemoveFromRolesAsync(UserRoleRequest roleRequest)
     {
-        AppUser foundUser;
-        if (roleRequest.UserId is not null)
-            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
-        else if (roleRequest.Username is not null)
-            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
-        else if (roleRequest.Email is not null)
-            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
-        else
-            return await Result<List<IdentityResult>>.FailAsync("UserId, Username & Email are all empty, at least one is required");
+        var requestedUser = await GetUserFromProvidedIds(roleRequest);
+        if (requestedUser is null)
+            return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
-        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
-        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
-        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
-        var requestIsForSelf = foundUser.Id == currentUser.Id;
-        var requestIsForDefaultAdmin = foundUser.Username == UserConstants.DefaultUsername;
+        var currentUser = await GetByIdAsync(Guid.Parse(_currentUserService.UserId));
+        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
         
-        if (!userIsAdmin && requestContainsAdmin)
+        var currentUserIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = currentUser!.Id, RoleId = adminRole!.Id });
+        var requestContainsAdmin = roleRequest.RoleNames.Contains(adminRole.Name);
+        var requestIsForSelf = requestedUser.Id == currentUser.Id;
+        var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultUsername;
+        
+        if (!currentUserIsAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync("You aren't an admin so you cannot add or remove admin from accounts");
 
         // Requiring another admin to remove admin access has the added benefit of there always being at least one non default admin
-        if (requestIsForSelf && userIsAdmin && !requestContainsAdmin)
-            return await Result<List<IdentityResult>>.FailAsync("You can't remove admin access from yourself, another admin will have to revoke your access");
+        if (requestIsForSelf && currentUserIsAdmin && requestContainsAdmin)
+            return await Result<List<IdentityResult>>.
+                FailAsync("You can't remove admin access from yourself, another admin will have to revoke your access");
 
-        if (requestIsForDefaultAdmin && !requestContainsAdmin)
+        if (requestIsForDefaultAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync("Default admin cannot have admin access revoked");
 
         var resultList = new List<IdentityResult>();
         foreach (var role in roleRequest.RoleNames)
         {
-            var result = await _userManager.RemoveFromRoleAsync(foundUser, role);
-            resultList.Add(result);
+            var foundRole = await _roleService.GetByNameAsync(role);
+            if (foundRole is null)
+            {
+                resultList.Add(IdentityResult.Failed(new IdentityError() 
+                    {Code = "RoleError", Description = $"Role couldn't be found using the provided name: {role}"}));
+                continue;
+            }
+            
+            var changesMade = await _database.SaveData(JunctionUserRoleDelete.ToDboName(),
+                new RoleMembershipRequest() { RoleId = foundRole.Id, UserId = requestedUser.Id });
+            if (changesMade < 1)
+                resultList.Add(IdentityResult.Failed(new IdentityError() 
+                    { Code = "RoleError", Description = $"Role already wasn't on the provided user: {role}" }));
+            else
+                resultList.Add(IdentityResult.Success);
         }
         
         return await Result<List<IdentityResult>>.SuccessAsync(resultList);
     }
 
-    public async Task<IResult<IdentityResult>> EnforceRolesAsync(UserRoleRequest roleRequest)
+    public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest, CancellationToken cancellationToken)
     {
-        AppUser foundUser;
-        if (roleRequest.UserId is not null)
-            foundUser = await _userManager.FindByIdAsync(roleRequest.UserId.ToString());
-        else if (roleRequest.Username is not null)
-            foundUser = await _userManager.FindByNameAsync(roleRequest.Username);
-        else if (roleRequest.Email is not null)
-            foundUser = await _userManager.FindByEmailAsync(roleRequest.Email);
-        else
-            return await Result<IdentityResult>.FailAsync("UserId, Username & Email are all empty, at least one is required");
-
-        var currentRoles = await _userManager.GetRolesAsync(foundUser);
-        var currentUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
-        var userIsAdmin = await _userManager.IsInRoleAsync(currentUser, RoleConstants.AdminRole);
-        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
-        var requestIsForSelf = foundUser.Id == currentUser.Id;
-        var requestIsForDefaultAdmin = foundUser.Username == UserConstants.DefaultUsername;
-        
-        if (!userIsAdmin && requestContainsAdmin)
-            return await Result<IdentityResult>.FailAsync("You aren't an admin so you cannot add or remove admin from accounts");
-
-        // Requiring another admin to remove admin access has the added benefit of there always being at least one non default admin
-        if (requestIsForSelf && userIsAdmin && !requestContainsAdmin)
-            return await Result<IdentityResult>.FailAsync("You can't remove admin access from yourself, another admin will have to revoke your access");
-
-        if (requestIsForDefaultAdmin && !requestContainsAdmin)
-            return await Result<IdentityResult>.FailAsync("Default admin cannot have admin access revoked");
-        
-        var removeResult = await _userManager.RemoveFromRolesAsync(foundUser, currentRoles);
-        if (!removeResult.Succeeded)
-            return await Result<IdentityResult>.FailAsync(removeResult.Errors.ToString()!);
-        
-        var enforceResult = await _userManager.AddToRolesAsync(foundUser, roleRequest.RoleNames);
-        return await Result<IdentityResult>.SuccessAsync(enforceResult);
-    }
-
-    public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
-    {
-        var userWithSameUserName = await _userManager.FindByNameAsync(registerRequest.Username);
-        if (userWithSameUserName != null)
+        var matchingUserName = await GetByUsernameAsync(registerRequest.Username);
+        if (matchingUserName != null)
         {
             return await Result.FailAsync(string.Format($"Username {registerRequest.Username} is already in use, please try again"));
         }
@@ -478,17 +469,20 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             UserName = registerRequest.Username,
         };
 
-        var userWithSameEmail = await _userManager.FindByEmailAsync(registerRequest.Email);
-        if (userWithSameEmail is not null)
+        var matchingEmail = await GetByEmailAsync(registerRequest.Email);
+        if (matchingEmail is not null)
             return await Result.FailAsync($"The email address {registerRequest.Email} is already in use, please try again");
         
-        var createUserResult = await _userManager.CreateAsync(newUser, registerRequest.Password);
+        var createUserResult = await CreateAsync(newUser, registerRequest.Password, cancellationToken);
         if (!createUserResult.Succeeded)
             return await Result.FailAsync(createUserResult.Errors.Select(r => r.Description).ToList());
-        
-        var addToRoleResult = await _userManager.AddToRoleAsync(newUser, RoleConstants.DefaultRole);
-        if (!addToRoleResult.Succeeded)
-            return await Result.FailAsync(addToRoleResult.Errors.Select(r => r.Description).ToList());
+
+        var caveatMessage = "";
+        var addToRoleResult = await AddUserToRolesAsync(
+            new UserRoleRequest() { Username = newUser.Username, RoleNames = new List<string>() { RoleConstants.DefaultRole } });
+        if (addToRoleResult.Select(x => !x.Succeeded).Any())
+            caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
+                            $"please contact the administrator for assistance";
         
         var confirmationUrl = await GetEmailConfirmationUri(newUser);
         var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
@@ -497,14 +491,15 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             ).SendAsync();
         if (!sendResponse.Successful)
             return await Result.FailAsync(
-                "Account was registered successfully but a failure occurred attempting to send an email to " +
-                "the address provided, please contact the administrator for assistance");
+                $"Account was registered successfully but a failure occurred attempting to send an email to " +
+                $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
-        return await Result<Guid>.SuccessAsync(newUser.Id, $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!");
+        return await Result<Guid>.SuccessAsync(newUser.Id, $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
     }
 
     public async Task<string> GetEmailConfirmationUri(AppUser user)
     {
+        // TODO: Create email confirmation token
         var confirmationCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var decodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationCode));
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
@@ -514,20 +509,25 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<IResult> ToggleUserStatusAsync(ChangeUserActiveStateRequest activeRequest)
     {
-        var user = await GetByIdAsync(new GetUserByIdRequest(){Id = activeRequest.UserId});
-        if (user is null)
-            return await Result.FailAsync("User Id provided is invalid");
-        
-        var isAdmin = await _userManager.IsInRoleAsync(user, RoleConstants.AdminRole);
-        if (isAdmin)
+        var requestedUser = await GetByIdAsync(activeRequest.UserId);
+        if (requestedUser is null)
+            return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
+
+        // TODO: Add permission for toggling user status and validation current user has permissions
+        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
+        var requestedUserIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = requestedUser!.Id, RoleId = adminRole!.Id });
+        if (requestedUserIsAdmin)
             return await Result.FailAsync("Administrators cannot be toggled, please remove admin privileges first");
-        
-        user.IsActive = activeRequest.IsActive;
-        var identityResult = await _userManager.UpdateAsync(user);
-        if (!identityResult.Succeeded)
-            return await Result.FailAsync(identityResult.Errors.Select(r => r.Description).ToList());
-        
-        return await Result.SuccessAsync($"{user.Username} active status set to: {user.IsActive}");
+
+        try
+        {
+            await UpdateAsync(new UpdateUserRequest() { IsActive = activeRequest.IsActive});
+            return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsActive}");
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync($"Failed to update the active status of the user account '{requestedUser.Username}'");
+        }
     }
 
     public async Task<IResult<List<RoleResponse>>> GetRolesAsync(Guid userId)
