@@ -76,8 +76,4 @@
       <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\Roles.sql" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="DatabaseScripts\MsSql\StoredProcedures\Claim" />
-    </ItemGroup>
-
 </Project>

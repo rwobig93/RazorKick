@@ -2,7 +2,7 @@
 @UserId UNIQUEIDENTIFIER
 AS
 begin
-    select RoleId
+    select FK_Role
     from dbo.[User_Role_Junctions]
     where UserId = @UserId;
 end

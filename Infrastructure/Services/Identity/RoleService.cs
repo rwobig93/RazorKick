@@ -12,7 +12,7 @@ public class RoleService : IRoleStore<AppRole>
 {
     private readonly RoleManager<AppRole> _roleManager;
     private readonly UserManager<AppUser> _userManager;
-    private readonly IClaimService _caimService;
+    private readonly IClaimService _claimService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IMapper _mapper;
 
@@ -26,7 +26,7 @@ public class RoleService : IRoleStore<AppRole>
         _roleManager = roleManager;
         _mapper = mapper;
         _userManager = userManager;
-        _caimService = claimService;
+        _claimService = claimService;
         _currentUserService = currentUserService;
     }
 

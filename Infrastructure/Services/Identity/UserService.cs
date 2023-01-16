@@ -4,8 +4,9 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.Constants.Identity;
 using Application.Extensibility.Extensions;
+using Application.Extensibility.Identity;
 using Application.Extensibility.Settings;
-using Application.Extensibility.Utilities;
+using Application.Extensibility.Web;
 using Application.Interfaces.Database;
 using Application.Interfaces.Identity;
 using Application.Wrappers;
@@ -187,7 +188,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     {
         try
         {
-            IdentityUtilities.GetPasswordHash(password, out var hash, out var salt);
+            AccountValidation.GetPasswordHash(password, out var hash, out var salt);
             user.PasswordSalt = salt;
             user.PasswordHash = hash.ToString();
             user.CreatedOn = DateTime.Now;
@@ -334,15 +335,15 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         var user = await GetByUsernameAsync(loginRequest.Username);
         if (user is null)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
+        
+        var passwordValid = AccountValidation.IsPasswordCorrect(
+            loginRequest.Password, Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
+        if (!passwordValid)
+            return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
         if (!user.IsActive)
             return await Result<UserLoginResponse>.FailAsync("Your account is disabled, please contact the administrator.");
         if (!user.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync("Your email has not been confirmed, please confirm your email.");
-        
-        var passwordValid = IdentityUtilities.IsPasswordCorrect(
-            loginRequest.Password, Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
-        if (!passwordValid)
-            return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
 
         user.RefreshToken = GenerateRefreshToken();
         // TODO: Add server setting for token expiration
@@ -499,8 +500,8 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<string> GetEmailConfirmationUri(AppUser user)
     {
-        // TODO: Create email confirmation token
-        var confirmationCode = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
+        // TODO: Add confirmation code to AppUser in DB, AppUser will have list of Auxiliary Attributes
         var decodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationCode));
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", user.Id.ToString());
@@ -532,29 +533,26 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<IResult<List<RoleResponse>>> GetRolesAsync(Guid userId)
     {
-        var userRoles = new List<RoleResponse>();
-        var user = await _userManager.FindByIdAsync(userId.ToString());
-        var roles = _roleManager.Roles.ToList();
+        var foundUser = await GetByIdAsync(userId);
+        if (foundUser is null)
+            return await Result<List<RoleResponse>>.FailAsync("Was unable to find a user with the provided information");
 
-        foreach (var role in roles)
-        {
-            var userRole = _mapper.Map<RoleResponse>(role);
-            if (await _userManager.IsInRoleAsync(user, role.Name))
-                userRole.IsMember = true;
-            
-            userRoles.Add(userRole);
-        }
+        var userRoles = await _database
+            .LoadData<RoleResponse, dynamic>(JunctionUserRoleGetRolesOfUser.ToDboName(), new {UserId = userId});
+
+        var roleResponses = userRoles.ToList();
         
-        return await Result<List<RoleResponse>>.SuccessAsync(userRoles);
+        return await Result<List<RoleResponse>>.SuccessAsync(roleResponses);
     }
 
     public async Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode)
-    {
-        var foundUser = await _userManager.FindByIdAsync(userId.ToString());
+    {\
+        var foundUser = await GetByIdAsync(userId);
         if (foundUser is null)
-            return await Result<string>.FailAsync("User Id provided is invalid");
+            return await Result<string>.FailAsync("Was unable to find a user with the provided information");
         
         var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(confirmationCode));
+        // TODO: Integrate user manager email confirmation after finishing confirmation token generation
         var result = await _userManager.ConfirmEmailAsync(foundUser, decodedCode);
         if (!result.Succeeded)
             throw new ApiException($"An error occurred attempting to confirm email: {foundUser.Email}");
@@ -564,11 +562,11 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest)
     {
-        var foundUser = await _userManager.FindByEmailAsync(forgotRequest.Email);
+        var foundUser = await GetByEmailAsync(forgotRequest.Email!);
         if (foundUser is null)
             return await Result.FailAsync("An internal server error occurred, please contact the administrator");
 
-        if (!await _userManager.IsEmailConfirmedAsync(foundUser))
+        if (!foundUser.EmailConfirmed)
             return await Result.FailAsync("Email hasn't been confirmed for this account, please contact the administrator");
         
         // For more information on how to enable account confirmation and password reset please
@@ -592,7 +590,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
     public async Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest)
     {
-        var foundUser = await _userManager.FindByEmailAsync(resetRequest.Email);
+        var foundUser = await GetByEmailAsync(resetRequest.Email);
         if (foundUser is null)
             return await Result.FailAsync("An internal server error occurred, please contact the administrator");
 
