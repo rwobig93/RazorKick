@@ -495,7 +495,8 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
                 $"Account was registered successfully but a failure occurred attempting to send an email to " +
                 $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
-        return await Result<Guid>.SuccessAsync(newUser.Id, $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
+        return await Result<Guid>.SuccessAsync(newUser.Id, 
+            $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
     }
 
     public async Task<string> GetEmailConfirmationUri(AppUser user)
