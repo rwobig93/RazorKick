@@ -11,6 +11,7 @@ public static class MsSqlConstants
         public const string Users = "Users.sql";
         public const string Roles = "Roles.sql";
         public const string UserRoleJunctions = "UserRoleJunctions.sql";
+        public const string UserExtendedAttributes = "UserExtendedAttributes.sql";
     }
     
     public static class StoredProcedures
@@ -25,6 +26,13 @@ public static class MsSqlConstants
         public const string UserCreate = "spUser_Insert.sql";
         public const string UserSearch = "spUser_Search.sql";
         public const string UserUpdate = "spUser_Update.sql";
+
+        public const string UserExtendedAttributeDelete = "spUserExtendedAttribute_Delete.sql";
+        public const string UserExtendedAttributeGetAll = "spUserExtendedAttribute_GetAll.sql";
+        public const string UserExtendedAttributeGetByOwnerId = "spUserExtendedAttribute_GetByOwnerId.sql";
+        public const string UserExtendedAttributeGetByOwnerIdAndType = "spUserExtendedAttribute_GetByOwnerIdAndType.sql";
+        public const string UserExtendedAttributeInsert = "spUserExtendedAttribute_Insert.sql";
+        public const string UserExtendedAttributeUpdate = "spUserExtendedAttribute_Update.sql";
 
         // TODO: Implement Claims to Attach or Junction to Roles to allow permissions bound to Roles
         public const string RoleDelete = "spRole_Delete.sql";

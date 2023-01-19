@@ -63,6 +63,12 @@
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Insert.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Search.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Update.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Delete.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetAll.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetByOwnerId.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetByOwnerIdAndType.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Insert.sql" />
+      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Update.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Delete.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetByEmail.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetById.sql" />

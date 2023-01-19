@@ -1,4 +1,4 @@
-﻿namespace Domain.Enums.Identity;
+﻿namespace Shared.Enums.Identity;
 
 public enum AttributeType
 {

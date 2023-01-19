@@ -12,6 +12,7 @@ using Application.Interfaces.Identity;
 using Application.Wrappers;
 using AutoMapper;
 using Domain.Entities.Identity;
+using Domain.Enums.Identity;
 using Domain.Exceptions;
 using Domain.Models.Identity;
 using FluentEmail.Core;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Shared.ApiRoutes.Identity;
+using Shared.Enums.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 using static Application.Constants.Database.MsSqlConstants.StoredProcedures;
@@ -490,6 +492,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
                 new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
             ).SendAsync();
+        
         if (!sendResponse.Successful)
             return await Result.FailAsync(
                 $"Account was registered successfully but a failure occurred attempting to send an email to " +
@@ -503,10 +506,34 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     {
         var confirmationCode = UrlTokenGenerator.GenerateToken(32);
         // TODO: Add confirmation code to AppUser in DB, AppUser will have list of Auxiliary Attributes
-        var decodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationCode));
+        var extendedAttributes = new ExtendedAttribute
+        {
+            OwnerId = user.Id,
+            Name = "AccountEmailConfirmation",
+            Type = AttributeType.EmailConfirmation
+        };
+        var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
+            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
+                { Id = user.Id, Type = AttributeType.EmailConfirmation });
+        var previousConfirmation = previousConfirmations.FirstOrDefault();
+        
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", user.Id.ToString());
-        return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", decodedCode);
+        
+        if (previousConfirmation is not null)
+        {
+            if (previousConfirmation.Completed)
+                return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value);
+            
+            extendedAttributes.Id = previousConfirmation.Id;
+            extendedAttributes.Update(confirmationCode);
+            // TODO: Convert previous values on extended attributes to string since we can't do a raw list
+            await _database.SaveData(UserExtendedAttributeUpdate.ToDboName(), extendedAttributes);
+        }
+        else
+            await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttributes);
+        
+        return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode);
     }
 
     public async Task<IResult> ToggleUserStatusAsync(ChangeUserActiveStateRequest activeRequest)
