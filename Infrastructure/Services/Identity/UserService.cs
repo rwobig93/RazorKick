@@ -528,6 +528,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             extendedAttributes.Id = previousConfirmation.Id;
             extendedAttributes.Update(confirmationCode);
             // TODO: Convert previous values on extended attributes to string since we can't do a raw list
+            //   Do toDB() and fromDB() and convert to a DB entity
             await _database.SaveData(UserExtendedAttributeUpdate.ToDboName(), extendedAttributes);
         }
         else
