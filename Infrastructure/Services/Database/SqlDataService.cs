@@ -36,6 +36,28 @@ public class SqlDataService : ISqlDataService
         return await connection.QueryAsync<TDataClass>(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(
+        string storedProcedure,
+        Func<TDataClass, TDataClassJoin, TDataClass> joinMapping,
+        TParameters parameters,
+        string connectionId)
+    {
+        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+
+        return await connection.QueryAsync(storedProcedure, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
+    }
+
+    public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TParameters>(
+        string storedProcedure,
+        Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
+        TParameters parameters,
+        string connectionId)
+    {
+        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+
+        return await connection.QueryAsync(storedProcedure, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<int> LoadDataCount<TParameters>(
         string storedProcedure,
         TParameters parameters,

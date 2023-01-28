@@ -1,4 +1,5 @@
 ﻿using Domain.Contracts;
+using Domain.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Shared.Enums.Identity;
 
@@ -23,4 +24,5 @@ public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public List<AppRole> Roles { get; set; } = new();
+    public List<ExtendedAttribute> ExtendedAttributes { get; set; } = new();
 }

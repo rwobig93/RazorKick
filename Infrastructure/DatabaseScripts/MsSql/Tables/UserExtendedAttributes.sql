@@ -4,12 +4,11 @@ begin
         [Id] UNIQUEIDENTIFIER NOT NULL PRIMARY KEY IDENTITY,
         [OwnerId] UNIQUEIDENTIFIER NOT NULL,
         [Name] NVARCHAR(256) NOT NULL,
-        [Value] NVARCHAR(256) NOT NULL,
-        [Completed] BIT NOT NULL,
+        [Value] NVARCHAR(1024) NOT NULL,
         [Type] int NOT NULL,
         [Added] datetime2 NOT NULL,
         [Updated] datetime2 NOT NULL,
-        [PreviousValues] NVARCHAR(2048) NOT NULL
+        [PreviousValue] NVARCHAR(1024) NOT NULL
     )
     CREATE INDEX [IX_UserExtendedAttribute_OwnerId] ON [dbo].[UserExtendedAttributes] ([OwnerId])
     CREATE INDEX [IX_UserExtendedAttribute_Type] ON [dbo].[UserExtendedAttributes] ([Type])

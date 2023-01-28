@@ -68,6 +68,25 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return foundUser.FirstOrDefault();
     }
 
+    // TODO: Validate this works w/ left join on multiple tables and research stored procedures vs. raw queries
+    // TODO: If this does work move to doing this for the other entity gets for the desired return data set
+    public async Task<AppUser?> GetByIdFullAsync(Guid userId)
+    {
+        var foundUser = await _database.LoadDataJoin<AppUser, IEnumerable<ExtendedAttribute>, IEnumerable<AppRole>, dynamic>(
+            UserGetById.ToDboName(),
+            (user, attributes, roles) =>
+            {
+                foreach (var attribute in attributes)
+                    user.ExtendedAttributes.Add(attribute);
+                foreach (var role in roles)
+                    user.Roles.Add(role);
+
+                return user;
+            },
+            new GetUserByIdRequest { Id = userId });
+        return foundUser.FirstOrDefault();
+    }
+
     public async Task<AppUser?> GetByUsernameAsync(string username)
     {
         var foundUser = await _database.LoadData<AppUser, dynamic>(
