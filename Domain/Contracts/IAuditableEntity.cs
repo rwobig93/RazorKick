@@ -2,6 +2,7 @@
 
 public interface IAuditableEntity<TId> : IAuditableEntity, IEntity<TId>
 {
+    // TODO: Fully implement auditable entity to ensure full auditing trail on any inheriting entity
 }
 
 public interface IAuditableEntity : IEntity

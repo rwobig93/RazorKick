@@ -46,7 +46,7 @@ public interface IUserService
     Task<IResult<List<IdentityResult>>> RemoveFromRolesAsync(UserRoleRequest roleRequest);
     Task<IResult<IdentityResult>> EnforceRolesAsync(UserRoleRequest roleRequest);
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
-    Task<string> GetEmailConfirmationUri(AppUser user);
+    Task<string> GetEmailConfirmationUrl(AppUser user);
     Task<IResult> ToggleUserStatusAsync(ChangeUserActiveStateRequest activeRequest);
     Task<IResult<List<RoleResponse>>> GetRolesAsync(Guid userId);
     Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode);

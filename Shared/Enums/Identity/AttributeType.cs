@@ -2,5 +2,6 @@
 
 public enum AttributeType
 {
-    EmailConfirmation = 0
+    EmailConfirmation = 0,
+    ForgotPassword = 1,
 }

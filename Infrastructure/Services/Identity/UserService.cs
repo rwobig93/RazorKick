@@ -31,6 +31,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     IUserTwoFactorStore<AppUser>, IUserPasswordStore<AppUser>
 {
     private const string InvalidErrorMessage = "The username and password combination provided is invalid";
+    private const string GenericFailureMessage = "An internal server error occurred, please contact the administrator";
 
     private readonly ISqlDataService _database;
     private readonly IMapper _mapper;
@@ -74,17 +75,22 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     {
         var foundUser = await _database.LoadDataJoin<AppUser, IEnumerable<ExtendedAttribute>, IEnumerable<AppRole>, dynamic>(
             UserGetById.ToDboName(),
-            (user, attributes, roles) =>
-            {
-                foreach (var attribute in attributes)
-                    user.ExtendedAttributes.Add(attribute);
-                foreach (var role in roles)
-                    user.Roles.Add(role);
-
-                return user;
-            },
+            UserFullMapping(),
             new GetUserByIdRequest { Id = userId });
         return foundUser.FirstOrDefault();
+    }
+
+    private static Func<AppUser, IEnumerable<ExtendedAttribute>, IEnumerable<AppRole>, AppUser> UserFullMapping()
+    {
+        return (user, attributes, roles) =>
+        {
+            foreach (var attribute in attributes)
+                user.ExtendedAttributes.Add(attribute);
+            foreach (var role in roles)
+                user.Roles.Add(role);
+
+            return user;
+        };
     }
 
     public async Task<AppUser?> GetByUsernameAsync(string username)
@@ -178,6 +184,15 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     {
         user.Username = userName;
         await _database.SaveData(UserUpdate.ToDboName(), user);
+    }
+
+    public async Task SetUserPassword(Guid userId, string newPassword)
+    {
+        var request = new UserUpdatePasswordRequest() { Id = userId };
+        AccountValidation.GetPasswordHash(newPassword, out var hash, out var salt);
+        request.PasswordSalt = salt;
+        request.PasswordHash = hash.ToString()!;
+        await _database.SaveData(UserUpdate.ToDboName(), request);
     }
 
     public async Task<string> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
@@ -506,7 +521,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
         
-        var confirmationUrl = await GetEmailConfirmationUri(newUser);
+        var confirmationUrl = await GetEmailConfirmationUrl(newUser);
         var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
             .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
                 new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
@@ -521,16 +536,8 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
     }
 
-    public async Task<string> GetEmailConfirmationUri(AppUser user)
+    public async Task<string> GetEmailConfirmationUrl(AppUser user)
     {
-        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
-        // TODO: Add confirmation code to AppUser in DB, AppUser will have list of Auxiliary Attributes
-        var extendedAttributes = new ExtendedAttribute
-        {
-            OwnerId = user.Id,
-            Name = "AccountEmailConfirmation",
-            Type = AttributeType.EmailConfirmation
-        };
         var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
             UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
                 { Id = user.Id, Type = AttributeType.EmailConfirmation });
@@ -539,19 +546,21 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", user.Id.ToString());
         
+        // Previous pending account registration exists, return current value
         if (previousConfirmation is not null)
+            return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value);
+
+        // No currently pending account registration exists so we'll generate a new one, add it to the provided user
+        //   and return the generated confirmation uri
+        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
+        var extendedAttribute = new ExtendedAttribute
         {
-            if (previousConfirmation.Completed)
-                return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value);
-            
-            extendedAttributes.Id = previousConfirmation.Id;
-            extendedAttributes.Update(confirmationCode);
-            // TODO: Convert previous values on extended attributes to string since we can't do a raw list
-            //   Do toDB() and fromDB() and convert to a DB entity
-            await _database.SaveData(UserExtendedAttributeUpdate.ToDboName(), extendedAttributes);
-        }
-        else
-            await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttributes);
+            OwnerId = user.Id,
+            Name = "AccountEmailConfirmation",
+            Type = AttributeType.EmailConfirmation,
+            Value = confirmationCode
+        };
+        await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttribute);
         
         return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode);
     }
@@ -594,57 +603,84 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     }
 
     public async Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode)
-    {\
+    {
         var foundUser = await GetByIdAsync(userId);
         if (foundUser is null)
             return await Result<string>.FailAsync("Was unable to find a user with the provided information");
         
         var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(confirmationCode));
-        // TODO: Integrate user manager email confirmation after finishing confirmation token generation
-        var result = await _userManager.ConfirmEmailAsync(foundUser, decodedCode);
-        if (!result.Succeeded)
-            throw new ApiException($"An error occurred attempting to confirm email: {foundUser.Email}");
         
-        return await Result<string>.SuccessAsync(foundUser.Id.ToString(), $"Account Confirmed for {foundUser.Email}.");
+        var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
+            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
+                { Id = foundUser.Id, Type = AttributeType.EmailConfirmation });
+        var previousConfirmation = previousConfirmations.FirstOrDefault();
+
+        // TODO: Add admin logging w/ attempt and failure details so an admin can troubleshoot
+        if (previousConfirmation is null)
+            return await Result<string>.FailAsync(
+                $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
+        if (previousConfirmation!.Value == confirmationCode)
+            return await Result<string>.FailAsync(
+                $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
+        
+        return await Result<string>.SuccessAsync(foundUser.Id.ToString(), $"Account Confirmed for {foundUser.Username}.");
     }
 
     public async Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest)
     {
+        // For more information on how to enable account confirmation and password reset please
+        // visit https://go.microsoft.com/fwlink/?LinkID=532713
         var foundUser = await GetByEmailAsync(forgotRequest.Email!);
         if (foundUser is null)
-            return await Result.FailAsync("An internal server error occurred, please contact the administrator");
+            return await Result.FailAsync(GenericFailureMessage);
 
         if (!foundUser.EmailConfirmed)
             return await Result.FailAsync("Email hasn't been confirmed for this account, please contact the administrator");
         
-        // For more information on how to enable account confirmation and password reset please
-        // visit https://go.microsoft.com/fwlink/?LinkID=532713
-        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(foundUser);
-        var decodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
-        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ResetPassword));
-        var resetUrl = QueryHelpers.AddQueryString(endpointUri.ToString(), "Token", decodedToken);
-        // TODO: Figure out why BackgroundJob.Enqueue() isn't working here
-        var sendResponse = await _mailService.Subject("Password Reset").To(foundUser.Email)
-            .UsingTemplateFromFile(UserConstants.PathEmailTemplatePasswordReset,
-                new EmailAction() {ActionUrl = resetUrl, Username = foundUser.Username}
-            ).SendAsync();
-        if (!sendResponse.Successful)
-            return await Result.FailAsync(
-                "A failure occurred attempting to send an email to the account email address, " +
-                "please contact the administrator for assistance");
+        var previousResets = await _database.LoadData<ExtendedAttribute, dynamic>(
+            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
+                { Id = foundUser.Id, Type = AttributeType.ForgotPassword });
+        var previousReset = previousResets.FirstOrDefault();
         
-        return await Result.SuccessAsync("Password reset has been successfully sent to the account email");
+        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
+        var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", foundUser.Id.ToString());
+        
+        // Previous pending forgot password exists, return current value
+        if (previousReset is not null)
+            return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousReset.Value));
+
+        // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
+        //   and return the generated reset uri
+        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
+        var extendedAttribute = new ExtendedAttribute
+        {
+            OwnerId = foundUser.Id,
+            Name = "ForgotPasswordReset",
+            Type = AttributeType.ForgotPassword,
+            Value = confirmationCode
+        };
+        await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttribute);
+        
+        return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", extendedAttribute.Value));
     }
 
     public async Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest)
     {
         var foundUser = await GetByEmailAsync(resetRequest.Email);
         if (foundUser is null)
-            return await Result.FailAsync("An internal server error occurred, please contact the administrator");
-
-        var resetResult = await _userManager.ResetPasswordAsync(foundUser, resetRequest.Token, resetRequest.Password);
-        if (!resetResult.Succeeded)
-            return await Result.FailAsync("An internal server error occurred, please contact the administrator");
+            return await Result.FailAsync(GenericFailureMessage);
+        
+        var previousResets = await _database.LoadData<ExtendedAttribute, dynamic>(
+            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
+                { Id = foundUser.Id, Type = AttributeType.ForgotPassword });
+        var previousReset = previousResets.FirstOrDefault();
+        
+        if (previousReset is null)
+            return await Result.FailAsync(GenericFailureMessage);
+        if (resetRequest.Password != resetRequest.ConfirmPassword)
+            return await Result.FailAsync("Password and Confirm Password provided don't match, please try again");
+        if (resetRequest.RequestCode == previousReset.Value)
+            await SetUserPassword(foundUser.Id, resetRequest.Password);
 
         return await Result.SuccessAsync("Password reset was successful");
     }
@@ -657,19 +693,18 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
     {
         if (refreshRequest is null)
-        {
             return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
-        }
+        
         var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
         var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
-        var user = await _userManager.FindByEmailAsync(userEmail);
+        var user = await GetByEmailAsync(userEmail);
         if (user == null)
             return await Result<UserLoginResponse>.FailAsync("User Not Found.");
         if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
             return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
         user.RefreshToken = GenerateRefreshToken();
-        await _userManager.UpdateAsync(user);
+        await UpdateAsync(user, new CancellationToken());
 
         // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
         var response = new UserLoginResponse { Token = token, RefreshToken = user.RefreshToken,
@@ -686,10 +721,10 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
     private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUser user)
     {
         var userClaims = await _userManager.GetClaimsAsync(user);
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = await GetRolesAsync(user.Id);
         var roleClaims = new List<Claim>();
         var permissionClaims = new List<Claim>();
-        foreach (var role in roles)
+        foreach (var role in roles.Data)
         {
             roleClaims.Add(new Claim(ClaimTypes.Role, role));
             var thisRole = await _roleManager.FindByNameAsync(role);

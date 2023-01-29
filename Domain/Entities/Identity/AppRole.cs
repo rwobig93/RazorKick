@@ -11,7 +11,7 @@ public class AppRole : IdentityRole<Guid>, IAuditableEntity<Guid>
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public ICollection<AppRoleClaim> Claims { get; set; } = new List<AppRoleClaim>();
+    public ICollection<AppPermission> Claims { get; set; } = new List<AppPermission>();
 
     public override string ToString()
     {

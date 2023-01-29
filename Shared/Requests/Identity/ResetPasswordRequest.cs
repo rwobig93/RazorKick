@@ -16,5 +16,5 @@ public class ResetPasswordRequest
     public string ConfirmPassword { get; set; } = null!;
 
     [Required]
-    public string Token { get; set; } = null!;
+    public string RequestCode { get; set; } = null!;
 }

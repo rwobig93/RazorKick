@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities.Identity;
 
-public class AppRoleClaim : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
+public class AppPermission : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
 {
     public Guid Id { get; set; }
     
@@ -18,8 +18,6 @@ public class AppRoleClaim : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
     public Guid? LastModifiedBy { get; set; }
     
     public DateTime? LastModifiedOn { get; set; }
-    
-    public virtual AppRole Role { get; set; } = null!;
 
     public Guid RoleId { get; set; }
 
