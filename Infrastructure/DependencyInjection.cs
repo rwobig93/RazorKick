@@ -1,17 +1,20 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Text;
-using Application.Extensibility.Extensions;
-using Application.Extensibility.Settings;
-using Application.Interfaces.Database;
-using Application.Interfaces.Example;
-using Application.Interfaces.Identity;
-using Application.Mappings;
-using Application.Wrappers;
+using Application.Database;
+using Application.Helpers.Runtime;
+using Application.Models.Web;
+using Application.Repositories.Example;
+using Application.Services.Database;
+using Application.Services.Identity;
+using Application.Services.Weather;
+using Application.Settings.AppSettings;
+using Application.Settings.Identity;
 using Asp.Versioning;
 using Domain.Entities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
+using Infrastructure.Repositories.Example;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
@@ -40,6 +43,7 @@ public static class DependencyInjection
         builder.Services.AddCoreServices(builder.Configuration);
         builder.Services.AddAuthServices(builder.Configuration);
 
+        builder.Services.AddRepositories();
         builder.Services.AddApplicationServices();
 
         builder.Services.AddApiServices();
@@ -56,7 +60,6 @@ public static class DependencyInjection
 
     private static void AddCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddAutoMapper(typeof(BaseMapProfile));
         services.AddHangfire(x =>
         {
             x.UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection"));
@@ -72,6 +75,8 @@ public static class DependencyInjection
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var appSettings = configuration.GetApplicationSettings(services);
+        
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
@@ -88,17 +93,22 @@ public static class DependencyInjection
             .AddUserStore<IUserService>()
             .AddRoleStore<IRoleService>()
             .AddDefaultTokenProviders();
-        services.AddJwtAuthentication(configuration.GetApplicationSettings(services));
+        
+        services.AddJwtAuthentication(appSettings);
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
-            // TODO: Add server configurable validation interval
-            options.ValidationInterval = TimeSpan.FromSeconds(2);
+            options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
         });
+    }
+
+    private static void AddRepositories(this IServiceCollection services)
+    {
+        services.AddSingleton<IExampleObjectRepository, ExampleObjectRepository>();
     }
 
     private static void AddApplicationServices(this IServiceCollection services)
     {
-        services.AddSingleton<IWeatherService, WeatherService>();
+        services.AddSingleton<IWeatherService, WeatherForecastService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)
@@ -121,8 +131,8 @@ public static class DependencyInjection
 
     private static void AddDatabaseServices(this IServiceCollection services)
     {
-        services.AddSingleton<ISqlDataService, SqlDataService>();
-        services.AddSingleton<IExampleUserService, ExampleUserService>();
+        // TODO: Add more sql support, currently we only support MsSql
+        services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
     }
     
     private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration config)
@@ -170,15 +180,13 @@ public static class DependencyInjection
                     OnChallenge = context =>
                     {
                         context.HandleResponse();
-                        if (!context.Response.HasStarted)
-                        {
-                            context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
-                            context.Response.ContentType = "application/json";
-                            var result = JsonConvert.SerializeObject(Result.Fail("You are not Authorized."));
-                            return context.Response.WriteAsync(result);
-                        }
+                        if (context.Response.HasStarted) return Task.CompletedTask;
+                        
+                        context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        var result = JsonConvert.SerializeObject(Result.Fail("You are not Authorized."));
+                        return context.Response.WriteAsync(result);
 
-                        return Task.CompletedTask;
                     },
                     OnForbidden = context =>
                     {

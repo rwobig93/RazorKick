@@ -1,10 +1,7 @@
-﻿using Application.Interfaces.Identity;
-using Application.Wrappers;
+﻿using Application.Services.Identity;
 using AutoMapper;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
-using Shared.Requests.Identity;
-using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 

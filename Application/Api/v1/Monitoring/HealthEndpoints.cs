@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Application.Helpers.Web;
+using Application.Models.Web;
+using Microsoft.Extensions.Configuration;
+using Shared.Responses.Monitoring;
 
 namespace Application.Api.v1.Monitoring;
 
@@ -13,18 +16,22 @@ public static class HealthEndpoints
     {
         try
         {
-            var returnObject = new
+            var returnObject = new HealthCheckResponse()
             {
-                Testconfigvariable = configuration.GetSection("TestConfigVariable"),
+                SettingsValue = configuration.GetSection("TestConfigVariable").Value,
                 Health = "Healthy",
                 ApiVersion = "v1"
             };
-            await Task.CompletedTask;
-            return Results.Ok(returnObject);
+            return await Result<HealthCheckResponse>.SuccessAsync(returnObject);
         }
         catch (Exception ex)
         {
-            return Results.Problem(ex.Message);
+            var returnObject = new HealthCheckResponse()
+            {
+                Health = "Unhealthy",
+                ApiVersion = "v1"
+            };
+            return await Result<HealthCheckResponse>.FailAsync(returnObject);
         }
     }
 }

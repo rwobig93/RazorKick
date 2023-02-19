@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Example;
+﻿using Application.Helpers.Web;
+using Application.Services.Weather;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Example;
 

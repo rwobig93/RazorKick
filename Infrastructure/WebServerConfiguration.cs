@@ -1,12 +1,15 @@
 ﻿using Application.Api.v1.Example;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
-using Application.Constants;
-using Application.Interfaces.Database;
+using Application.Constants.Web;
+using Application.Database;
+using Application.Helpers.Runtime;
+using Application.Services.Database;
 using Hangfire;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -39,6 +42,14 @@ public static class WebServerConfiguration
         }
         app.UseExceptionHandler("/Error");
         app.UseHsts();
+        
+        // TODO: Validate url adding via appsettings.json
+        // using var scope = app.Services.CreateAsyncScope();
+        // var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        // var servicesCollection = scope.ServiceProvider.GetRequiredService<IServiceCollection>();
+        // var appConfig = configuration.GetApplicationSettings(servicesCollection);
+        //
+        // app.Urls.Add(appConfig.BaseUrl!);
     }
 
     private static void ConfigureBlazorServerCommons(this WebApplication app)
@@ -61,7 +72,7 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var sqlAccess = scope.ServiceProvider.GetRequiredService<ISqlDataService>();
-        sqlAccess.EnsureDatabaseStructure();
+        sqlAccess.EnforceDatabaseStructure();
     }
 
     private static void ConfigureCoreServices(this IApplicationBuilder app)
@@ -104,7 +115,7 @@ public static class WebServerConfiguration
             .Build();
         
         // Map all active API endpoints
-        app.MapEndpointsExampleUsers();
+        app.MapEndpointsExampleObjects();
         app.MapEndpointsHealth();
         app.MapEndpointsWeather();
         app.MapEndpointsUsers();

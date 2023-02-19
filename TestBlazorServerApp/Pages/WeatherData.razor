@@ -1,0 +1,42 @@
+﻿@page "/weatherdata"
+@using Application.Services.Weather
+@using global::Shared.Responses.Example
+
+@inject IWeatherService WeatherForecast
+
+<PageTitle>Weather Forecast</PageTitle>
+<MudSpacer/>
+
+<MudTable Items="@_forecasts" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" SortLabel="Sort By"
+          Virtualize="true" Loading="@(_forecasts == null)" Filter="@SearchFunction" @bind-selected="_selectedItem"
+          FixedFooter="true" FixedHeader="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Weather Forcast</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" 
+                                  SortBy="new Func<WeatherDataResponse,object>(x=>x.Date)">Date</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.TemperatureC)">Temp. (C)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.TemperatureF)">Temp. (F)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.Summary!)">Summary</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Temp. (C)">@context.TemperatureC</MudTd>
+        <MudTd DataLabel="Temp. (F)">@context.TemperatureF</MudTd>
+        <MudTd DataLabel="Summary">@context.Summary</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
+        <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+        <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+        <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+        <MudTablePager PageSizeOptions="new []{ 100, 200, 300, 500, 1000 }">100</MudTablePager>
+    </PagerContent>
+</MudTable>

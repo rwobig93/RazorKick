@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Application.Wrappers;
+using Application.Models.Web;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 

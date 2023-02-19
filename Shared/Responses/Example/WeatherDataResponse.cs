@@ -2,7 +2,7 @@ namespace Shared.Responses.Example;
 
 public class WeatherDataResponse
 {
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
 
     public int TemperatureC { get; set; }
 
