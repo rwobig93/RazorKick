@@ -12,11 +12,14 @@ public class ExampleObjectRepository : IExampleObjectRepository
 {
     private readonly ISqlDataService _database;
     private readonly IExampleExtendedAttributeRepository _extendedAttributeRepository;
+    private readonly IExamplePermissionRepository _permissionsRepository;
     
-    public ExampleObjectRepository(ISqlDataService database, IExampleExtendedAttributeRepository extendedAttributeRepository)
+    public ExampleObjectRepository(ISqlDataService database,
+        IExampleExtendedAttributeRepository extendedAttributeRepository, IExamplePermissionRepository permissionsRepository)
     {
         _database = database;
         _extendedAttributeRepository = extendedAttributeRepository;
+        _permissionsRepository = permissionsRepository;
     }
     
     public async Task<List<ExampleObjectDb>> GetAll()
@@ -64,12 +67,17 @@ public class ExampleObjectRepository : IExampleObjectRepository
         if (foundObject is null)
             return null;
 
-        var foundAttributeMappings = await _extendedAttributeRepository.GetAttributesForObject(foundObject.Id);
-
         var convertedFullObject = foundObject.ToFullObject();
+
+        var foundAttributeMappings = await _extendedAttributeRepository.GetAttributesForObject(foundObject.Id);
         
-        foreach (var attributeId in foundAttributeMappings)
-            convertedFullObject.ExtendedAttributes.Add(await _extendedAttributeRepository.Get(attributeId));
+        foreach (var attribute in foundAttributeMappings)
+            convertedFullObject.ExtendedAttributes.Add(attribute);
+
+        var foundPermissions = await _permissionsRepository.GetPermissionsForObject(foundObject.Id);
+        
+        foreach (var permission in foundPermissions)
+            convertedFullObject.Permissions.Add(permission);
         
         return convertedFullObject;
     }

@@ -40,7 +40,7 @@ public static class DependencyInjection
         
         builder.Services.AddBlazorServerCommon();
         builder.Services.AddCoreServices(builder.Configuration);
-        builder.Services.AddAuthServices(builder.Configuration);
+        // builder.Services.AddAuthServices(builder.Configuration);
 
         builder.Services.AddRepositories();
         builder.Services.AddApplicationServices();
@@ -103,6 +103,8 @@ public static class DependencyInjection
     private static void AddRepositories(this IServiceCollection services)
     {
         services.AddSingleton<IExampleObjectRepository, ExampleObjectRepository>();
+        services.AddSingleton<IExamplePermissionRepository, ExamplePermissionRepository>();
+        services.AddSingleton<IExampleExtendedAttributeRepository, ExampleExtendedAttributeRepository>();
     }
 
     private static void AddApplicationServices(this IServiceCollection services)

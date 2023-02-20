@@ -2,8 +2,8 @@
 
 namespace Domain.Models.Example;
 
-public class ExampleObjectAttributeJunctionFull
+public class ExampleObjectPermissionJunctionFull
 {
     public ExampleObjectDb ExampleObject { get; set; } = null!;
-    public ExampleExtendedAttributeDb ExampleAttribute { get; set; } = null!;
+    public ExamplePermissionDb ExamplePermission { get; set; } = null!;
 }

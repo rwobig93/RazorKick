@@ -2,7 +2,7 @@
 
 namespace Shared.Requests.Identity;
 
-public class DeleteUserRequest : ApiObjectFromQuery<DeleteExampleUserRequest>
+public class DeleteUserRequest : ApiObjectFromQuery<DeleteUserRequest>
 {
     public Guid Id { get; set; }
 }

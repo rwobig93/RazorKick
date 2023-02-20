@@ -15,8 +15,10 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
             begin
                 CREATE TABLE [dbo].[ExampleExtendedAttributes](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [AssignedTo] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(50) NOT NULL,
-                    [Value] NVARCHAR(50) NOT NULL
+                    [Value] NVARCHAR(50) NOT NULL,
+                    [Type] int NOT NULL
                 )
             end"
     };
@@ -46,9 +48,24 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select Id, Name, Value
+                select Id, AssignedTo, Name, Value, Type
                 from dbo.[ExampleExtendedAttributes]
                 where Id = @Id;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByAssignedTo = new()
+    {
+        Table = Table,
+        Action = "GetByAssignedTo",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spExampleExtendedAttributes_GetByAssignedTo]
+                @AssignedTo UNIQUEIDENTIFIER
+            AS
+            begin
+                select Id, AssignedTo, Name, Value, Type
+                from dbo.[ExampleExtendedAttributes]
+                where AssignedTo = @AssignedTo;
             end"
     };
     
@@ -60,8 +77,23 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[spExampleExtendedAttributes_GetAll]
             AS
             begin
-                select Id, Name, Value
+                select Id, AssignedTo, Name, Value, Type
                 from dbo.[ExampleExtendedAttributes];
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetAllOfType = new()
+    {
+        Table = Table,
+        Action = "GetAllOfType",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spExampleExtendedAttributes_GetAllOfType]
+                @Type int
+            AS
+            begin
+                select Id, AssignedTo, Name, Value, Type
+                from dbo.[ExampleExtendedAttributes]
+                where Type = @Type;
             end"
     };
     
@@ -71,12 +103,15 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
         Action = "Insert",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spExampleExtendedAttributes_Insert]
+                @AssignedTo UNIQUEIDENTIFIER,
                 @Name nvarchar(50),
-                @Value nvarchar(50)
+                @Value nvarchar(50),
+                @Type int
             AS
             begin
-                insert into dbo.[ExampleExtendedAttributes] (Name, Value)
-                values (@Name, @Value);
+                insert into dbo.[ExampleExtendedAttributes] (AssignedTo, Name, Value, Type)
+                values (@AssignedTo, @Name, @Value, @Type);
+                select @Id = @@IDENTITY;
             end"
     };
     
@@ -88,11 +123,12 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[spExampleExtendedAttributes_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Name nvarchar(50),
-                @Value nvarchar(50)
+                @Value nvarchar(50),
+                @Type int
             AS
             begin
                 update dbo.[ExampleExtendedAttributes]
-                set Name = @Name, Value = @Value
+                set Name = @Name, Value = @Value, Type = @Type
                 where Id = @Id;
             end"
     };

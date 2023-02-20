@@ -1,8 +1,11 @@
-﻿namespace Application.Models.Example;
+﻿using Domain.Enums.Example;
+
+namespace Application.Models.Example;
 
 public class ExampleExtendedAttributeUpdate
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? Value { get; set; }
+    public ExampleExtendedAttributeType Type { get; set; }
 }

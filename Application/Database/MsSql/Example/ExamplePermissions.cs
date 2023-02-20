@@ -47,7 +47,37 @@ public class ExamplePermissions : ISqlEnforcedEntityMsSql
             begin
                 select Id, Name, Value
                 from dbo.[ExamplePermissions]
-                where Id = @Id;
+                where Name = @Id;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByName = new()
+    {
+        Table = Table,
+        Action = "GetByName",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spExamplePermissions_GetByName]
+                @Name NVARCHAR(50)
+            AS
+            begin
+                select Id, Name, Value
+                from dbo.[ExamplePermissions]
+                where Name = @Name;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByValue = new()
+    {
+        Table = Table,
+        Action = "GetByValue",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spExamplePermissions_GetByValue]
+                @Value NVARCHAR(50)
+            AS
+            begin
+                select Id, Name, Value
+                from dbo.[ExamplePermissions]
+                where Value = @Value;
             end"
     };
     
@@ -75,7 +105,8 @@ public class ExamplePermissions : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[ExamplePermissions] (Name, Value)
-                values (@Name, @Value);
+                values (@Name, @Value)
+                select @Id = @@IDENTITY;
             end"
     };
     
