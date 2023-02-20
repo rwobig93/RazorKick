@@ -1,6 +1,6 @@
 ﻿using Domain.Enums.Identity;
 
-namespace Domain.Entities.Identity;
+namespace Domain.DatabaseEntities.Identity;
 
 public class Validator
 {

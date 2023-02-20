@@ -1,7 +1,7 @@
 ﻿using Shared.Requests.Example;
 using Shared.Responses.Example;
 
-namespace Application.Services.Weather;
+namespace Application.Services.Example;
 
 public interface IWeatherService
 {

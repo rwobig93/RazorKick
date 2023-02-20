@@ -2,14 +2,11 @@
 using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
-using Application.Database;
-using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Hangfire;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

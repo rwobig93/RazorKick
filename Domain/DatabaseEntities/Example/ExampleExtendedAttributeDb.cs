@@ -1,4 +1,4 @@
-﻿namespace Domain.Entities.Example;
+﻿namespace Domain.DatabaseEntities.Example;
 
 public class ExampleExtendedAttributeDb
 {

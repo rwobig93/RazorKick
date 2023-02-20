@@ -1,5 +1,5 @@
 ﻿using Application.Models.Web;
-using Domain.Entities.Identity;
+using Domain.DatabaseEntities.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 

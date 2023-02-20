@@ -1,15 +1,16 @@
-﻿using Shared.Requests.Example;
-using Shared.Responses.Example;
+﻿using Application.Models.Example;
+using Domain.DatabaseEntities.Example;
+using Domain.Models.Example;
 
 namespace Application.Repositories.Example;
 
 public interface IExampleObjectRepository
 {
-    Task<List<ExampleObjectResponse>> GetAll();
+    Task<List<ExampleObjectDb>> GetAll();
     Task CreateRandom();
-    Task<Guid?> Create(string firstName, string lastName);
-    Task<ExampleObjectResponse> Get(Guid id);
-    Task<ExampleObjectFullResponse> GetFull(Guid id);
-    Task Update(ExampleObjectUpdateRequest objectUpdate);
+    Task<Guid?> Create(ExampleObjectCreate createObject);
+    Task<ExampleObjectDb?> Get(Guid id);
+    Task<ExampleObjectFull?> GetFull(Guid id);
+    Task Update(ExampleObjectUpdate objectUpdate);
     Task Delete(Guid id);
 }

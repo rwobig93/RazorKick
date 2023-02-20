@@ -1,4 +1,4 @@
-namespace Domain.Entities.Identity;
+namespace Domain.DatabaseEntities.Identity;
 
 public class AppUserRoleJunction
 {

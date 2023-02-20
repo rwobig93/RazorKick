@@ -1,4 +1,4 @@
-using Application.Services.Weather;
+using Application.Services.Example;
 using Shared.Requests.Example;
 using Shared.Responses.Example;
 

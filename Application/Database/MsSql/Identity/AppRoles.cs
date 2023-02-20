@@ -2,18 +2,18 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class Roles : ISqlEnforcedEntityMsSql
+public class AppAppRoles : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(Roles).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppAppRoles).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 1,
-        TableName = "Roles",
+        TableName = "AppRoles",
         SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[Roles]'))
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppRoles]'))
             begin
-                CREATE TABLE [dbo].[Roles](
+                CREATE TABLE [dbo].[AppRoles](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Name] NVARCHAR(256) NOT NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
@@ -30,13 +30,13 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Delete",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_Delete]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
             --     archive instead in production
                 delete
-                from dbo.[Roles]
+                from dbo.[AppRoles]
                 where Id = @Id;
             end"
     };
@@ -46,11 +46,11 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetAll",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_GetAll]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetAll]
             AS
             begin
                 select *
-                from dbo.[Roles];
+                from dbo.[AppRoles];
             end"
     };
     
@@ -59,12 +59,12 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetById",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_GetById]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 select *
-                from dbo.[Roles]
+                from dbo.[AppRoles]
                 where Id = @Id;
             end"
     };
@@ -74,7 +74,7 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Insert",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_Insert]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Insert]
                 @Name NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
@@ -83,7 +83,7 @@ public class Roles : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[Roles] (Name, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                insert into dbo.[AppRoles] (Name, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 values (@Name, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
@@ -93,14 +93,14 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Search",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_Search]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
                 set nocount on;
                 
                 select *
-                from dbo.[Roles]
+                from dbo.[AppRoles]
                 where Name LIKE '%' + @SearchTerm + '%'
                     OR Description LIKE '%' + @SearchTerm + '%';
             end"
@@ -111,7 +111,7 @@ public class Roles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Update",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spRole_Update]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @Description NVARCHAR(4000),
@@ -121,7 +121,7 @@ public class Roles : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                update dbo.[Roles]
+                update dbo.[AppRoles]
                 set Name = @Name, Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn,
                     LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
                 where Id = @Id;

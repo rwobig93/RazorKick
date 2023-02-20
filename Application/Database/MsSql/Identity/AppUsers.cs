@@ -2,18 +2,18 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class Users : ISqlEnforcedEntityMsSql
+public class AppUsers : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(Users).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsers).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 1,
-        TableName = "Users",
+        TableName = "AppUsers",
         SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[Users]'))
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUsers]'))
             begin
-                CREATE TABLE [dbo].[Users](
+                CREATE TABLE [dbo].[AppUsers](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Username] NVARCHAR(256) NOT NULL,
                     [NormalizedUserName] NVARCHAR(256) NOT NULL,
@@ -39,8 +39,8 @@ public class Users : ISqlEnforcedEntityMsSql
                     [RefreshTokenExpiryTime] datetime2 NULL,
                     [AccountType] int NOT NULL
                 )
-                CREATE INDEX [IX_User_NormalizedUserName] ON [dbo].[Users] ([NormalizedUserName])
-                CREATE INDEX [IX_User_NormalizedEmail] ON [dbo].[Users] ([NormalizedEmail])
+                CREATE INDEX [IX_User_NormalizedUserName] ON [dbo].[AppUsers] ([NormalizedUserName])
+                CREATE INDEX [IX_User_NormalizedEmail] ON [dbo].[AppUsers] ([NormalizedEmail])
             end"
     };
     
@@ -49,13 +49,13 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Delete",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_Delete]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
             --     archive instead in production
                 delete
-                from dbo.[Users]
+                from dbo.[AppUsers]
                 where Id = @Id;
             end"
     };
@@ -65,11 +65,11 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetAll",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_GetAll]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetAll]
             AS
             begin
                 select *
-                from dbo.[Users];
+                from dbo.[AppUsers];
             end"
     };
 
@@ -78,12 +78,12 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetByEmail",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_GetByEmail]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByEmail]
                 @Email NVARCHAR(256)
             AS
             begin
                 select *
-                from dbo.[Users]
+                from dbo.[AppUsers]
                 where NormalizedEmail = @Email;
             end"
     };
@@ -93,12 +93,12 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetById",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_GetById]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 select *
-                from dbo.[Users]
+                from dbo.[AppUsers]
                 where Id = @Id;
             end"
     };
@@ -108,12 +108,12 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetByUsername",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_GetByUsername]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByUsername]
                 @Username NVARCHAR(256)
             AS
             begin
                 select *
-                from dbo.[Users]
+                from dbo.[AppUsers]
                 where Username = @Username;
             end"
     };
@@ -123,7 +123,7 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Insert",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_Insert]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Insert]
                 @Username NVARCHAR(256),
                 @NormalizedUserName NVARCHAR(256),
                 @Email NVARCHAR(256),
@@ -149,7 +149,7 @@ public class Users : ISqlEnforcedEntityMsSql
                 @AccountType int
             AS
             begin
-                insert into dbo.[Users] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
+                insert into dbo.[AppUsers] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
                                          PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
                                          IsActive, RefreshToken, RefreshTokenExpiryTime, AccountType)
@@ -165,14 +165,14 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Search",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_Search]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
                 set nocount on;
                 
                 select *
-                from dbo.[Users]
+                from dbo.[AppUsers]
                 where FirstName LIKE '%' + @SearchTerm + '%'
                     OR LastName LIKE '%' + @SearchTerm + '%'
                     OR Email LIKE '%' + @SearchTerm + '%';
@@ -184,7 +184,7 @@ public class Users : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Update",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUsers_Update]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Username NVARCHAR(256),
                 @NormalizedUserName NVARCHAR(256),
@@ -211,7 +211,7 @@ public class Users : ISqlEnforcedEntityMsSql
                 @AccountType int
             AS
             begin
-                update dbo.[Users]
+                update dbo.[AppUsers]
                 set Username = @Username, NormalizedUserName = @NormalizedUserName, Email = @Email, NormalizedEmail = @NormalizedEmail,
                     EmailConfirmed = @EmailConfirmed, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt,
                     PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @PhoneNumberConfirmed, TwoFactorEnabled = @TwoFactorEnabled,

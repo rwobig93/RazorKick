@@ -1,5 +1,4 @@
 ﻿using Domain.DatabaseEntities.Example;
-using Domain.Entities.Example;
 
 namespace Domain.Models.Example;
 

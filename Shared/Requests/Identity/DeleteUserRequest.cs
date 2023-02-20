@@ -1,5 +1,4 @@
 ﻿using Shared.Models.Base;
-using Shared.Requests.Example;
 
 namespace Shared.Requests.Identity;
 

@@ -2,18 +2,18 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class UserRoleJunctions : ISqlEnforcedEntityMsSql
+public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(UserRoleJunctions).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserRoleJunctions).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 3,
-        TableName = "UserRoleJunctions",
+        TableName = "AppUserRoleJunctions",
         SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[UserRoleJunctions]'))
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUserRoleJunctions]'))
             begin
-                CREATE TABLE [dbo].[UserRoleJunctions](
+                CREATE TABLE [dbo].[AppUserRoleJunctions](
                     [UserId] UNIQUEIDENTIFIER NOT NULL,
                     [RoleId] UNIQUEIDENTIFIER NOT NULL,
                     CONSTRAINT User_Role_PK PRIMARY KEY (UserId, RoleId),
@@ -30,7 +30,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Delete",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_Delete]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Delete]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
@@ -48,7 +48,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetAll",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_GetAll]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetAll]
             AS
             begin
                 select *
@@ -61,7 +61,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetByUserRoleId",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_GetByUserRoleId]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetByUserRoleId]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
@@ -78,7 +78,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetRolesOfUser",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_GetRolesOfUser]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetRolesOfUser]
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
@@ -93,7 +93,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetUsersOfRole",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_GetUsersOfRole]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetUsersOfRole]
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
@@ -108,7 +108,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Insert",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_Insert]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Insert]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
@@ -123,7 +123,7 @@ public class UserRoleJunctions : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Search",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spUserRoleJunctions_Search]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin

@@ -1,11 +1,8 @@
 ﻿using Application.Helpers.Web;
-using Application.Models.Example;
 using Application.Models.Web;
 using Application.Repositories.Example;
 using Application.Services.Identity;
-using Shared.Requests.Example;
 using Shared.Requests.Identity;
-using Shared.Responses.Example;
 using Shared.Responses.Identity;
 
 namespace Application.Api.v1.Identity;

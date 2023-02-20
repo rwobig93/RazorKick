@@ -1,6 +1,6 @@
 ﻿using Application.Services.Identity;
 using AutoMapper;
-using Domain.Entities.Identity;
+using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
 
 namespace Infrastructure.Services.Identity;

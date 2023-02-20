@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Shared.Enums.Identity;
 using Shared.Responses.Identity;
 
-namespace Domain.Entities.Identity;
+namespace Domain.DatabaseEntities.Identity;
 
 public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
 {

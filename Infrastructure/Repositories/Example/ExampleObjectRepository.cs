@@ -1,8 +1,9 @@
-using Application.Database;
 using Application.Database.MsSql.Example;
 using Application.Models.Example;
 using Application.Repositories.Example;
 using Application.Services.Database;
+using Domain.DatabaseEntities.Example;
+using Domain.Models.Example;
 using RandomNameGeneratorNG;
 
 namespace Infrastructure.Repositories.Example;
@@ -18,9 +19,9 @@ public class ExampleObjectRepository : IExampleObjectRepository
         _extendedAttributeRepository = extendedAttributeRepository;
     }
     
-    public async Task<List<ExampleObjectDisplay>> GetAll()
+    public async Task<List<ExampleObjectDb>> GetAll()
     {
-        return (await _database.LoadData<ExampleObjectDisplay, dynamic>(ExampleObjects.GetAll, new { })).ToList();
+        return (await _database.LoadData<ExampleObjectDb, dynamic>(ExampleObjects.GetAll, new { })).ToList();
     }
 
     public async Task CreateRandom()
@@ -29,51 +30,48 @@ public class ExampleObjectRepository : IExampleObjectRepository
         var firstName = generator.GenerateRandomFirstName();
         var lastName = generator.GenerateRandomLastName();
 
-        await Create(firstName, lastName);
-    }
-
-    public async Task<Guid?> Create(string firstName, string lastName)
-    {
-        var newExampleObject = new ExampleObjectCreate()
+        await Create(new ExampleObjectCreate()
         {
             FirstName = firstName,
             LastName = lastName
-        };
-        
-        var createdId = await _database.SaveDataReturnId(ExampleObjects.Insert, newExampleObject);
+        });
+    }
+
+    public async Task<Guid?> Create(ExampleObjectCreate createObject)
+    {
+        var createdId = await _database.SaveDataReturnId(ExampleObjects.Insert, createObject);
         if (createdId == Guid.Empty)
             return null;
 
         return createdId;
     }
 
-    public async Task<ExampleObjectDisplay> Get(Guid id)
+    public async Task<ExampleObjectDb?> Get(Guid id)
     {
-        var foundObject = await _database.LoadData<ExampleObjectDisplay, dynamic>(
+        var foundObject = await _database.LoadData<ExampleObjectDb, dynamic>(
             ExampleObjects.GetById,
             new {Id = id});
-        
-        if (foundObject is null)
-            throw new Exception("Id provided was invalid, please try again");
         
         return foundObject.FirstOrDefault()!;
     }
 
-    public async Task<ExampleObjectDisplayFull> GetFull(Guid id)
+    public async Task<ExampleObjectFull?> GetFull(Guid id)
     {
-        var foundObject = (await _database.LoadData<ExampleObjectDisplayFull, dynamic>(
+        var foundObject = (await _database.LoadData<ExampleObjectDb, dynamic>(
             ExampleObjects.GetById,
             new {Id = id})).FirstOrDefault();
-       
+
         if (foundObject is null)
-            throw new Exception("Id provided was invalid, please try again");
+            return null;
 
         var foundAttributeMappings = await _extendedAttributeRepository.GetAttributesForObject(foundObject.Id);
+
+        var convertedFullObject = foundObject.ToFullObject();
         
         foreach (var attributeId in foundAttributeMappings)
-            foundObject.ExtendedAttributes.Add(await _extendedAttributeRepository.Get(attributeId));
+            convertedFullObject.ExtendedAttributes.Add(await _extendedAttributeRepository.Get(attributeId));
         
-        return foundObject;
+        return convertedFullObject;
     }
 
     public async Task Update(ExampleObjectUpdate updateObject)

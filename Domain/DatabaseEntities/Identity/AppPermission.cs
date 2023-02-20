@@ -1,7 +1,7 @@
 ﻿using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
 
-namespace Domain.Entities.Identity;
+namespace Domain.DatabaseEntities.Identity;
 
 public class AppPermission : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
 {

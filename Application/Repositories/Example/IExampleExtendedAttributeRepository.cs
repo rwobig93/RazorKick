@@ -1,5 +1,5 @@
 ﻿using Application.Models.Example;
-using Domain.Entities.Example;
+using Domain.DatabaseEntities.Example;
 using Domain.Models.Example;
 
 namespace Application.Repositories.Example;
