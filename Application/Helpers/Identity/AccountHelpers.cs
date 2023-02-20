@@ -42,4 +42,9 @@ public static class AccountHelpers
         var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
         return computedHash.SequenceEqual(hash);
     }
+
+    public static string NormalizeForDatabase(this string providedString)
+    {
+        return providedString.ToUpper().Normalize();
+    }
 }

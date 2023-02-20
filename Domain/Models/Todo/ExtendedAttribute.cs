@@ -1,7 +1,8 @@
 ﻿using Shared.Enums.Identity;
 
-namespace Domain.Models.Identity;
+namespace Domain.Models.Todo;
 
+// TODO: Refactor this, will be unnecessary after implementing actual extended attributes in the database
 public class ExtendedAttribute
 {
     private string _value = "";

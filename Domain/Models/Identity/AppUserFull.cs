@@ -1,14 +1,12 @@
-﻿using Domain.Contracts;
-using Domain.Models.Identity;
-using Microsoft.AspNetCore.Identity;
+﻿using Domain.DatabaseEntities.Identity;
+using Domain.Models.Todo;
 using Shared.Enums.Identity;
-using Shared.Responses.Identity;
 
-namespace Domain.DatabaseEntities.Identity;
+namespace Domain.Models.Identity;
 
-public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
+public class AppUserFull
 {
-    public override Guid Id { get; set; }
+    public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public byte[] PasswordSalt { get; set; } = null!;
     public string? FirstName { get; set; }
@@ -24,20 +22,6 @@ public class AppUser : IdentityUser<Guid>, IAuditableEntity<Guid>
     public string? RefreshToken { get; set; }
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
-    public List<AppRole> Roles { get; set; } = new();
+    public List<AppRoleDb> Roles { get; set; } = new();
     public List<ExtendedAttribute> ExtendedAttributes { get; set; } = new();
-}
-
-public static class AppUserExtensions
-{
-    public static UserBasicResponse ToBasicResponse(this AppUser appUser)
-    {
-        return new UserBasicResponse()
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn,
-            IsActive = appUser.IsActive
-        };
-    }
 }

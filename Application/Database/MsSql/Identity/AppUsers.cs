@@ -20,7 +20,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                     [Email] NVARCHAR(256) NOT NULL,
                     [NormalizedEmail] NVARCHAR(256) NOT NULL,
                     [EmailConfirmed] BIT NOT NULL,
-                    [PasswordHash] VARBINARY(MAX) NOT NULL,
+                    [PasswordHash] NVARCHAR(256) NOT NULL,
                     [PasswordSalt] VARBINARY(MAX) NOT NULL,
                     [PhoneNumber] NVARCHAR(50) NULL,
                     [PhoneNumberConfirmed] BIT NOT NULL,
@@ -84,7 +84,22 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where NormalizedEmail = @Email;
+                where Email = @Email;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByNormalizedEmail = new()
+    {
+        Table = Table,
+        Action = "GetByNormalizedEmail",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByNormalizedEmail]
+                @NormalizedEmail NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppUsers]
+                where NormalizedEmail = @NormalizedEmail;
             end"
     };
 
@@ -118,6 +133,21 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             end"
     };
 
+    public static readonly MsSqlStoredProcedure GetByNormalizedUsername = new()
+    {
+        Table = Table,
+        Action = "GetByNormalizedUsername",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByNormalizedUsername]
+                @NormalizedUsername NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppUsers]
+                where NormalizedUsername = @NormalizedUsername;
+            end"
+    };
+
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -129,7 +159,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 @Email NVARCHAR(256),
                 @NormalizedEmail NVARCHAR(256),
                 @EmailConfirmed BIT,
-                @PasswordHash VARBINARY(MAX),
+                @PasswordHash NVARCHAR(256),
                 @PasswordSalt VARBINARY(MAX),
                 @PhoneNumber NVARCHAR(256),
                 @PhoneNumberConfirmed BIT,
@@ -191,16 +221,14 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 @Email NVARCHAR(256),
                 @NormalizedEmail NVARCHAR(256),
                 @EmailConfirmed BIT,
-                @PasswordHash VARBINARY(MAX),
+                @PasswordHash NVARCHAR(256),
                 @PasswordSalt VARBINARY(MAX),
                 @PhoneNumber NVARCHAR(256),
                 @PhoneNumberConfirmed BIT,
                 @TwoFactorEnabled BIT,
                 @FirstName NVARCHAR(256),
                 @LastName NVARCHAR(256),
-                @CreatedBy UNIQUEIDENTIFIER,
                 @ProfilePictureDataUrl NVARCHAR(400),
-                @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
                 @LastModifiedOn datetime2,
                 @IsDeleted BIT,
@@ -215,8 +243,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 set Username = @Username, NormalizedUserName = @NormalizedUserName, Email = @Email, NormalizedEmail = @NormalizedEmail,
                     EmailConfirmed = @EmailConfirmed, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt,
                     PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @PhoneNumberConfirmed, TwoFactorEnabled = @TwoFactorEnabled,
-                    FirstName = @FirstName, LastName = @LastName, CreatedBy = @CreatedBy, ProfilePictureDataUrl = @ProfilePictureDataUrl,
-                    CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn, IsDeleted = @IsDeleted,
+                    FirstName = @FirstName, LastName = @LastName, ProfilePictureDataUrl = @ProfilePictureDataUrl,
+                    LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn, IsDeleted = @IsDeleted,
                     DeletedOn = @DeletedOn, IsActive = @IsActive, RefreshToken = @RefreshToken, RefreshTokenExpiryTime = @RefreshTokenExpiryTime,
                     AccountType = @AccountType
                 where Id = @Id;

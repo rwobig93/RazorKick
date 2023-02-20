@@ -1,11 +1,12 @@
 ﻿using Application.Models.Web;
+using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 
-public class ClaimService : IClaimService
+public class ClaimService : IAppPermissionsRepository
 {
     public async Task<IResult<List<ClaimResponse>>> GetAllAsync()
     {

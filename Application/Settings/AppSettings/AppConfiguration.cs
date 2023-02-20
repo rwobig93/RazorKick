@@ -6,4 +6,5 @@ public class AppConfiguration : IAppSettingsSection
     public string? Secret { get; set; }
     public string? BaseUrl { get; set; }
     public int PermissionValidationIntervalSeconds { get; set; } = 5;
+    public int TokenExpirationDays { get; set; } = 7;
 }

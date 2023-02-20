@@ -18,7 +18,6 @@
 
     <ItemGroup>
       <PackageReference Include="Asp.Versioning.Http" Version="6.0.0-preview.3" />
-      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
       <PackageReference Include="Hangfire" Version="1.7.30" />
       <PackageReference Include="Hangfire.Core" Version="1.7.30" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />

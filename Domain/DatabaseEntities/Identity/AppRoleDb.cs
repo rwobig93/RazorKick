@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
-public class AppRole : IdentityRole<Guid>, IAuditableEntity<Guid>
+public class AppRoleDb : IdentityRole<Guid>, IAuditableEntity<Guid>
 {
     public override Guid Id { get; set; }
     public string? Description { get; set; }
@@ -11,7 +11,6 @@ public class AppRole : IdentityRole<Guid>, IAuditableEntity<Guid>
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public ICollection<AppPermission> Claims { get; set; } = new List<AppPermission>();
 
     public override string ToString()
     {

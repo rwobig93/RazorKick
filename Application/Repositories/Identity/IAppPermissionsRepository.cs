@@ -2,9 +2,9 @@
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 
-namespace Application.Services.Identity;
+namespace Application.Repositories.Identity;
 
-public interface IClaimService
+public interface IAppPermissionsRepository
 {
     Task<IResult<List<ClaimResponse>>> GetAllAsync();
 

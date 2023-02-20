@@ -1,6 +1,7 @@
 ﻿using Application.Helpers.Web;
 using Application.Models.Web;
 using Application.Repositories.Example;
+using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
@@ -20,7 +21,7 @@ public static class UserEndpoints
         // TODO: Add swagger endpoint viewer enrichment
     }
 
-    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IUserService repository)
+    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppUserRepository repository)
     {
         try
         {

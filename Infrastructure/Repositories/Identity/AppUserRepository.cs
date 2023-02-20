@@ -3,13 +3,19 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Application.Constants.Identity;
+using Application.Database.MsSql.Identity;
+using Application.Database.MsSql.Shared;
+using Application.Helpers.Identity;
+using Application.Helpers.Web;
+using Application.Models.Identity;
 using Application.Models.Web;
+using Application.Repositories.Identity;
 using Application.Services.Database;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
-using AutoMapper;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
+using Domain.Models.Todo;
 using FluentEmail.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -19,99 +25,87 @@ using Shared.Enums.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 
-namespace Infrastructure.Services.Identity;
+namespace Infrastructure.Repositories.Identity;
 
-public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNumberStore<AppUser>,
-    IUserTwoFactorStore<AppUser>, IUserPasswordStore<AppUser>
+public class AppUserRepository : IAppUserRepository, IUserEmailStore<AppUserDb>, IUserPhoneNumberStore<AppUserDb>,
+    IUserTwoFactorStore<AppUserDb>, IUserPasswordStore<AppUserDb>
 {
     private const string InvalidErrorMessage = "The username and password combination provided is invalid";
     private const string GenericFailureMessage = "An internal server error occurred, please contact the administrator";
 
     private readonly ISqlDataService _database;
-    private readonly IMapper _mapper;
     private readonly AppConfiguration _appConfig;
     private readonly IFluentEmail _mailService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IRoleService _roleService;
+    private readonly IAppRoleRepository _roleRepository;
 
-    public UserService(ISqlDataService database, IMapper mapper, AppConfiguration appConfig, IFluentEmail mailService,
-        ICurrentUserService currentUserService, IRoleService roleService)
+    public AppUserRepository(ISqlDataService database, AppConfiguration appConfig, IFluentEmail mailService,
+        ICurrentUserService currentUserService, IAppRoleRepository roleService)
     {
         _database = database;
-        _mapper = mapper;
         _appConfig = appConfig;
         _mailService = mailService;
         _currentUserService = currentUserService;
-        _roleService = roleService;
+        _roleRepository = roleService;
     }
 
-    public async Task<IEnumerable<AppUser>> GetAllAsync()
+    public async Task<IEnumerable<AppUserDb>> GetAllAsync()
     {
-        return await _database.LoadData<AppUser, dynamic>(UserGetAll.ToDboName(), new { });
+        return await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
     }
 
     public async Task<int> GetCountAsync()
     {
-        return await _database.LoadDataCount<dynamic>(GeneralGetTableRowCount.ToDboName(), new {TableName = "Users"});
+        var rowCount = await _database.LoadData<int, dynamic>(General.GetRowCount, new {TableName = "Users"});
+        return rowCount.FirstOrDefault();
     }
 
-    public async Task<AppUser?> GetByIdAsync(Guid userId)
+    public async Task<AppUserDb?> GetByIdAsync(Guid userId)
     {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(
-            UserGetById.ToDboName(), 
-            new GetUserByIdRequest { Id = userId });
+        var foundUser = await _database.LoadData<AppUserDb, dynamic>( AppUsers.GetById, new { Id = userId });
+        return foundUser.FirstOrDefault();
+    }
+    
+    public async Task<AppUserFull?> GetByIdFullAsync(Guid userId)
+    {
+        var foundUser = (await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetById, new {Id = userId})).FirstOrDefault();
+        if (foundUser is null)
+            return null;
+
+        var fullUser = foundUser.ToFullObject();
+        
+        // TODO: Add roles and extended attributes after both have been fully implemented
+        // var foundRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.)
+        
+        return fullUser;
+    }
+
+    public async Task<AppUserDb?> GetByUsernameAsync(string username)
+    {
+        var foundUser = await _database.LoadData<AppUserDb, dynamic>(
+            AppUsers.GetByUsername, new { Username = username });
+        
         return foundUser.FirstOrDefault();
     }
 
-    // TODO: Validate this works w/ left join on multiple tables and research stored procedures vs. raw queries
-    // TODO: If this does work move to doing this for the other entity gets for the desired return data set
-    public async Task<AppUser?> GetByIdFullAsync(Guid userId)
+    public async Task<AppUserDb?> GetByEmailAsync(string email)
     {
-        var foundUser = await _database.LoadDataJoin<AppUser, IEnumerable<ExtendedAttribute>, IEnumerable<AppRole>, dynamic>(
-            UserGetById.ToDboName(),
-            UserFullMapping(),
-            new GetUserByIdRequest { Id = userId });
+        var foundUser = await _database.LoadData<AppUserDb, dynamic>(
+            AppUsers.GetByEmail, new { Email = email });
         return foundUser.FirstOrDefault();
     }
 
-    private static Func<AppUser, IEnumerable<ExtendedAttribute>, IEnumerable<AppRole>, AppUser> UserFullMapping()
+    public async Task<bool> IsInRoleAsync(Guid userId, Guid roleId)
     {
-        return (user, attributes, roles) =>
-        {
-            foreach (var attribute in attributes)
-                user.ExtendedAttributes.Add(attribute);
-            foreach (var role in roles)
-                user.Roles.Add(role);
-
-            return user;
-        };
-    }
-
-    public async Task<AppUser?> GetByUsernameAsync(string username)
-    {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(
-            UserGetByUsername.ToDboName(), 
-            new GetUserByUsernameRequest() { Username = username});
-        return foundUser.FirstOrDefault();
-    }
-
-    public async Task<AppUser?> GetByEmailAsync(string emailAddress)
-    {
-        var foundUser = await _database.LoadData<AppUser, dynamic>(
-            UserGetByEmail.ToDboName(),
-            new GetUserByEmailRequest() { Email = emailAddress });
-        return foundUser.FirstOrDefault();
-    }
-
-    public async Task<bool> IsInRoleAsync(RoleMembershipRequest membershipValidationRequest)
-    {
-        var foundMembership = await _database.LoadData<AppUserRoleJunction, dynamic>(
-            JunctionUserRoleGetByUserRoleId.ToDboName(), membershipValidationRequest);
+        var foundMembership = await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
+            AppUserRoleJunctions.GetByUserRoleId, new { UserId = userId, RoleId = roleId });
+        
         return foundMembership.FirstOrDefault() is not null;
     }
 
     public async Task<List<IResult>> AddUserToRolesAsync(UserRoleRequest roleRequest)
     {
+        // TODO: Need to refactor this to not use IResult to be more in line w/ repository methods
         var resultList = new List<IResult>();
         
         var foundUser = await GetUserFromProvidedIds(roleRequest);
@@ -125,23 +119,21 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         {
             try
             {
-                var foundRole = await _roleService.GetByNameAsync(roleName);
+                var foundRole = await _roleRepository.GetByNameAsync(roleName);
                 if (foundRole is null)
                 {
                     resultList.Add(await Result.FailAsync($"Role '{roleName}' wasn't found"));
                     continue;
                 }
 
-                var alreadyHasRole = await IsInRoleAsync(
-                    new RoleMembershipRequest() {RoleId = foundRole.Id, UserId = foundUser.Id});
+                var alreadyHasRole = await IsInRoleAsync(foundRole.Id, foundUser.Id);
                 if (alreadyHasRole)
                 {
                     resultList.Add(await Result.SuccessAsync($"User already has the '{roleName}' Role"));
                     continue;   
                 }
 
-                await _database.SaveData(JunctionUserRoleCreate.ToDboName(),
-                    new RoleMembershipRequest() {RoleId = foundRole.Id, UserId = foundUser.Id});
+                await _database.SaveData(AppUserRoleJunctions.Insert, new { RoleId = foundRole.Id, UserId = foundUser.Id });
                 resultList.Add(await Result.SuccessAsync($"Successfully added role '{roleName}' to user '{foundUser.Username}'"));
             }
             catch (Exception ex)
@@ -154,58 +146,75 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return resultList;
     }
 
-    public async Task UpdateAsync(UpdateUserRequest userRequest)
+    public async Task UpdateAsync(AppUserUpdate updateObject)
     {
-        await _database.SaveData(UserUpdate.ToDboName(), userRequest);
+        await _database.SaveData(AppUsers.Update, updateObject);
     }
 
-    public async Task DeleteAsync(DeleteUserRequest userRequest)
+    public async Task DeleteAsync(Guid userId)
     {
-        await _database.SaveData(UserDelete.ToDboName(), userRequest);
+        await _database.SaveData(AppUsers.Delete, new { Id = userId });
     }
 
-    public async Task<string> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetUserIdAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.Id.ToString());
     }
 
-    public async Task<string> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetUserNameAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.Username);
     }
 
-    public async Task SetUserNameAsync(AppUser user, string userName, CancellationToken cancellationToken)
+    public async Task SetUserNameAsync(AppUserDb user, string newUserName, CancellationToken cancellationToken)
     {
-        user.Username = userName;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate()
+        {
+            Id = user.Id,
+            Username = newUserName,
+            NormalizedUserName = newUserName.NormalizeForDatabase()
+        };
+        
+        await UpdateAsync(updateObject);
     }
 
     public async Task SetUserPassword(Guid userId, string newPassword)
     {
-        var request = new UserUpdatePasswordRequest() { Id = userId };
-        AccountValidation.GetPasswordHash(newPassword, out var hash, out var salt);
-        request.PasswordSalt = salt;
-        request.PasswordHash = hash.ToString()!;
-        await _database.SaveData(UserUpdate.ToDboName(), request);
+        var updateObject = new AppUserUpdate() { Id = userId };
+        
+        AccountHelpers.GetPasswordHash(newPassword, out var hash, out var salt);
+        updateObject.PasswordSalt = salt;
+        updateObject.PasswordHash = hash.ToString()!;
+        
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<string> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetNormalizedUserNameAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.NormalizedUserName);
     }
 
-    public async Task SetNormalizedUserNameAsync(AppUser user, string normalizedName, CancellationToken cancellationToken)
+    public async Task SetNormalizedUserNameAsync(AppUserDb user, string normalizedName, CancellationToken cancellationToken)
     {
-        user.NormalizedUserName = normalizedName;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() { Id = user.Id, NormalizedUserName = normalizedName };
+        
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<Guid?> CreateAsync(AppUserCreate createObject)
+    {
+        var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
+        if (createdId == Guid.Empty)
+            return null;
+
+        return createdId;
+    }
+
+    public async Task<IdentityResult> CreateAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         try
         {
-            user.CreatedOn = DateTime.Now;
-            await _database.SaveData(UserCreate.ToDboName(), user);
+            await CreateAsync(user.ToCreateObject());
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -214,15 +223,17 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         }
     }
 
-    public async Task<IdentityResult> CreateAsync(AppUser user, string password, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(AppUserDb user, string password, CancellationToken cancellationToken)
     {
         try
         {
-            AccountValidation.GetPasswordHash(password, out var hash, out var salt);
-            user.PasswordSalt = salt;
-            user.PasswordHash = hash.ToString();
-            user.CreatedOn = DateTime.Now;
-            await _database.SaveData(UserCreate.ToDboName(), user);
+            var createUser = user.ToCreateObject();
+            
+            AccountHelpers.GetPasswordHash(password, out var hash, out var salt);
+            createUser.PasswordSalt = salt;
+            createUser.PasswordHash = hash.ToString()!;
+            
+            await CreateAsync(createUser);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -231,12 +242,14 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         }
     }
 
-    public async Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         try
         {
-            user.LastModifiedOn = DateTime.Now;
-            await _database.SaveData(UserUpdate.ToDboName(), user);
+            var updateUser = user.ToUpdateObject();
+            updateUser.LastModifiedOn = DateTime.Now;
+
+            await UpdateAsync(updateUser);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -245,12 +258,11 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         }
     }
 
-    public async Task<IdentityResult> DeleteAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> DeleteAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         try
         {
-            user.DeletedOn = DateTime.Now;
-            await _database.SaveData(UserDelete.ToDboName(), user);
+            await DeleteAsync(user.Id);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -259,105 +271,108 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         }
     }
 
-    public async Task<AppUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
+    public async Task<AppUserDb> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
         var id = Guid.Parse(userId);
         return (await GetByIdAsync(id))!;
     }
 
-    public async Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+    public async Task<AppUserDb> FindByNameAsync(string normalizedUsername, CancellationToken cancellationToken)
     {
-        return (await GetByUsernameAsync(normalizedUserName))!;
+        var foundUser = await _database.LoadData<AppUserDb, dynamic>(
+            AppUsers.GetByNormalizedUsername, new { NormalizedUsername = normalizedUsername });
+        
+        return foundUser.FirstOrDefault()!;
     }
 
-    public async Task SetEmailAsync(AppUser user, string email, CancellationToken cancellationToken)
+    public async Task SetEmailAsync(AppUserDb user, string email, CancellationToken cancellationToken)
     {
-        user.Email = email;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, Email = email};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<string> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetEmailAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.Email);
     }
 
-    public async Task<bool> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<bool> GetEmailConfirmedAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.EmailConfirmed);
     }
 
-    public async Task SetEmailConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
+    public async Task SetEmailConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
-        user.EmailConfirmed = confirmed;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, EmailConfirmed = confirmed};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<AppUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+    public async Task<AppUserDb> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
-        var userRequest = new GetUserByEmailRequest() {Email = normalizedEmail};
-        var foundUser = await _database.LoadData<AppUser, dynamic>(UserGetByEmail.ToDboName(), userRequest);
+        var foundUser = await _database.LoadData<AppUserDb, dynamic>(
+            AppUsers.GetByNormalizedEmail, new { NormalizedEmail = normalizedEmail });
+        
         return foundUser.FirstOrDefault()!;
     }
 
-    public async Task<string> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetNormalizedEmailAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.NormalizedEmail);
     }
 
-    public async Task SetNormalizedEmailAsync(AppUser user, string normalizedEmail, CancellationToken cancellationToken)
+    public async Task SetNormalizedEmailAsync(AppUserDb user, string normalizedEmail, CancellationToken cancellationToken)
     {
-        user.Email = normalizedEmail.ToLower();
-        user.NormalizedEmail = normalizedEmail;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, NormalizedEmail = normalizedEmail};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task SetPhoneNumberAsync(AppUser user, string phoneNumber, CancellationToken cancellationToken)
+    public async Task SetPhoneNumberAsync(AppUserDb user, string phoneNumber, CancellationToken cancellationToken)
     {
-        user.PhoneNumber = phoneNumber;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumber = phoneNumber};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<string> GetPhoneNumberAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetPhoneNumberAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.PhoneNumber);
     }
 
-    public async Task<bool> GetPhoneNumberConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<bool> GetPhoneNumberConfirmedAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.PhoneNumberConfirmed);
     }
 
-    public async Task SetPhoneNumberConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
+    public async Task SetPhoneNumberConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
-        user.PhoneNumberConfirmed = confirmed;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumberConfirmed = confirmed};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task SetTwoFactorEnabledAsync(AppUser user, bool enabled, CancellationToken cancellationToken)
+    public async Task SetTwoFactorEnabledAsync(AppUserDb user, bool enabled, CancellationToken cancellationToken)
     {
-        user.TwoFactorEnabled = enabled;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, TwoFactorEnabled = enabled};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<bool> GetTwoFactorEnabledAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<bool> GetTwoFactorEnabledAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.TwoFactorEnabled);
     }
 
-    public async Task SetPasswordHashAsync(AppUser user, string passwordHash, CancellationToken cancellationToken)
+    public async Task SetPasswordHashAsync(AppUserDb user, string passwordHash, CancellationToken cancellationToken)
     {
-        user.PasswordHash = passwordHash;
-        await _database.SaveData(UserUpdate.ToDboName(), user);
+        var updateObject = new AppUserUpdate() {Id = user.Id, PasswordHash = passwordHash};
+        await UpdateAsync(updateObject);
     }
 
-    public async Task<string> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<string> GetPasswordHashAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         return await Task.FromResult(user.PasswordHash);
     }
 
-    public async Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<bool> HasPasswordAsync(AppUserDb user, CancellationToken cancellationToken)
     {
-        return await Task.FromResult(string.IsNullOrWhiteSpace(user.PasswordHash));
+        return await Task.FromResult(!string.IsNullOrWhiteSpace(user.PasswordHash));
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -366,7 +381,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         if (user is null)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
         
-        var passwordValid = AccountValidation.IsPasswordCorrect(
+        var passwordValid = AccountHelpers.IsPasswordCorrect(
             loginRequest.Password, Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
         if (!passwordValid)
             return await Result<UserLoginResponse>.FailAsync(InvalidErrorMessage);
@@ -376,8 +391,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<UserLoginResponse>.FailAsync("Your email has not been confirmed, please confirm your email.");
 
         user.RefreshToken = GenerateRefreshToken();
-        // TODO: Add server setting for token expiration
-        user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+        user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_appConfig.TokenExpirationDays);
         await UpdateAsync(user, CancellationToken.None);
 
         var token = await GenerateJwtAsync(user);
@@ -386,7 +400,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    private async Task<AppUser?> GetUserFromProvidedIds(UserRoleRequest roleRequest)
+    private async Task<AppUserDb?> GetUserFromProvidedIds(UserRoleRequest roleRequest)
     {
         if (roleRequest.UserId is not null)
             return await GetByIdAsync((Guid) roleRequest.UserId);
@@ -409,8 +423,8 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<List<IdentityResult>>.FailAsync("Internal Identity failure occurred, please contact the administrator");
         
         var currentUser = await GetByIdAsync(currentUserId);
-        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
-        var userIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = currentUser!.Id, RoleId = adminRole!.Id});
+        var adminRole = await _roleRepository.GetByNameAsync(RoleConstants.AdminRole);
+        var userIsAdmin = await IsInRoleAsync(currentUser!.Id, adminRole!.Id);
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
         
         if (!userIsAdmin && requestContainsAdmin)
@@ -445,9 +459,9 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
         var currentUser = await GetByIdAsync(Guid.Parse(_currentUserService.UserId));
-        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
+        var adminRole = await _roleRepository.GetByNameAsync(RoleConstants.AdminRole);
         
-        var currentUserIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = currentUser!.Id, RoleId = adminRole!.Id });
+        var currentUserIsAdmin = await IsInRoleAsync(currentUser!.Id, adminRole!.Id);
         var requestContainsAdmin = roleRequest.RoleNames.Contains(adminRole.Name);
         var requestIsForSelf = requestedUser.Id == currentUser.Id;
         var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultUsername;
@@ -466,7 +480,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         var resultList = new List<IdentityResult>();
         foreach (var role in roleRequest.RoleNames)
         {
-            var foundRole = await _roleService.GetByNameAsync(role);
+            var foundRole = await _roleRepository.GetByNameAsync(role);
             if (foundRole is null)
             {
                 resultList.Add(IdentityResult.Failed(new IdentityError() 
@@ -474,8 +488,8 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
                 continue;
             }
             
-            var changesMade = await _database.SaveData(JunctionUserRoleDelete.ToDboName(),
-                new RoleMembershipRequest() { RoleId = foundRole.Id, UserId = requestedUser.Id });
+            var changesMade = await _database.SaveData(
+                AppUserRoleJunctions.Insert, new { UserId = requestedUser.Id, RoleId = foundRole.Id });
             if (changesMade < 1)
                 resultList.Add(IdentityResult.Failed(new IdentityError() 
                     { Code = "RoleError", Description = $"Role already wasn't on the provided user: {role}" }));
@@ -486,7 +500,12 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return await Result<List<IdentityResult>>.SuccessAsync(resultList);
     }
 
-    public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest, CancellationToken cancellationToken)
+    public async Task<IResult<IdentityResult>> EnforceRolesAsync(UserRoleRequest roleRequest)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
     {
         var matchingUserName = await GetByUsernameAsync(registerRequest.Username);
         if (matchingUserName != null)
@@ -494,7 +513,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result.FailAsync(string.Format($"Username {registerRequest.Username} is already in use, please try again"));
         }
         
-        var newUser = new AppUser()
+        var newUser = new AppUserDb()
         {
             Email = registerRequest.Email,
             UserName = registerRequest.Username,
@@ -504,7 +523,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         if (matchingEmail is not null)
             return await Result.FailAsync($"The email address {registerRequest.Email} is already in use, please try again");
         
-        var createUserResult = await CreateAsync(newUser, registerRequest.Password, cancellationToken);
+        var createUserResult = await CreateAsync(newUser, registerRequest.Password, CancellationToken.None);
         if (!createUserResult.Succeeded)
             return await Result.FailAsync(createUserResult.Errors.Select(r => r.Description).ToList());
 
@@ -530,7 +549,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
     }
 
-    public async Task<string> GetEmailConfirmationUrl(AppUser user)
+    public async Task<string> GetEmailConfirmationUrl(AppUserDb user)
     {
         var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
             UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
@@ -546,7 +565,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
 
         // No currently pending account registration exists so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri
-        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
+        var confirmationCode = UrlHelpers.GenerateToken(32);
         var extendedAttribute = new ExtendedAttribute
         {
             OwnerId = user.Id,
@@ -566,7 +585,7 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
             return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
         // TODO: Add permission for toggling user status and validation current user has permissions
-        var adminRole = await _roleService.GetByNameAsync(RoleConstants.AdminRole);
+        var adminRole = await _roleRepository.GetByNameAsync(RoleConstants.AdminRole);
         var requestedUserIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = requestedUser!.Id, RoleId = adminRole!.Id });
         if (requestedUserIsAdmin)
             return await Result.FailAsync("Administrators cannot be toggled, please remove admin privileges first");
@@ -706,13 +725,13 @@ public class UserService : IUserService, IUserEmailStore<AppUser>, IUserPhoneNum
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    private async Task<string> GenerateJwtAsync(AppUser user)
+    private async Task<string> GenerateJwtAsync(AppUserDb user)
     {
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
         return token;
     }
 
-    private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUser user)
+    private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUserDb user)
     {
         var userClaims = await _userManager.GetClaimsAsync(user);
         var roles = await GetRolesAsync(user.Id);

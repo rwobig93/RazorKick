@@ -3,17 +3,17 @@ using Domain.DatabaseEntities.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 
-namespace Application.Services.Identity;
+namespace Application.Repositories.Identity;
 
-public interface IRoleService
+public interface IAppRoleRepository
 {
     Task<IResult<List<RoleResponse>>> GetAllAsync();
     
     Task<IResult<int>> GetCountAsync();
     
-    Task<AppRole?> GetByIdAsync(string id);
+    Task<AppRoleDb?> GetByIdAsync(string id);
     
-    Task<AppRole?> GetByNameAsync(string roleName);
+    Task<AppRoleDb?> GetByNameAsync(string roleName);
     
     Task<IResult<string>> CreateAsync(CreateRoleRequest request);
     

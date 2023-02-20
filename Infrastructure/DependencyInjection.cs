@@ -4,6 +4,7 @@ using System.Text;
 using Application.Helpers.Runtime;
 using Application.Models.Web;
 using Application.Repositories.Example;
+using Application.Repositories.Identity;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
@@ -80,7 +81,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
-            .AddIdentity<AppUser, AppRole>(options =>
+            .AddIdentity<AppUserDb, AppRoleDb>(options =>
             {
                 options.Password.RequiredLength = 12;
                 options.Password.RequireDigit = true;
@@ -89,8 +90,8 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = true;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddUserStore<IUserService>()
-            .AddRoleStore<IRoleService>()
+            .AddUserStore<IAppUserRepository>()
+            .AddRoleStore<IAppRoleRepository>()
             .AddDefaultTokenProviders();
         
         services.AddJwtAuthentication(appSettings);
