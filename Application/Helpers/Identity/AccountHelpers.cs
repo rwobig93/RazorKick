@@ -45,6 +45,6 @@ public static class AccountHelpers
 
     public static string NormalizeForDatabase(this string providedString)
     {
-        return providedString.ToUpper().Normalize();
+        return providedString.Normalize();
     }
 }
