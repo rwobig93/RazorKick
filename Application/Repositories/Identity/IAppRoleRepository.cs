@@ -15,8 +15,8 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<Guid>> CreateAsync(CreateRoleRequest request);
     Task<DatabaseActionResult> UpdateAsync(UpdateRoleRequest request);
     Task<DatabaseActionResult> DeleteAsync(string id);
-    Task<DatabaseActionResult> GetAllPermissionsAsync(string roleId);
-    Task<DatabaseActionResult> AddPermissionsAsync(PermissionsRequest request);
-    Task<DatabaseActionResult> RemovePermissionsAsync(PermissionsRequest request);
-    Task<DatabaseActionResult> EnforcePermissionsAsync(PermissionsRequest request);
+    Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
+    Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId);
+    Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId);
+    Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetRolesForUser(Guid userId);
 }

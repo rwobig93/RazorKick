@@ -21,6 +21,7 @@ using Shared.Enums.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 using Application.Settings.AppSettings;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using FluentEmail.Core;
 
@@ -292,7 +293,7 @@ public class AppIdentityService : IAppIdentityService
         
         var currentUser = (await _userRepository.GetByIdAsync(currentUserId)).Result;
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
-        var userIsAdmin = (await _userRepository.IsInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
+        var userIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
         
         if (!userIsAdmin && requestContainsAdmin)
@@ -329,7 +330,7 @@ public class AppIdentityService : IAppIdentityService
         var currentUser = (await _userRepository.GetByIdAsync(Guid.Parse(_currentUserService.UserId))).Result;
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
         
-        var currentUserIsAdmin = (await _userRepository.IsInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
+        var currentUserIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(adminRole.Name);
         var requestIsForSelf = requestedUser.Id == currentUser.Id;
         var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultUsername;
@@ -355,7 +356,7 @@ public class AppIdentityService : IAppIdentityService
                 continue;
             }
 
-            var removeResult = (await _userRepository.RemoveFromRoleAsync(requestedUser.Id, foundRole.Id)).Success;
+            var removeResult = (await _roleRepository.RemoveUserFromRoleAsync(requestedUser.Id, foundRole.Id)).Success;
             if (!removeResult)
             {
                 resultList.Add(IdentityResult.Failed(new IdentityError()
@@ -393,7 +394,7 @@ public class AppIdentityService : IAppIdentityService
 
         var caveatMessage = "";
         var defaultRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRole)).Result;
-        var addToRoleResult = await _userRepository.AddToRoleAsync(createUserResult.Result, defaultRole!.Id);
+        var addToRoleResult = await _roleRepository.AddUserToRoleAsync(createUserResult.Result, defaultRole!.Id);
         if (!addToRoleResult.Success)
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
@@ -416,10 +417,9 @@ public class AppIdentityService : IAppIdentityService
     public async Task<string> GetEmailConfirmationUrl(AppUserDb user)
     {
         // TODO: Implement AppUser ExtendedAttributes before continuing
-        var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
-            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
-                { Id = user.Id, Type = AttributeType.EmailConfirmation });
-        var previousConfirmation = previousConfirmations.FirstOrDefault();
+        var previousConfirmations =
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(user.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
+        var previousConfirmation = previousConfirmations?.FirstOrDefault();
         
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", user.Id.ToString());
@@ -431,33 +431,34 @@ public class AppIdentityService : IAppIdentityService
         // No currently pending account registration exists so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri
         var confirmationCode = UrlHelpers.GenerateToken(32);
-        var extendedAttribute = new ExtendedAttribute
+        var newExtendedAttribute = new AppUserExtendedAttributeAdd()
         {
             OwnerId = user.Id,
             Name = "AccountEmailConfirmation",
-            Type = AttributeType.EmailConfirmation,
+            Type = ExtendedAttributeType.EmailConfirmationToken,
             Value = confirmationCode
         };
-        await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttribute);
+        await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         
         return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode);
     }
 
     public async Task<IResult> ToggleUserStatusAsync(ChangeUserActiveStateRequest activeRequest)
     {
-        var requestedUser = await GetByIdAsync(activeRequest.UserId);
+        var requestedUser = (await _userRepository.GetByIdAsync(activeRequest.UserId)).Result;
         if (requestedUser is null)
             return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
         // TODO: Add permission for toggling user status and validation current user has permissions
-        var adminRole = await _roleRepository.GetByNameAsync(RoleConstants.AdminRole);
-        var requestedUserIsAdmin = await IsInRoleAsync(new RoleMembershipRequest() { UserId = requestedUser!.Id, RoleId = adminRole!.Id });
+        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
+        var requestedUserIsAdmin =
+            (await _roleRepository.IsUserInRoleAsync(requestedUser.Id, adminRole!.Id)).Result;
         if (requestedUserIsAdmin)
             return await Result.FailAsync("Administrators cannot be toggled, please remove admin privileges first");
 
         try
         {
-            await UpdateAsync(new UpdateUserRequest() { IsActive = activeRequest.IsActive});
+            await _userRepository.UpdateAsync(new AppUserUpdate(){ Id = requestedUser.Id, IsActive = activeRequest.IsActive});
             return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsActive}");
         }
         catch (Exception ex)
@@ -466,32 +467,28 @@ public class AppIdentityService : IAppIdentityService
         }
     }
 
-    public async Task<IResult<List<RoleResponse>>> GetRolesAsync(Guid userId)
+    public async Task<IResult<List<AppRoleDb>>> GetRolesAsync(Guid userId)
     {
-        var foundUser = await GetByIdAsync(userId);
+        var foundUser = (await _userRepository.GetByIdAsync(userId)).Result;
         if (foundUser is null)
-            return await Result<List<RoleResponse>>.FailAsync("Was unable to find a user with the provided information");
+            return await Result<List<AppRoleDb>>.FailAsync("Was unable to find a user with the provided information");
 
-        var userRoles = await _database
-            .LoadData<RoleResponse, dynamic>(JunctionUserRoleGetRolesOfUser.ToDboName(), new {UserId = userId});
+        var userRoles = (await _roleRepository.GetRolesForUser(foundUser.Id)).Result ?? new List<AppRoleDb>();
 
-        var roleResponses = userRoles.ToList();
-        
-        return await Result<List<RoleResponse>>.SuccessAsync(roleResponses);
+        return await Result<List<AppRoleDb>>.SuccessAsync(userRoles.ToList());
     }
 
     public async Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode)
     {
-        var foundUser = await GetByIdAsync(userId);
+        var foundUser = (await _userRepository.GetByIdAsync(userId)).Result;
         if (foundUser is null)
-            return await Result<string>.FailAsync("Was unable to find a user with the provided information");
+            return await Result<string>.FailAsync(ErrorMessageConstants.UserNotFoundError);
         
         var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(confirmationCode));
-        
-        var previousConfirmations = await _database.LoadData<ExtendedAttribute, dynamic>(
-            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
-                { Id = foundUser.Id, Type = AttributeType.EmailConfirmation });
-        var previousConfirmation = previousConfirmations.FirstOrDefault();
+
+        var previousConfirmations =
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
+        var previousConfirmation = previousConfirmations?.FirstOrDefault();
 
         // TODO: Add admin logging w/ attempt and failure details so an admin can troubleshoot
         if (previousConfirmation is null)
@@ -508,17 +505,16 @@ public class AppIdentityService : IAppIdentityService
     {
         // For more information on how to enable account confirmation and password reset please
         // visit https://go.microsoft.com/fwlink/?LinkID=532713
-        var foundUser = await GetByEmailAsync(forgotRequest.Email!);
+        var foundUser = (await _userRepository.GetByEmailAsync(forgotRequest.Email!)).Result;
         if (foundUser is null)
-            return await Result.FailAsync(GenericFailureMessage);
+            return await Result.FailAsync(ErrorMessageConstants.GenericError);
 
         if (!foundUser.EmailConfirmed)
-            return await Result.FailAsync("Email hasn't been confirmed for this account, please contact the administrator");
-        
-        var previousResets = await _database.LoadData<ExtendedAttribute, dynamic>(
-            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
-                { Id = foundUser.Id, Type = AttributeType.ForgotPassword });
-        var previousReset = previousResets.FirstOrDefault();
+            return await Result.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
+
+        var previousResets =
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.PasswordResetToken)).Result;
+        var previousReset = previousResets?.FirstOrDefault();
         
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", foundUser.Id.ToString());
@@ -529,34 +525,33 @@ public class AppIdentityService : IAppIdentityService
 
         // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
         //   and return the generated reset uri
-        var confirmationCode = UrlTokenGenerator.GenerateToken(32);
-        var extendedAttribute = new ExtendedAttribute
+        var confirmationCode = UrlHelpers.GenerateToken(32);
+        var newExtendedAttribute = new AppUserExtendedAttributeAdd()
         {
             OwnerId = foundUser.Id,
             Name = "ForgotPasswordReset",
-            Type = AttributeType.ForgotPassword,
+            Type = ExtendedAttributeType.PasswordResetToken,
             Value = confirmationCode
         };
-        await _database.SaveData(UserExtendedAttributeInsert.ToDboName(), extendedAttribute);
+        await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         
-        return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", extendedAttribute.Value));
+        return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", newExtendedAttribute.Value));
     }
 
     public async Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest)
     {
-        var foundUser = await GetByEmailAsync(resetRequest.Email);
+        var foundUser = (await _userRepository.GetByEmailAsync(resetRequest.Email)).Result;
         if (foundUser is null)
-            return await Result.FailAsync(GenericFailureMessage);
-        
-        var previousResets = await _database.LoadData<ExtendedAttribute, dynamic>(
-            UserExtendedAttributeGetByOwnerIdAndType.ToDboName(), new GetUserExtendedAttributesByOwnerIdAndType() 
-                { Id = foundUser.Id, Type = AttributeType.ForgotPassword });
-        var previousReset = previousResets.FirstOrDefault();
+            return await Result.FailAsync(ErrorMessageConstants.GenericError);
+
+        var previousResets =
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.PasswordResetToken)).Result;
+        var previousReset = previousResets?.FirstOrDefault();
         
         if (previousReset is null)
-            return await Result.FailAsync(GenericFailureMessage);
+            return await Result.FailAsync(ErrorMessageConstants.GenericError);
         if (resetRequest.Password != resetRequest.ConfirmPassword)
-            return await Result.FailAsync("Password and Confirm Password provided don't match, please try again");
+            return await Result.FailAsync(ErrorMessageConstants.PasswordsNoMatchError);
         if (resetRequest.RequestCode == previousReset.Value)
             await SetUserPassword(foundUser.Id, resetRequest.Password);
 
@@ -566,11 +561,11 @@ public class AppIdentityService : IAppIdentityService
     public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
     {
         if (refreshRequest is null)
-            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
         var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
-        var user = await GetByEmailAsync(userEmail);
+        var user = (await _userRepository.GetByEmailAsync(userEmail)).Result;
         if (user == null)
             return await Result<UserLoginResponse>.FailAsync("User Not Found.");
         if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)

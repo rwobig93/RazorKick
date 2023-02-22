@@ -19,9 +19,6 @@ public interface IAppUserRepository
     Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject);
-    Task<DatabaseActionResult<bool>> IsInRoleAsync(Guid userId, Guid roleId);
-    Task<DatabaseActionResult> AddToRoleAsync(Guid userId, Guid roleId);
-    Task<DatabaseActionResult> RemoveFromRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
