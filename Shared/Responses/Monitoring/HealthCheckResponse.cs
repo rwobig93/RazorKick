@@ -2,7 +2,7 @@
 
 public class HealthCheckResponse
 {
-    public string SettingsValue { get; set; } = "";
+    public string Message { get; set; } = "";
     public string Health { get; set; } = "Unhealthy";
     public string ApiVersion { get; set; } = "v1";
 }

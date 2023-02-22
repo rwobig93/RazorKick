@@ -1,5 +1,6 @@
 ﻿using Application.Models.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 
@@ -21,4 +22,14 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<bool>> IsInRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult> AddToRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult> RemoveFromRoleAsync(Guid userId, Guid roleId);
+    Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
+    Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
+    Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
+    Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllUserExtendedAttributesAsync(Guid userId);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByNameAsync(string name);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync();
 }

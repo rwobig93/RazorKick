@@ -4,6 +4,7 @@ using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 
@@ -284,11 +285,208 @@ public class AppUserRepository : IAppUserRepository
 
     public async Task<DatabaseActionResult> RemoveFromRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult actionReturn = new ();
+        DatabaseActionResult actionReturn = new();
         
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new { UserId = userId, RoleId = roleId });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+        
+        try
+        {
+            actionReturn.Result = await _database.SaveDataReturnId(AppUserExtendedAttributes.Insert, addAttribute);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue)
+    {
+        DatabaseActionResult actionReturn = new();
+        
+        try
+        {
+            await _database.SaveData(AppUserExtendedAttributes.Update, new { Id = attributeId, Value = newValue });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId)
+    {
+        DatabaseActionResult actionReturn = new();
+        
+        try
+        {
+            await _database.SaveData(AppUserExtendedAttributes.Delete, new { Id = attributeId });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId)
+    {
+        DatabaseActionResult<AppUserExtendedAttributeDb> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetById, new { Id = attributeId })).FirstOrDefault();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetAllOfTypeForOwner, new { OwnerId = userId, Type = type });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetAllOfNameForOwner, new { OwnerId = userId, Name = name });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllUserExtendedAttributesAsync(Guid userId)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetByOwnerId, new { OwnerId = userId });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetAllOfType, new { Type = type });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByNameAsync(string name)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetByName, new { Name = name });
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.FailureOccurred = true;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync()
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributes.GetAll, new { });
             actionReturn.Success = true;
         }
         catch (Exception ex)

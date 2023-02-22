@@ -4,7 +4,7 @@ using Shared.Responses.Identity;
 
 namespace Application.Repositories.Identity;
 
-public interface IAppPermissionsRepository
+public interface IAppPermissionRepository
 {
     Task<IResult<List<ClaimResponse>>> GetAllAsync();
 

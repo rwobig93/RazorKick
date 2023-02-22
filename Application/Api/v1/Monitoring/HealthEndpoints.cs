@@ -14,23 +14,18 @@ public static class HealthEndpoints
 
     private static async Task<IResult> GetHealth(IConfiguration configuration)
     {
+        var returnObject = new HealthCheckResponse() { ApiVersion = "v1" };
+        
         try
         {
-            var returnObject = new HealthCheckResponse()
-            {
-                SettingsValue = configuration.GetSection("TestConfigVariable").Value,
-                Health = "Healthy",
-                ApiVersion = "v1"
-            };
+            returnObject.Message = configuration.GetSection("TestConfigVariable").Value;
+            returnObject.Health = "Healthy";
             return await Result<HealthCheckResponse>.SuccessAsync(returnObject);
         }
         catch (Exception ex)
         {
-            var returnObject = new HealthCheckResponse()
-            {
-                Health = "Unhealthy",
-                ApiVersion = "v1"
-            };
+            returnObject.Message = ex.Message;
+            returnObject.Health = "Unhealthy";
             return await Result<HealthCheckResponse>.FailAsync(returnObject);
         }
     }

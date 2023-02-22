@@ -6,7 +6,7 @@ using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 
-public class ClaimService : IAppPermissionsRepository
+public class ClaimService : IAppPermissionRepository
 {
     public async Task<IResult<List<ClaimResponse>>> GetAllAsync()
     {
