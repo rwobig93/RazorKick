@@ -35,7 +35,7 @@ public class AppUserRepository : IAppUserRepository
             actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
-        
+
         return actionReturn;
     }
 
@@ -46,7 +46,7 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             actionReturn.Result = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {TableName = "Users"})).FirstOrDefault();
+                General.GetRowCount, new {TableName = AppUsers.Table.TableName})).FirstOrDefault();
             actionReturn.Success = true;
         }
         catch (Exception ex)

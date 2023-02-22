@@ -2,22 +2,24 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class AppRoles : ISqlEnforcedEntityMsSql
+public class AppPermissions : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppRoles).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissions).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 1,
-        TableName = "AppRoles",
+        TableName = "AppPermissions",
         SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppRoles]'))
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppPermissions]'))
             begin
-                CREATE TABLE [dbo].[AppRoles](
+                CREATE TABLE [dbo].[AppPermissions](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [RoleId] UNIQUEIDENTIFIER NULL,
                     [Name] NVARCHAR(256) NOT NULL,
-                    [NormalizedName] NVARCHAR(256) NOT NULL,
-                    [ConcurrencyStamp] NVARCHAR(256) NULL,
+                    [ClaimType] NVARCHAR(256) NULL,
+                    [ClaimValue] NVARCHAR(256) NULL,
+                    [Group] NVARCHAR(256) NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
@@ -32,13 +34,13 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Delete",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Delete]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
             --     archive instead in production
                 delete
-                from dbo.[AppRoles]
+                from dbo.[AppPermissions]
                 where Id = @Id;
             end"
     };
@@ -48,11 +50,11 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetAll",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetAll]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetAll]
             AS
             begin
                 select *
-                from dbo.[AppRoles];
+                from dbo.[AppPermissions];
             end"
     };
     
@@ -61,12 +63,12 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetById",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetById]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 select *
-                from dbo.[AppRoles]
+                from dbo.[AppPermissions]
                 where Id = @Id;
             end"
     };
@@ -76,13 +78,43 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "GetByName",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetByName]
-                @Name NVARCHAR(256)
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByName]
+                @Name UNIQUEIDENTIFIER
             AS
             begin
                 select *
-                from dbo.[AppRoles]
+                from dbo.[AppPermissions]
                 where Name = @Name;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByGroup = new()
+    {
+        Table = Table,
+        Action = "GetByGroup",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByGroup]
+                @Group UNIQUEIDENTIFIER
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where Group = @Group;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByRoleId = new()
+    {
+        Table = Table,
+        Action = "GetByRoleId",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByRoleId]
+                @RoleId UNIQUEIDENTIFIER
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where RoleId = @RoleId;
             end"
     };
     
@@ -91,10 +123,12 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Insert",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Insert]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Insert]
+                @RoleId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
-                @NormalizedName NVARCHAR(256),
-                @ConcurrencyStamp NVARCHAR(256),
+                @ClaimType NVARCHAR(256),
+                @ClaimValue NVARCHAR(256),
+                @Group NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -102,8 +136,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppRoles] (Name, NormalizedName, ConcurrencyStamp, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
-                values (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                insert into dbo.[AppPermissions] (RoleId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                values (@RoleId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -112,14 +146,14 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Search",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Search]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
                 set nocount on;
                 
                 select *
-                from dbo.[AppRoles]
+                from dbo.[AppPermissions]
                 where Name LIKE '%' + @SearchTerm + '%'
                     OR Description LIKE '%' + @SearchTerm + '%';
             end"
@@ -130,11 +164,13 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         Table = Table,
         Action = "Update",
         SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Update]
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Update]
                 @Id UNIQUEIDENTIFIER,
+                @RoleId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
-                @NormalizedName NVARCHAR(256),
-                @ConcurrencyStamp NVARCHAR(256),
+                @ClaimType NVARCHAR(256),
+                @ClaimValue NVARCHAR(256),
+                @Group NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -142,8 +178,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                update dbo.[AppRoles]
-                set Name = @Name, NormalizedName = @NormalizedName, ConcurrencyStamp = @ConcurrencyStamp, Description = @Description,
+                update dbo.[AppPermissions]
+                set Name = @Name, RoleId = @RoleId, ClaimType = @ClaimType, ClaimValue = @ClaimValue, Group = @Group, Description = @Description,
                     CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
                 where Id = @Id;
             end"

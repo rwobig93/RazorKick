@@ -34,15 +34,19 @@ public class AppIdentityService : IAppIdentityService
     private readonly IFluentEmail _mailService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAppRoleRepository _roleRepository;
+    private readonly UserManager<AppUserDb> _userManager;
+    private readonly RoleManager<AppRoleDb> _roleManager;
 
     public AppIdentityService(IAppUserRepository userRepository, AppConfiguration appConfig, IFluentEmail mailService,
-        ICurrentUserService currentUserService, IAppRoleRepository roleRepository)
+        ICurrentUserService currentUserService, IAppRoleRepository roleRepository, UserManager<AppUserDb> userManager, RoleManager<AppRoleDb> roleManager)
     {
         _userRepository = userRepository;
         _appConfig = appConfig;
         _mailService = mailService;
         _currentUserService = currentUserService;
         _roleRepository = roleRepository;
+        _userManager = userManager;
+        _roleManager = roleManager;
     }
 
     public void Dispose()
@@ -594,8 +598,8 @@ public class AppIdentityService : IAppIdentityService
         var permissionClaims = new List<Claim>();
         foreach (var role in roles.Data)
         {
-            roleClaims.Add(new Claim(ClaimTypes.Role, role));
-            var thisRole = await _roleManager.FindByNameAsync(role);
+            roleClaims.Add(new Claim(ClaimTypes.Role, role.Name));
+            var thisRole = await _roleManager.FindByNameAsync(role.Name);
             var allPermissionsForThisRoles = await _roleManager.GetClaimsAsync(thisRole);
             permissionClaims.AddRange(allPermissionsForThisRoles);
         }

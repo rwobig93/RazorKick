@@ -95,6 +95,15 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
         
         services.AddJwtAuthentication(appSettings);
+        services.AddAuthorization(options =>
+        {
+            // Enumerate permissions and create claim policies for them
+            foreach (var permission in Permissions.GetRegisteredPermissions())
+            {
+                options.AddPolicy(permission, policy => policy.RequireClaim(
+                    ApplicationClaimTypes.Permission, permission));
+            }
+        });
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
             options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
@@ -200,14 +209,5 @@ public static class DependencyInjection
                     },
                 };
             });
-        services.AddAuthorization(options =>
-        {
-            // Enumerate permissions and create claim policies for them
-            foreach (var permission in Permissions.GetRegisteredPermissions())
-            {
-                options.AddPolicy(permission, policy => policy.RequireClaim(
-                    ApplicationClaimTypes.Permission, permission));
-            }
-        });
     }
 }

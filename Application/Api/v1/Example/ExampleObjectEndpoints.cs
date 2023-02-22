@@ -35,7 +35,7 @@ public static class ExampleObjectEndpoints
         }
     }
 
-    private static async Task<IResult<ExampleObjectResponse>> GetObject(Guid objectId, IExampleObjectRepository repository, IMapper mapper)
+    private static async Task<IResult<ExampleObjectResponse>> GetObject(Guid objectId, IExampleObjectRepository repository)
     {
         try
         {
