@@ -40,6 +40,11 @@ public static class AppUserExtensions
         };
     }
 
+    public static List<UserBasicResponse> ToBasicResponses(this IEnumerable<AppUserDb> appUsers)
+    {
+        return appUsers.Select(x => x.ToBasicResponse()).ToList();
+    }
+
     public static AppUserFull ToFullObject(this AppUserDb appUser)
     {
         return new AppUserFull

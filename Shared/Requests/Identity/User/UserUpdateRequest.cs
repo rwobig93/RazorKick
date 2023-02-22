@@ -1,6 +1,6 @@
-﻿namespace Shared.Requests.Identity;
+﻿namespace Shared.Requests.Identity.User;
 
-public class UpdateUserRequest
+public class UserUpdateRequest
 {
     public Guid Id { get; set; }
     public string? FirstName { get; set; }

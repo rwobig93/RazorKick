@@ -4,7 +4,6 @@ using Application.Repositories.Example;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Example;
 using Domain.Enums.Example;
-using Domain.Models.Example;
 
 namespace Infrastructure.Repositories.Example;
 

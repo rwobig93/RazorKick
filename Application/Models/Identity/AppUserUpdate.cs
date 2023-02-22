@@ -1,5 +1,6 @@
 ﻿using Domain.DatabaseEntities.Identity;
 using Shared.Enums.Identity;
+using Shared.Requests.Identity.User;
 
 namespace Application.Models.Identity;
 
@@ -56,6 +57,17 @@ public static class AppUserUpdateExtensions
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             AccountType = appUser.AccountType
+        };
+    }
+    
+    public static AppUserUpdate ToUpdateObject(this UserUpdateRequest appUser)
+    {
+        return new AppUserUpdate
+        {
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            IsActive = appUser.IsActive,
         };
     }
 }

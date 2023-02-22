@@ -1,7 +1,6 @@
 ﻿using Application.Models.Example;
 using Domain.DatabaseEntities.Example;
 using Domain.Enums.Example;
-using Domain.Models.Example;
 
 namespace Application.Repositories.Example;
 

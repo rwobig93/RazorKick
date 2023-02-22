@@ -1,8 +1,6 @@
-﻿using Application.Models.Web;
-using Domain.DatabaseEntities.Identity;
+﻿using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 using Shared.Requests.Identity;
-using Shared.Responses.Identity;
 
 namespace Application.Repositories.Identity;
 

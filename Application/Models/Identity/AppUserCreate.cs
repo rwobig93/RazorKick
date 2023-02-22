@@ -1,5 +1,7 @@
-﻿using Domain.DatabaseEntities.Identity;
+﻿using Application.Helpers.Identity;
+using Domain.DatabaseEntities.Identity;
 using Shared.Enums.Identity;
+using Shared.Requests.Identity.User;
 
 namespace Application.Models.Identity;
 
@@ -56,6 +58,37 @@ public static class AppUserCreateExtensions
             IsActive = appUser.IsActive,
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
+            AccountType = appUser.AccountType
+        };
+    }
+    
+    public static AppUserCreate ToCreateObject(this UserCreateRequest appUser)
+    {
+        AccountHelpers.GetPasswordHash(appUser.Password, out var salt, out var hash);
+        
+        return new AppUserCreate
+        {
+            Username = appUser.Username,
+            NormalizedUserName = appUser.Username.NormalizeForDatabase(),
+            Email = appUser.Email,
+            NormalizedEmail = appUser.Email.NormalizeForDatabase(),
+            EmailConfirmed = appUser.EmailConfirmed,
+            PasswordHash = hash.ToString()!,
+            PasswordSalt = salt,
+            PhoneNumber = appUser.PhoneNumber,
+            PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
+            TwoFactorEnabled = false,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = string.Empty,
+            CreatedOn = DateTime.Now,
+            LastModifiedBy = Guid.Empty,
+            LastModifiedOn = DateTime.Now,
+            IsDeleted = false,
+            DeletedOn = null,
+            IsActive = appUser.IsActive,
+            RefreshToken = string.Empty,
+            RefreshTokenExpiryTime = DateTime.Now,
             AccountType = appUser.AccountType
         };
     }

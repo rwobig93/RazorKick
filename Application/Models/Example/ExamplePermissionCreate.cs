@@ -1,6 +1,4 @@
-﻿using Domain.Enums.Example;
-
-namespace Application.Models.Example;
+﻿namespace Application.Models.Example;
 
 public class ExamplePermissionCreate
 {

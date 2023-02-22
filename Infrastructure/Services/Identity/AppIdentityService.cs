@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.Constants.Identity;
 using Application.Constants.Messages;
-using Application.Database.MsSql.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Models.Identity;
@@ -17,13 +16,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using Shared.ApiRoutes.Identity;
-using Shared.Enums.Identity;
 using Shared.Requests.Identity;
 using Shared.Responses.Identity;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using FluentEmail.Core;
+using Shared.Requests.Identity.User;
 
 namespace Infrastructure.Services.Identity;
 
