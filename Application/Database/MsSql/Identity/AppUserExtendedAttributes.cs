@@ -157,8 +157,8 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[AppUserExtendedAttributes] (OwnerId, Name, Value, Type)
-                values (@OwnerId, @Name, @Value, @Type);
-                select @Id = @@IDENTITY;
+                values (@OwnerId, @Name, @Value, @Type)
+                select Id = @@IDENTITY;
             end"
     };
     

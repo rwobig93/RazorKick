@@ -186,7 +186,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 values (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
                         @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @FirstName, @LastName, @CreatedBy,
                         @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsActive,
-                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
+                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType)
+                select Id = @@IDENTITY;
             end"
     };
 

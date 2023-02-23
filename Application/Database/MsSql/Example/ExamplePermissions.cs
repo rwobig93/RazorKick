@@ -8,6 +8,7 @@ public class ExamplePermissions : ISqlEnforcedEntityMsSql
     
     public static readonly MsSqlTable Table = new()
     {
+        EnforcementOrder = 1,
         TableName = "ExamplePermissions",
         SqlStatement = @"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[ExamplePermissions]'))
@@ -106,7 +107,7 @@ public class ExamplePermissions : ISqlEnforcedEntityMsSql
             begin
                 insert into dbo.[ExamplePermissions] (Name, Value)
                 values (@Name, @Value)
-                select @Id = @@IDENTITY;
+                select Id = @@IDENTITY;
             end"
     };
     

@@ -8,5 +8,5 @@ public partial class Index
     [Inject] private IConfiguration Configuration { get; set; } = null!;
 
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
-    private string BaseAddress => Configuration.GetSection("AppConfiguration").GetSection("BaseUrl").Value;
+    private string BaseAddress => Configuration.GetSection("AppConfiguration").GetSection("BaseUrl").Value ?? "https://localhost:9500";
 }

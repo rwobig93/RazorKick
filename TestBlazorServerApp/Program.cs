@@ -6,6 +6,6 @@ builder.AddInfrastructure();
 
 var app = builder.Build();
 
-app.ConfigureWebServer();
+app.ConfigureWebServices();
 
 app.Run();

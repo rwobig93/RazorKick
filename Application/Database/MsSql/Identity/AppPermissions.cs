@@ -2,7 +2,7 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class AppPermissions : ISqlEnforcedEntityMsSql
+public class AppPermissions
 {
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissions).GetDbScriptsFromClass();
     
@@ -80,7 +80,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
         Action = "GetByName",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByName]
-                @Name UNIQUEIDENTIFIER
+                @Name NVARCHAR(256)
             AS
             begin
                 select *
@@ -95,7 +95,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
         Action = "GetByGroup",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByGroup]
-                @Group UNIQUEIDENTIFIER
+                @Group NVARCHAR(256)
             AS
             begin
                 select *
@@ -156,7 +156,8 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 insert into dbo.[AppPermissions] (RoleId, UserId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
                 values (@RoleId, @UserId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
-                @LastModifiedOn);
+                @LastModifiedOn)
+                select Id = @@IDENTITY;
             end"
     };
     

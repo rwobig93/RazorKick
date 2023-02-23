@@ -8,6 +8,7 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
     
     public static readonly MsSqlTable Table = new()
     {
+        EnforcementOrder = 3,
         TableName = "ExampleObjects",
         SqlStatement = @"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[ExampleObjects]'))
@@ -76,7 +77,7 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
             begin
                 insert into dbo.[ExampleObjects] (FirstName, LastName)
                 values (@FirstName, @LastName)
-                select @Id = @@IDENTITY;
+                select Id = @@IDENTITY;
             end"
     };
     

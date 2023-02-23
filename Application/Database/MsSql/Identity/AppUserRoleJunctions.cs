@@ -18,9 +18,9 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                     [RoleId] UNIQUEIDENTIFIER NOT NULL,
                     CONSTRAINT User_Role_PK PRIMARY KEY (UserId, RoleId),
                     CONSTRAINT FK_User
-                        FOREIGN KEY (UserId) REFERENCES dbo.[Users] (Id),
+                        FOREIGN KEY (UserId) REFERENCES dbo.[AppUsers] (Id),
                     CONSTRAINT FK_Role
-                        FOREIGN KEY (RoleId) REFERENCES dbo.[Roles] (Id)
+                        FOREIGN KEY (RoleId) REFERENCES dbo.[AppRoles] (Id)
                 )
             end"
     };
@@ -114,7 +114,8 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[User_Role_Junctions] (UserId, RoleId)
-                values (@UserId, @RoleId);
+                values (@UserId, @RoleId)
+                select Id = @@IDENTITY;
             end"
     };
     

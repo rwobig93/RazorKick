@@ -13,7 +13,8 @@ public class WeatherForecastService : IWeatherService
 
     public async Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest startDate, int count = 100)
     {
-        return await Task.FromResult(Enumerable.Range(1, 5).Select(index => new WeatherDataResponse
+        if (count < 2) count = 2;
+        return await Task.FromResult(Enumerable.Range(1, count).Select(index => new WeatherDataResponse
         {
             Date = startDate.StartDate.AddDays(index),
             TemperatureC = Random.Shared.Next(-20, 55),

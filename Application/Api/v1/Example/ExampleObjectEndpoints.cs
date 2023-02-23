@@ -15,8 +15,8 @@ public static class ExampleObjectEndpoints
     {
         app.MapGet("/api/example/objects", GetAllObjects).ApiVersionOne();
         app.MapGet("/api/example/object", GetObject).ApiVersionOne();
-        app.MapPost("/api/example/object", UpdateObject).ApiVersionOne();
-        app.MapPut("/api/example/object", CreateObject).ApiVersionOne();
+        app.MapPost("/api/example/object", CreateObject).ApiVersionOne();
+        app.MapPut("/api/example/object", UpdateObject).ApiVersionOne();
         app.MapDelete("/api/example/object", DeleteObject).ApiVersionOne();
     }
 

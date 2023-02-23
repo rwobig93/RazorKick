@@ -17,7 +17,7 @@ public static class WebServerConfiguration
     // Certificate loading via appsettings.json =>
     //   https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
     
-    public static void ConfigureWebServer(this WebApplication app)
+    public static void ConfigureWebServices(this WebApplication app)
     {
         app.ConfigureForEnvironment();
         app.ConfigureBlazorServerCommons();
