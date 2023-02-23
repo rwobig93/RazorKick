@@ -1,6 +1,5 @@
 ﻿using Domain.Contracts;
 using Domain.Models.Identity;
-using Domain.Models.Todo;
 using Microsoft.AspNetCore.Identity;
 using Shared.Enums.Identity;
 using Shared.Responses.Identity;
@@ -66,7 +65,7 @@ public static class AppUserExtensions
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleDb>(),
-            ExtendedAttributes = new List<ExtendedAttribute>()
+            ExtendedAttributes = new List<AppUserExtendedAttributeDb>()
         };
     }
 }

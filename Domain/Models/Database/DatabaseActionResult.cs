@@ -3,7 +3,6 @@
 public class DatabaseActionResult
 {
     public bool Success { get; set; }
-    public bool FailureOccurred { get; set; } = false;
     public string ErrorMessage { get; set; } = "";
 }
 

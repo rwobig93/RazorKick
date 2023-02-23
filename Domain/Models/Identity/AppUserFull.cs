@@ -1,5 +1,4 @@
 ﻿using Domain.DatabaseEntities.Identity;
-using Domain.Models.Todo;
 using Shared.Enums.Identity;
 
 namespace Domain.Models.Identity;
@@ -23,5 +22,5 @@ public class AppUserFull
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public List<AppRoleDb> Roles { get; set; } = new();
-    public List<ExtendedAttribute> ExtendedAttributes { get; set; } = new();
+    public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
 }

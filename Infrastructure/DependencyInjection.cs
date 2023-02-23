@@ -15,6 +15,7 @@ using Domain.DatabaseEntities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Repositories.Example;
+using Infrastructure.Repositories.Identity;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
@@ -76,9 +77,12 @@ public static class DependencyInjection
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
         var appSettings = configuration.GetApplicationSettings(services);
+
+        services.AddSingleton<IAppIdentityService, AppIdentityService>();
+        services.AddSingleton<IAppIdentityRoleService, AppIdentityRoleService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         
         services.AddHttpContextAccessor();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
             .AddIdentity<AppUserDb, AppRoleDb>(options =>
@@ -90,8 +94,8 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = true;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddUserStore<IAppUserRepository>()
-            .AddRoleStore<IAppRoleRepository>()
+            .AddUserStore<IAppIdentityService>()
+            .AddRoleStore<IAppIdentityRoleService>()
             .AddDefaultTokenProviders();
         
         services.AddJwtAuthentication(appSettings);
@@ -115,6 +119,9 @@ public static class DependencyInjection
         services.AddSingleton<IExampleObjectRepository, ExampleObjectRepository>();
         services.AddSingleton<IExamplePermissionRepository, ExamplePermissionRepository>();
         services.AddSingleton<IExampleExtendedAttributeRepository, ExampleExtendedAttributeRepository>();
+        services.AddSingleton<IAppUserRepository, AppUserRepository>();
+        services.AddSingleton<IAppRoleRepository, AppRoleRepository>();
+        services.AddSingleton<IAppPermissionRepository, AppPermissionRepository>();
     }
 
     private static void AddApplicationServices(this IServiceCollection services)

@@ -6,6 +6,7 @@ namespace Domain.DatabaseEntities.Identity;
 public class AppPermissionDb : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
 {
     public new Guid Id { get; set; }
+    public new Guid UserId { get; set; }
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public string Group { get; set; } = "";

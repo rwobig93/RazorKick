@@ -1,6 +1,6 @@
-﻿using Domain.DatabaseEntities.Identity;
+﻿using Application.Models.Identity;
+using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
-using Shared.Requests.Identity;
 
 namespace Application.Repositories.Identity;
 
@@ -10,8 +10,9 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppRoleDb>> GetByNameAsync(string roleName);
-    Task<DatabaseActionResult<Guid>> CreateAsync(CreateRoleRequest request);
-    Task<DatabaseActionResult> UpdateAsync(UpdateRoleRequest request);
+    Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName);
+    Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject);
+    Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id);
     Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId);

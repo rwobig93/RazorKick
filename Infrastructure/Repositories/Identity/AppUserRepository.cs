@@ -14,10 +14,12 @@ public class AppUserRepository : IAppUserRepository
 {
 
     private readonly ISqlDataService _database;
+    private readonly IAppRoleRepository _roleRepository;
 
-    public AppUserRepository(ISqlDataService database)
+    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository)
     {
         _database = database;
+        _roleRepository = roleRepository;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
@@ -32,7 +34,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -52,7 +53,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -72,7 +72,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -89,8 +88,11 @@ public class AppUserRepository : IAppUserRepository
 
             var fullUser = foundUser!.ToFullObject();
         
-            // TODO: Add roles and extended attributes after both have been fully implemented
-            // var foundRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.)
+            var foundRoles = await _roleRepository.GetRolesForUser(foundUser!.Id);
+            fullUser.Roles = foundRoles.Result?.ToList() ?? new List<AppRoleDb>();
+
+            var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
+            fullUser.ExtendedAttributes = foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>();
             
             actionReturn.Result = fullUser;
             actionReturn.Success = true;
@@ -98,7 +100,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -118,7 +119,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -138,7 +138,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -158,7 +157,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -178,7 +176,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -197,7 +194,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -216,7 +212,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -235,7 +230,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -257,7 +251,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -276,7 +269,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -295,7 +287,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -314,7 +305,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -333,7 +323,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -352,7 +341,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -372,7 +360,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -392,7 +379,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -412,7 +398,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -432,7 +417,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -452,7 +436,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -472,7 +455,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -492,7 +474,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         

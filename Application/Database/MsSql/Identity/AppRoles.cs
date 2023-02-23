@@ -86,6 +86,21 @@ public class AppRoles : ISqlEnforcedEntityMsSql
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByNormalizedName = new()
+    {
+        Table = Table,
+        Action = "GetByNormalizedName",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetByNormalizedName]
+                @NormalizedName NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppRoles]
+                where NormalizedName = @NormalizedName;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,

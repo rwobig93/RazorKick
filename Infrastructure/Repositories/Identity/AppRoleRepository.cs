@@ -1,10 +1,10 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
+using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
-using Shared.Requests.Identity;
 
 namespace Infrastructure.Repositories.Identity;
 
@@ -29,7 +29,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -49,7 +48,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
         
@@ -68,7 +66,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -88,45 +85,61 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(CreateRoleRequest request)
+    public async Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName)
+    {
+        DatabaseActionResult<AppRoleDb> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(
+                AppRoles.GetByNormalizedName, new {NormalizedName = normalizedRoleName})).FirstOrDefault();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new ();
         
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(AppRoles.Insert, request);
+            actionReturn.Result = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(UpdateRoleRequest request)
+    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
     {
         DatabaseActionResult actionReturn = new ();
         
         try
         {
-            await _database.SaveData(AppRoles.Update, request);
+            await _database.SaveData(AppRoles.Update, updateObject);
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -145,7 +158,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -166,7 +178,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -185,7 +196,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -204,7 +214,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 
@@ -229,7 +238,6 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.Success = false;
-            actionReturn.FailureOccurred = true;
             actionReturn.ErrorMessage = ex.Message;
         }
 

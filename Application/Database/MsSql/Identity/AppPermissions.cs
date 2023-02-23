@@ -16,6 +16,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 CREATE TABLE [dbo].[AppPermissions](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [RoleId] UNIQUEIDENTIFIER NULL,
+                    [UserId] UNIQUEIDENTIFIER NULL,
                     [Name] NVARCHAR(256) NOT NULL,
                     [ClaimType] NVARCHAR(256) NULL,
                     [ClaimValue] NVARCHAR(256) NULL,
@@ -118,6 +119,21 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByUserId = new()
+    {
+        Table = Table,
+        Action = "GetByUserId",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByUserId]
+                @UserId UNIQUEIDENTIFIER
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where UserId = @UserId;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -125,6 +141,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Insert]
                 @RoleId UNIQUEIDENTIFIER,
+                @UserId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @ClaimType NVARCHAR(256),
                 @ClaimValue NVARCHAR(256),
@@ -136,8 +153,10 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppPermissions] (RoleId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
-                values (@RoleId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                insert into dbo.[AppPermissions] (RoleId, UserId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn,
+                LastModifiedBy, LastModifiedOn)
+                values (@RoleId, @UserId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
+                @LastModifiedOn);
             end"
     };
     
@@ -155,7 +174,12 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppPermissions]
                 where Name LIKE '%' + @SearchTerm + '%'
-                    OR Description LIKE '%' + @SearchTerm + '%';
+                    OR Description LIKE '%' + @SearchTerm + '%'
+                    OR RoleId LIKE '%' + @SearchTerm + '%'
+                    OR UserId LIKE '%' + @SearchTerm + '%'
+                    OR ClaimType LIKE '%' + @SearchTerm + '%'
+                    OR ClaimValue LIKE '%' + @SearchTerm + '%'
+                    OR Group LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -167,6 +191,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Update]
                 @Id UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER,
+                @UserId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @ClaimType NVARCHAR(256),
                 @ClaimValue NVARCHAR(256),
@@ -179,8 +204,9 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             AS
             begin
                 update dbo.[AppPermissions]
-                set Name = @Name, RoleId = @RoleId, ClaimType = @ClaimType, ClaimValue = @ClaimValue, Group = @Group, Description = @Description,
-                    CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
+                set Name = @Name, RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType, ClaimValue = @ClaimValue,
+                Group = @Group, Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy,
+                LastModifiedOn = @LastModifiedOn
                 where Id = @Id;
             end"
     };
