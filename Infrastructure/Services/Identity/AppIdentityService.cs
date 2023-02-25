@@ -5,6 +5,7 @@ using System.Text;
 using Application.Constants.Identity;
 using Application.Constants.Messages;
 using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
@@ -22,6 +23,7 @@ using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using FluentEmail.Core;
+using Microsoft.Extensions.Configuration;
 using Shared.Requests.Identity.User;
 
 namespace Infrastructure.Services.Identity;
@@ -29,23 +31,21 @@ namespace Infrastructure.Services.Identity;
 public class AppIdentityService : IAppIdentityService
 {
     private readonly IAppUserRepository _userRepository;
-    private readonly AppConfiguration _appConfig;
     private readonly IFluentEmail _mailService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAppRoleRepository _roleRepository;
-    private readonly UserManager<AppUserDb> _userManager;
-    private readonly RoleManager<AppRoleDb> _roleManager;
+    private readonly IAppPermissionRepository _appPermissionRepository;
+    private readonly AppConfiguration _appConfig;
 
-    public AppIdentityService(IAppUserRepository userRepository, AppConfiguration appConfig, IFluentEmail mailService,
-        ICurrentUserService currentUserService, IAppRoleRepository roleRepository, UserManager<AppUserDb> userManager, RoleManager<AppRoleDb> roleManager)
+    public AppIdentityService(IAppUserRepository userRepository, IConfiguration configuration, IFluentEmail mailService,
+        ICurrentUserService currentUserService, IAppRoleRepository roleRepository, IAppPermissionRepository appPermissionRepository)
     {
         _userRepository = userRepository;
-        _appConfig = appConfig;
         _mailService = mailService;
         _currentUserService = currentUserService;
         _roleRepository = roleRepository;
-        _userManager = userManager;
-        _roleManager = roleManager;
+        _appPermissionRepository = appPermissionRepository;
+        _appConfig = configuration.GetApplicationSettings();
     }
 
     public void Dispose()
@@ -466,7 +466,8 @@ public class AppIdentityService : IAppIdentityService
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync($"Failed to update the active status of the user account '{requestedUser.Username}'");
+            return await Result.FailAsync(
+                $"Failed to update the active status of the user account '{requestedUser.Username}': {ex.Message}");
         }
     }
 
@@ -591,15 +592,16 @@ public class AppIdentityService : IAppIdentityService
 
     private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUserDb user)
     {
-        var userClaims = await _userManager.GetClaimsAsync(user);
+        var userClaims = (await _appPermissionRepository.GetAllForUserAsync(user.Id)).Result?.ToClaims() ?? new List<Claim>();
         var roles = await GetRolesAsync(user.Id);
         var roleClaims = new List<Claim>();
         var permissionClaims = new List<Claim>();
         foreach (var role in roles.Data)
         {
             roleClaims.Add(new Claim(ClaimTypes.Role, role.Name));
-            var thisRole = await _roleManager.FindByNameAsync(role.Name);
-            var allPermissionsForThisRoles = await _roleManager.GetClaimsAsync(thisRole);
+            var thisRole = (await _roleRepository.GetByNameAsync(role.Name)).Result;
+            var allPermissionsForThisRoles = 
+                (await _appPermissionRepository.GetAllForRoleAsync(thisRole!.Id)).Result?.ToClaims() ?? new List<Claim>();
             permissionClaims.AddRange(allPermissionsForThisRoles);
         }
 

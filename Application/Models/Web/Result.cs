@@ -104,7 +104,7 @@ public class Result<T> : Result, IResult<T>
         return Task.FromResult(Fail(messages));
     }
 
-    public new static Task<Result<T>> FailAsync(T data)
+    public static Task<Result<T>> FailAsync(T data)
     {
         return Task.FromResult(Fail(data));
     }

@@ -7,12 +7,12 @@ namespace TestBlazorServerApp.Shared;
 public partial class MainLayout
 {
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
-    private bool _drawerOpen = true;
+    private bool _isDrawerOpen = true;
     private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
 
     private void DrawerToggle()
     {
-        _drawerOpen = !_drawerOpen;
+        _isDrawerOpen = !_isDrawerOpen;
     }
 
     private void ChangeTheme(MudTheme theme)

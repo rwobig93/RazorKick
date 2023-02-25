@@ -1,4 +1,4 @@
-﻿@page "/weatherdata"
+﻿@page "/weather-data"
 @using global::Shared.Responses.Example
 @using Application.Services.Example
 
@@ -37,6 +37,6 @@
         <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
         <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
         <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
-        <MudTablePager PageSizeOptions="new []{ 100, 200, 300, 500, 1000 }">100</MudTablePager>
+        <MudTablePager PageSizeOptions="new []{ 7, 10, 25, 50, 100, 300, 1000 }">10</MudTablePager>
     </PagerContent>
 </MudTable>

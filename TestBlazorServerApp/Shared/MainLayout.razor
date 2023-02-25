@@ -26,9 +26,9 @@
             }
         </MudMenu>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always"
+    <MudDrawer @bind-Open="_isDrawerOpen" ClipMode="DrawerClipMode.Always"
                Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false">
-        <NavMenu/>
+        <NavMenu DisplayTooltips="@(!_isDrawerOpen)"/>
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Medium">

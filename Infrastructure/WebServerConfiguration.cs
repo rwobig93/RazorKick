@@ -25,8 +25,8 @@ public static class WebServerConfiguration
         app.ValidateDatabaseStructure();
         
         app.ConfigureCoreServices();
-        app.ConfigureIdentityServices();
         app.ConfigureApiServices();
+        app.ConfigureIdentityServices();
         app.MapApiEndpoints();
     }
 
@@ -37,6 +37,7 @@ public static class WebServerConfiguration
             app.UseDeveloperExceptionPage();
             return;
         }
+        
         app.UseExceptionHandler("/Error");
         app.UseHsts();
         
@@ -84,6 +85,7 @@ public static class WebServerConfiguration
     private static void ConfigureIdentityServices(this IApplicationBuilder app)
     {
         app.UseAuthorization();
+        ((IEndpointRouteBuilder) app).MapIdentityApiEndpoints();
     }
 
     private static void ConfigureApiServices(this WebApplication app)
@@ -97,9 +99,10 @@ public static class WebServerConfiguration
             options.InjectStylesheet("/css/swagger-dark.css");
         });
         app.MapControllers();
+        app.ConfigureApiVersions();
     }
 
-    private static void MapApiEndpoints(this IEndpointRouteBuilder app)
+    private static void ConfigureApiVersions(this IEndpointRouteBuilder app)
     {
         ApiConstants.SupportsVersionOne = app.NewApiVersionSet()
             .HasApiVersion(ApiConstants.Version1)
@@ -110,11 +113,19 @@ public static class WebServerConfiguration
             .HasApiVersion(ApiConstants.Version2)
             .ReportApiVersions()
             .Build();
-        
-        // Map all active API endpoints
+    }
+
+    private static void MapIdentityApiEndpoints(this IEndpointRouteBuilder app)
+    {
+        // Map endpoints that require identity services
+        app.MapEndpointsUsers();
+    }
+
+    private static void MapApiEndpoints(this IEndpointRouteBuilder app)
+    {
+        // Map all service API endpoints
         app.MapEndpointsExampleObjects();
         app.MapEndpointsHealth();
         app.MapEndpointsWeather();
-        app.MapEndpointsUsers();
     }
 }

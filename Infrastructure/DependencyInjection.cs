@@ -41,13 +41,15 @@ public static class DependencyInjection
             lc.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
         
         builder.Services.AddBlazorServerCommon();
+        builder.Services.AddSettingsConfiguration(builder.Configuration);
         builder.Services.AddCoreServices(builder.Configuration);
-        // builder.Services.AddAuthServices(builder.Configuration);
 
         builder.Services.AddRepositories();
         builder.Services.AddApplicationServices();
 
         builder.Services.AddApiServices();
+        builder.Services.AddAuthServices(builder.Configuration);
+ 
         builder.Services.AddDatabaseServices();
 
         return builder;
@@ -57,6 +59,12 @@ public static class DependencyInjection
     {
         services.AddRazorPages();
         services.AddServerSideBlazor();
+    }
+
+    private static void AddSettingsConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        configuration.ConfigureMailSettings(services);
+        configuration.ConfigureApplicationSettings(services);
     }
 
     private static void AddCoreServices(this IServiceCollection services, IConfiguration configuration)
@@ -69,20 +77,19 @@ public static class DependencyInjection
         services.AddHangfireServer();
         services.AddMudServices();
 
-        var mailConfig = configuration.GetMailSettings(services);
+        var mailConfig = configuration.GetMailSettings();
+
         services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
             .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
     }
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var appSettings = configuration.GetApplicationSettings(services);
+        var appSettings = configuration.ConfigureApplicationSettings(services);
 
-        services.AddSingleton<IAppIdentityService, AppIdentityService>();
-        services.AddSingleton<IAppIdentityRoleService, AppIdentityRoleService>();
+        services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         
-        services.AddHttpContextAccessor();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
             .AddIdentity<AppUserDb, AppRoleDb>(options =>
@@ -94,11 +101,12 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = true;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddUserStore<IAppIdentityService>()
-            .AddRoleStore<IAppIdentityRoleService>()
+            .AddUserStore<AppIdentityService>()
+            .AddRoleStore<AppIdentityRoleService>()
+            .AddUserManager<UserManagerService>()
             .AddDefaultTokenProviders();
         
-        services.AddJwtAuthentication(appSettings);
+        // services.AddJwtAuthentication(appSettings);
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
@@ -108,10 +116,10 @@ public static class DependencyInjection
                     ApplicationClaimTypes.Permission, permission));
             }
         });
-        services.Configure<SecurityStampValidatorOptions>(options =>
-        {
-            options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
-        });
+        // services.Configure<SecurityStampValidatorOptions>(options =>
+        // {
+        //     options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
+        // });
     }
 
     private static void AddRepositories(this IServiceCollection services)

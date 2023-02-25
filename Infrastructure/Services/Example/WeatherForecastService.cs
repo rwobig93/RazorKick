@@ -11,7 +11,7 @@ public class WeatherForecastService : IWeatherService
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    public async Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest startDate, int count = 100)
+    public async Task<WeatherDataResponse[]> GetForecastAsync(WeatherForecastRequest startDate, int count = 10)
     {
         if (count < 2) count = 2;
         return await Task.FromResult(Enumerable.Range(1, count).Select(index => new WeatherDataResponse

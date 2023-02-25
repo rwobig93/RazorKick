@@ -63,7 +63,7 @@ public class AppPermissionRepository : IAppPermissionRepository
         try
         {
             actionReturn.Result = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {TableName = AppPermissions.Table.TableName})).FirstOrDefault();
+                General.GetRowCount, new {AppPermissions.Table.TableName})).FirstOrDefault();
             actionReturn.Success = true;
         }
         catch (Exception ex)
