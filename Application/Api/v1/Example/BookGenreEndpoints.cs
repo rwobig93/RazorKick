@@ -18,8 +18,10 @@ public static class BookGenreEndpoints
         app.MapPost("/api/example/genre", CreateGenre).ApiVersionOne();
         app.MapPut("/api/example/genre", UpdateGenre).ApiVersionOne();
         app.MapDelete("/api/example/genre", DeleteGenre).ApiVersionOne();
-        app.MapPost("/api/example/genre/book-add", AddGenreToBook).ApiVersionOne();
-        app.MapPost("/api/example/genre/book-remove", RemoveGenreFromBook).ApiVersionOne();
+        
+        app.MapGet("/api/example/genre/books", GetGenresForBook).ApiVersionOne();
+        app.MapPost("/api/example/genre/book/add", AddGenreToBook).ApiVersionOne();
+        app.MapPost("/api/example/genre/book/remove", RemoveGenreFromBook).ApiVersionOne();
     }
 
     // TODO: Add authorization/genres to these endpoints
