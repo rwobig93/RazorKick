@@ -121,6 +121,7 @@ public static class WebServerConfiguration
     {
         // Map endpoints that require identity services
         app.MapEndpointsUsers();
+        app.MapEndpointsRoles();
     }
 
     private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
