@@ -124,9 +124,9 @@ public static class DependencyInjection
 
     private static void AddRepositories(this IServiceCollection services)
     {
-        services.AddSingleton<IExampleObjectRepository, ExampleObjectRepository>();
-        services.AddSingleton<IExamplePermissionRepository, ExamplePermissionRepository>();
-        services.AddSingleton<IExampleExtendedAttributeRepository, ExampleExtendedAttributeRepository>();
+        services.AddSingleton<IBookRepository, BookRepository>();
+        services.AddSingleton<IBookGenreRepository, BookGenreRepository>();
+        services.AddSingleton<IBookReviewRepository, BookReviewRepository>();
         services.AddSingleton<IAppUserRepository, AppUserRepository>();
         services.AddSingleton<IAppRoleRepository, AppRoleRepository>();
         services.AddSingleton<IAppPermissionRepository, AppPermissionRepository>();

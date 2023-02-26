@@ -10,75 +10,75 @@ using Shared.Responses.Example;
 
 namespace Application.Api.v1.Example;
 
-public static class ExampleObjectEndpoints
+public static class BookEndpoints
 {
-    public static void MapEndpointsExampleObjects(this IEndpointRouteBuilder app)
+    public static void MapEndpointsBooks(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/example/objects", GetAllObjects).ApiVersionOne();
-        app.MapGet("/api/example/object", GetObject).ApiVersionOne();
-        app.MapGet("/api/example/object-full", GetObjectFull).ApiVersionOne();
-        app.MapPost("/api/example/object", CreateObject).ApiVersionOne();
-        app.MapPut("/api/example/object", UpdateObject).ApiVersionOne();
-        app.MapDelete("/api/example/object", DeleteObject).ApiVersionOne();
+        app.MapGet("/api/example/books", GetAllBooks).ApiVersionOne();
+        app.MapGet("/api/example/book", GetBookById).ApiVersionOne();
+        app.MapGet("/api/example/book-full", GetBookFull).ApiVersionOne();
+        app.MapPost("/api/example/book", CreateBook).ApiVersionOne();
+        app.MapPut("/api/example/book", UpdateBook).ApiVersionOne();
+        app.MapDelete("/api/example/book", DeleteBook).ApiVersionOne();
         
-        app.MapPost("/api/example/object-attribute", AddAttribute).ApiVersionOne();
-        app.MapDelete("/api/example/object-attribute", RemoveAttribute).ApiVersionOne();
+        app.MapPost("/api/example/book/review", AddReview).ApiVersionOne();
+        app.MapDelete("/api/example/book/review", RemoveReview).ApiVersionOne();
     }
 
     // TODO: Add authorization/permissions to these endpoints
-    private static async Task<IResult<List<ExampleObjectResponse>>> GetAllObjects(IExampleObjectRepository repository)
+    private static async Task<IResult<List<BookResponse>>> GetAllBooks(IBookRepository repository)
     {
         try
         {
-            var allExampleObjects = await repository.GetAll();
+            var allBooks = await repository.GetAll();
             
-            return await Result<List<ExampleObjectResponse>>.SuccessAsync(allExampleObjects.ToResponses());
+            return await Result<List<BookResponse>>.SuccessAsync(allBooks.ToResponses());
         }
         catch (Exception ex)
         {
-            return await Result<List<ExampleObjectResponse>>.FailAsync(ex.Message);
+            return await Result<List<BookResponse>>.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult<ExampleObjectResponse>> GetObject(Guid objectId, IExampleObjectRepository repository)
+    private static async Task<IResult<BookResponse>> GetBookById(Guid bookId, IBookRepository repository)
     {
         try
         {
-            var foundObject = await repository.Get(objectId);
+            var foundBook = await repository.Get(bookId);
             
-            if (foundObject is null)
-                return await Result<ExampleObjectResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundBook is null)
+                return await Result<BookResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<ExampleObjectResponse>.SuccessAsync(foundObject.ToResponse());
+            return await Result<BookResponse>.SuccessAsync(foundBook.ToResponse());
         }
         catch (Exception ex)
         {
-            return await Result<ExampleObjectResponse>.FailAsync(ex.Message);
+            return await Result<BookResponse>.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult<ExampleObjectFullResponse>> GetObjectFull(Guid objectId, IExampleObjectRepository repository)
+    private static async Task<IResult<BookFullResponse>> GetBookFull(Guid bookId, IBookRepository repository)
     {
         try
         {
-            var foundObject = await repository.GetFull(objectId);
+            var foundBook = await repository.GetFull(bookId);
             
-            if (foundObject is null)
-                return await Result<ExampleObjectFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundBook is null)
+                return await Result<BookFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<ExampleObjectFullResponse>.SuccessAsync(foundObject.ToFullResponse());
+            return await Result<BookFullResponse>.SuccessAsync(foundBook.ToFullResponse());
         }
         catch (Exception ex)
         {
-            return await Result<ExampleObjectFullResponse>.FailAsync(ex.Message);
+            return await Result<BookFullResponse>.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult<Guid>> CreateObject(ExampleObjectCreateRequest objectRequest, IExampleObjectRepository repository)
+    private static async Task<IResult<Guid>> CreateBook(BookCreateRequest bookRequest, IBookRepository repository)
     {
         try
         {
-            var createdId = await repository.Create(objectRequest.ToObjectCreate());
+            var createdId = await repository.Create(bookRequest.ToCreate());
             if (createdId is null)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
 
@@ -90,12 +90,12 @@ public static class ExampleObjectEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateObject(ExampleObjectUpdateRequest updateRequest, IExampleObjectRepository repository)
+    private static async Task<IResult> UpdateBook(BookUpdateRequest updateRequest, IBookRepository repository)
     {
         try
         {
-            await repository.Update(updateRequest.ToObjectUpdate());
-            return await Result.SuccessAsync("Object successfully updated!");
+            await repository.Update(updateRequest.ToRequest());
+            return await Result.SuccessAsync("Book successfully updated!");
         }
         catch (Exception ex)
         {
@@ -103,12 +103,12 @@ public static class ExampleObjectEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteObject(Guid objectId, IExampleObjectRepository repository)
+    private static async Task<IResult> DeleteBook(Guid bookId, IBookRepository repository)
     {
         try
         {
-            await repository.Delete(objectId);
-            return await Result.SuccessAsync("Object successfully deleted!");
+            await repository.Delete(bookId);
+            return await Result.SuccessAsync("Book successfully deleted!");
         }
         catch (Exception ex)
         {
@@ -116,12 +116,12 @@ public static class ExampleObjectEndpoints
         }
     }
 
-    private static async Task<IResult<Guid>> AddAttribute(ExampleExtendedAttributeCreateRequest createRequest,
-        IExampleExtendedAttributeRepository repository)
+    private static async Task<IResult<Guid>> AddReview(BookReviewCreateRequest createReviewRequest,
+        IBookReviewRepository repository)
     {
         try
         {
-            var createdId = await repository.Create(createRequest.ToCreate());
+            var createdId = await repository.Create(createReviewRequest.ToCreate());
             if (createdId is null)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
 
@@ -133,11 +133,11 @@ public static class ExampleObjectEndpoints
         }
     }
 
-    private static async Task<IResult> RemoveAttribute(Guid attributeId, IExampleExtendedAttributeRepository repository)
+    private static async Task<IResult> RemoveReview(Guid reviewId, IBookReviewRepository repository)
     {
         try
         {
-            await repository.Delete(attributeId);
+            await repository.Delete(reviewId);
             return await Result.SuccessAsync("ExampleExtendedAttribute successfully deleted!");
         }
         catch (Exception ex)

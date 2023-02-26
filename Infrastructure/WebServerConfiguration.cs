@@ -126,8 +126,8 @@ public static class WebServerConfiguration
     private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
     {
         // Map all example API endpoints
-        app.MapEndpointsExampleObjects();
-        app.MapEndpointsExamplePermissions();
+        app.MapEndpointsBooks();
+        app.MapEndpointsBookGenres();
         app.MapEndpointsWeather();
     }
 

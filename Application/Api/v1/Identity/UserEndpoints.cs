@@ -18,7 +18,7 @@ public static class UserEndpoints
         app.MapGet("/api/user", GetUser).ApiVersionOne();
         app.MapDelete("/api/user", DeleteUser).ApiVersionOne();
         app.MapPost("/api/user", CreateUser).ApiVersionOne();
-        // app.MapPost("/api/user/register", Register).ApiVersionOne();
+        app.MapPost("/api/user/register", Register).ApiVersionOne();
         app.MapPut("/api/user", UpdateUser).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
@@ -28,7 +28,6 @@ public static class UserEndpoints
     {
         try
         {
-            // TODO: If identity services aren't enabled don't allow register or any other identity based endpoints
             await identityService.RegisterAsync(registerRequest);
             return await Result.SuccessAsync("Successfully registered user!");
         }
