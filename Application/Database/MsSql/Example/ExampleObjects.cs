@@ -15,8 +15,8 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
             begin
                 CREATE TABLE [dbo].[ExampleObjects](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [FirstName] NVARCHAR(50) NOT NULL,
-                    [LastName] NVARCHAR(50) NOT NULL
+                    [FirstName] NVARCHAR(256) NOT NULL,
+                    [LastName] NVARCHAR(256) NOT NULL
                 )
             end"
     };
@@ -52,6 +52,21 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByIdFull = new()
+    {
+        Table = Table,
+        Action = "GetByIdFull",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spExampleObjects_GetByIdFull]
+                @Id UNIQUEIDENTIFIER
+            AS
+            begin
+                select obj.Id, obj.FirstName, obj.LastName from dbo.[ExampleObjects] obj
+                LEFT JOIN dbo.[ExampleExtendedAttributes] attr ON obj.Id = attr.AssignedTo
+                where obj.Id = @Id;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -71,13 +86,13 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
         Action = "Insert",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spExampleObjects_Insert]
-                @FirstName nvarchar(50),
-                @LastName nvarchar(50)
+                @FirstName NVARCHAR(256),
+                @LastName NVARCHAR(256)
             AS
             begin
                 insert into dbo.[ExampleObjects] (FirstName, LastName)
-                values (@FirstName, @LastName)
-                select Id = @@IDENTITY;
+                OUTPUT INSERTED.id
+                values (@FirstName, @LastName);
             end"
     };
     
@@ -88,8 +103,8 @@ public class ExampleObjects : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spExampleObjects_Update]
                 @Id UNIQUEIDENTIFIER,
-                @FirstName nvarchar(50),
-                @LastName nvarchar(50)
+                @FirstName NVARCHAR(256),
+                @LastName NVARCHAR(256)
             AS
             begin
                 update dbo.[ExampleObjects]

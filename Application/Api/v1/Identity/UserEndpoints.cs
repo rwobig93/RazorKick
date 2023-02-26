@@ -71,7 +71,13 @@ public static class UserEndpoints
     {
         try
         {
-            await repository.CreateAsync(userRequest.ToCreateObject());
+            var createRequest = userRequest.ToCreateObject();
+            createRequest.CreatedBy = Guid.Empty;
+            
+            var result = await repository.CreateAsync(createRequest);
+            if (!result.Success)
+                return await Result.FailAsync(result.ErrorMessage);
+            
             return await Result.SuccessAsync("Successfully created user!");
         }
         catch (Exception ex)

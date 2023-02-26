@@ -35,11 +35,40 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
                 delete
                 from dbo.[User_Role_Junctions]
                 where UserId = @UserId AND
                       RoleId = @RoleId;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteForUser = new()
+    {
+        Table = Table,
+        Action = "DeleteForUser",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_DeleteForUser]
+                @UserId UNIQUEIDENTIFIER
+            AS
+            begin
+                delete
+                from dbo.[User_Role_Junctions]
+                where UserId = @UserId;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteForRole = new()
+    {
+        Table = Table,
+        Action = "DeleteForRole",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_DeleteForRole]
+                @RoleId UNIQUEIDENTIFIER
+            AS
+            begin
+                delete
+                from dbo.[User_Role_Junctions]
+                where RoleId = @RoleId;
             end"
     };
     
@@ -114,8 +143,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[User_Role_Junctions] (UserId, RoleId)
-                values (@UserId, @RoleId)
-                select Id = @@IDENTITY;
+                values (@UserId, @RoleId);
             end"
     };
     

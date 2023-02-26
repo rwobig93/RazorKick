@@ -96,8 +96,7 @@ public class ExampleObjectPermissionJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[ExampleObjectPermissionJunctions] (ExampleObjectId, ExamplePermissionId)
-                values (@ExampleObjectId, @ExamplePermissionId)
-                select Id = @@IDENTITY;
+                values (@ExampleObjectId, @ExamplePermissionId);
             end"
     };
     

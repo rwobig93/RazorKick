@@ -110,8 +110,8 @@ public class ExampleExtendedAttributes : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[ExampleExtendedAttributes] (AssignedTo, Name, Value, Type)
-                values (@AssignedTo, @Name, @Value, @Type)
-                select Id = @@IDENTITY;
+                OUTPUT INSERTED.Id
+                values (@AssignedTo, @Name, @Value, @Type);
             end"
     };
     

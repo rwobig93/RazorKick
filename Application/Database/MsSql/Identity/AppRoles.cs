@@ -118,8 +118,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[AppRoles] (Name, NormalizedName, ConcurrencyStamp, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
-                values (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn)
-                select Id = @@IDENTITY;
+                OUTPUT INSERTED.Id
+                values (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     

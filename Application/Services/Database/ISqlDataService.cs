@@ -14,8 +14,7 @@ public interface ISqlDataService
     public Task<Guid> SaveDataReturnId<TParameters>(
         ISqlDatabaseScript script,
         TParameters parameters,
-        string connectionId = "DefaultConnection",
-        string returnParameterName = "Id");
+        string connectionId = "DefaultConnection");
     
     public Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(
         ISqlDatabaseScript script,

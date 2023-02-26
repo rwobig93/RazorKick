@@ -32,10 +32,24 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
                 delete
                 from dbo.[AppUserExtendedAttributes]
                 where Id = @Id;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteAllForOwner = new()
+    {
+        Table = Table,
+        Action = "DeleteAllForOwner",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_DeleteAllForOwner]
+                @OwnerId UNIQUEIDENTIFIER
+            AS
+            begin
+                delete
+                from dbo.[AppUserExtendedAttributes]
+                where OwnerId = @OwnerId;
             end"
     };
     
@@ -157,8 +171,8 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[AppUserExtendedAttributes] (OwnerId, Name, Value, Type)
-                values (@OwnerId, @Name, @Value, @Type)
-                select Id = @@IDENTITY;
+                OUTPUT INSERTED.Id
+                values (@OwnerId, @Name, @Value, @Type);
             end"
     };
     

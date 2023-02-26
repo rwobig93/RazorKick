@@ -39,10 +39,39 @@ public class AppPermissions
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
                 delete
                 from dbo.[AppPermissions]
                 where Id = @Id;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteForUser = new()
+    {
+        Table = Table,
+        Action = "DeleteForUser",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_DeleteForUser]
+                @UserId UNIQUEIDENTIFIER
+            AS
+            begin
+                delete
+                from dbo.[AppPermissions]
+                where UserId = @UserId;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteForRole = new()
+    {
+        Table = Table,
+        Action = "DeleteForRole",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_DeleteForRole]
+                @RoleId UNIQUEIDENTIFIER
+            AS
+            begin
+                delete
+                from dbo.[AppPermissions]
+                where RoleId = @RoleId;
             end"
     };
     
@@ -155,9 +184,9 @@ public class AppPermissions
             begin
                 insert into dbo.[AppPermissions] (RoleId, UserId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
+                OUTPUT INSERTED.Id
                 values (@RoleId, @UserId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
-                @LastModifiedOn)
-                select Id = @@IDENTITY;
+                @LastModifiedOn);
             end"
     };
     

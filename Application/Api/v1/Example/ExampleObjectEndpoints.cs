@@ -4,6 +4,7 @@ using Application.Models.Example;
 using Application.Models.Web;
 using Application.Repositories.Example;
 using Domain.DatabaseEntities.Example;
+using Domain.Models.Example;
 using Shared.Requests.Example;
 using Shared.Responses.Example;
 
@@ -15,9 +16,13 @@ public static class ExampleObjectEndpoints
     {
         app.MapGet("/api/example/objects", GetAllObjects).ApiVersionOne();
         app.MapGet("/api/example/object", GetObject).ApiVersionOne();
+        app.MapGet("/api/example/object-full", GetObjectFull).ApiVersionOne();
         app.MapPost("/api/example/object", CreateObject).ApiVersionOne();
         app.MapPut("/api/example/object", UpdateObject).ApiVersionOne();
         app.MapDelete("/api/example/object", DeleteObject).ApiVersionOne();
+        
+        app.MapPost("/api/example/object-attribute", AddAttribute).ApiVersionOne();
+        app.MapDelete("/api/example/object-attribute", RemoveAttribute).ApiVersionOne();
     }
 
     // TODO: Add authorization/permissions to these endpoints
@@ -49,6 +54,23 @@ public static class ExampleObjectEndpoints
         catch (Exception ex)
         {
             return await Result<ExampleObjectResponse>.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<ExampleObjectFullResponse>> GetObjectFull(Guid objectId, IExampleObjectRepository repository)
+    {
+        try
+        {
+            var foundObject = await repository.GetFull(objectId);
+            
+            if (foundObject is null)
+                return await Result<ExampleObjectFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+
+            return await Result<ExampleObjectFullResponse>.SuccessAsync(foundObject.ToFullResponse());
+        }
+        catch (Exception ex)
+        {
+            return await Result<ExampleObjectFullResponse>.FailAsync(ex.Message);
         }
     }
 
@@ -87,6 +109,36 @@ public static class ExampleObjectEndpoints
         {
             await repository.Delete(objectId);
             return await Result.SuccessAsync("Object successfully deleted!");
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<Guid>> AddAttribute(ExampleExtendedAttributeCreateRequest createRequest,
+        IExampleExtendedAttributeRepository repository)
+    {
+        try
+        {
+            var createdId = await repository.Create(createRequest.ToCreate());
+            if (createdId is null)
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
+
+            return await Result<Guid>.SuccessAsync((Guid)createdId);
+        }
+        catch (Exception ex)
+        {
+            return await Result<Guid>.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult> RemoveAttribute(Guid attributeId, IExampleExtendedAttributeRepository repository)
+    {
+        try
+        {
+            await repository.Delete(attributeId);
+            return await Result.SuccessAsync("ExampleExtendedAttribute successfully deleted!");
         }
         catch (Exception ex)
         {

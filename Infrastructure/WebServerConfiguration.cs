@@ -27,7 +27,9 @@ public static class WebServerConfiguration
         app.ConfigureCoreServices();
         app.ConfigureApiServices();
         app.ConfigureIdentityServices();
-        app.MapApiEndpoints();
+        
+        app.MapExampleApiEndpoints();
+        app.MapApplicationApiEndpoints();
     }
 
     private static void ConfigureForEnvironment(this WebApplication app)
@@ -121,11 +123,17 @@ public static class WebServerConfiguration
         app.MapEndpointsUsers();
     }
 
-    private static void MapApiEndpoints(this IEndpointRouteBuilder app)
+    private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
     {
-        // Map all service API endpoints
+        // Map all example API endpoints
         app.MapEndpointsExampleObjects();
-        app.MapEndpointsHealth();
+        app.MapEndpointsExamplePermissions();
         app.MapEndpointsWeather();
+    }
+
+    private static void MapApplicationApiEndpoints(this IEndpointRouteBuilder app)
+    {
+        // Map all other endpoints for the application (not identity and not examples)
+        app.MapEndpointsHealth();
     }
 }

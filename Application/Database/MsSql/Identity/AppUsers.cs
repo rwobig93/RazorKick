@@ -53,10 +53,23 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
-                delete
-                from dbo.[AppUsers]
+                update dbo.[AppUsers]
+                set IsDeleted = 1
                 where Id = @Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllDeleted = new()
+    {
+        Table = Table,
+        Action = "GetAllDeleted",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetAllDeleted]
+            AS
+            begin
+                select *
+                from dbo.[AppUsers]
+                where IsDeleted = 1;
             end"
     };
 
@@ -69,7 +82,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             AS
             begin
                 select *
-                from dbo.[AppUsers];
+                from dbo.[AppUsers]
+                where IsDeleted = 0;
             end"
     };
 
@@ -84,7 +98,22 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Email = @Email;
+                where Email = @Email AND IsDeleted = 0;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByEmailDeleted = new()
+    {
+        Table = Table,
+        Action = "GetByEmailDeleted",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByEmailDeleted]
+                @Email NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppUsers]
+                where Email = @Email AND IsDeleted = 1;
             end"
     };
 
@@ -99,7 +128,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where NormalizedEmail = @NormalizedEmail;
+                where NormalizedEmail = @NormalizedEmail AND IsDeleted = 0;
             end"
     };
 
@@ -114,7 +143,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Id = @Id;
+                where Id = @Id AND IsDeleted = 0;
             end"
     };
 
@@ -129,7 +158,22 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Username = @Username;
+                where Username = @Username AND IsDeleted = 0;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByUsernameDeleted = new()
+    {
+        Table = Table,
+        Action = "GetByUsernameDeleted",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByUsernameDeleted]
+                @Username NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppUsers]
+                where Username = @Username AND IsDeleted = 1;
             end"
     };
 
@@ -144,7 +188,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where NormalizedUsername = @NormalizedUsername;
+                where NormalizedUsername = @NormalizedUsername AND IsDeleted = 0;
             end"
     };
 
@@ -183,11 +227,11 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                                          PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
                                          IsActive, RefreshToken, RefreshTokenExpiryTime, AccountType)
+                OUTPUT INSERTED.Id
                 values (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
                         @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @FirstName, @LastName, @CreatedBy,
                         @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsActive,
-                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType)
-                select Id = @@IDENTITY;
+                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
             end"
     };
 
@@ -206,7 +250,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 from dbo.[AppUsers]
                 where FirstName LIKE '%' + @SearchTerm + '%'
                     OR LastName LIKE '%' + @SearchTerm + '%'
-                    OR Email LIKE '%' + @SearchTerm + '%';
+                    OR Email LIKE '%' + @SearchTerm + '%'
+                AND IsDeleted = 0;
             end"
     };
 

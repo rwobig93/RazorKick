@@ -20,6 +20,7 @@ public class AppUserCreate
     public string? FirstName { get; set; } = "";
     public string? LastName { get; set; } = "";
     public string? ProfilePictureDataUrl { get; set; } = "";
+    public Guid? CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; } = DateTime.Now;
@@ -81,6 +82,7 @@ public static class AppUserCreateExtensions
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = string.Empty,
+            CreatedBy = Guid.Empty,
             CreatedOn = DateTime.Now,
             LastModifiedBy = Guid.Empty,
             LastModifiedOn = DateTime.Now,

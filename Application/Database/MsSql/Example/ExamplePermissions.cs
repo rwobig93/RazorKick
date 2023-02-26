@@ -106,8 +106,8 @@ public class ExamplePermissions : ISqlEnforcedEntityMsSql
             AS
             begin
                 insert into dbo.[ExamplePermissions] (Name, Value)
-                values (@Name, @Value)
-                select Id = @@IDENTITY;
+                OUTPUT INSERTED.Id
+                values (@Name, @Value);
             end"
     };
     

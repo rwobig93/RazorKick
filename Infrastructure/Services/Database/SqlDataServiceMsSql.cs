@@ -36,18 +36,11 @@ public class SqlDataServiceMsSql : ISqlDataService
     }
 
     public async Task<Guid> SaveDataReturnId<TParameters>(
-        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection", string returnParameterName = "Id")
+        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection")
     {
         using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
-        var databaseSafeReturnParameter = $"@{returnParameterName}";
 
-        DynamicParameters dynamicParameters = new();
-        dynamicParameters.AddDynamicParams(parameters);
-        dynamicParameters.Add(databaseSafeReturnParameter, null, DbType.Guid, ParameterDirection.Output);
-
-        await connection.ExecuteAsync(script.Path, dynamicParameters, commandType: CommandType.StoredProcedure);
-
-        return dynamicParameters.Get<Guid>(databaseSafeReturnParameter);
+        return await connection.ExecuteScalarAsync<Guid>(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(
