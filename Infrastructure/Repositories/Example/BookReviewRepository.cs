@@ -3,6 +3,7 @@ using Application.Models.Example;
 using Application.Repositories.Example;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Example;
+using Domain.Models.Database;
 
 namespace Infrastructure.Repositories.Example;
 
@@ -15,52 +16,132 @@ public class BookReviewRepository : IBookReviewRepository
         _database = database;
     }
     
-    public async Task<List<BookReviewDb>> GetAll()
+    public async Task<DatabaseActionResult<List<BookReviewDb>>> GetAllAsync()
     {
-        return (await _database.LoadData<BookReviewDb, dynamic>(BookReviews.GetAll, new { })).ToList();
-    }
-
-    public async Task<Guid?> Create(BookReviewCreate createObject)
-    {
-        var createdId = await _database.SaveDataReturnId(BookReviews.Insert, createObject);
-        if (createdId == Guid.Empty)
-            return null;
-
-        return createdId;
-    }
-
-    public async Task<BookReviewDb?> Get(Guid id)
-    {
-        var foundObject = await _database.LoadData<BookReviewDb, dynamic>(
-            BookReviews.GetById,
-            new {Id = id});
+        DatabaseActionResult<List<BookReviewDb>> actionReturn = new ();
         
-        return foundObject.FirstOrDefault();
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookReviewDb, dynamic>(BookReviews.GetAll, new { })).ToList();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task Update(BookReviewUpdate updateObject)
+    public async Task<DatabaseActionResult<Guid?>> CreateAsync(BookReviewCreate createObject)
     {
-        await _database.SaveData(BookReviews.Update, updateObject);
+        DatabaseActionResult<Guid?> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = await _database.SaveDataReturnId(BookReviews.Insert, createObject);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task Delete(Guid id)
+    public async Task<DatabaseActionResult<BookReviewDb?>> GetByIdAsync(Guid id)
     {
-        await _database.SaveData(BookReviews.Delete, new {Id = id});
+        DatabaseActionResult<BookReviewDb?> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookReviewDb, dynamic>(
+                BookReviews.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task<List<BookReviewDb>> GetReviewsForBook(Guid bookId)
+    public async Task<DatabaseActionResult> UpdateAsync(BookReviewUpdate updateObject)
     {
-        var reviews = await _database.LoadData<BookReviewDb, dynamic>(
-            BookReviews.GetByBookId, new { BookId = bookId });
-
-        return reviews.ToList();
+        DatabaseActionResult actionReturn = new ();
+        
+        try
+        {
+            await _database.SaveData(BookReviews.Update, updateObject);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task<List<BookReviewDb>> GetReviewsFromAuthor(string author)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
     {
-        var reviews = await _database.LoadData<BookReviewDb, dynamic>(
-            BookReviews.GetAllFromAuthor, new { Author = author });
+        DatabaseActionResult actionReturn = new ();
+        
+        try
+        {
+            await _database.SaveData(BookReviews.Delete, new {Id = id});
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
 
-        return reviews.ToList();
+    public async Task<DatabaseActionResult<List<BookReviewDb>>> GetReviewsForBookAsync(Guid bookId)
+    {
+        DatabaseActionResult<List<BookReviewDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookReviewDb, dynamic>(
+                BookReviews.GetByBookId, new {BookId = bookId})).ToList();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<List<BookReviewDb>>> GetReviewsFromAuthorAsync(string author)
+    {
+        DatabaseActionResult<List<BookReviewDb>> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookReviewDb, dynamic>(
+                BookReviews.GetAllFromAuthor, new {Author = author})).ToList();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 }

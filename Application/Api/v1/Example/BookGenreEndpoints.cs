@@ -29,9 +29,11 @@ public static class BookGenreEndpoints
     {
         try
         {
-            var allGenres = await repository.GetAll();
-            
-            return await Result<List<BookGenreResponse>>.SuccessAsync(allGenres.ToResponses());
+            var allGenres = await repository.GetAllAsync();
+            if (!allGenres.Success)
+                return await Result<List<BookGenreResponse>>.FailAsync(allGenres.ErrorMessage);
+
+            return await Result<List<BookGenreResponse>>.SuccessAsync(allGenres.Result!.ToResponses());
         }
         catch (Exception ex)
         {
@@ -43,12 +45,11 @@ public static class BookGenreEndpoints
     {
         try
         {
-            var foundGenre = await repository.GetById(genreId);
-            
-            if (foundGenre is null)
+            var foundGenre = await repository.GetByIdAsync(genreId);
+            if (!foundGenre.Success)
                 return await Result<BookGenreResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<BookGenreResponse>.SuccessAsync(foundGenre.ToResponse());
+            return await Result<BookGenreResponse>.SuccessAsync(foundGenre.Result!.ToResponse());
         }
         catch (Exception ex)
         {
@@ -60,11 +61,11 @@ public static class BookGenreEndpoints
     {
         try
         {
-            var createdId = await repository.Create(genreRequest.ToCreate());
-            if (createdId is null)
+            var createdId = await repository.CreateAsync(genreRequest.ToCreate());
+            if (!createdId.Success)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
 
-            return await Result<Guid>.SuccessAsync((Guid)createdId);
+            return await Result<Guid>.SuccessAsync((Guid)createdId.Result!);
         }
         catch (Exception ex)
         {
@@ -76,7 +77,10 @@ public static class BookGenreEndpoints
     {
         try
         {
-            await repository.Update(updateRequest.ToUpdate());
+            var update = await repository.UpdateAsync(updateRequest.ToUpdate());
+            if (!update.Success)
+                return await Result.FailAsync(update.ErrorMessage);
+            
             return await Result.SuccessAsync("Genre successfully updated!");
         }
         catch (Exception ex)
@@ -89,7 +93,10 @@ public static class BookGenreEndpoints
     {
         try
         {
-            await repository.Delete(genreId);
+            var delete = await repository.DeleteAsync(genreId);
+            if (!delete.Success)
+                return await Result.FailAsync(delete.ErrorMessage);
+            
             return await Result.SuccessAsync("Genre successfully deleted!");
         }
         catch (Exception ex)
@@ -102,8 +109,11 @@ public static class BookGenreEndpoints
     {
         try
         {
-            var genres = await repository.GetGenresForBook(bookId);
-            return await Result<List<BookGenreResponse>>.SuccessAsync(genres.ToResponses());
+            var genres = await repository.GetGenresForBookAsync(bookId);
+            if (!genres.Success)
+                return await Result<List<BookGenreResponse>>.FailAsync(genres.ErrorMessage);
+            
+            return await Result<List<BookGenreResponse>>.SuccessAsync(genres.Result!.ToResponses());
         }
         catch (Exception ex)
         {
@@ -115,7 +125,10 @@ public static class BookGenreEndpoints
     {
         try
         {
-            await repository.AddToBook(bookId, genreId);
+            var add = await repository.AddToBookAsync(bookId, genreId);
+            if (!add.Success)
+                return await Result.FailAsync(add.ErrorMessage);
+            
             return await Result.SuccessAsync("Genre successfully added!");
         }
         catch (Exception ex)
@@ -128,7 +141,10 @@ public static class BookGenreEndpoints
     {
         try
         {
-            await repository.RemoveFromBook(bookId, genreId);
+            var remove = await repository.RemoveFromBookAsync(bookId, genreId);
+            if (!remove.Success)
+                return await Result.FailAsync(remove.ErrorMessage);
+            
             return await Result.SuccessAsync("Genre successfully removed!");
         }
         catch (Exception ex)

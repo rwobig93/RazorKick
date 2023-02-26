@@ -3,6 +3,7 @@ using Application.Models.Example;
 using Application.Repositories.Example;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Example;
+using Domain.Models.Database;
 using Domain.Models.Example;
 
 namespace Infrastructure.Repositories.Example;
@@ -21,58 +22,123 @@ public class BookRepository : IBookRepository
         _bookGenreRepository = bookGenreRepository;
     }
     
-    public async Task<List<BookDb>> GetAll()
+    public async Task<DatabaseActionResult<List<BookDb>>> GetAllAsync()
     {
-        return (await _database.LoadData<BookDb, dynamic>(Books.GetAll, new { })).ToList();
-    }
-
-    public async Task<Guid?> Create(BookCreate createBook)
-    {
-        var createdId = await _database.SaveDataReturnId(Books.Insert, createBook);
-        if (createdId == Guid.Empty)
-            return null;
-
-        return createdId;
-    }
-
-    public async Task<BookDb?> Get(Guid id)
-    {
-        var foundObject = await _database.LoadData<BookDb, dynamic>(
-            Books.GetById,
-            new {Id = id});
+        DatabaseActionResult<List<BookDb>> actionReturn = new ();
         
-        return foundObject.FirstOrDefault()!;
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookDb, dynamic>(Books.GetAll, new { })).ToList();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task<BookFull?> GetFull(Guid id)
+    public async Task<DatabaseActionResult<Guid?>> CreateAsync(BookCreate createBook)
     {
-        var foundBook = await Get(id);
-
-        if (foundBook is null)
-            return null;
-
-        var convertedFullBook = foundBook.ToFullObject();
-
-        var foundReviews = await _bookReviewRepository.GetReviewsForBook(foundBook.Id);
+        DatabaseActionResult<Guid?> actionReturn = new ();
         
-        foreach (var review in foundReviews)
-            convertedFullBook.Reviews.Add(review);
-
-        var foundGenres = await _bookGenreRepository.GetGenresForBook(foundBook.Id);
+        try
+        {
+            actionReturn.Result = await _database.SaveDataReturnId(Books.Insert, createBook);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
         
-        foreach (var genre in foundGenres)
-            convertedFullBook.Genres.Add(genre);
-        
-        return convertedFullBook;
+        return actionReturn;
     }
 
-    public async Task Update(BookUpdate bookUpdate)
+    public async Task<DatabaseActionResult<BookDb?>> GetByIdAsync(Guid id)
     {
-        await _database.SaveData(Books.Update, bookUpdate);
+        DatabaseActionResult<BookDb?> actionReturn = new ();
+        
+        try
+        {
+            actionReturn.Result = (await _database.LoadData<BookDb, dynamic>(
+                Books.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 
-    public async Task Delete(Guid id)
+    public async Task<DatabaseActionResult<BookFull?>> GetFullByIdAsync(Guid id)
     {
-        await _database.SaveData(Books.Delete, new {Id = id});
+        DatabaseActionResult<BookFull?> actionReturn = new ();
+        
+        try
+        {
+            var foundBook = (await GetByIdAsync(id)).Result;
+            var convertedFullBook = foundBook?.ToFullObject();
+            
+            var foundReviews = (await _bookReviewRepository.GetReviewsForBookAsync(foundBook!.Id)).Result ?? new List<BookReviewDb>();
+            foreach (var review in foundReviews)
+                convertedFullBook!.Reviews.Add(review);
+
+            var foundGenres = (await _bookGenreRepository.GetGenresForBookAsync(foundBook.Id)).Result ?? new List<BookGenreDb>();
+            foreach (var genre in foundGenres)
+                convertedFullBook!.Genres.Add(genre);
+            
+            actionReturn.Result = convertedFullBook;
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> UpdateAsync(BookUpdate bookUpdate)
+    {
+        DatabaseActionResult actionReturn = new ();
+        
+        try
+        {
+            await _database.SaveData(Books.Update, bookUpdate);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    {
+        DatabaseActionResult actionReturn = new ();
+        
+        try
+        {
+            await _database.SaveData(Books.Delete, new {Id = id});
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+        
+        return actionReturn;
     }
 }

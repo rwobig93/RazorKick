@@ -30,9 +30,11 @@ public static class BookEndpoints
     {
         try
         {
-            var allBooks = await repository.GetAll();
+            var allBooks = await repository.GetAllAsync();
+            if (!allBooks.Success)
+                return await Result<List<BookResponse>>.FailAsync(allBooks.ErrorMessage);
             
-            return await Result<List<BookResponse>>.SuccessAsync(allBooks.ToResponses());
+            return await Result<List<BookResponse>>.SuccessAsync(allBooks.Result!.ToResponses());
         }
         catch (Exception ex)
         {
@@ -44,12 +46,11 @@ public static class BookEndpoints
     {
         try
         {
-            var foundBook = await repository.Get(bookId);
-            
-            if (foundBook is null)
+            var foundBook = await repository.GetByIdAsync(bookId);
+            if (!foundBook.Success)
                 return await Result<BookResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<BookResponse>.SuccessAsync(foundBook.ToResponse());
+            return await Result<BookResponse>.SuccessAsync(foundBook.Result!.ToResponse());
         }
         catch (Exception ex)
         {
@@ -61,12 +62,11 @@ public static class BookEndpoints
     {
         try
         {
-            var foundBook = await repository.GetFull(bookId);
-            
-            if (foundBook is null)
+            var foundBook = await repository.GetFullByIdAsync(bookId);
+            if (!foundBook.Success)
                 return await Result<BookFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<BookFullResponse>.SuccessAsync(foundBook.ToFullResponse());
+            return await Result<BookFullResponse>.SuccessAsync(foundBook.Result!.ToFullResponse());
         }
         catch (Exception ex)
         {
@@ -78,11 +78,11 @@ public static class BookEndpoints
     {
         try
         {
-            var createdId = await repository.Create(bookRequest.ToCreate());
-            if (createdId is null)
+            var createdId = await repository.CreateAsync(bookRequest.ToCreate());
+            if (!createdId.Success)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
 
-            return await Result<Guid>.SuccessAsync((Guid)createdId);
+            return await Result<Guid>.SuccessAsync((Guid)createdId.Result!);
         }
         catch (Exception ex)
         {
@@ -94,7 +94,10 @@ public static class BookEndpoints
     {
         try
         {
-            await repository.Update(updateRequest.ToRequest());
+            var update = await repository.UpdateAsync(updateRequest.ToRequest());
+            if (!update.Success)
+                return await Result.FailAsync(update.ErrorMessage);
+            
             return await Result.SuccessAsync("Book successfully updated!");
         }
         catch (Exception ex)
@@ -107,7 +110,10 @@ public static class BookEndpoints
     {
         try
         {
-            await repository.Delete(bookId);
+            var delete = await repository.DeleteAsync(bookId);
+            if (!delete.Success)
+                return await Result.FailAsync(delete.ErrorMessage);
+            
             return await Result.SuccessAsync("Book successfully deleted!");
         }
         catch (Exception ex)
@@ -121,11 +127,11 @@ public static class BookEndpoints
     {
         try
         {
-            var createdId = await repository.Create(createReviewRequest.ToCreate());
-            if (createdId is null)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
+            var createdId = await repository.CreateAsync(createReviewRequest.ToCreate());
+            if (!createdId.Success)
+                return await Result<Guid>.FailAsync(createdId.ErrorMessage);
 
-            return await Result<Guid>.SuccessAsync((Guid)createdId);
+            return await Result<Guid>.SuccessAsync((Guid)createdId.Result!);
         }
         catch (Exception ex)
         {
@@ -137,8 +143,11 @@ public static class BookEndpoints
     {
         try
         {
-            await repository.Delete(reviewId);
-            return await Result.SuccessAsync("ExampleExtendedAttribute successfully deleted!");
+            var remove = await repository.DeleteAsync(reviewId);
+            if (!remove.Success)
+                return await Result.FailAsync(remove.ErrorMessage);
+            
+            return await Result.SuccessAsync("Book review successfully deleted!");
         }
         catch (Exception ex)
         {
