@@ -1,10 +1,11 @@
-﻿using Shared.Models.Identity;
+﻿namespace Shared.Responses.Identity;
 
-namespace Shared.Responses.Identity;
-
-public class PermissionsResponse
+public class PermissionResponse
 {
+    public new Guid Id { get; set; }
+    public Guid UserId { get; set; }
     public Guid RoleId { get; set; }
-    public string? RoleName { get; set; }
-    public List<Permission> CurrentPermissions { get; set; } = new List<Permission>();
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Group { get; set; } = "";
 }

@@ -1,4 +1,6 @@
-﻿using Domain.DatabaseEntities.Identity;
+﻿using Application.Helpers.Identity;
+using Domain.DatabaseEntities.Identity;
+using Shared.Requests.Identity;
 
 namespace Application.Models.Identity;
 
@@ -28,6 +30,21 @@ public static class AppRoleCreateExtensions
             CreatedOn = appRole.CreatedOn,
             LastModifiedBy = appRole.LastModifiedBy,
             LastModifiedOn = appRole.LastModifiedOn
+        };
+    }
+
+    public static AppRoleCreate ToCreateObject(this CreateRoleRequest createRole)
+    {
+        return new AppRoleCreate
+        {
+            Name = createRole.Name!,
+            NormalizedName = createRole.Name!.NormalizeForDatabase(),
+            ConcurrencyStamp = null,
+            Description = createRole.Description,
+            CreatedBy = default,
+            CreatedOn = default,
+            LastModifiedBy = null,
+            LastModifiedOn = null
         };
     }
 }

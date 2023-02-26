@@ -5,6 +5,7 @@ using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Models.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
 
@@ -14,12 +15,15 @@ public static class UserEndpoints
 {
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/users", GetAllUsers).ApiVersionOne();
-        app.MapGet("/api/user", GetUser).ApiVersionOne();
-        app.MapDelete("/api/user", DeleteUser).ApiVersionOne();
-        app.MapPost("/api/user", CreateUser).ApiVersionOne();
-        app.MapPost("/api/user/register", Register).ApiVersionOne();
-        app.MapPut("/api/user", UpdateUser).ApiVersionOne();
+        app.MapGet("/api/identity/users", GetAllUsers).ApiVersionOne();
+        app.MapGet("/api/identity/user", GetUserById).ApiVersionOne();
+        app.MapGet("/api/identity/user/full", GetFullUserById).ApiVersionOne();
+        app.MapGet("/api/identity/user/email", GetUserByEmail).ApiVersionOne();
+        app.MapGet("/api/identity/user/username", GetUserByUsername).ApiVersionOne();
+        app.MapDelete("/api/identity/user", DeleteUser).ApiVersionOne();
+        app.MapPost("/api/identity/user", CreateUser).ApiVersionOne();
+        app.MapPost("/api/identity/user/register", Register).ApiVersionOne();
+        app.MapPut("/api/identity/user", UpdateUser).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
     }
@@ -46,7 +50,7 @@ public static class UserEndpoints
         return await Result<List<UserBasicResponse>>.SuccessAsync(usersResult.Result?.ToBasicResponses() ?? new List<UserBasicResponse>());
     }
 
-    private static async Task<IResult<UserBasicResponse>> GetUser(string userId, IAppUserRepository repository)
+    private static async Task<IResult<UserBasicResponse>> GetUserById(string userId, IAppUserRepository repository)
     {
         try
         {
@@ -55,6 +59,58 @@ public static class UserEndpoints
                 return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
             
             var foundUser = (await repository.GetByIdAsync(convertedGuid)).Result;
+            if (foundUser is null)
+                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            
+            return await Result<UserBasicResponse>.SuccessAsync(foundUser.ToBasicResponse());
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserBasicResponse>.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<UserFullResponse>> GetFullUserById(string userId, IAppUserRepository repository)
+    {
+        try
+        {
+            var isValidGuid = Guid.TryParse(userId, out var convertedGuid);
+            if (!isValidGuid)
+                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            
+            var foundUser = (await repository.GetByIdFullAsync(convertedGuid)).Result;
+            if (foundUser is null)
+                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            
+            return await Result<UserFullResponse>.SuccessAsync(foundUser.ToFullResponse());
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserFullResponse>.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<UserBasicResponse>> GetUserByEmail(string email, IAppUserRepository repository)
+    {
+        try
+        {
+            var foundUser = (await repository.GetByEmailAsync(email)).Result;
+            if (foundUser is null)
+                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            
+            return await Result<UserBasicResponse>.SuccessAsync(foundUser.ToBasicResponse());
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserBasicResponse>.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<UserBasicResponse>> GetUserByUsername(string username, IAppUserRepository repository)
+    {
+        try
+        {
+            var foundUser = (await repository.GetByUsernameAsync(username)).Result;
             if (foundUser is null)
                 return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
             

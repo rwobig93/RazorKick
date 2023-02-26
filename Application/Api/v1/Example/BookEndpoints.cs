@@ -16,7 +16,7 @@ public static class BookEndpoints
     {
         app.MapGet("/api/example/books", GetAllBooks).ApiVersionOne();
         app.MapGet("/api/example/book", GetBookById).ApiVersionOne();
-        app.MapGet("/api/example/book-full", GetBookFull).ApiVersionOne();
+        app.MapGet("/api/example/book/full", GetBookFull).ApiVersionOne();
         app.MapPost("/api/example/book", CreateBook).ApiVersionOne();
         app.MapPut("/api/example/book", UpdateBook).ApiVersionOne();
         app.MapDelete("/api/example/book", DeleteBook).ApiVersionOne();

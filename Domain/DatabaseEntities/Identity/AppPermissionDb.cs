@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
+using Shared.Responses.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
@@ -27,5 +28,23 @@ public static class AppPermissionDbExtensions
     public static IEnumerable<Claim> ToClaims(this IEnumerable<AppPermissionDb> appPermissions)
     {
         return appPermissions.Select(x => new Claim(x.ClaimType, x.ClaimValue));
+    }
+
+    public static PermissionResponse ToResponse(this AppPermissionDb permission)
+    {
+        return new PermissionResponse
+        {
+            Id = permission.Id,
+            UserId = permission.UserId,
+            RoleId = permission.RoleId,
+            Name = permission.Name,
+            Description = permission.Description,
+            Group = permission.Group
+        };
+    }
+
+    public static List<PermissionResponse> ToResponses(this IEnumerable<AppPermissionDb> permissions)
+    {
+        return permissions.Select(x => x.ToResponse()).ToList();
     }
 }

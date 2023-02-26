@@ -9,7 +9,7 @@ public static class HealthEndpoints
 {
     public static void MapEndpointsHealth(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/health", GetHealth).ApiVersionOne();
+        app.MapGet("/api/monitoring/health", GetHealth).ApiVersionOne();
     }
 
     private static async Task<IResult> GetHealth(IConfiguration configuration)
