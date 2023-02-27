@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Text;
+using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Web;
 using Application.Repositories.Example;
@@ -107,20 +108,20 @@ public static class DependencyInjection
             .AddUserManager<UserManagerService>()
             .AddDefaultTokenProviders();
         
-        // services.AddJwtAuthentication(appSettings);
+        services.AddJwtAuthentication(appSettings);
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
-            foreach (var permission in Permissions.GetRegisteredPermissions())
+            foreach (var permission in PermissionConstants.GetRegisteredPermissions())
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim(
                     ApplicationClaimTypes.Permission, permission));
             }
         });
-        // services.Configure<SecurityStampValidatorOptions>(options =>
-        // {
-        //     options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
-        // });
+        services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
+        });
     }
 
     private static void AddRepositories(this IServiceCollection services)

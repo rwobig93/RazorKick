@@ -1,9 +1,11 @@
+using Application.Constants.Identity;
 using Application.Constants.Messages;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Domain.DatabaseEntities.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.Permission;
 using Shared.Responses.Identity;
@@ -28,6 +30,7 @@ public static class PermissionEndpoints
         app.MapPost("/api/identity/permission/role/has", RoleHasPermission).ApiVersionOne();
     }
     
+    [Authorize(Policy = PermissionConstants.Claims.View)]
     public static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionRepository repository)
     {
         try

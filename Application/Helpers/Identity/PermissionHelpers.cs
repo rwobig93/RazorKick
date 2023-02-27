@@ -7,6 +7,6 @@ public static class PermissionHelpers
         if (permissionGroup is null || permissionName is null || permissionAccess is null)
             return null;
         
-        return $"Permission.{permissionGroup}.{permissionName}.{permissionAccess}";
+        return $"Permissions.{permissionGroup}.{permissionName}.{permissionAccess}";
     }
 }

@@ -337,7 +337,21 @@ public class AppPermissionRepository : IAppPermissionRepository
 
     public async Task<DatabaseActionResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<bool> actionReturn = new ();
+        
+        try
+        {
+            var allGlobalUserPermissions = await GetAllIncludingRolesForUserAsync(userId);
+            actionReturn.Result = allGlobalUserPermissions.Result!.Any(x => x.ClaimValue == permissionValue);
+            actionReturn.Success = true;
+        }
+        catch (Exception ex)
+        {
+            actionReturn.Success = false;
+            actionReturn.ErrorMessage = ex.Message;
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<bool>> RoleHasPermission(Guid roleId, string permissionValue)

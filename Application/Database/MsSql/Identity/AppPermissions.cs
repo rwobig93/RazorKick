@@ -2,13 +2,13 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class AppPermissions
+public class AppPermissions : ISqlEnforcedEntityMsSql
 {
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissions).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 3,
         TableName = "AppPermissions",
         SqlStatement = @"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppPermissions]'))
@@ -24,8 +24,8 @@ public class AppPermissions
                     [ClaimType] NVARCHAR(256) NULL,
                     [ClaimValue] NVARCHAR(1024) NULL,
                     [Name] NVARCHAR(256) NOT NULL,
-                    [Group] NVARCHAR(256) NULL,
-                    [Access] NVARCHAR(256) NULL,
+                    [Group] NVARCHAR(256) NOT NULL,
+                    [Access] NVARCHAR(256) NOT NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
@@ -134,7 +134,7 @@ public class AppPermissions
             begin
                 select *
                 from dbo.[AppPermissions]
-                where Group = @Group;
+                where [Group] = @Group;
             end"
     };
     
@@ -235,7 +235,7 @@ public class AppPermissions
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppPermissions] (RoleId, UserId, Name, Group, Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
+                insert into dbo.[AppPermissions] (RoleId, UserId, Name, [Group], Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
                 values (@RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
@@ -272,11 +272,11 @@ public class AppPermissions
                 @Id UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER,
                 @UserId UNIQUEIDENTIFIER,
+                @ClaimType NVARCHAR(256),
+                @ClaimValue NVARCHAR(1024),
                 @Name NVARCHAR(256),
                 @Group NVARCHAR(256),
                 @Access NVARCHAR(256),
-                @ClaimType NVARCHAR(256),
-                @ClaimValue NVARCHAR(1024),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -285,8 +285,8 @@ public class AppPermissions
             AS
             begin
                 update dbo.[AppPermissions]
-                set Name = @Name, Group = @Group, Access = @Access, RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType,
-                    ClaimValue = @ClaimValue Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn,
+                set RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType, ClaimValue = @ClaimValue, Name = @Name, [Group] = @Group,
+                    Access = @Access, Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn,
                     LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
                 where Id = @Id;
             end"
