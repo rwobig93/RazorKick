@@ -1,4 +1,4 @@
-﻿namespace Shared.Requests.Identity;
+﻿namespace Shared.Requests.Identity.Role;
 
 public class UpdateRoleRequest
 {

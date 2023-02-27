@@ -1,4 +1,4 @@
-﻿namespace Shared.Requests.Identity;
+﻿namespace Shared.Requests.Identity.Permission;
 
 public class ClaimRequest
 {

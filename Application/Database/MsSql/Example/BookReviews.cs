@@ -15,9 +15,9 @@ public class BookReviews : ISqlEnforcedEntityMsSql
             begin
                 CREATE TABLE [dbo].[BookReviews](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [BookId] UNIQUEIDENTIFIER,
+                    [BookId] UNIQUEIDENTIFIER NOT NULL,
                     [Author] NVARCHAR(256) NOT NULL,
-                    [Content] NVARCHAR(4096) NOT NULL,
+                    [Content] NVARCHAR(4000) NOT NULL,
                     [IsDeleted] BIT NOT NULL
                 )
             end"
@@ -32,7 +32,7 @@ public class BookReviews : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                update from dbo.[BookReviews]
+                update dbo.[BookReviews]
                 set IsDeleted = 1
                 where Id = @Id;
             end"
@@ -47,7 +47,7 @@ public class BookReviews : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                update from dbo.[BookReviews]
+                update dbo.[BookReviews]
                 set IsDeleted = 0
                 where Id = @Id;
             end"
@@ -147,9 +147,9 @@ public class BookReviews : ISqlEnforcedEntityMsSql
         Action = "Insert",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_Insert]
-                [BookId] UNIQUEIDENTIFIER,
-                [Author] NVARCHAR(256),
-                [Content] NVARCHAR(4096)
+                @BookId UNIQUEIDENTIFIER,
+                @Author NVARCHAR(256),
+                @Content NVARCHAR(4000)
             AS
             begin
                 insert into dbo.[BookReviews] (BookId, Author, Content)
@@ -165,9 +165,9 @@ public class BookReviews : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_Update]
                 @Id UNIQUEIDENTIFIER,
-                [BookId] UNIQUEIDENTIFIER,
-                [Author] NVARCHAR(256),
-                [Content] NVARCHAR(4096)
+                @BookId UNIQUEIDENTIFIER,
+                @Author NVARCHAR(256),
+                @Content NVARCHAR(4000)
             AS
             begin
                 update dbo.[BookReviews]

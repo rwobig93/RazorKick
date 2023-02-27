@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Requests.Identity;
+namespace Shared.Requests.Identity.User;
 
 public class ResetPasswordRequest
 {

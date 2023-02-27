@@ -1,6 +1,6 @@
 ﻿using Shared.Enums.Identity;
 
-namespace Shared.Requests.Identity;
+namespace Shared.Requests.Identity.User;
 
 public class GetUserExtendedAttributesByOwnerIdAndType
 {

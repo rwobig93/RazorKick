@@ -16,11 +16,16 @@ public class AppPermissions
                 CREATE TABLE [dbo].[AppPermissions](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [RoleId] UNIQUEIDENTIFIER NULL,
+                        FOREIGN KEY (RoleId) REFERENCES dbo.[AppRoles] (Id)
+                        ON DELETE SET NULL,
                     [UserId] UNIQUEIDENTIFIER NULL,
-                    [Name] NVARCHAR(256) NOT NULL,
+                        FOREIGN KEY (UserId) REFERENCES dbo.[AppUsers] (Id)
+                        ON DELETE SET NULL,
                     [ClaimType] NVARCHAR(256) NULL,
-                    [ClaimValue] NVARCHAR(256) NULL,
+                    [ClaimValue] NVARCHAR(1024) NULL,
+                    [Name] NVARCHAR(256) NOT NULL,
                     [Group] NVARCHAR(256) NULL,
+                    [Access] NVARCHAR(256) NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
@@ -133,6 +138,21 @@ public class AppPermissions
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByAccess = new()
+    {
+        Table = Table,
+        Action = "GetByAccess",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByAccess]
+                @Access NVARCHAR(256)
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where Access = @Access;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure GetByRoleId = new()
     {
         Table = Table,
@@ -145,6 +165,22 @@ public class AppPermissions
                 select *
                 from dbo.[AppPermissions]
                 where RoleId = @RoleId;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetByRoleIdAndValue = new()
+    {
+        Table = Table,
+        Action = "GetByRoleIdAndValue",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByRoleIdAndValue]
+                @RoleId UNIQUEIDENTIFIER,
+                @ClaimValue NVARCHAR(1024)
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where RoleId = @RoleId AND ClaimValue = @ClaimValue;
             end"
     };
     
@@ -163,6 +199,22 @@ public class AppPermissions
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByUserIdAndValue = new()
+    {
+        Table = Table,
+        Action = "GetByUserIdAndValue",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByUserIdAndValue]
+                @UserId UNIQUEIDENTIFIER,
+                @ClaimValue NVARCHAR(1024)
+            AS
+            begin
+                select *
+                from dbo.[AppPermissions]
+                where UserId = @UserId AND ClaimValue = @ClaimValue;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -171,10 +223,11 @@ public class AppPermissions
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Insert]
                 @RoleId UNIQUEIDENTIFIER,
                 @UserId UNIQUEIDENTIFIER,
-                @Name NVARCHAR(256),
                 @ClaimType NVARCHAR(256),
-                @ClaimValue NVARCHAR(256),
+                @ClaimValue NVARCHAR(1024),
+                @Name NVARCHAR(256),
                 @Group NVARCHAR(256),
+                @Access NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -182,10 +235,10 @@ public class AppPermissions
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppPermissions] (RoleId, UserId, Name, ClaimType, ClaimValue, Group, Description, CreatedBy, CreatedOn,
+                insert into dbo.[AppPermissions] (RoleId, UserId, Name, Group, Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                values (@RoleId, @UserId, @Name, @ClaimType, @ClaimValue, @Group, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
+                values (@RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
                 @LastModifiedOn);
             end"
     };
@@ -203,13 +256,10 @@ public class AppPermissions
                 
                 select *
                 from dbo.[AppPermissions]
-                where Name LIKE '%' + @SearchTerm + '%'
-                    OR Description LIKE '%' + @SearchTerm + '%'
+                where Description LIKE '%' + @SearchTerm + '%'
                     OR RoleId LIKE '%' + @SearchTerm + '%'
                     OR UserId LIKE '%' + @SearchTerm + '%'
-                    OR ClaimType LIKE '%' + @SearchTerm + '%'
-                    OR ClaimValue LIKE '%' + @SearchTerm + '%'
-                    OR Group LIKE '%' + @SearchTerm + '%';
+                    OR ClaimValue LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -223,9 +273,10 @@ public class AppPermissions
                 @RoleId UNIQUEIDENTIFIER,
                 @UserId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
-                @ClaimType NVARCHAR(256),
-                @ClaimValue NVARCHAR(256),
                 @Group NVARCHAR(256),
+                @Access NVARCHAR(256),
+                @ClaimType NVARCHAR(256),
+                @ClaimValue NVARCHAR(1024),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -234,9 +285,9 @@ public class AppPermissions
             AS
             begin
                 update dbo.[AppPermissions]
-                set Name = @Name, RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType, ClaimValue = @ClaimValue,
-                Group = @Group, Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy,
-                LastModifiedOn = @LastModifiedOn
+                set Name = @Name, Group = @Group, Access = @Access, RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType,
+                    ClaimValue = @ClaimValue Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn,
+                    LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
                 where Id = @Id;
             end"
     };

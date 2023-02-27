@@ -28,11 +28,11 @@ public static class UserEndpoints
         // TODO: Add swagger endpoint viewer enrichment
     }
 
-    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppIdentityService identityService)
+    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppAccountService accountService)
     {
         try
         {
-            await identityService.RegisterAsync(registerRequest);
+            await accountService.RegisterAsync(registerRequest);
             return await Result.SuccessAsync("Successfully registered user!");
         }
         catch (Exception ex)
