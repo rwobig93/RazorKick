@@ -230,9 +230,9 @@ public class AppIdentityService : IAppIdentityService
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         
         var currentUser = (await _userRepository.GetByIdAsync(currentUserId)).Result;
-        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
+        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;
         var userIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
-        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRole);
+        var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRoleName);
         
         if (!userIsAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.PermissionError);
@@ -266,12 +266,12 @@ public class AppIdentityService : IAppIdentityService
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         var currentUser = (await _userRepository.GetByIdAsync(Guid.Parse(_currentUserService.UserId))).Result;
-        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
+        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;
         
         var currentUserIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(adminRole.Name);
         var requestIsForSelf = requestedUser.Id == currentUser.Id;
-        var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultUsername;
+        var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultAdminUsername;
         
         if (!currentUserIsAdmin && requestContainsAdmin)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.PermissionError);
@@ -315,7 +315,7 @@ public class AppIdentityService : IAppIdentityService
             return await Result<List<IdentityResult>>.FailAsync("Was unable to find a user with the provided information");
 
         // TODO: Add permission for toggling user status and validation current user has permissions
-        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRole)).Result;
+        var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;
         var requestedUserIsAdmin =
             (await _roleRepository.IsUserInRoleAsync(requestedUser.Id, adminRole!.Id)).Result;
         if (requestedUserIsAdmin)

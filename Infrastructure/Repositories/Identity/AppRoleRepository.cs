@@ -11,16 +11,18 @@ namespace Infrastructure.Repositories.Identity;
 public class AppRoleRepository : IAppRoleRepository
 {
     private readonly ISqlDataService _database;
+    private readonly ILogger _logger;
 
-    public AppRoleRepository(ISqlDataService database)
+    public AppRoleRepository(ISqlDataService database, ILogger logger)
     {
         _database = database;
+        _logger = logger;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync()
     {
-        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
@@ -30,6 +32,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -37,8 +40,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
-        DatabaseActionResult<int> actionReturn = new ();
-        
+        DatabaseActionResult<int> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<int, dynamic>(
@@ -49,15 +52,16 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid id)
     {
-        DatabaseActionResult<AppRoleDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppRoleDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = id})).FirstOrDefault();
@@ -67,6 +71,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -74,8 +79,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<AppRoleDb>> GetByNameAsync(string roleName)
     {
-        DatabaseActionResult<AppRoleDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppRoleDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(
@@ -86,6 +91,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -93,8 +99,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName)
     {
-        DatabaseActionResult<AppRoleDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppRoleDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(
@@ -105,6 +111,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -112,8 +119,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject)
     {
-        DatabaseActionResult<Guid> actionReturn = new ();
-        
+        DatabaseActionResult<Guid> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
@@ -123,6 +130,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -130,8 +138,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
             await _database.SaveData(AppRoles.Update, updateObject);
@@ -141,6 +149,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -148,8 +157,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult> DeleteAsync(Guid id)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
             await _database.SaveData(AppRoles.Delete, new {Id = id});
@@ -159,6 +168,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -166,8 +176,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult<bool> actionReturn = new ();
-        
+        DatabaseActionResult<bool> actionReturn = new();
+
         try
         {
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
@@ -179,6 +189,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -186,8 +197,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
@@ -197,6 +208,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -204,8 +216,8 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
@@ -215,6 +227,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -222,12 +235,12 @@ public class AppRoleRepository : IAppRoleRepository
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetRolesForUser(Guid userId)
     {
-        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
         try
         {
             var roleIds = await _database.LoadData<Guid, dynamic>(
-                AppUserRoleJunctions.GetRolesOfUser, new { UserId = userId });
+                AppUserRoleJunctions.GetRolesOfUser, new {UserId = userId});
 
             var allRoles = (await GetAllAsync()).Result ?? new List<AppRoleDb>();
             var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
@@ -239,6 +252,7 @@ public class AppRoleRepository : IAppRoleRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;

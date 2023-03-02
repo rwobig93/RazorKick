@@ -36,7 +36,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 delete
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId AND
                       RoleId = @RoleId;
             end"
@@ -52,7 +52,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 delete
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId;
             end"
     };
@@ -67,7 +67,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 delete
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where RoleId = @RoleId;
             end"
     };
@@ -81,7 +81,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 select *
-                from dbo.[User_Role_Junctions];
+                from dbo.[AppUserRoleJunctions];
             end"
     };
     
@@ -96,7 +96,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 select *
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId AND
                       RoleId = @RoleId;
             end"
@@ -112,7 +112,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 select RoleId
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId;
             end"
     };
@@ -127,7 +127,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
             AS
             begin
                 select UserId
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where RoleId = @RoleId;
             end"
     };
@@ -142,7 +142,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                insert into dbo.[User_Role_Junctions] (UserId, RoleId)
+                insert into dbo.[AppUserRoleJunctions] (UserId, RoleId)
                 values (@UserId, @RoleId);
             end"
     };
@@ -159,7 +159,7 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                 set nocount on;
                 
                 select *
-                from dbo.[User_Role_Junctions]
+                from dbo.[AppUserRoleJunctions]
                 where UserId LIKE '%' + @SearchTerm + '%'
                     OR RoleId LIKE '%' + @SearchTerm + '%';
             end"

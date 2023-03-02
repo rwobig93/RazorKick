@@ -53,20 +53,21 @@ public static class PermissionConstants
     }
     
     /// <summary>
-    /// Returns a list of permissions
+    /// Returns a list of all native permissions values
     /// </summary>
     /// <returns></returns>
-    public static List<string> GetRegisteredPermissions()
+    public static List<string> GetAllPermissions()
     {
-        var permissions = new List<string>();
-        foreach (var prop in typeof(PermissionConstants).GetNestedTypes().SelectMany(c => c.GetFields(
-                     BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)))
+        return (from prop in typeof(PermissionConstants).GetNestedTypes().SelectMany(
+            c => c.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)) 
+            select prop.GetValue(null) into propertyValue where propertyValue is not null select propertyValue.ToString()!).ToList();
+    }
+
+    public static List<string> GetDefaultRolePermissions()
+    {
+        return new List<string>()
         {
-            var propertyValue = prop.GetValue(null);
-            if (propertyValue is not null)
-                permissions.Add(propertyValue.ToString()!);
-        }
-        
-        return permissions;
+            Preferences.ChangeTheme
+        };
     }
 }

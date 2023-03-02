@@ -16,11 +16,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 CREATE TABLE [dbo].[AppPermissions](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [RoleId] UNIQUEIDENTIFIER NULL,
-                        FOREIGN KEY (RoleId) REFERENCES dbo.[AppRoles] (Id)
-                        ON DELETE SET NULL,
                     [UserId] UNIQUEIDENTIFIER NULL,
-                        FOREIGN KEY (UserId) REFERENCES dbo.[AppUsers] (Id)
-                        ON DELETE SET NULL,
                     [ClaimType] NVARCHAR(256) NULL,
                     [ClaimValue] NVARCHAR(1024) NULL,
                     [Name] NVARCHAR(256) NOT NULL,

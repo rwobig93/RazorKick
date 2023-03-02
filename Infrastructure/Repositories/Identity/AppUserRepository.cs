@@ -12,20 +12,21 @@ namespace Infrastructure.Repositories.Identity;
 
 public class AppUserRepository : IAppUserRepository
 {
-
     private readonly ISqlDataService _database;
     private readonly IAppRoleRepository _roleRepository;
+    private readonly ILogger _logger;
 
-    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository)
+    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger)
     {
         _database = database;
         _roleRepository = roleRepository;
+        _logger = logger;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
     {
-        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
@@ -35,6 +36,7 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
 
         return actionReturn;
@@ -42,8 +44,8 @@ public class AppUserRepository : IAppUserRepository
 
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
-        DatabaseActionResult<int> actionReturn = new ();
-        
+        DatabaseActionResult<int> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<int, dynamic>(
@@ -54,15 +56,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserDb>> GetByIdAsync(Guid userId)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
@@ -73,27 +76,28 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
-    
+
     public async Task<DatabaseActionResult<AppUserFull>> GetByIdFullAsync(Guid userId)
     {
-        DatabaseActionResult<AppUserFull> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserFull> actionReturn = new();
+
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetById, new {Id = userId})).FirstOrDefault();
 
             var fullUser = foundUser!.ToFullObject();
-        
+
             var foundRoles = await _roleRepository.GetRolesForUser(foundUser!.Id);
             fullUser.Roles = foundRoles.Result?.ToList() ?? new List<AppRoleDb>();
 
             var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
             fullUser.ExtendedAttributes = foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>();
-            
+
             actionReturn.Result = fullUser;
             actionReturn.Success = true;
         }
@@ -101,15 +105,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
@@ -120,15 +125,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
@@ -139,15 +145,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
@@ -158,15 +165,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserDb>> GetByNormalizedEmailAsync(string normalizedEmail)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
@@ -177,15 +185,16 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
             await _database.SaveData(AppUsers.Update, updateObject);
@@ -195,33 +204,35 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> DeleteAsync(Guid userId)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
-            await _database.SaveData(AppUsers.Delete, new { Id = userId });
+            await _database.SaveData(AppUsers.Delete, new {Id = userId});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
     {
-        DatabaseActionResult<Guid> actionReturn = new ();
-        
+        DatabaseActionResult<Guid> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
@@ -231,20 +242,21 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
-    
+
     public async Task<DatabaseActionResult<bool>> IsInRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult<bool> actionReturn = new ();
-        
+        DatabaseActionResult<bool> actionReturn = new();
+
         try
         {
             var foundMembership = await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
-                AppUserRoleJunctions.GetByUserRoleId, new { UserId = userId, RoleId = roleId });
-        
+                AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = roleId});
+
             actionReturn.Result = foundMembership.FirstOrDefault() is not null;
             actionReturn.Success = true;
         }
@@ -252,51 +264,54 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> AddToRoleAsync(Guid userId, Guid roleId)
     {
-        DatabaseActionResult actionReturn = new ();
-        
+        DatabaseActionResult actionReturn = new();
+
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Insert, new { UserId = userId, RoleId = roleId });
+            await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> RemoveFromRoleAsync(Guid userId, Guid roleId)
     {
         DatabaseActionResult actionReturn = new();
-        
+
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Delete, new { UserId = userId, RoleId = roleId });
+            await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute)
     {
         DatabaseActionResult<Guid> actionReturn = new();
-        
+
         try
         {
             actionReturn.Result = await _database.SaveDataReturnId(AppUserExtendedAttributes.Insert, addAttribute);
@@ -306,165 +321,177 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue)
     {
         DatabaseActionResult actionReturn = new();
-        
+
         try
         {
-            await _database.SaveData(AppUserExtendedAttributes.Update, new { Id = attributeId, Value = newValue });
+            await _database.SaveData(AppUserExtendedAttributes.Update, new {Id = attributeId, Value = newValue});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId)
     {
         DatabaseActionResult actionReturn = new();
-        
+
         try
         {
-            await _database.SaveData(AppUserExtendedAttributes.Delete, new { Id = attributeId });
+            await _database.SaveData(AppUserExtendedAttributes.Delete, new {Id = attributeId});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId)
     {
-        DatabaseActionResult<AppUserExtendedAttributeDb> actionReturn = new ();
-        
+        DatabaseActionResult<AppUserExtendedAttributeDb> actionReturn = new();
+
         try
         {
             actionReturn.Result = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetById, new { Id = attributeId })).FirstOrDefault();
+                AppUserExtendedAttributes.GetById, new {Id = attributeId})).FirstOrDefault();
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type)
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId,
+        ExtendedAttributeType type)
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfTypeForOwner, new { OwnerId = userId, Type = type });
+                AppUserExtendedAttributes.GetAllOfTypeForOwner, new {OwnerId = userId, Type = type});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name)
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId,
+        string name)
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfNameForOwner, new { OwnerId = userId, Name = name });
+                AppUserExtendedAttributes.GetAllOfNameForOwner, new {OwnerId = userId, Name = name});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllUserExtendedAttributesAsync(Guid userId)
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetByOwnerId, new { OwnerId = userId });
+                AppUserExtendedAttributes.GetByOwnerId, new {OwnerId = userId});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type)
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(
+        ExtendedAttributeType type)
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfType, new { Type = type });
+                AppUserExtendedAttributes.GetAllOfType, new {Type = type});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByNameAsync(string name)
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetByName, new { Name = name });
+                AppUserExtendedAttributes.GetByName, new {Name = name});
             actionReturn.Success = true;
         }
         catch (Exception ex)
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync()
     {
-        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new ();
-        
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
         try
         {
             actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
@@ -475,8 +502,9 @@ public class AppUserRepository : IAppUserRepository
         {
             actionReturn.Success = false;
             actionReturn.ErrorMessage = ex.Message;
+            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
         }
-        
+
         return actionReturn;
     }
 }

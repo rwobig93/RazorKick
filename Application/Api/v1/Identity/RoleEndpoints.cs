@@ -21,9 +21,9 @@ public static class RoleEndpoints
         app.MapPut("/api/identity/role", UpdateRole).ApiVersionOne();
         
         app.MapGet("/api/identity/roles/user", GetRolesForUser).ApiVersionOne();
-        app.MapGet("/api/identity/role/user/isinrole", IsUserInRole).ApiVersionOne();
-        app.MapPost("/api/identity/role/user/add", AddUserToRole).ApiVersionOne();
-        app.MapPost("/api/identity/role/user/remove", RemoveUserFromRole).ApiVersionOne();
+        app.MapGet("/api/identity/role/isinrole", IsUserInRole).ApiVersionOne();
+        app.MapPost("/api/identity/role/adduser", AddUserToRole).ApiVersionOne();
+        app.MapPost("/api/identity/role/removeuser", RemoveUserFromRole).ApiVersionOne();
     }
     
     public static async Task<IResult<List<RoleResponse>>> GetAllRoles(IAppRoleRepository repository)

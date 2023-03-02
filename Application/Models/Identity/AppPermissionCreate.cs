@@ -35,6 +35,7 @@ public static class AppPermissionCreateExtensions
             Access = permissionCreate.Access
         };
     }
+    
     public static AppPermissionCreate ToCreate(this PermissionCreateForUserRequest permissionCreate)
     {
         return new AppPermissionCreate
@@ -46,6 +47,32 @@ public static class AppPermissionCreateExtensions
             Description = permissionCreate.Description,
             Group = permissionCreate.Group,
             Access = permissionCreate.Access
+        };
+    }
+
+    public static AppPermissionCreate ToAppPermissionCreate(this string permissionValue)
+    {
+        if (permissionValue.Split('.').Length != 4)
+            throw new Exception("Permission value provided doesn't match the correct syntax of Permissions.Group.Name.Access");
+
+        var permissionName = PermissionHelpers.GetNameFromValue(permissionValue);
+        var permissionGroup = PermissionHelpers.GetGroupFromValue(permissionValue);
+        var permissionAccess = PermissionHelpers.GetAccessFromValue(permissionValue);
+        
+        return new AppPermissionCreate
+        {
+            RoleId = default,
+            UserId = default,
+            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimValue = permissionValue,
+            Name = permissionName,
+            Group = permissionGroup,
+            Access = permissionAccess,
+            Description = $"{permissionAccess} access to {permissionName} {permissionGroup}",
+            CreatedBy = Guid.Empty,
+            CreatedOn = DateTime.Now,
+            LastModifiedBy = null,
+            LastModifiedOn = null
         };
     }
 }

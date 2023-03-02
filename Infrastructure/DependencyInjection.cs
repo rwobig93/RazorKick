@@ -112,7 +112,7 @@ public static class DependencyInjection
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
-            foreach (var permission in PermissionConstants.GetRegisteredPermissions())
+            foreach (var permission in PermissionConstants.GetAllPermissions())
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim(
                     ApplicationClaimTypes.Permission, permission));
@@ -161,6 +161,9 @@ public static class DependencyInjection
     {
         // TODO: Add more sql support, currently we only support MsSql
         services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
+
+        // Seeds the targeted database using the indicated provider on startup
+        services.AddHostedService<SqlDatabaseSeederService>();
     }
     
     private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration config)
