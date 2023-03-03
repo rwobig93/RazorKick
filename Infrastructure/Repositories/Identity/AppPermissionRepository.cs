@@ -25,14 +25,12 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(AppPermissions.GetAll, new { });
-            actionReturn.Success = true;
+            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(AppPermissions.GetAll, new { });
+            actionReturn.Succeed(allPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -44,15 +42,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var searchResults = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.Search, new {SearchTerm = searchTerm});
-            actionReturn.Success = true;
+            actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.Search.Path, ex.Message);
         }
 
         return actionReturn;
@@ -64,15 +60,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<int, dynamic>(
+            var rowCount = (await _database.LoadData<int, dynamic>(
                 General.GetRowCount, new {AppPermissions.Table.TableName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, General.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -84,15 +78,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -104,15 +96,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByUserIdAndValue, new {UserId = userId, ClaimValue = claimValue})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByUserIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -124,15 +114,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = claimValue})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByRoleIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -144,15 +132,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByName, new {Name = roleName});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -164,15 +150,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByGroup, new {Group = groupName});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByGroup.Path, ex.Message);
         }
 
         return actionReturn;
@@ -184,15 +168,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByAccess, new {Access = accessName});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByAccess.Path, ex.Message);
         }
 
         return actionReturn;
@@ -204,15 +186,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByRoleId, new {RoleId = roleId});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -224,15 +204,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppPermissionDb, dynamic>(
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByUserId, new {UserId = userId});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByUserId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -259,14 +237,11 @@ public class AppPermissionRepository : IAppPermissionRepository
                     allPermissions.AddRange(rolePermissions.Result!);
             }
 
-            actionReturn.Result = allPermissions;
-            actionReturn.Success = true;
+            actionReturn.Succeed(allPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, "GetAllIncludingRolesForUserAsync", ex.Message);
         }
 
         return actionReturn;
@@ -281,14 +256,12 @@ public class AppPermissionRepository : IAppPermissionRepository
             if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
 
-            actionReturn.Result = await _database.SaveDataReturnId(AppPermissions.Insert, createObject);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(AppPermissions.Insert, createObject);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -301,13 +274,11 @@ public class AppPermissionRepository : IAppPermissionRepository
         try
         {
             await _database.SaveData(AppPermissions.Update, updateObject);
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -320,13 +291,11 @@ public class AppPermissionRepository : IAppPermissionRepository
         try
         {
             await _database.SaveData(AppPermissions.Delete, new {Id = id});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -340,14 +309,12 @@ public class AppPermissionRepository : IAppPermissionRepository
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByUserIdAndValue, new {UserId = userId, ClaimValue = permissionValue})).FirstOrDefault();
-            actionReturn.Result = foundPermission is not null;
-            actionReturn.Success = true;
+            var hasPermission = foundPermission is not null;
+            actionReturn.Succeed(hasPermission);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByUserIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -360,14 +327,12 @@ public class AppPermissionRepository : IAppPermissionRepository
         try
         {
             var allGlobalUserPermissions = await GetAllIncludingRolesForUserAsync(userId);
-            actionReturn.Result = allGlobalUserPermissions.Result!.Any(x => x.ClaimValue == permissionValue);
-            actionReturn.Success = true;
+            var hasPermission = allGlobalUserPermissions.Result!.Any(x => x.ClaimValue == permissionValue);
+            actionReturn.Succeed(hasPermission);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, "UserIncludingRolesHasPermission", ex.Message);
         }
 
         return actionReturn;
@@ -381,14 +346,12 @@ public class AppPermissionRepository : IAppPermissionRepository
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissions.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = permissionValue})).FirstOrDefault();
-            actionReturn.Result = foundPermission is not null;
-            actionReturn.Success = true;
+            var hasPermission = foundPermission is not null;
+            actionReturn.Succeed(hasPermission);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppPermissions.GetByRoleIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;

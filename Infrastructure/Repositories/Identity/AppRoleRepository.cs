@@ -25,14 +25,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
-            actionReturn.Success = true;
+            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
+            actionReturn.Succeed(allRoles);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -44,15 +42,13 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<int, dynamic>(
+            var rowCount = (await _database.LoadData<int, dynamic>(
                 General.GetRowCount, new {TableName = AppRoles.Table.TableName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, General.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -64,14 +60,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Success = true;
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -83,15 +77,13 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
                 AppRoles.GetByName, new {Name = roleName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -103,15 +95,13 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppRoleDb, dynamic>(
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
                 AppRoles.GetByNormalizedName, new {NormalizedName = normalizedRoleName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.GetByNormalizedName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -123,14 +113,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -143,13 +131,11 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await _database.SaveData(AppRoles.Update, updateObject);
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -162,13 +148,11 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await _database.SaveData(AppRoles.Delete, new {Id = id});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppRoles.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -182,14 +166,12 @@ public class AppRoleRepository : IAppRoleRepository
         {
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
                 AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = roleId})).FirstOrDefault();
-            actionReturn.Result = userRoleJunction is not null;
-            actionReturn.Success = true;
+            var hasRole = userRoleJunction is not null;
+            actionReturn.Succeed(hasRole);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.GetByUserRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -202,13 +184,11 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -221,13 +201,11 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -245,14 +223,11 @@ public class AppRoleRepository : IAppRoleRepository
             var allRoles = (await GetAllAsync()).Result ?? new List<AppRoleDb>();
             var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
 
-            actionReturn.Result = matchingRoles;
-            actionReturn.Success = true;
+            actionReturn.Succeed(matchingRoles);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, "GetRolesForUser", ex.Message);
         }
 
         return actionReturn;

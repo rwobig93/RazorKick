@@ -13,13 +13,15 @@ public class BookRepository : IBookRepository
     private readonly ISqlDataService _database;
     private readonly IBookReviewRepository _bookReviewRepository;
     private readonly IBookGenreRepository _bookGenreRepository;
+    private readonly ILogger _logger;
     
     public BookRepository(ISqlDataService database,
-        IBookReviewRepository bookReviewRepository, IBookGenreRepository bookGenreRepository)
+        IBookReviewRepository bookReviewRepository, IBookGenreRepository bookGenreRepository, ILogger logger)
     {
         _database = database;
         _bookReviewRepository = bookReviewRepository;
         _bookGenreRepository = bookGenreRepository;
+        _logger = logger;
     }
     
     public async Task<DatabaseActionResult<List<BookDb>>> GetAllAsync()
@@ -28,13 +30,12 @@ public class BookRepository : IBookRepository
         
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookDb, dynamic>(Books.GetAll, new { })).ToList();
-            actionReturn.Success = true;
+            var allBooks = (await _database.LoadData<BookDb, dynamic>(Books.GetAll, new { })).ToList();
+            actionReturn.Succeed(allBooks);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, Books.GetAll.Path, ex.Message);
         }
         
         return actionReturn;
@@ -46,13 +47,12 @@ public class BookRepository : IBookRepository
         
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(Books.Insert, createBook);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(Books.Insert, createBook);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, Books.Insert.Path, ex.Message);
         }
         
         return actionReturn;
@@ -64,14 +64,13 @@ public class BookRepository : IBookRepository
         
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookDb, dynamic>(
+            var foundBook = (await _database.LoadData<BookDb, dynamic>(
                 Books.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundBook);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, Books.GetById.Path, ex.Message);
         }
         
         return actionReturn;
@@ -94,13 +93,11 @@ public class BookRepository : IBookRepository
             foreach (var genre in foundGenres)
                 convertedFullBook!.Genres.Add(genre);
             
-            actionReturn.Result = convertedFullBook;
-            actionReturn.Success = true;
+            actionReturn.Succeed(convertedFullBook);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, "GetFullByIdAsync", ex.Message);
         }
         
         return actionReturn;
@@ -113,12 +110,11 @@ public class BookRepository : IBookRepository
         try
         {
             await _database.SaveData(Books.Update, bookUpdate);
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, Books.Update.Path, ex.Message);
         }
         
         return actionReturn;
@@ -131,12 +127,11 @@ public class BookRepository : IBookRepository
         try
         {
             await _database.SaveData(Books.Delete, new {Id = id});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, Books.Delete.Path, ex.Message);
         }
         
         return actionReturn;

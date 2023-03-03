@@ -11,10 +11,12 @@ namespace Infrastructure.Repositories.Example;
 public class BookGenreRepository : IBookGenreRepository
 {
     private readonly ISqlDataService _database;
+    private readonly ILogger _logger;
     
-    public BookGenreRepository(ISqlDataService database)
+    public BookGenreRepository(ISqlDataService database, ILogger logger)
     {
         _database = database;
+        _logger = logger;
     }
     
     public async Task<DatabaseActionResult<List<BookGenreDb>>> GetAllAsync()
@@ -23,13 +25,12 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookGenreDb, dynamic>(BookGenres.GetAll, new { })).ToList();
-            actionReturn.Success = true;
+            var allGenres = (await _database.LoadData<BookGenreDb, dynamic>(BookGenres.GetAll, new { })).ToList();
+            actionReturn.Succeed(allGenres);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.GetAll.Path, ex.Message);
         }
         
         return actionReturn;
@@ -41,13 +42,12 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(BookGenres.Insert, genreCreate);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(BookGenres.Insert, genreCreate);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.Insert.Path, ex.Message);
         }
         
         return actionReturn;
@@ -59,14 +59,13 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookGenreDb, dynamic>(
+            var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
                 BookGenres.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.GetById.Path, ex.Message);
         }
         
         return actionReturn;
@@ -78,14 +77,13 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookGenreDb, dynamic>(
+            var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
                 BookGenres.GetByName, new {Name = genreName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.GetByName.Path, ex.Message);
         }
         
         return actionReturn;
@@ -97,14 +95,13 @@ public class BookGenreRepository : IBookGenreRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<BookGenreDb, dynamic>(
+            var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
                 BookGenres.GetByValue, new {Value = genreValue})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.GetByValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -117,12 +114,11 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             await _database.SaveData(BookGenres.Update, genreUpdate);
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -135,12 +131,11 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             await _database.SaveData(BookGenres.Delete, new {Id = id});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenres.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -153,12 +148,11 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             await _database.SaveData(BookGenreJunctions.Insert, new {BookId = bookId, GenreId = genreId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenreJunctions.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -171,12 +165,11 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             await _database.SaveData(BookGenreJunctions.Delete, new {BookId = bookId, GenreId = genreId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, BookGenreJunctions.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -194,13 +187,11 @@ public class BookGenreRepository : IBookGenreRepository
             var allGenres = (await GetAllAsync()).Result ?? new List<BookGenreDb>();
             var matchingGenres = allGenres.Where(x => bookGenreIds.Any(p => p == x.Id)).ToList();
 
-            actionReturn.Result = matchingGenres;
-            actionReturn.Success = true;
+            actionReturn.Succeed(matchingGenres);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, "GetGenresForBookAsync", ex.Message);
         }
 
         return actionReturn;
@@ -220,13 +211,11 @@ public class BookGenreRepository : IBookGenreRepository
 
             var matchingBooks = allBooks.Where(x => bookIds.Any(p => p == x.Id)).ToList();
 
-            actionReturn.Result = matchingBooks;
-            actionReturn.Success = true;
+            actionReturn.Succeed(matchingBooks);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, "GetBooksWithGenreAsync", ex.Message);
         }
 
         return actionReturn;
@@ -253,13 +242,11 @@ public class BookGenreRepository : IBookGenreRepository
                 Genre = allGenres.FirstOrDefault(x => x.Id == mapping.GenreId)!
             }).ToList();
 
-            actionReturn.Result = mappingList;
-            actionReturn.Success = true;
+            actionReturn.Succeed(mappingList);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
+            actionReturn.FailLog(_logger, "GetAllBookGenreMappingsAsync", ex.Message);
         }
 
         return actionReturn;

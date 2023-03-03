@@ -29,14 +29,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
-            actionReturn.Success = true;
+            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
+            actionReturn.Succeed(allUsers);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -48,15 +46,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<int, dynamic>(
+            var rowCount = (await _database.LoadData<int, dynamic>(
                 General.GetRowCount, new {TableName = AppUsers.Table.TableName})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, General.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -68,15 +64,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
                 AppUsers.GetById, new {Id = userId})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -98,14 +92,11 @@ public class AppUserRepository : IAppUserRepository
             var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
             fullUser.ExtendedAttributes = foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>();
 
-            actionReturn.Result = fullUser;
-            actionReturn.Success = true;
+            actionReturn.Succeed(fullUser);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, "GetByIdFullAsync", ex.Message);
         }
 
         return actionReturn;
@@ -117,15 +108,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
                 AppUsers.GetByUsername, new {Username = username})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetByUsername.Path, ex.Message);
         }
 
         return actionReturn;
@@ -137,15 +126,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
                 AppUsers.GetByNormalizedUsername, new {NormalizedUsername = normalizedUsername})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetByNormalizedUsername.Path, ex.Message);
         }
 
         return actionReturn;
@@ -157,15 +144,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
                 AppUsers.GetByEmail, new {Email = email})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetByEmail.Path, ex.Message);
         }
 
         return actionReturn;
@@ -177,15 +162,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
                 AppUsers.GetByNormalizedEmail, new {NormalizedEmail = normalizedEmail})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.GetByNormalizedEmail.Path, ex.Message);
         }
 
         return actionReturn;
@@ -198,13 +181,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUsers.Update, updateObject);
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -217,13 +198,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUsers.Delete, new {Id = userId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -235,14 +214,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUsers.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -257,14 +234,12 @@ public class AppUserRepository : IAppUserRepository
             var foundMembership = await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
                 AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = roleId});
 
-            actionReturn.Result = foundMembership.FirstOrDefault() is not null;
-            actionReturn.Success = true;
+            var isMember = foundMembership.FirstOrDefault() is not null;
+            actionReturn.Succeed(isMember);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.GetByUserRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -277,13 +252,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -296,13 +269,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctions.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -314,14 +285,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.SaveDataReturnId(AppUserExtendedAttributes.Insert, addAttribute);
-            actionReturn.Success = true;
+            var createdId = await _database.SaveDataReturnId(AppUserExtendedAttributes.Insert, addAttribute);
+            actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -334,13 +303,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUserExtendedAttributes.Update, new {Id = attributeId, Value = newValue});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -353,13 +320,11 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await _database.SaveData(AppUserExtendedAttributes.Delete, new {Id = attributeId});
-            actionReturn.Success = true;
+            actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -371,15 +336,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttribute = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetById, new {Id = attributeId})).FirstOrDefault();
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttribute!);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -392,15 +355,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetAllOfTypeForOwner, new {OwnerId = userId, Type = type});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfTypeForOwner.Path, ex.Message);
         }
 
         return actionReturn;
@@ -413,15 +374,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetAllOfNameForOwner, new {OwnerId = userId, Name = name});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfNameForOwner.Path, ex.Message);
         }
 
         return actionReturn;
@@ -433,15 +392,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetByOwnerId, new {OwnerId = userId});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetByOwnerId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -454,15 +411,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetAllOfType, new {Type = type});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfType.Path, ex.Message);
         }
 
         return actionReturn;
@@ -474,15 +429,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetByName, new {Name = name});
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -494,15 +447,13 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            actionReturn.Result = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                 AppUserExtendedAttributes.GetAll, new { });
-            actionReturn.Success = true;
+            actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.Success = false;
-            actionReturn.ErrorMessage = ex.Message;
-            _logger.Debug("Database error occurred during action: {ErrorMessage}", ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
