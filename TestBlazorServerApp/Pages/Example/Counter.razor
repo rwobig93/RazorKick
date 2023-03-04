@@ -1,5 +1,6 @@
 ﻿@page "/counter"
 @using Application.Constants.Identity
+
 @attribute [Authorize(Policy = PermissionConstants.Developer.DevMenu)]
 
 <PageTitle>Counter</PageTitle>

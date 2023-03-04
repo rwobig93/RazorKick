@@ -1,7 +1,7 @@
 ﻿using Shared.Requests.Example;
 using Shared.Responses.Example;
 
-namespace TestBlazorServerApp.Pages;
+namespace TestBlazorServerApp.Pages.Example;
 
 public partial class WeatherData
 {

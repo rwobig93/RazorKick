@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using TestBlazorServerApp.Settings;
 

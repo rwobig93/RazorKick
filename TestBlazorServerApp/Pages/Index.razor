@@ -1,6 +1,5 @@
 ﻿@page "/"
-
-<PageTitle>Index</PageTitle>
+@attribute [Authorize]
 
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
@@ -25,7 +24,7 @@
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
             <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">
-                We can view background jobs, execute them and check their status on the 
+                We can view background jobs, execute them and check their status on the
                 <MudLink Href="@($"{BaseAddress}/jobs")">Jobs Page</MudLink>
             </MudAlert>
         </MudItem>

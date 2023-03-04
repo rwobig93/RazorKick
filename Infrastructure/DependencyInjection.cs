@@ -20,9 +20,11 @@ using Infrastructure.Repositories.Identity;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
+using Infrastructure.Services.Lifecycle;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -77,6 +79,7 @@ public static class DependencyInjection
         });
         services.AddHangfireServer();
         services.AddMudServices();
+        services.AddSingleton<RunningServerState>();
 
         var mailConfig = configuration.GetMailSettings();
 
@@ -114,6 +117,7 @@ public static class DependencyInjection
             // Enumerate permissions and create claim policies for them
             foreach (var permission in PermissionConstants.GetAllPermissions())
             {
+                // TODO: Use IAuthorizationPolicyProvider to add policies during runtime
                 options.AddPolicy(permission, policy => policy.RequireClaim(
                     ApplicationClaimTypes.Permission, permission));
             }

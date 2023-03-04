@@ -83,6 +83,7 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
     {
+        // TODO: Add handling for a deleted account that still exists in the database, reactivate account or reach out to admin for enablement?
         var matchingUserName = (await _userRepository.GetByUsernameAsync(registerRequest.Username)).Result;
         if (matchingUserName != null)
         {

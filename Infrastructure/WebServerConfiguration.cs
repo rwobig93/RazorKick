@@ -5,6 +5,7 @@ using Application.Constants.Web;
 using Application.Services.Database;
 using Hangfire;
 using Infrastructure.Middleware;
+using Infrastructure.Services.Lifecycle;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,6 +67,17 @@ public static class WebServerConfiguration
             ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
         });
         app.UseMiddleware<ErrorHandlerMiddleware>();
+    }
+
+    private static void SetupRunningServerState(this IHost app)
+    {
+        using var scope = app.Services.CreateAsyncScope();
+        var serverState = scope.ServiceProvider.GetRequiredService<RunningServerState>();
+        #if DEBUG
+            serverState.IsRunningInDebugMode = true;
+        #else
+            serverState.IsRunningInDebugMode = false;
+        #endif
     }
 
     private static void ValidateDatabaseStructure(this IHost app)

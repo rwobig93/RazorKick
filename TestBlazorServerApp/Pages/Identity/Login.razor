@@ -1,0 +1,10 @@
+﻿@page "/login"
+@using Infrastructure.Services.Lifecycle
+
+@attribute [AllowAnonymous]
+
+<h3>Login</h3>
+
+@code {
+    [Inject] private readonly RunningServerState ServerState;
+}

@@ -1,9 +1,11 @@
-﻿<Error>
+﻿@using TestBlazorServerApp.Pages.Identity
+
+<Error>
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <NotAuthorized>
-                    <p>Sorry, I need to put a login page there!</p>
+                    <Login/>
                 </NotAuthorized>
             </AuthorizeRouteView>
         </Found>
