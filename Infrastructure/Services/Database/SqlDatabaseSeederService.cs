@@ -110,7 +110,8 @@ public class SqlDatabaseSeederService : IHostedService
         if (existingUser.Result is not null || !existingUser.Success)
             return existingUser;
         
-        AccountHelpers.GetPasswordHash(userPassword, out var salt, out var hash);
+        AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
+        
         var createdUser = await _userRepository.CreateAsync(new AppUserCreate
         {
             Username = userName,
@@ -118,7 +119,7 @@ public class SqlDatabaseSeederService : IHostedService
             Email = $"{userName}@localhost.local",
             NormalizedEmail = $"{userName}@localhost.local".NormalizeForDatabase(),
             EmailConfirmed = true,
-            PasswordHash = hash.ToString()!,
+            PasswordHash = hash,
             PasswordSalt = salt,
             PhoneNumber = "",
             PhoneNumberConfirmed = false,

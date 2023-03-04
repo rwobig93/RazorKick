@@ -3,6 +3,7 @@ using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
 using Application.Services.Database;
+using Application.Services.Lifecycle;
 using Hangfire;
 using Infrastructure.Middleware;
 using Infrastructure.Services.Lifecycle;
@@ -22,6 +23,7 @@ public static class WebServerConfiguration
     {
         app.ConfigureForEnvironment();
         app.ConfigureBlazorServerCommons();
+        app.SetupRunningServerState();
         
         app.ValidateDatabaseStructure();
         
@@ -72,7 +74,7 @@ public static class WebServerConfiguration
     private static void SetupRunningServerState(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
-        var serverState = scope.ServiceProvider.GetRequiredService<RunningServerState>();
+        var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         #if DEBUG
             serverState.IsRunningInDebugMode = true;
         #else

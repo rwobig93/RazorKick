@@ -8,7 +8,7 @@ public class AppUserFull
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
-    public byte[] PasswordSalt { get; set; } = null!;
+    public string PasswordSalt { get; set; } = null!;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }

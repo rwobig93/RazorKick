@@ -13,7 +13,7 @@ public class AppUserCreate
     public string NormalizedEmail { get; set; } = null!;
     public bool EmailConfirmed { get; set; } = false;
     public string PasswordHash { get; set; } = null!;
-    public byte[] PasswordSalt { get; set; } = null!;
+    public string PasswordSalt { get; set; } = null!;
     public string PhoneNumber { get; set; } = "";
     public bool PhoneNumberConfirmed { get; set; } = false;
     public bool TwoFactorEnabled { get; set; } = false;
@@ -65,7 +65,7 @@ public static class AppUserCreateExtensions
     
     public static AppUserCreate ToCreateObject(this UserCreateRequest appUser)
     {
-        AccountHelpers.GetPasswordHash(appUser.Password, out var salt, out var hash);
+        AccountHelpers.GenerateHashAndSalt(appUser.Password, out var salt, out var hash);
         
         return new AppUserCreate
         {
@@ -74,7 +74,7 @@ public static class AppUserCreateExtensions
             Email = appUser.Email,
             NormalizedEmail = appUser.Email.NormalizeForDatabase(),
             EmailConfirmed = appUser.EmailConfirmed,
-            PasswordHash = hash.ToString()!,
+            PasswordHash = hash,
             PasswordSalt = salt,
             PhoneNumber = appUser.PhoneNumber,
             PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,

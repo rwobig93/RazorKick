@@ -13,7 +13,7 @@ public class AppUserUpdate
     public string? NormalizedEmail { get; set; }
     public bool? EmailConfirmed { get; set; }
     public string? PasswordHash { get; set; }
-    public byte[]? PasswordSalt { get; set; }
+    public string? PasswordSalt { get; set; }
     public string? PhoneNumber { get; set; }
     public bool? PhoneNumberConfirmed { get; set; }
     public bool? TwoFactorEnabled { get; set; }

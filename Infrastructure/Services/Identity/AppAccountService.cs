@@ -29,17 +29,17 @@ namespace Infrastructure.Services.Identity;
 public class AppAccountService : IAppAccountService
 {
     private readonly IAppUserRepository _userRepository;
-    private readonly IFluentEmail _mailService;
+    // private readonly IFluentEmail _mailService;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _appPermissionRepository;
     private readonly AppConfiguration _appConfig;
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
-        IFluentEmail mailService, IAppUserRepository userRepository)
+        IAppUserRepository userRepository)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
         _roleRepository = roleRepository;
-        _mailService = mailService;
+        // _mailService = mailService;
         _userRepository = userRepository;
     }
 
@@ -50,7 +50,7 @@ public class AppAccountService : IAppAccountService
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
         var passwordValid = AccountHelpers.IsPasswordCorrect(
-            loginRequest.Password, Encoding.UTF8.GetBytes(user.PasswordHash), user.PasswordSalt);
+            loginRequest.Password, user.PasswordSalt, user.PasswordHash);
         if (!passwordValid)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         if (!user.IsActive)
@@ -73,10 +73,10 @@ public class AppAccountService : IAppAccountService
     private async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserDb user, string password)
     {
         var createUser = user.ToCreateObject();
-            
-        AccountHelpers.GetPasswordHash(password, out var hash, out var salt);
+
+        AccountHelpers.GenerateHashAndSalt(password, out var salt, out var hash);
         createUser.PasswordSalt = salt;
-        createUser.PasswordHash = hash.ToString()!;
+        createUser.PasswordHash = hash;
             
         return await _userRepository.CreateAsync(createUser);
     }
@@ -112,15 +112,15 @@ public class AppAccountService : IAppAccountService
                             $"please contact the administrator for assistance";
         
         var confirmationUrl = await GetEmailConfirmationUrl(newUser);
-        var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
-            .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
-                new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
-            ).SendAsync();
-        
-        if (!sendResponse.Successful)
-            return await Result.FailAsync(
-                $"Account was registered successfully but a failure occurred attempting to send an email to " +
-                $"the address provided, please contact the administrator for assistance{caveatMessage}");
+        // var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
+        //     .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
+        //         new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
+        //     ).SendAsync();
+        //
+        // if (!sendResponse.Successful)
+        //     return await Result.FailAsync(
+        //         $"Account was registered successfully but a failure occurred attempting to send an email to " +
+        //         $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
         return await Result<Guid>.SuccessAsync(newUser.Id, 
             $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
@@ -223,9 +223,9 @@ public class AppAccountService : IAppAccountService
     {
         var updateObject = new AppUserUpdate() { Id = userId };
         
-        AccountHelpers.GetPasswordHash(newPassword, out var hash, out var salt);
+        AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
         updateObject.PasswordSalt = salt;
-        updateObject.PasswordHash = hash.ToString()!;
+        updateObject.PasswordHash = hash;
         
         await _userRepository.UpdateAsync(updateObject);
     }

@@ -1,6 +1,8 @@
-﻿namespace Infrastructure.Services.Lifecycle;
+﻿using Application.Services.Lifecycle;
 
-public class RunningServerState
+namespace Infrastructure.Services.Lifecycle;
+
+public class RunningServerState : IRunningServerState
 {
     public bool IsRunningInDebugMode { get; set; }
 }

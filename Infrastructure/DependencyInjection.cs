@@ -9,6 +9,7 @@ using Application.Repositories.Identity;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Application.Settings.Identity;
 using Asp.Versioning;
@@ -30,6 +31,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 
@@ -78,13 +80,24 @@ public static class DependencyInjection
             x.UseDarkDashboard();
         });
         services.AddHangfireServer();
-        services.AddMudServices();
-        services.AddSingleton<RunningServerState>();
+        services.AddMudServices(config =>
+        {
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+
+            config.SnackbarConfiguration.PreventDuplicates = true;
+            config.SnackbarConfiguration.NewestOnTop = false;
+            config.SnackbarConfiguration.ShowCloseIcon = true;
+            config.SnackbarConfiguration.VisibleStateDuration = 10000;
+            config.SnackbarConfiguration.HideTransitionDuration = 500;
+            config.SnackbarConfiguration.ShowTransitionDuration = 500;
+            config.SnackbarConfiguration.SnackbarVariant = Variant.Text;
+        });
+        services.AddSingleton<IRunningServerState, RunningServerState>();
 
         var mailConfig = configuration.GetMailSettings();
 
-        services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
-            .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
+        // services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
+        //     .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
     }
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
