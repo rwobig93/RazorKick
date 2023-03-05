@@ -2,8 +2,8 @@
 using Application.Constants.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Components;
+using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages;
 
@@ -15,32 +15,25 @@ public partial class Index
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private string BaseUrl => NavManager.BaseUri;
 
-    private AppUserDb _loggedInUser = new();
+    private UserBasicResponse _loggedInUser = new();
     
-    // protected override async Task OnInitializedAsync()
-    // {
-    // }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
         await UpdateLoggedInUser();
     }
 
     private async Task UpdateLoggedInUser()
     {
-        if (CurrentUserService.UserId is null)
-            return;
-        
-        var foundUser = await UserRepository.GetByIdAsync((Guid)CurrentUserService.UserId!);
-        if (!foundUser.Success)
+        var user = await CurrentUserService.GetCurrentUserBasic();
+        if (user is null)
             return;
 
-        _loggedInUser = foundUser.Result!;
+        _loggedInUser = user;
     }
 
     private async Task LogoutUser()
     {
         await AccountService.LogoutGuiAsync();
-        // NavManager.NavigateTo(AppRouteConstants.Index, true);
+        NavManager.NavigateTo(AppRouteConstants.Index, true);
     }
 }

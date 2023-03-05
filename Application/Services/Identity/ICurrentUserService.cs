@@ -1,12 +1,10 @@
-﻿using System.Security.Claims;
+﻿using Domain.DatabaseEntities.Identity;
+using Shared.Responses.Identity;
 
 namespace Application.Services.Identity;
 
 public interface ICurrentUserService
 {
-    // ClaimsPrincipal? AuthenticatedUser { get; }
-    Guid? UserId { get; }
-    string? Username { get; }
-    string? Email { get; }
-    public List<KeyValuePair<string, string>> Claims { get; }
+    public Task<UserBasicResponse?> GetCurrentUserBasic();
+    public Task<AppUserDb?> GetCurrentUserFull();
 }

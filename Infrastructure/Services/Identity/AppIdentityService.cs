@@ -225,11 +225,10 @@ public class AppIdentityService : IAppIdentityService
         if (foundUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
-        var isGuid = Guid.TryParse(_currentUserService.UserId.ToString(), out var currentUserId);
-        if (!isGuid)
+        var currentUser = await _currentUserService.GetCurrentUserFull();
+        if (currentUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         
-        var currentUser = (await _userRepository.GetByIdAsync(currentUserId)).Result;
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;
         var userIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.AdminRoleName);
@@ -265,10 +264,9 @@ public class AppIdentityService : IAppIdentityService
         if (requestedUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
-        var isGuid = Guid.TryParse(_currentUserService.UserId.ToString(), out var currentUserId);
-        if (!isGuid)
+        var currentUser = await _currentUserService.GetCurrentUserFull();
+        if (currentUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
-        var currentUser = (await _userRepository.GetByIdAsync(currentUserId)).Result;
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;
         
         var currentUserIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;

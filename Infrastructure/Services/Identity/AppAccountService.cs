@@ -13,13 +13,11 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
@@ -91,10 +89,10 @@ public class AppAccountService : IAppAccountService
         // var user = await _userRepository.GetByUsernameAsync(loginRequest.Username);
         await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, authResponse.Data.Token);
         await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
         
         var authState = await _authProvider.GetAuthenticationStateAsync();
-        _authProvider.IndicateUserAuthenticationSuccess(authState);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
+        // _authProvider.IndicateUserAuthenticationSuccess(authState);
         
         return authResponse;
     }

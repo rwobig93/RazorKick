@@ -12,43 +12,49 @@ namespace Infrastructure.Services.Identity;
 
 public class AuthStateProvider : AuthenticationStateProvider
 {
-    private readonly ILocalStorageService _localStorage;
     private readonly HttpClient _httpClient;
     private readonly ISerializerService _serializer;
     private readonly IHttpContextAccessor _contextAccessor;
+    private readonly ILocalStorageService _localStorage;
 
-    public AuthStateProvider(ILocalStorageService localStorage, HttpClient httpClient, ISerializerService serializer,
-        IHttpContextAccessor contextAccessor)
+    public AuthStateProvider(HttpClient httpClient, ISerializerService serializer,
+        IHttpContextAccessor contextAccessor, ILocalStorageService localStorage)
     {
-        _localStorage = localStorage;
         _serializer = serializer;
         _contextAccessor = contextAccessor;
+        _localStorage = localStorage;
         _httpClient = httpClient;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        var savedToken = "";
         try
         {
-            // var savedToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
-            var savedToken = _contextAccessor.HttpContext!.Session.GetString(LocalStorageConstants.AuthToken);
+            savedToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+        }
+        catch
+        {
+            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            //   we have to do this to keep our sanity, would love to find a working solution to this at some point
+        }
+        
+        try
+        {
             if (string.IsNullOrWhiteSpace(savedToken))
-            {
+                savedToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+            
+            if (string.IsNullOrWhiteSpace(savedToken))
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-            }
-
+            
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
             var state = new AuthenticationState(
                 new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults.AuthenticationScheme)));
             AuthenticationStateUser = state.User;
-            await Task.CompletedTask;
             return state;
         }
         catch
         {
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (AuthenticationStateUser is not null) return new AuthenticationState(AuthenticationStateUser);
-            
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
     }
@@ -65,7 +71,7 @@ public class AuthStateProvider : AuthenticationStateProvider
 
         var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
 
-        NotifyAuthenticationStateChanged(authState);
+        // NotifyAuthenticationStateChanged(authState);
     }
 
     public void IndicateUserAuthenticationSuccess(AuthenticationState authState)
@@ -74,7 +80,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         _contextAccessor.HttpContext!.User = new ClaimsPrincipal(authState.User.Identities);
         AuthenticationStateUser = authState.User;
 
-        NotifyAuthenticationStateChanged(taskAuthState);
+        // NotifyAuthenticationStateChanged(taskAuthState);
     }
 
     public void DeauthenticateUser()
@@ -82,7 +88,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
         var authState = Task.FromResult(new AuthenticationState(anonymousUser));
 
-        NotifyAuthenticationStateChanged(authState);
+        // NotifyAuthenticationStateChanged(authState);
     }
 
     public async Task<ClaimsPrincipal> GetAuthenticationStateProviderUserAsync()

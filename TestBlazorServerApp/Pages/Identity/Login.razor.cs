@@ -33,25 +33,6 @@ public partial class Login
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        ContextAccessor.HttpContext!.Response.Cookies.Append(LocalStorageConstants.AuthToken, "");
-        ContextAccessor.HttpContext!.Response.Cookies.Append(LocalStorageConstants.AuthTokenRefresh, "");
-        await Task.CompletedTask;
-    }
-
-    // protected override async Task OnAfterRenderAsync(bool firstRender)
-    // {
-    //     var state = await AuthProvider.GetAuthenticationStateAsync();
-    //     
-    //     await LocalStorage.SetItemAsStringAsync("testing", "value");
-    //     var test = await LocalStorage.GetItemAsync<string>("testing");
-    //     if (state != new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())))
-    //     {
-    //         NavManager.NavigateTo(AppRouteConstants.Index);
-    //     }
-    // }
-
     private async Task LoginAsync()
     {
         try
@@ -60,7 +41,7 @@ public partial class Login
             if (string.IsNullOrWhiteSpace(Password)) Snackbar.Add("Password field is empty", Severity.Error);
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)) return;
             
-            var authResponse = await AccountService.LoginAsync(new UserLoginRequest
+            var authResponse = await AccountService.LoginGuiAsync(new UserLoginRequest
             {
                 Username = Username,
                 Password = Password
@@ -72,21 +53,9 @@ public partial class Login
                 return;
             }
             
-            ContextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthToken, authResponse.Data.Token);
-            ContextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
-        
-            var authState = await AuthProvider.GetAuthenticationStateAsync();
-            // AuthProvider.IndicateUserAuthenticationSuccess(Username);
-            AuthProvider.IndicateUserAuthenticationSuccess(authState);
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
+            Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
             
-            // TODO: Handle Auth state provider and httpclient authr bearer header updates for user auth
-            Token = authResponse.Data.Token;
-            RefreshToken = authResponse.Data.RefreshToken;
-            Expiration = authResponse.Data.RefreshTokenExpiryTime;
-            Snackbar.Add("Authentication success!", Severity.Success);
-            
-            // NavManager.NavigateTo(AppRouteConstants.Index, true);
+            NavManager.NavigateTo(AppRouteConstants.Index, true);
         }
         catch (Exception ex)
         {

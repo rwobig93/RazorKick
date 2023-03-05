@@ -1,52 +1,53 @@
 ﻿using System.Security.Claims;
+using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Microsoft.AspNetCore.Http;
+using Domain.DatabaseEntities.Identity;
+using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 
 public class CurrentUserService : ICurrentUserService
 {
-    public Guid? UserId { get; }
-
-    public string? Username { get; }
-
-    public string? Email { get; }
-
-    public List<KeyValuePair<string, string>> Claims { get; }
-
-    public CurrentUserService(IHttpContextAccessor httpContextAccessor)
+    private readonly AuthStateProvider _authProvider;
+    private readonly IAppUserRepository _userRepository;
+    
+    public CurrentUserService(AuthStateProvider authProvider, IAppUserRepository userRepository)
     {
-        var isGuid = Guid.TryParse(httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId);
-        UserId = isGuid ? userId : null;
-        Username = httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
-        Email = httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
-        Claims = httpContextAccessor.HttpContext?.User?.Claims.AsEnumerable()
-            .Select(item => new KeyValuePair<string, string>(item.Type, item.Value)).ToList() ?? new List<KeyValuePair<string, string>>();
+        _authProvider = authProvider;
+        _userRepository = userRepository;
+    }
+
+    private async Task<Guid?> GetUserIdFromAuthProvider()
+    {
+        var userIdentity = await _authProvider.GetAuthenticationStateProviderUserAsync();
+        var userIdClaim = userIdentity.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
+        var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
+        
+        if (!isGuid) return null;
+        return userId;
     }
     
-    // private readonly AuthStateProvider _authProvider;
-    //
-    // public CurrentUserService(AuthStateProvider authProvider)
-    // {
-    //     _authProvider = authProvider;
-    // }
-    //
-    // public ClaimsPrincipal? AuthenticatedUser => _authProvider.AuthenticationStateUser;
-    //
-    // public Guid? UserId
-    // {
-    //     get
-    //     {
-    //         var isGuid = Guid.TryParse(AuthenticatedUser.FindFirstValue(ClaimTypes.NameIdentifier), out var userId);
-    //         return isGuid ? userId : null;
-    //     }
-    // }
-    //
-    // public string? Username => AuthenticatedUser?.FindFirstValue(ClaimTypes.Name);
-    //
-    // public string? Email => AuthenticatedUser?.FindFirstValue(ClaimTypes.Email);
-    //
-    // public List<KeyValuePair<string, string>> Claims =>
-    //     AuthenticatedUser?.Claims.Select(x => new KeyValuePair<string, string>(x.Type, x.Value)).ToList() ??
-    //     new List<KeyValuePair<string, string>>();
+    public async Task<UserBasicResponse?> GetCurrentUserBasic()
+    {
+        var userId = await GetUserIdFromAuthProvider();
+        
+        if (userId is null) return null;
+
+        var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
+        if (!foundUser.Success) return null;
+
+        return foundUser.Result!.ToBasicResponse();
+    }
+
+    public async Task<AppUserDb?> GetCurrentUserFull()
+    {
+        var userId = await GetUserIdFromAuthProvider();
+        
+        if (userId is null) return null;
+
+        var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
+        if (!foundUser.Success) return null;
+
+        return foundUser.Result!;
+    }
 }
