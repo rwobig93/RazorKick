@@ -18,6 +18,8 @@ using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Domain.Models.Todo;
+using FluentEmail.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +34,7 @@ namespace Infrastructure.Services.Identity;
 public class AppAccountService : IAppAccountService 
 {
     private readonly IAppUserRepository _userRepository;
-    // private readonly IFluentEmail _mailService;
+    private readonly IFluentEmail _mailService;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _appPermissionRepository;
     private readonly AppConfiguration _appConfig;
@@ -42,17 +44,18 @@ public class AppAccountService : IAppAccountService
     private readonly IHttpContextAccessor _contextAccessor;
     
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
-        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, HttpClient httpClient, IHttpContextAccessor contextAccessor)
+        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, HttpClient httpClient,
+        IHttpContextAccessor contextAccessor, IFluentEmail mailService)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
         _roleRepository = roleRepository;
-        // _mailService = mailService;
         _userRepository = userRepository;
         _localStorage = localStorage;
         _authProvider = authProvider;
         _httpClient = httpClient;
         _contextAccessor = contextAccessor;
+        _mailService = mailService;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -86,13 +89,11 @@ public class AppAccountService : IAppAccountService
     {
         var authResponse = await LoginAsync(loginRequest);
 
-        // var user = await _userRepository.GetByUsernameAsync(loginRequest.Username);
         await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, authResponse.Data.Token);
         await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
         
-        var authState = await _authProvider.GetAuthenticationStateAsync();
-        // _authProvider.IndicateUserAuthenticationSuccess(authState);
+        await _authProvider.GetAuthenticationStateAsync();
         
         return authResponse;
     }
@@ -158,15 +159,17 @@ public class AppAccountService : IAppAccountService
         
         // TODO: Re-add email service after validating why it was failing
         var confirmationUrl = await GetEmailConfirmationUrl(newUser);
-        // var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
-        //     .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
-        //         new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
-        //     ).SendAsync();
-        //
-        // if (!sendResponse.Successful)
-        //     return await Result.FailAsync(
-        //         $"Account was registered successfully but a failure occurred attempting to send an email to " +
-        //         $"the address provided, please contact the administrator for assistance{caveatMessage}");
+        var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
+            .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
+                new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
+            ).SendAsync();
+        if (!sendResponse.Successful)
+            return await Result.FailAsync(string.Join(Environment.NewLine, sendResponse.ErrorMessages));
+        
+        if (!sendResponse.Successful)
+            return await Result.FailAsync(
+                $"Account was registered successfully but a failure occurred attempting to send an email to " +
+                $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
         return await Result<Guid>.SuccessAsync(newUser.Id, 
             $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");

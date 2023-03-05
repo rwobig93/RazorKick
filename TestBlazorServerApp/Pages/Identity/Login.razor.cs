@@ -55,7 +55,7 @@ public partial class Login
             
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
             
-            NavManager.NavigateTo(AppRouteConstants.Index, true);
+            NavManager.NavigateTo(NavManager.Uri, true);
         }
         catch (Exception ex)
         {
@@ -80,7 +80,7 @@ public partial class Login
     {
         try
         {
-            NavManager.NavigateTo("/register");
+            NavManager.NavigateTo(AppRouteConstants.Identity.Register);
         }
         catch (Exception ex)
         {
@@ -97,5 +97,11 @@ public partial class Login
     {
         Username = UserConstants.DefaultAdminUsername;
         Password = UserConstants.DefaultAdminPassword;
+    }
+    
+    private void DebugFillBasicCreds()
+    {
+        Username = UserConstants.DefaultBasicUsername;
+        Password = UserConstants.DefaultBasicPassword;
     }
 }

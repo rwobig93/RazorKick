@@ -99,8 +99,8 @@ public static class DependencyInjection
 
         var mailConfig = configuration.GetMailSettings();
 
-        // services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
-        //     .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
+        services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
+            .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
         
         services.AddSingleton<IRunningServerState, RunningServerState>();
         services.AddSingleton<ISerializerService, JsonSerializerService>();

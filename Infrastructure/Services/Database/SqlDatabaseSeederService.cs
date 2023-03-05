@@ -33,12 +33,6 @@ public class SqlDatabaseSeederService : IHostedService
         _logger.Information("Finished seeding database");
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        // We don't have any cleanup required so we'll just return a completed task
-        await Task.CompletedTask;
-    }
-
     private async Task SeedDatabaseRoles()
     {
         var adminRole = await CreateOrGetSeedRole(RoleConstants.AdminRoleName, RoleConstants.AdminRoleDescription);
@@ -48,6 +42,27 @@ public class SqlDatabaseSeederService : IHostedService
         var defaultRole = await CreateOrGetSeedRole(RoleConstants.DefaultRoleName, RoleConstants.DefaultRoleDescription);
         if (defaultRole.Success)
             await EnforcePermissionsForRole(defaultRole.Result!.Id, PermissionConstants.GetDefaultRolePermissions());
+    }
+
+    private async Task SeedDatabaseUsers()
+    {
+        var adminUser = await CreateOrGetSeedUser(
+            UserConstants.DefaultAdminUsername, UserConstants.DefaultAdminFirstName, UserConstants.DefaultAdminLastName,
+            UserConstants.DefaultAdminEmail, UserConstants.DefaultAdminPassword);
+        if (adminUser.Success)
+            await EnforceRolesForUser(adminUser.Result!.Id, new List<string>() {RoleConstants.AdminRoleName});
+        
+        var basicUser = await CreateOrGetSeedUser(
+            UserConstants.DefaultBasicUsername, UserConstants.DefaultBasicFirstName, UserConstants.DefaultBasicLastName,
+            UserConstants.DefaultBasicEmail, UserConstants.DefaultBasicPassword);
+        if (basicUser.Success)
+            await EnforceRolesForUser(basicUser.Result!.Id, new List<string>() {RoleConstants.DefaultRoleName});
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        // We don't have any cleanup required so we'll just return a completed task
+        await Task.CompletedTask;
     }
 
     private async Task<DatabaseActionResult<AppRoleDb>> CreateOrGetSeedRole(string roleName, string roleDescription)
@@ -94,15 +109,8 @@ public class SqlDatabaseSeederService : IHostedService
         _logger.Debug("Finished enforcing seeded permissions for role {roleId}", roleId);
     }
 
-    private async Task SeedDatabaseUsers()
-    {
-        var adminUser = await CreateOrGetSeedUser(
-            UserConstants.DefaultAdminUsername, "Admini", "Strator", UserConstants.DefaultAdminPassword);
-        if (adminUser.Success)
-            await EnforceRolesForUser(adminUser.Result!.Id, new List<string>() {RoleConstants.AdminRoleName});
-    }
-
-    private async Task<DatabaseActionResult<AppUserDb>> CreateOrGetSeedUser(string userName, string firstName, string lastName, string userPassword)
+    private async Task<DatabaseActionResult<AppUserDb>> CreateOrGetSeedUser(string userName, string firstName, string lastName, string email,
+        string userPassword)
     {
         var existingUser = await _userRepository.GetByUsernameAsync(userName);
         if (!existingUser.Success)
@@ -116,8 +124,8 @@ public class SqlDatabaseSeederService : IHostedService
         {
             Username = userName,
             NormalizedUserName = userName.NormalizeForDatabase(),
-            Email = $"{userName}@localhost.local",
-            NormalizedEmail = $"{userName}@localhost.local".NormalizeForDatabase(),
+            Email = email,
+            NormalizedEmail = email.NormalizeForDatabase(),
             EmailConfirmed = true,
             PasswordHash = hash,
             PasswordSalt = salt,
