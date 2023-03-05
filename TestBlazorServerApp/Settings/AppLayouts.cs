@@ -1,6 +1,4 @@
-﻿using MudBlazor;
-
-namespace TestBlazorServerApp.Settings;
+﻿namespace TestBlazorServerApp.Settings;
 
 public static class AppLayouts
 {

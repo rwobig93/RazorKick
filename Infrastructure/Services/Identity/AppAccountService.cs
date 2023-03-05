@@ -1,9 +1,11 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Application.Constants.Identity;
 using Application.Constants.Messages;
+using Application.Constants.Web;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
@@ -11,36 +13,48 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Application.Settings.AppSettings;
+using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
-using Domain.Models.Todo;
-using FluentEmail.Core;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Shared.ApiRoutes.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
+using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
 
-public class AppAccountService : IAppAccountService
+public class AppAccountService : IAppAccountService 
 {
     private readonly IAppUserRepository _userRepository;
     // private readonly IFluentEmail _mailService;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _appPermissionRepository;
     private readonly AppConfiguration _appConfig;
+    private readonly ILocalStorageService _localStorage;
+    private readonly AuthStateProvider _authProvider;
+    private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _contextAccessor;
+    
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
-        IAppUserRepository userRepository)
+        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, HttpClient httpClient, IHttpContextAccessor contextAccessor)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
         _roleRepository = roleRepository;
         // _mailService = mailService;
         _userRepository = userRepository;
+        _localStorage = localStorage;
+        _authProvider = authProvider;
+        _httpClient = httpClient;
+        _contextAccessor = contextAccessor;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -68,6 +82,39 @@ public class AppAccountService : IAppAccountService
         var response = new UserLoginResponse() { Token = token, RefreshToken = user.RefreshToken,
             RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
         return await Result<UserLoginResponse>.SuccessAsync(response);
+    }
+
+    public async Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest)
+    {
+        var authResponse = await LoginAsync(loginRequest);
+
+        // var user = await _userRepository.GetByUsernameAsync(loginRequest.Username);
+        await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, authResponse.Data.Token);
+        await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
+        
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        _authProvider.IndicateUserAuthenticationSuccess(authState);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
+        
+        return authResponse;
+    }
+
+    public async Task<IResult> LogoutGuiAsync()
+    {
+        try
+        {
+            await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
+            await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
+
+            _authProvider.DeauthenticateUser();
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+
+            return await Result.SuccessAsync();
+        }
+        catch
+        {
+            return await Result.FailAsync();
+        }
     }
 
     private async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserDb user, string password)
@@ -111,6 +158,7 @@ public class AppAccountService : IAppAccountService
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
         
+        // TODO: Re-add email service after validating why it was failing
         var confirmationUrl = await GetEmailConfirmationUrl(newUser);
         // var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
         //     .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
@@ -286,16 +334,17 @@ public class AppAccountService : IAppAccountService
     {
         var allUserAndRolePermissions = 
             (await _appPermissionRepository.GetAllIncludingRolesForUserAsync(user.Id)).Result?.ToClaims() ?? new List<Claim>();
+        var allRoles = 
+            (await _roleRepository.GetRolesForUser(user.Id)).Result?.ToClaims() ?? new List<Claim>();
 
         var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new(ClaimTypes.Email, user.Email ?? "NA"),
-                new(ClaimTypes.Name, user.FirstName ?? "NA"),
-                new(ClaimTypes.Surname, user.LastName ?? "NA"),
-                new(ClaimTypes.MobilePhone, user.PhoneNumber ?? "NA")
+                new(ClaimTypes.Name, user.Username)
             }
-        .Union(allUserAndRolePermissions);
+        .Union(allUserAndRolePermissions)
+        .Union(allRoles);
 
         return claims;
     }

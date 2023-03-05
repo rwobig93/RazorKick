@@ -1,6 +1,4 @@
-﻿using MudBlazor;
-
-namespace TestBlazorServerApp.Pages.Example;
+﻿namespace TestBlazorServerApp.Pages.Example;
 
 public partial class Counter
 {

@@ -1,4 +1,4 @@
-namespace Application.Services.Lifecycle;
+namespace Application.Services.System;
 
 public interface IRunningServerState
 {

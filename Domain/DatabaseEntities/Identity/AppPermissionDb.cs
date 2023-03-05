@@ -31,6 +31,11 @@ public static class AppPermissionDbExtensions
         return appPermissions.Select(x => new Claim(x.ClaimType, x.ClaimValue));
     }
 
+    public static IEnumerable<Claim> ToClaims(this IEnumerable<AppRoleDb> appRoles)
+    {
+        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name));
+    }
+
     public static PermissionResponse ToResponse(this AppPermissionDb permission)
     {
         return new PermissionResponse

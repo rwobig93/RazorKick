@@ -9,10 +9,11 @@ using Application.Repositories.Identity;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
-using Application.Services.Lifecycle;
+using Application.Services.System;
 using Application.Settings.AppSettings;
 using Application.Settings.Identity;
 using Asp.Versioning;
+using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
@@ -21,11 +22,11 @@ using Infrastructure.Repositories.Identity;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
-using Infrastructure.Services.Lifecycle;
+using Infrastructure.Services.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -47,7 +48,7 @@ public static class DependencyInjection
         
         builder.Services.AddBlazorServerCommon();
         builder.Services.AddSettingsConfiguration(builder.Configuration);
-        builder.Services.AddCoreServices(builder.Configuration);
+        builder.Services.AddSystemServices(builder.Configuration);
 
         builder.Services.AddRepositories();
         builder.Services.AddApplicationServices();
@@ -72,7 +73,7 @@ public static class DependencyInjection
         configuration.ConfigureApplicationSettings(services);
     }
 
-    private static void AddCoreServices(this IServiceCollection services, IConfiguration configuration)
+    private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHangfire(x =>
         {
@@ -92,12 +93,18 @@ public static class DependencyInjection
             config.SnackbarConfiguration.ShowTransitionDuration = 500;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Text;
         });
-        services.AddSingleton<IRunningServerState, RunningServerState>();
+        
+        services.AddBlazoredLocalStorage();
+        services.AddHttpClient();
 
         var mailConfig = configuration.GetMailSettings();
 
         // services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
         //     .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
+        
+        services.AddSingleton<IRunningServerState, RunningServerState>();
+        services.AddSingleton<ISerializerService, JsonSerializerService>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
     }
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
@@ -105,8 +112,17 @@ public static class DependencyInjection
         var appSettings = configuration.ConfigureApplicationSettings(services);
 
         services.AddHttpContextAccessor();
+        services.AddSession(options =>
+        {
+            // TODO: Add appsetting for idle session timeout
+            options.IdleTimeout = TimeSpan.FromMinutes(240);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+        });
+        services.AddScoped<AuthStateProvider>();
+        services.AddTransient<AuthenticationStateProvider, AuthStateProvider>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
-        services.AddSingleton<IAppAccountService, AppAccountService>();
+        services.AddScoped<IAppAccountService, AppAccountService>();
         
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
@@ -203,6 +219,7 @@ public static class DependencyInjection
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     RoleClaimType = ClaimTypes.Role,
+                    NameClaimType = ClaimTypes.Name,
                     ClockSkew = TimeSpan.FromMinutes(1)
                 };
 

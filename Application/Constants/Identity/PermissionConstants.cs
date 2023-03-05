@@ -45,6 +45,12 @@ public static class PermissionConstants
         public const string DevMenu = "Permissions.Native.Developer.Menu";
     }
 
+    public static class Example
+    {
+        public const string Counter = "Permissions.Native.Example.Counter";
+        public const string Weather = "Permissions.Native.Example.Weather";
+    }
+
     public static class Audit
     {
         public const string View = "Permissions.Native.Audit.View";

@@ -1,6 +1,4 @@
-﻿@page "/login"
-@using Infrastructure.Services.Lifecycle
-@using Application.Services.Lifecycle
+﻿@attribute [Route(AppRouteConstants.Identity.Login)]
 @using System.Globalization
 
 @attribute [AllowAnonymous]
@@ -13,29 +11,35 @@
             </div>
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
-            <MudText Align="Align.Center" Typo="Typo.h2">Hey there stranger! Please login and stay awhile :)</MudText>
+            <MudText Align="Align.Center" Typo="Typo.h5">Hey there stranger! Please login and stay awhile :)</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
             <MudTextField @bind-Value="Username" Label="Username" Variant="Variant.Outlined"/>
             <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Outlined" InputType="@_passwordInput"
                           Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
                           AdornmentAriaLabel="Show Password"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.BlurOn" OnClick="@LoginAsync">
                 Let's Login
             </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
             <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" EndIcon="@Icons.Material.Filled.BlurCircular" OnClick="@RegisterAsync">
                 Register
             </MudButton>
-            @if (ServerState.IsRunningInDebugMode)
-            {
+        </MudItem>
+        @if (ServerState.IsRunningInDebugMode)
+        {
+            <MudItem xs="12" sm="12" md="12">
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.AdminPanelSettings"
                            OnClick="@DebugFillAdminCreds">Fill Admin Credentials
                 </MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Error" EndIcon="@Icons.Material.Filled.Expand"
                            OnClick="@ToggleAuth">Toggle Auth Info
                 </MudButton>
-            }
-        </MudItem>
+            </MudItem>
+        }
         @if (ServerState.IsRunningInDebugMode && ShowAuth)
         {
             <MudItem xs="12" sm="12" md="12">

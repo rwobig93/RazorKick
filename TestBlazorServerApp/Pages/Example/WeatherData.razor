@@ -1,10 +1,11 @@
-﻿@page "/weather-data"
+﻿@attribute [Route(AppRouteConstants.Example.WeatherData)]
 @using global::Shared.Responses.Example
 @using Application.Services.Example
+@using Application.Constants.Identity
 
 @inject IWeatherService WeatherForecast
 
-@* @attribute [Authorize] *@
+@attribute [Authorize(Policy = PermissionConstants.Example.Weather)]
 
 <PageTitle>Weather Forecast</PageTitle>
 <MudSpacer/>

@@ -8,6 +8,8 @@ namespace Application.Services.Identity;
 public interface IAppAccountService
 {
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
+    Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
+    Task<IResult> LogoutGuiAsync();
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
     Task<string> GetEmailConfirmationUrl(AppUserDb user);
     Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode);

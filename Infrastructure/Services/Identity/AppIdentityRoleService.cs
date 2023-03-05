@@ -17,7 +17,7 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public void Dispose()
     {
-        throw new NotImplementedException();
+        // Using dapper, nothing to dispose
     }
 
     public async Task<IdentityResult> CreateAsync(AppRoleDb role, CancellationToken cancellationToken)

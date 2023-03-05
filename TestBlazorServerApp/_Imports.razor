@@ -10,3 +10,20 @@
 @using TestBlazorServerApp.Shared
 @using MudBlazor
 @using Blazorade.Core.Components.Server
+@using Application.Constants.Web
+@using Application.Services.Identity
+@using Blazored.LocalStorage
+@using Infrastructure.Services.Identity
+
+
+@attribute [Authorize]
+@inject NavigationManager NavManager
+@inject AuthStateProvider AuthProvider
+@inject IAuthorizationService AuthorizationService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject HttpClient HttpClient
+@inject IHttpContextAccessor ContextAccessor
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JsRuntime
+@inject ICurrentUserService CurrentUserService

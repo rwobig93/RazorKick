@@ -1,8 +1,17 @@
+using System.Net.Http.Headers;
+using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Constants.Web;
+using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Application.Services.Lifecycle;
+using Application.Services.System;
+using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
+using Infrastructure.Services.Identity;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Shared.Requests.Identity.User;
 
@@ -10,11 +19,9 @@ namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class Login
 {
-    [Inject] private IRunningServerState ServerState { get; set; } = null!;
-    [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    [Inject] private NavigationManager NavManager { get; set; } = null!;
-    [Inject] private ISnackbar Snackbar { get; set; } = null!;
-    [Inject] private UserManager<AppUserDb> UserManager { get; set; } = null!;
+    [Inject] private IRunningServerState ServerState { get; init; } = null!;
+    [Inject] private IAppAccountService AccountService { get; init; } = null!;
+    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -26,26 +33,60 @@ public partial class Login
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        ContextAccessor.HttpContext!.Response.Cookies.Append(LocalStorageConstants.AuthToken, "");
+        ContextAccessor.HttpContext!.Response.Cookies.Append(LocalStorageConstants.AuthTokenRefresh, "");
+        await Task.CompletedTask;
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     var state = await AuthProvider.GetAuthenticationStateAsync();
+    //     
+    //     await LocalStorage.SetItemAsStringAsync("testing", "value");
+    //     var test = await LocalStorage.GetItemAsync<string>("testing");
+    //     if (state != new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())))
+    //     {
+    //         NavManager.NavigateTo(AppRouteConstants.Index);
+    //     }
+    // }
+
     private async Task LoginAsync()
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(Username)) Snackbar.Add("Username field is empty", Severity.Error);
+            if (string.IsNullOrWhiteSpace(Password)) Snackbar.Add("Password field is empty", Severity.Error);
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)) return;
+            
             var authResponse = await AccountService.LoginAsync(new UserLoginRequest
             {
                 Username = Username,
                 Password = Password
             });
-
+            
             if (!authResponse.Succeeded)
             {
                 authResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
+            
+            ContextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthToken, authResponse.Data.Token);
+            ContextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
         
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            // AuthProvider.IndicateUserAuthenticationSuccess(Username);
+            AuthProvider.IndicateUserAuthenticationSuccess(authState);
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
+            
             // TODO: Handle Auth state provider and httpclient authr bearer header updates for user auth
             Token = authResponse.Data.Token;
             RefreshToken = authResponse.Data.RefreshToken;
             Expiration = authResponse.Data.RefreshTokenExpiryTime;
+            Snackbar.Add("Authentication success!", Severity.Success);
+            
+            // NavManager.NavigateTo(AppRouteConstants.Index, true);
         }
         catch (Exception ex)
         {

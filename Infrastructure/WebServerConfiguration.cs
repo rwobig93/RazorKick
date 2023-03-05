@@ -3,10 +3,9 @@ using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
 using Application.Services.Database;
-using Application.Services.Lifecycle;
+using Application.Services.System;
 using Hangfire;
 using Infrastructure.Middleware;
-using Infrastructure.Services.Lifecycle;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -100,7 +99,9 @@ public static class WebServerConfiguration
 
     private static void ConfigureIdentityServices(this IApplicationBuilder app)
     {
+        app.UseAuthentication();
         app.UseAuthorization();
+        app.UseSession();
         ((IEndpointRouteBuilder) app).MapIdentityApiEndpoints();
     }
 

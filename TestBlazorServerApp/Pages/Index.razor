@@ -1,5 +1,4 @@
-﻿@page "/"
-@attribute [Authorize]
+﻿@attribute [Route(AppRouteConstants.Index)]
 
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
@@ -15,9 +14,14 @@
             </MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
+            <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                Hello @_loggedInUser.Username! Welcome to @ApplicationName!
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
             <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
                 I'm an info alert with a link!
-                <MudLink Href="@($"{BaseUrl}/api")">
+                <MudLink Href="@($"{BaseUrl}{AppRouteConstants.Api.Root}")">
                     Check out the API documentation using Swagger/OpenApi!
                 </MudLink>
             </MudAlert>
@@ -25,7 +29,7 @@
         <MudItem xs="12" sm="12" md="12">
             <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning">
                 We can view background jobs, execute them and check their status on the
-                <MudLink Href="@($"{BaseUrl}/jobs")">Jobs Page</MudLink>
+                <MudLink Href="@($"{BaseUrl}{AppRouteConstants.Jobs.Root}")">Jobs Page</MudLink>
             </MudAlert>
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
@@ -39,5 +43,10 @@
                 I'll link to the documentation page!
             </MudButton>
         </MudExpansionPanel>
+        <MudItem xs="12" sm="12" md="12">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Logout"
+                       OnClick="@LogoutUser">Logout
+            </MudButton>
+        </MudItem>
     </MudGrid>
 </MudContainer>
