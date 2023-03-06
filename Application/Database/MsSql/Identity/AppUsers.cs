@@ -262,38 +262,43 @@ public class AppUsers : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Username NVARCHAR(256),
-                @NormalizedUserName NVARCHAR(256),
-                @Email NVARCHAR(256),
-                @NormalizedEmail NVARCHAR(256),
-                @EmailConfirmed BIT,
-                @PasswordHash NVARCHAR(256),
-                @PasswordSalt NVARCHAR(256),
-                @PhoneNumber NVARCHAR(256),
-                @PhoneNumberConfirmed BIT,
-                @TwoFactorEnabled BIT,
-                @FirstName NVARCHAR(256),
-                @LastName NVARCHAR(256),
-                @ProfilePictureDataUrl NVARCHAR(400),
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2,
-                @IsDeleted BIT,
-                @DeletedOn datetime2,
-                @IsActive BIT,
-                @RefreshToken NVARCHAR(400),
-                @RefreshTokenExpiryTime datetime2,
-                @AccountType int
+                @Username NVARCHAR(256) = null,
+                @NormalizedUserName NVARCHAR(256) = null,
+                @Email NVARCHAR(256) = null,
+                @NormalizedEmail NVARCHAR(256) = null,
+                @EmailConfirmed BIT = null,
+                @PasswordHash NVARCHAR(256) = null,
+                @PasswordSalt NVARCHAR(256) = null,
+                @PhoneNumber NVARCHAR(256) = null,
+                @PhoneNumberConfirmed BIT = null,
+                @TwoFactorEnabled BIT = null,
+                @FirstName NVARCHAR(256) = null,
+                @LastName NVARCHAR(256) = null,
+                @ProfilePictureDataUrl NVARCHAR(400) = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn datetime2 = null,
+                @IsDeleted BIT = null,
+                @DeletedOn datetime2 = null,
+                @IsActive BIT = null,
+                @RefreshToken NVARCHAR(400) = null,
+                @RefreshTokenExpiryTime datetime2 = null,
+                @AccountType int = null
             AS
             begin
                 update dbo.[AppUsers]
-                set Username = @Username, NormalizedUserName = @NormalizedUserName, Email = @Email, NormalizedEmail = @NormalizedEmail,
-                    EmailConfirmed = @EmailConfirmed, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt,
-                    PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @PhoneNumberConfirmed, TwoFactorEnabled = @TwoFactorEnabled,
-                    FirstName = @FirstName, LastName = @LastName, ProfilePictureDataUrl = @ProfilePictureDataUrl,
-                    LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn, IsDeleted = @IsDeleted,
-                    DeletedOn = @DeletedOn, IsActive = @IsActive, RefreshToken = @RefreshToken, RefreshTokenExpiryTime = @RefreshTokenExpiryTime,
-                    AccountType = @AccountType
-                where Id = @Id;
+                set Username = COALESCE(@Username, Username), NormalizedUserName = COALESCE(@NormalizedUserName, NormalizedUserName),
+                    Email = COALESCE(@Email, Email), NormalizedEmail = COALESCE(@NormalizedEmail, NormalizedEmail),
+                    EmailConfirmed = COALESCE(@EmailConfirmed, EmailConfirmed), PasswordHash = COALESCE(@PasswordHash, PasswordHash),
+                    PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt), PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
+                    PhoneNumberConfirmed = COALESCE(@PhoneNumberConfirmed, PhoneNumberConfirmed),
+                    TwoFactorEnabled = COALESCE(@TwoFactorEnabled, TwoFactorEnabled), FirstName = COALESCE(@FirstName, FirstName),
+                    LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
+                    IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
+                    IsActive = COALESCE(@IsActive, IsActive), RefreshToken = COALESCE(@RefreshToken, RefreshToken),
+                    RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
+                    AccountType = COALESCE(@AccountType, AccountType)
+                where Id = COALESCE(@Id, Id);
             end"
     };
 }

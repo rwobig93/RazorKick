@@ -36,6 +36,7 @@ public static class AppUserUpdateExtensions
     {
         return new AppUserUpdate
         {
+            Id = appUser.Id,
             Username = appUser.Username,
             NormalizedUserName = appUser.NormalizedUserName,
             Email = appUser.Email,
@@ -64,6 +65,7 @@ public static class AppUserUpdateExtensions
     {
         return new AppUserUpdate
         {
+            Id = appUser.Id,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,

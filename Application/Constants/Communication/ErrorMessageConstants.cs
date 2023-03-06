@@ -1,4 +1,4 @@
-﻿namespace Application.Constants.Messages;
+﻿namespace Application.Constants.Communication;
 
 public static class ErrorMessageConstants
 {

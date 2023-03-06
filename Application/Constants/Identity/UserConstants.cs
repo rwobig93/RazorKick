@@ -13,7 +13,4 @@ public static class UserConstants
     public const string DefaultBasicLastName = "Maybe";
     public const string DefaultBasicEmail = "TheNeutral@doop.future";
     public const string DefaultBasicPassword = "wFWHo^^@Lv%df$Exo7h&KWeTj35t4g3GBu^LPz9^35KCDT6A@K#zMZ3";
-
-    public const string PathEmailTemplateConfirmation = "Infrastructure.EmailTemplates.RegistrationConfirmation.cshtml";
-    public const string PathEmailTemplatePasswordReset = "Infrastructure.EmailTemplates.PasswordReset.cshtml";
 }

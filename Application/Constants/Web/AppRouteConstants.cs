@@ -15,6 +15,7 @@ public static class AppRouteConstants
     {
         public const string Login = "/login";
         public const string Register = "/register";
+        public const string ConfirmEmail = "/confirm-email";
     }
 
     public static class Api

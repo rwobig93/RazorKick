@@ -3,12 +3,13 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Application.Constants.Communication;
 using Application.Constants.Identity;
-using Application.Constants.Messages;
 using Application.Constants.Web;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
+using Application.Models.Email;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -18,7 +19,6 @@ using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
-using Domain.Models.Todo;
 using FluentEmail.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
@@ -121,15 +121,27 @@ public class AppAccountService : IAppAccountService
         var createUser = user.ToCreateObject();
 
         AccountHelpers.GenerateHashAndSalt(password, out var salt, out var hash);
+        createUser.CreatedOn = DateTime.Now;
+        createUser.CreatedBy = Guid.Empty;
+        createUser.RefreshTokenExpiryTime = DateTime.Now;
         createUser.PasswordSalt = salt;
         createUser.PasswordHash = hash;
-            
+        createUser.NormalizedUserName = createUser.Username.NormalizeForDatabase();
+        createUser.NormalizedEmail = createUser.Email.NormalizeForDatabase();
+
         return await _userRepository.CreateAsync(createUser);
     }
 
     public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
     {
         // TODO: Add handling for a deleted account that still exists in the database, reactivate account or reach out to admin for enablement?
+        if (!AccountHelpers.IsValidEmailAddress(registerRequest.Email))
+            return await Result.FailAsync($"The email address {registerRequest.Email} provided isn't a valid email, please try again");
+        
+        var matchingEmail = (await _userRepository.GetByEmailAsync(registerRequest.Email)).Result;
+        if (matchingEmail is not null)
+            return await Result.FailAsync($"The email address {registerRequest.Email} is already in use, please try again");
+        
         var matchingUserName = (await _userRepository.GetByUsernameAsync(registerRequest.Username)).Result;
         if (matchingUserName != null)
         {
@@ -139,12 +151,8 @@ public class AppAccountService : IAppAccountService
         var newUser = new AppUserDb()
         {
             Email = registerRequest.Email,
-            UserName = registerRequest.Username,
+            Username = registerRequest.Username,
         };
-
-        var matchingEmail = (await _userRepository.GetByEmailAsync(registerRequest.Email)).Result;
-        if (matchingEmail is not null)
-            return await Result.FailAsync($"The email address {registerRequest.Email} is already in use, please try again");
         
         var createUserResult = await CreateAsync(newUser, registerRequest.Password);
         if (!createUserResult.Success)
@@ -158,11 +166,14 @@ public class AppAccountService : IAppAccountService
                             $"please contact the administrator for assistance";
         
         // TODO: Re-add email service after validating why it was failing
-        var confirmationUrl = await GetEmailConfirmationUrl(newUser);
+        var confirmationUrl = await GetEmailConfirmationUrl(createUserResult.Result);
+        if (string.IsNullOrWhiteSpace(confirmationUrl))
+            return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
+        
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
+            EmailConstants.PathRegistrationConfirmation);
         var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
-            .UsingTemplateFromFile(UserConstants.PathEmailTemplateConfirmation,
-                new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}
-            ).SendAsync();
+            .UsingTemplateFromFile(templatePath, new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}).SendAsync();
         if (!sendResponse.Successful)
             return await Result.FailAsync(string.Join(Environment.NewLine, sendResponse.ErrorMessages));
         
@@ -172,17 +183,17 @@ public class AppAccountService : IAppAccountService
                 $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
         return await Result<Guid>.SuccessAsync(newUser.Id, 
-            $"User {newUser.UserName} Registered. Please check your Mailbox to confirm!{caveatMessage}");
+            $"Account {newUser.UserName} successfully registered, please check your email to confirm!{caveatMessage}");
     }
 
-    public async Task<string> GetEmailConfirmationUrl(AppUserDb user)
+    public async Task<string> GetEmailConfirmationUrl(Guid userId)
     {
         var previousConfirmations =
-            (await _userRepository.GetUserExtendedAttributesByTypeAsync(user.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.EmailConfirmationToken)).Result;
         var previousConfirmation = previousConfirmations?.FirstOrDefault();
         
-        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
-        var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", user.Id.ToString());
+        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, AppRouteConstants.Identity.ConfirmEmail));
+        var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", userId.ToString());
         
         // Previous pending account registration exists, return current value
         if (previousConfirmation is not null)
@@ -193,13 +204,16 @@ public class AppAccountService : IAppAccountService
         var confirmationCode = UrlHelpers.GenerateToken();
         var newExtendedAttribute = new AppUserExtendedAttributeAdd()
         {
-            OwnerId = user.Id,
+            OwnerId = userId,
             Name = "AccountEmailConfirmation",
             Type = ExtendedAttributeType.EmailConfirmationToken,
             Value = confirmationCode
         };
-        await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+        var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+        if (!addAttributeRequest.Success)
+            return "";
         
+        // TODO: Split confirmation code and URI return for API endpoints to register a user programmatically
         return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode);
     }
 
@@ -222,7 +236,9 @@ public class AppAccountService : IAppAccountService
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
         
         foundUser.EmailConfirmed = true;
-        var confirmEmail = await _userRepository.UpdateAsync(foundUser.ToUpdateObject());
+        foundUser.IsActive = true;
+        var userUpdate = foundUser.ToUpdateObject();
+        var confirmEmail = await _userRepository.UpdateAsync(userUpdate);
         if (!confirmEmail.Success)
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");

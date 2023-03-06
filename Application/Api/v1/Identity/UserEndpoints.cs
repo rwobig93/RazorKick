@@ -1,4 +1,4 @@
-﻿using Application.Constants.Messages;
+﻿using Application.Constants.Communication;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;

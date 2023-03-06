@@ -82,6 +82,8 @@
       <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\ExampleUser.sql" />
       <None Remove="DatabaseScripts\MsSql\Tables\Roles.sql" />
       <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\Roles.sql" />
+      <None Remove="EmailTemplates\RegistrationConfirmation.cshtml" />
+      <None Remove="EmailTemplates\PasswordReset.cshtml" />
     </ItemGroup>
 
 </Project>

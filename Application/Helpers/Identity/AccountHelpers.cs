@@ -1,4 +1,5 @@
-﻿using Bcrypt = BCrypt.Net.BCrypt;
+﻿using System.ComponentModel.DataAnnotations;
+using Bcrypt = BCrypt.Net.BCrypt;
 
 namespace Application.Helpers.Identity;
 
@@ -29,5 +30,10 @@ public static class AccountHelpers
     public static string NormalizeForDatabase(this string providedString)
     {
         return providedString.Normalize();
+    }
+
+    public static bool IsValidEmailAddress(string? address)
+    {
+        return address != null && new EmailAddressAttribute().IsValid(address);
     }
 }
