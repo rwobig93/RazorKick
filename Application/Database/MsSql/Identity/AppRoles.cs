@@ -148,20 +148,22 @@ public class AppRoles : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Name NVARCHAR(256),
-                @NormalizedName NVARCHAR(256),
-                @ConcurrencyStamp NVARCHAR(256),
-                @Description NVARCHAR(4000),
-                @CreatedBy UNIQUEIDENTIFIER,
-                @CreatedOn datetime2,
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2
+                @Name NVARCHAR(256) = null,
+                @NormalizedName NVARCHAR(256) = null,
+                @ConcurrencyStamp NVARCHAR(256) = null,
+                @Description NVARCHAR(4000) = null,
+                @CreatedBy UNIQUEIDENTIFIER = null,
+                @CreatedOn datetime2 = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn datetime2 = null
             AS
             begin
                 update dbo.[AppRoles]
-                set Name = @Name, NormalizedName = @NormalizedName, ConcurrencyStamp = @ConcurrencyStamp, Description = @Description,
-                    CreatedBy = @CreatedBy, CreatedOn = @CreatedOn, LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
-                where Id = @Id;
+                set Name = COALESCE(@Name, Name), NormalizedName = COALESCE(@NormalizedName, NormalizedName),
+                    ConcurrencyStamp = COALESCE(@ConcurrencyStamp, ConcurrencyStamp), Description = COALESCE(@Description, Description),
+                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
+                where Id = COALESCE(@Id, Id);
             end"
     };
 }

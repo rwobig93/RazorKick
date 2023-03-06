@@ -119,6 +119,13 @@ public class AppAccountService : IAppAccountService
     private async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserDb user, string password)
     {
         var createUser = user.ToCreateObject();
+        var passwordMeetsRequirements = await AccountHelpers.PasswordMeetsRequirements(password);
+        if (!passwordMeetsRequirements)
+        {
+            var passwordFailResult = new DatabaseActionResult<Guid>();
+            passwordFailResult.Fail("Provided password doesn't meet the requirements");
+            return passwordFailResult;
+        }
 
         AccountHelpers.GenerateHashAndSalt(password, out var salt, out var hash);
         createUser.CreatedOn = DateTime.Now;

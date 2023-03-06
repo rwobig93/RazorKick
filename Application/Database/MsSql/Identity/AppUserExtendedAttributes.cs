@@ -183,11 +183,11 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Value NVARCHAR(256)
+                @Value NVARCHAR(256) = null
             AS
             begin
                 update dbo.[AppUserExtendedAttributes]
-                set Value = @Value
+                set Value = COALESCE(@Value, Value)
                 where Id = @Id;
             end"
     };

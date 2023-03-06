@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
@@ -126,6 +127,10 @@ public static class UserEndpoints
     {
         try
         {
+            var passwordMeetsRequirements = await AccountHelpers.PasswordMeetsRequirements(userRequest.Password);
+            if (!passwordMeetsRequirements)
+                return await Result.FailAsync("Password provided doesn't meet the requirements");
+            
             var createRequest = userRequest.ToCreateObject();
             createRequest.CreatedBy = Guid.Empty;
             

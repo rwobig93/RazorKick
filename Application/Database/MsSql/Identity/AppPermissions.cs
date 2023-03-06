@@ -266,25 +266,27 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Update]
                 @Id UNIQUEIDENTIFIER,
-                @RoleId UNIQUEIDENTIFIER,
-                @UserId UNIQUEIDENTIFIER,
-                @ClaimType NVARCHAR(256),
-                @ClaimValue NVARCHAR(1024),
-                @Name NVARCHAR(256),
-                @Group NVARCHAR(256),
-                @Access NVARCHAR(256),
-                @Description NVARCHAR(4000),
-                @CreatedBy UNIQUEIDENTIFIER,
-                @CreatedOn datetime2,
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2
+                @RoleId UNIQUEIDENTIFIER = null,
+                @UserId UNIQUEIDENTIFIER = null,
+                @ClaimType NVARCHAR(256) = null,
+                @ClaimValue NVARCHAR(1024) = null,
+                @Name NVARCHAR(256) = null,
+                @Group NVARCHAR(256) = null,
+                @Access NVARCHAR(256) = null,
+                @Description NVARCHAR(4000) = null,
+                @CreatedBy UNIQUEIDENTIFIER = null,
+                @CreatedOn datetime2 = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn datetime2 = null
             AS
             begin
                 update dbo.[AppPermissions]
-                set RoleId = @RoleId, UserID = @UserId, ClaimType = @ClaimType, ClaimValue = @ClaimValue, Name = @Name, [Group] = @Group,
-                    Access = @Access, Description = @Description, CreatedBy = @CreatedBy, CreatedOn = @CreatedOn,
-                    LastModifiedBy = @LastModifiedBy, LastModifiedOn = @LastModifiedOn
-                where Id = @Id;
+                set RoleId = COALESCE(@RoleId, RoleId), UserID = COALESCE(@UserId, UserId), ClaimType = COALESCE(@ClaimType, ClaimType),
+                    ClaimValue = COALESCE(@ClaimValue, ClaimValue), Name = COALESCE(@Name, Name), [Group] = COALESCE(@Group, Group),
+                    Access = COALESCE(@Access, Access), Description = COALESCE(@Description, Description),
+                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
+                where Id = COALESCE(@Id, Id);
             end"
     };
 }

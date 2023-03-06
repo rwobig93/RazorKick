@@ -16,6 +16,16 @@
             <MudText Align="Align.Center" Typo="Typo.h5">We just need a little info from you first</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            @if (PageIsLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Rounded="true" Indeterminate="true" Class="my-7"/>
+            }
+            else
+            {
+                <MudProgressLinear Color="Color.Primary" Rounded="true" Indeterminate="false" Value="0" Class="my-7"/>
+            }
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
             <MudTextField @bind-Value="DesiredUsername" Label="Desired Username" Variant="Variant.Outlined"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">

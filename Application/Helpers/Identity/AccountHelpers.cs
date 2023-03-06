@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Application.Constants.Identity;
+using Domain.DatabaseEntities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Bcrypt = BCrypt.Net.BCrypt;
 
 namespace Application.Helpers.Identity;
@@ -35,5 +38,11 @@ public static class AccountHelpers
     public static bool IsValidEmailAddress(string? address)
     {
         return address != null && new EmailAddressAttribute().IsValid(address);
+    }
+
+    public static async Task<bool> PasswordMeetsRequirements(string password)
+    {
+        var validPassword = await new PasswordValidator<AppUserDb>().ValidateAsync(null, new AppUserDb(), password);
+        return validPassword.Succeeded;
     }
 }

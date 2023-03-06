@@ -14,10 +14,13 @@ public partial class Register
     private string DesiredEmail { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
+    
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
     private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private bool PageIsLoading { get; set; } = false;
 
     private async Task RegisterAsync()
     {
@@ -25,13 +28,16 @@ public partial class Register
         {
             if (!IsRequiredInformationPresent()) return;
 
+            PageIsLoading = true;
+            StateHasChanged();
+
             var authResponse = await AccountService.RegisterAsync(new UserRegisterRequest
             {
                 Username = DesiredUsername,
                 Email = DesiredEmail,
                 Password = DesiredPassword
             });
-            
+
             if (!authResponse.Succeeded)
             {
                 authResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -43,6 +49,11 @@ public partial class Register
         catch (Exception ex)
         {
             Snackbar.Add($"Failure Occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            PageIsLoading = false;
+            StateHasChanged();
         }
     }
 

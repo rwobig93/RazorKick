@@ -1,4 +1,6 @@
-﻿namespace Application.Constants.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Application.Constants.Identity;
 
 public static class UserConstants
 {
@@ -13,4 +15,20 @@ public static class UserConstants
     public const string DefaultBasicLastName = "Maybe";
     public const string DefaultBasicEmail = "TheNeutral@doop.future";
     public const string DefaultBasicPassword = "wFWHo^^@Lv%df$Exo7h&KWeTj35t4g3GBu^LPz9^35KCDT6A@K#zMZ3";
+
+    public static PasswordOptions PasswordRequirements = new()
+    {
+        RequiredLength = 12,
+        RequiredUniqueChars = 1,
+        RequireNonAlphanumeric = true,
+        RequireLowercase = true,
+        RequireUppercase = true,
+        RequireDigit = true
+    };
+
+    public static UserOptions UserRequirements = new()
+    {
+        AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._$@+",
+        RequireUniqueEmail = true
+    };
 }

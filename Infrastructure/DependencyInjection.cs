@@ -84,14 +84,13 @@ public static class DependencyInjection
         services.AddMudServices(config =>
         {
             config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
-
             config.SnackbarConfiguration.PreventDuplicates = true;
             config.SnackbarConfiguration.NewestOnTop = false;
             config.SnackbarConfiguration.ShowCloseIcon = true;
-            config.SnackbarConfiguration.VisibleStateDuration = 10000;
+            config.SnackbarConfiguration.VisibleStateDuration = 6000;
             config.SnackbarConfiguration.HideTransitionDuration = 500;
             config.SnackbarConfiguration.ShowTransitionDuration = 500;
-            config.SnackbarConfiguration.SnackbarVariant = Variant.Text;
+            config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
         });
         
         services.AddBlazoredLocalStorage();
@@ -128,12 +127,8 @@ public static class DependencyInjection
             .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>()
             .AddIdentity<AppUserDb, AppRoleDb>(options =>
             {
-                options.Password.RequiredLength = 12;
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = true;
-                options.User.RequireUniqueEmail = true;
+                options.Password = UserConstants.PasswordRequirements;
+                options.User = UserConstants.UserRequirements;
             })
             .AddUserStore<AppIdentityService>()
             .AddRoleStore<AppIdentityRoleService>()
