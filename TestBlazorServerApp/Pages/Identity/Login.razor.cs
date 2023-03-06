@@ -37,9 +37,7 @@ public partial class Login
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(Username)) Snackbar.Add("Username field is empty", Severity.Error);
-            if (string.IsNullOrWhiteSpace(Password)) Snackbar.Add("Password field is empty", Severity.Error);
-            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)) return;
+            if (!IsRequiredInformationPresent()) return;
             
             var authResponse = await AccountService.LoginGuiAsync(new UserLoginRequest
             {
@@ -61,6 +59,20 @@ public partial class Login
         {
             Snackbar.Add($"Failure Occurred: {ex.Message}", Severity.Error);
         }
+    }
+
+    private bool IsRequiredInformationPresent()
+    {
+        var informationValid = true;
+        
+        if (string.IsNullOrWhiteSpace(Username)) {
+            Snackbar.Add("Username field is empty", Severity.Error); informationValid = false;
+        }
+        if (string.IsNullOrWhiteSpace(Password)) {
+            Snackbar.Add("Password field is empty", Severity.Error); informationValid = false;
+        }
+
+        return informationValid;
     }
 
     private void TogglePasswordVisibility()

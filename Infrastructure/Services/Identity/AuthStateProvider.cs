@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Security.Principal;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Services.System;
 using Application.Settings.Identity;
@@ -28,6 +30,48 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        try
+        {
+            var currentPrincipal = GetPrincipalFromHttpContext();
+            if (currentPrincipal.Identity!.Name != UserConstants.UnauthenticatedIdentity.Name)
+                return new AuthenticationState(currentPrincipal);
+            
+            var savedToken = await GetTokenFromLocalStorage();
+            
+            if (string.IsNullOrWhiteSpace(savedToken))
+                savedToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+            
+            if (string.IsNullOrWhiteSpace(savedToken))
+                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
+            
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
+            var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults
+            .AuthenticationScheme));
+            _contextAccessor.HttpContext!.User = authorizedPrincipal;
+            var state = new AuthenticationState(authorizedPrincipal);
+            AuthenticationStateUser = state.User;
+            return state;
+        }
+        catch
+        {
+            return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
+        }
+    }
+
+    private ClaimsPrincipal GetPrincipalFromHttpContext()
+    {
+        try
+        {
+            return _contextAccessor.HttpContext?.User!;
+        }
+        catch
+        {
+            return UserConstants.UnauthenticatedPrincipal;
+        }
+    }
+
+    private async Task<string> GetTokenFromLocalStorage()
+    {
         var savedToken = "";
         try
         {
@@ -38,25 +82,8 @@ public class AuthStateProvider : AuthenticationStateProvider
             // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
         }
-        
-        try
-        {
-            if (string.IsNullOrWhiteSpace(savedToken))
-                savedToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
-            
-            if (string.IsNullOrWhiteSpace(savedToken))
-                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-            
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
-            var state = new AuthenticationState(
-                new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults.AuthenticationScheme)));
-            AuthenticationStateUser = state.User;
-            return state;
-        }
-        catch
-        {
-            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
-        }
+
+        return savedToken;
     }
 
     public ClaimsPrincipal AuthenticationStateUser { get; set; } = null!;

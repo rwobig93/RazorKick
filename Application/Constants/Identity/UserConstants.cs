@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Constants.Identity;
 
@@ -31,4 +32,8 @@ public static class UserConstants
         AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._$@+",
         RequireUniqueEmail = true
     };
+
+    public static ClaimsIdentity UnauthenticatedIdentity = new();
+
+    public static ClaimsPrincipal UnauthenticatedPrincipal = new(UnauthenticatedIdentity);
 }

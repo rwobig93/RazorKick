@@ -2,6 +2,7 @@
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
+using Microsoft.AspNetCore.Http;
 using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
@@ -10,11 +11,13 @@ public class CurrentUserService : ICurrentUserService
 {
     private readonly AuthStateProvider _authProvider;
     private readonly IAppUserRepository _userRepository;
+    private readonly IHttpContextAccessor _contextAccessor;
     
-    public CurrentUserService(AuthStateProvider authProvider, IAppUserRepository userRepository)
+    public CurrentUserService(AuthStateProvider authProvider, IAppUserRepository userRepository, IHttpContextAccessor contextAccessor)
     {
         _authProvider = authProvider;
         _userRepository = userRepository;
+        _contextAccessor = contextAccessor;
     }
 
     private async Task<Guid?> GetUserIdFromAuthProvider()
@@ -49,5 +52,10 @@ public class CurrentUserService : ICurrentUserService
         if (!foundUser.Success) return null;
 
         return foundUser.Result!;
+    }
+
+    public ClaimsPrincipal? GetUserFromContext()
+    {
+        return _contextAccessor.HttpContext?.User;
     }
 }

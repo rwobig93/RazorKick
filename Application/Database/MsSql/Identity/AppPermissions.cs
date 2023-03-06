@@ -282,7 +282,7 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             begin
                 update dbo.[AppPermissions]
                 set RoleId = COALESCE(@RoleId, RoleId), UserID = COALESCE(@UserId, UserId), ClaimType = COALESCE(@ClaimType, ClaimType),
-                    ClaimValue = COALESCE(@ClaimValue, ClaimValue), Name = COALESCE(@Name, Name), [Group] = COALESCE(@Group, Group),
+                    ClaimValue = COALESCE(@ClaimValue, ClaimValue), Name = COALESCE(@Name, Name), [Group] = COALESCE(@Group, [Group]),
                     Access = COALESCE(@Access, Access), Description = COALESCE(@Description, Description),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
