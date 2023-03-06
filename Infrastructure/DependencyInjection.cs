@@ -108,13 +108,12 @@ public static class DependencyInjection
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var appSettings = configuration.ConfigureApplicationSettings(services);
+        var appSettings = configuration.GetApplicationSettings();
 
         services.AddHttpContextAccessor();
         services.AddSession(options =>
         {
-            // TODO: Add appsetting for idle session timeout
-            options.IdleTimeout = TimeSpan.FromMinutes(240);
+            options.IdleTimeout = TimeSpan.FromMinutes(appSettings.SessionIdleTimeoutMinutes);
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
         });

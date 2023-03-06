@@ -7,4 +7,5 @@ public class AppConfiguration : IAppSettingsSection
     public string? BaseUrl { get; set; }
     public int PermissionValidationIntervalSeconds { get; set; } = 5;
     public int TokenExpirationDays { get; set; } = 7;
+    public int SessionIdleTimeoutMinutes { get; set; } = 240;
 }
