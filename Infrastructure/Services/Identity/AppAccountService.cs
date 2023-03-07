@@ -348,6 +348,47 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
+    public async Task<IResult> UpdateThemePreference(Guid userId, AppThemeId themeId)
+    {
+        var currentTheme =
+            await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference);
+        if (currentTheme.Result is null)
+        {
+            var newTheme = await _userRepository.AddExtendedAttributeAsync(new AppUserExtendedAttributeAdd
+            {
+                OwnerId = userId,
+                Name = "ThemePreferencePrimary",
+                Value = themeId.ToString(),
+                Type = ExtendedAttributeType.ThemePreference
+            });
+            if (!newTheme.Success)
+                return await Result.FailAsync($"Failure occurred attempting to update theme preference: {newTheme.ErrorMessage}");
+
+            return await Result.SuccessAsync("Theme updated successfully");
+        }
+
+        var updateResult = await _userRepository.UpdateExtendedAttributeAsync(currentTheme.Result.FirstOrDefault()!.Id, themeId.ToString());
+        if (!updateResult.Success)
+            return await Result.FailAsync($"Failure occurred attempting to update theme preference: {updateResult.ErrorMessage}");
+
+        return await Result.SuccessAsync("Theme updated successfully");
+    }
+
+    public async Task<IResult<AppThemeId>> GetThemePreference(Guid userId)
+    {
+        var currentTheme =
+            await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference);
+        if (currentTheme.Result is null)
+            return await Result<AppThemeId>.FailAsync("No current theme exists for this user");
+
+        var themeValue = currentTheme.Result.FirstOrDefault()!.Value;
+        var validTheme = Enum.TryParse<AppThemeId>(themeValue, out var themeId);
+        if (!validTheme)
+            return await Result<AppThemeId>.FailAsync("Failure occurred attempting to get the theme for this user");
+        
+        return await Result<AppThemeId>.SuccessAsync(themeId);
+    }
+
     private async Task<string> GenerateJwtAsync(AppUserDb user)
     {
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));

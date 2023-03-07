@@ -1,10 +1,13 @@
 ﻿using System.Reflection;
+using Application.Services.System;
+using Microsoft.AspNetCore.Components;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
 
 public partial class MainLayout
 {
+    [Inject] private ISerializerService Serializer { get; set; } = null!;
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private bool _isDrawerOpen = true;
     private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;

@@ -1,5 +1,6 @@
 ﻿using Application.Models.Web;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
 
@@ -16,4 +17,6 @@ public interface IAppAccountService
     Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest);
     Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest);
     Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
+    Task<IResult> UpdateThemePreference(Guid userId, AppThemeId themeId);
+    Task<IResult<AppThemeId>> GetThemePreference(Guid userId);
 }

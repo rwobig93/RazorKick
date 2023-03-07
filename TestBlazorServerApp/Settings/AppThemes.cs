@@ -1,9 +1,12 @@
-﻿namespace TestBlazorServerApp.Settings;
+﻿using Domain.Enums.Identity;
+
+namespace TestBlazorServerApp.Settings;
 
 public static class AppThemes
 {
     public static readonly AppTheme DarkTheme = new()
     {
+        Id = AppThemeId.Dark,
         FriendlyName = "Dark",
         Description = "Easy on the eyes, and awesome, don't forget awesome",
         Theme = new MudTheme()
@@ -36,6 +39,7 @@ public static class AppThemes
     
     public static readonly AppTheme DarkerTheme = new()
     {
+        Id = AppThemeId.Darker,
         FriendlyName = "Darker",
         Description = "I get it, you wanna go darker, I don't blame you",
         Theme = new MudTheme()
@@ -68,6 +72,7 @@ public static class AppThemes
     
     public static readonly AppTheme HackerTheme = new()
     {
+        Id = AppThemeId.Hacker,
         FriendlyName = "Hackerman",
         Description = "I'm not normal and I never will be, no matter what world I'm in",
         Theme = new MudTheme()
@@ -100,6 +105,7 @@ public static class AppThemes
     
     public static readonly AppTheme BrightTheme = new()
     {
+        Id = AppThemeId.Bright,
         FriendlyName = "Bright",
         Description = "I mean if you're into that sort of thing, we still gave you that option",
         Theme = new MudTheme()
