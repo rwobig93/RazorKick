@@ -33,10 +33,13 @@ public class AuthStateProvider : AuthenticationStateProvider
         try
         {
             var currentPrincipal = GetPrincipalFromHttpContext();
-            if (currentPrincipal.Identity!.Name != UserConstants.UnauthenticatedIdentity.Name)
+            if (currentPrincipal.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
                 return new AuthenticationState(currentPrincipal);
+
+            var savedToken = GetTokenFromHttpSession();
             
-            var savedToken = await GetTokenFromLocalStorage();
+            if (string.IsNullOrWhiteSpace(savedToken))
+                savedToken = await GetTokenFromLocalStorage();
             
             if (string.IsNullOrWhiteSpace(savedToken))
                 savedToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
@@ -67,6 +70,18 @@ public class AuthStateProvider : AuthenticationStateProvider
         catch
         {
             return UserConstants.UnauthenticatedPrincipal;
+        }
+    }
+
+    private string GetTokenFromHttpSession()
+    {
+        try
+        {
+            return _contextAccessor.HttpContext!.Session.GetString(LocalStorageConstants.AuthToken)!;
+        }
+        catch
+        {
+            return "";
         }
     }
 

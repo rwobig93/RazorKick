@@ -9,6 +9,7 @@ using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
+using Shared.Routes;
 
 namespace Application.Api.v1.Identity;
 
@@ -16,15 +17,16 @@ public static class UserEndpoints
 {
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/identity/users", GetAllUsers).ApiVersionOne();
-        app.MapGet("/api/identity/user", GetUserById).ApiVersionOne();
-        app.MapGet("/api/identity/user/full", GetFullUserById).ApiVersionOne();
-        app.MapGet("/api/identity/user/email", GetUserByEmail).ApiVersionOne();
-        app.MapGet("/api/identity/user/username", GetUserByUsername).ApiVersionOne();
-        app.MapDelete("/api/identity/user", DeleteUser).ApiVersionOne();
-        app.MapPost("/api/identity/user", CreateUser).ApiVersionOne();
-        app.MapPost("/api/identity/user/register", Register).ApiVersionOne();
-        app.MapPut("/api/identity/user", UpdateUser).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.GetAll, GetAllUsers).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.GetById, GetUserById).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.GetFullById, GetFullUserById).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.GetByEmail, GetUserByEmail).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.GetByUsername, GetUserByUsername).ApiVersionOne();
+        app.MapDelete(ApiRoutes.Identity.Delete, DeleteUser).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Create, CreateUser).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Register, Register).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Login, Login).ApiVersionOne();
+        app.MapPut(ApiRoutes.Identity.Update, UpdateUser).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
     }
@@ -39,6 +41,18 @@ public static class UserEndpoints
         catch (Exception ex)
         {
             return await Result.FailAsync(ex.Message);
+        }
+    }
+
+    private static async Task<IResult<UserLoginResponse>> Login(UserLoginRequest loginRequest, IAppAccountService accountService)
+    {
+        try
+        {
+            return await accountService.LoginAsync(loginRequest);
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserLoginResponse>.FailAsync(ex.Message);
         }
     }
 

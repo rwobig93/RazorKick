@@ -4,6 +4,18 @@ namespace TestBlazorServerApp.Settings;
 
 public static class AppThemes
 {
+    public static AppTheme GetThemeById(AppThemeId themeId)
+    {
+        return themeId switch
+        {
+            AppThemeId.Dark => DarkTheme,
+            AppThemeId.Darker => DarkerTheme,
+            AppThemeId.Hacker => HackerTheme,
+            AppThemeId.Bright => BrightTheme,
+            _ => DarkTheme
+        };
+    }
+    
     public static readonly AppTheme DarkTheme = new()
     {
         Id = AppThemeId.Dark,

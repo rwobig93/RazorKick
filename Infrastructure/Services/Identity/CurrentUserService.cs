@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Application.Constants.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
@@ -20,19 +21,38 @@ public class CurrentUserService : ICurrentUserService
         _contextAccessor = contextAccessor;
     }
 
-    private async Task<Guid?> GetUserIdFromAuthProvider()
+    public async Task<ClaimsPrincipal?> GetCurrentUserPrincipal()
     {
-        var userIdentity = await _authProvider.GetAuthenticationStateProviderUserAsync();
-        var userIdClaim = userIdentity.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
-        var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
+        var userFromContext = _contextAccessor.HttpContext?.User;
+        if (userFromContext?.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
+            return userFromContext;
         
-        if (!isGuid) return null;
+        return await _authProvider.GetAuthenticationStateProviderUserAsync();
+    }
+
+    public async Task<Guid?> GetCurrentUserId()
+    {
+        var userIdentity = await GetCurrentUserPrincipal();
+        if (userIdentity is null)
+            return null;
+        
+        var userId = GetIdFromPrincipal(userIdentity);
+        
+        if (userId == Guid.Empty) return null;
         return userId;
     }
-    
+
+    public Guid GetIdFromPrincipal(ClaimsPrincipal principal)
+    {
+        var userIdClaim = principal?.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
+        var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
+        
+        return !isGuid ? Guid.Empty : userId;
+    }
+
     public async Task<UserBasicResponse?> GetCurrentUserBasic()
     {
-        var userId = await GetUserIdFromAuthProvider();
+        var userId = await GetCurrentUserId();
         
         if (userId is null) return null;
 
@@ -44,7 +64,7 @@ public class CurrentUserService : ICurrentUserService
 
     public async Task<AppUserDb?> GetCurrentUserFull()
     {
-        var userId = await GetUserIdFromAuthProvider();
+        var userId = await GetCurrentUserId();
         
         if (userId is null) return null;
 
@@ -52,10 +72,5 @@ public class CurrentUserService : ICurrentUserService
         if (!foundUser.Success) return null;
 
         return foundUser.Result!;
-    }
-
-    public ClaimsPrincipal? GetUserFromContext()
-    {
-        return _contextAccessor.HttpContext?.User;
     }
 }

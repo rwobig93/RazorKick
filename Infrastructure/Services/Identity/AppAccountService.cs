@@ -1,5 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -14,19 +15,21 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using FluentEmail.Core;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Shared.ApiRoutes.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
+using Shared.Routes;
 using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
@@ -42,10 +45,12 @@ public class AppAccountService : IAppAccountService
     private readonly AuthStateProvider _authProvider;
     private readonly HttpClient _httpClient;
     private readonly IHttpContextAccessor _contextAccessor;
+    private readonly ISerializerService _serializer;
+    private readonly NavigationManager _navManager;
     
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, HttpClient httpClient,
-        IHttpContextAccessor contextAccessor, IFluentEmail mailService)
+        IHttpContextAccessor contextAccessor, IFluentEmail mailService, ISerializerService serializer, NavigationManager navManager)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
@@ -56,6 +61,8 @@ public class AppAccountService : IAppAccountService
         _httpClient = httpClient;
         _contextAccessor = contextAccessor;
         _mailService = mailService;
+        _serializer = serializer;
+        _navManager = navManager;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -87,15 +94,27 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest)
     {
-        var authResponse = await LoginAsync(loginRequest);
+        try
+        {
+            var authResponse = await _httpClient.PostAsJsonAsync(ApiRoutes.Identity.Login.ToFullUrl(_navManager.BaseUri), loginRequest);
+            if (!authResponse.IsSuccessStatusCode)
+                return await Result<UserLoginResponse>.FailAsync(await authResponse.Content.ReadAsStringAsync());
 
-        await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, authResponse.Data.Token);
-        await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, authResponse.Data.RefreshToken);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.Data.Token);
-        
-        await _authProvider.GetAuthenticationStateAsync();
-        
-        return authResponse;
+            var loginResponse = _serializer.Deserialize<UserLoginResponse>(await authResponse.Content.ReadAsStringAsync());
+            _contextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthToken, loginResponse.Token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token);
+
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Token);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.RefreshToken);
+
+            await _authProvider.GetAuthenticationStateAsync();
+
+            return await Result<UserLoginResponse>.SuccessAsync(loginResponse);
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserLoginResponse>.FailAsync($"Failure occurred attempting to login: {ex.Message}");
+        }
     }
 
     public async Task<IResult> LogoutGuiAsync()
@@ -269,7 +288,7 @@ public class AppAccountService : IAppAccountService
             (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.PasswordResetToken)).Result;
         var previousReset = previousResets?.FirstOrDefault();
         
-        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, UserRoutes.ConfirmEmail));
+        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, AppRouteConstants.Identity.ForgotPassword));
         var confirmationUri = QueryHelpers.AddQueryString(endpointUri.ToString(), "userId", foundUser.Id.ToString());
         
         // Previous pending forgot password exists, return current value
@@ -348,7 +367,7 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult> UpdateThemePreference(Guid userId, AppThemeId themeId)
+    public async Task<IResult> SetThemePreference(Guid userId, AppThemeId themeId)
     {
         var currentTheme =
             await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference);

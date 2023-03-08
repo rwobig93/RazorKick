@@ -6,16 +6,17 @@ public static class AppRouteConstants
     
     public static class Example
     {
-        public const string Counter = "/counter";
-        public const string WeatherData = "/weather-data";
-        public const string Books = "/books";
+        public const string Counter = "/example/counter";
+        public const string WeatherData = "/example/weather-data";
+        public const string Books = "/example/books";
     }
     
     public static class Identity
     {
-        public const string Login = "/login";
-        public const string Register = "/register";
-        public const string ConfirmEmail = "/confirm-email";
+        public const string Login = "/identity/login";
+        public const string Register = "/identity/register";
+        public const string ConfirmEmail = "/identity/confirm-email";
+        public const string ForgotPassword = "/identity/reset-password";
     }
 
     public static class Api

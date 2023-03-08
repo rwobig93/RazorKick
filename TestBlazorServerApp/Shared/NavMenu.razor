@@ -1,17 +1,17 @@
 ﻿<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
+    <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
         Home
     </MudNavLink>
-    <MudNavLink Href="/api" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+    <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
         API
     </MudNavLink>
-    <MudNavLink Href="/jobs" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
+    <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
         Jobs Dashboard
     </MudNavLink>
-    <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
+    <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
         Counter
     </MudNavLink>
-    <MudNavLink Href="/weather-data" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
+    <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
         Weather Forecasts
     </MudNavLink>
 </MudNavMenu>

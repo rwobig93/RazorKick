@@ -8,6 +8,8 @@ namespace Application.Helpers.Identity;
 
 public static class AccountHelpers
 {
+    public static PasswordValidator<AppUserDb> PasswordValidator { get; } = new();
+    
     public static string GenerateSalt()
     {
         return Bcrypt.GenerateSalt();
@@ -42,7 +44,7 @@ public static class AccountHelpers
 
     public static async Task<bool> PasswordMeetsRequirements(string password)
     {
-        var validPassword = await new PasswordValidator<AppUserDb>().ValidateAsync(null, new AppUserDb(), password);
+        var validPassword = await PasswordValidator.ValidateAsync(null, new AppUserDb(), password);
         return validPassword.Succeeded;
     }
 }
