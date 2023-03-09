@@ -15,28 +15,10 @@ public partial class MainLayout
     private bool _isDrawerOpen = true;
     private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await SetThemeFromPreference();
-    }
-
-    private async Task SetThemeFromPreference()
-    {
-        try
-        {
-            var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-            if (IsUserAuthenticated(currentUser))
-            {
-                var userId = CurrentUserService.GetIdFromPrincipal(currentUser!);
-                var themeId = await AccountService.GetThemePreference(userId);
-                var desiredTheme = AppThemes.GetThemeById(themeId.Data);
-                _selectedTheme = desiredTheme.Theme;
-            }
-        }
-        catch
-        {
-            _selectedTheme = AppThemes.DarkTheme.Theme;
-        }
+        await GetThemeFromPreference();
+        StateHasChanged();
     }
 
     private static bool IsUserAuthenticated(ClaimsPrincipal? principal)
@@ -49,9 +31,24 @@ public partial class MainLayout
         _isDrawerOpen = !_isDrawerOpen;
     }
 
-    private void ChangeTheme(MudTheme theme)
+    private async Task ChangeTheme(AppTheme theme)
     {
-        _selectedTheme = theme;
+        try
+        {
+            _selectedTheme = theme.Theme;
+            var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+            if (IsUserAuthenticated(currentUser))
+            {
+                var userId = CurrentUserService.GetIdFromPrincipal(currentUser!);
+                var result = await AccountService.SetThemePreference(userId, theme.Id);
+                if (!result.Succeeded)
+                    result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            }
+        }
+        catch
+        {
+            _selectedTheme = AppThemes.DarkTheme.Theme;
+        }
     }
     
     private static List<AppTheme> GetAvailableThemes()
@@ -62,5 +59,28 @@ public partial class MainLayout
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
             where propertyValue is not null select (AppTheme)propertyValue).ToList()!;
+    }
+
+    private async Task GetThemeFromPreference()
+    {
+        // TODO: Theme isn't updating for unauthorized pages - user not having permission
+        try
+        {
+            var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+            if (IsUserAuthenticated(currentUser))
+            {
+                var userId = CurrentUserService.GetIdFromPrincipal(currentUser!);
+                var themeId = await AccountService.GetThemePreference(userId);
+                if (!themeId.Succeeded)
+                    return;
+                
+                var desiredTheme = AppThemes.GetThemeById(themeId.Data);
+                _selectedTheme = desiredTheme.Theme;
+            }
+        }
+        catch
+        {
+            _selectedTheme = AppThemes.DarkTheme.Theme;
+        }
     }
 }

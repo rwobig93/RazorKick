@@ -22,6 +22,10 @@ public static class ApiRoutes
 
 public static class ApiRouteExtensions
 {
-    public static string ToFullUrl(this string uri, string hostOrigin) =>
-        string.Concat(hostOrigin, uri);
+    public static string ToFullUrl(this string uri, string hostOrigin)
+    {
+        if (hostOrigin.EndsWith('/'))
+            hostOrigin = hostOrigin[..^1];
+        return string.Concat(hostOrigin, uri);
+    }
 }

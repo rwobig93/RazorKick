@@ -28,6 +28,8 @@ public class AuthStateProvider : AuthenticationStateProvider
         _httpClient = httpClient;
     }
 
+    private string authToken = "";
+
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         try
@@ -36,29 +38,46 @@ public class AuthStateProvider : AuthenticationStateProvider
             if (currentPrincipal.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
                 return new AuthenticationState(currentPrincipal);
 
-            var savedToken = GetTokenFromHttpSession();
-            
-            if (string.IsNullOrWhiteSpace(savedToken))
-                savedToken = await GetTokenFromLocalStorage();
-            
-            if (string.IsNullOrWhiteSpace(savedToken))
-                savedToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
-            
-            if (string.IsNullOrWhiteSpace(savedToken))
+            await GetSavedAuthToken();
+            if (string.IsNullOrWhiteSpace(authToken))
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
             
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
-            var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults
-            .AuthenticationScheme));
-            _contextAccessor.HttpContext!.User = authorizedPrincipal;
-            var state = new AuthenticationState(authorizedPrincipal);
-            AuthenticationStateUser = state.User;
-            return state;
+            return GenerateNewAuthenticationState(authToken);
         }
         catch
         {
             return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
         }
+    }
+
+    public async Task<AuthenticationState> GetAuthenticationStateAsync(string providedToken)
+    {
+        authToken = providedToken;
+        return await GetAuthenticationStateAsync();
+    }
+
+    private AuthenticationState GenerateNewAuthenticationState(string savedToken)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
+        
+        var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults
+            .AuthenticationScheme));
+        _contextAccessor.HttpContext!.User = authorizedPrincipal;
+        
+        var state = new AuthenticationState(authorizedPrincipal);
+        AuthenticationStateUser = state.User;
+        return state;
+    }
+
+    private async Task GetSavedAuthToken()
+    {
+        authToken = GetTokenFromHttpSession();
+            
+        if (string.IsNullOrWhiteSpace(authToken))
+            authToken = await GetTokenFromLocalStorage();
+            
+        if (string.IsNullOrWhiteSpace(authToken))
+            authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
     }
 
     private ClaimsPrincipal GetPrincipalFromHttpContext()
@@ -87,18 +106,16 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     private async Task<string> GetTokenFromLocalStorage()
     {
-        var savedToken = "";
         try
         {
-            savedToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
         }
         catch
         {
             // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
+            return "";
         }
-
-        return savedToken;
     }
 
     public ClaimsPrincipal AuthenticationStateUser { get; set; } = null!;

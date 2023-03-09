@@ -94,7 +94,10 @@ public static class DependencyInjection
         });
         
         services.AddBlazoredLocalStorage();
-        services.AddHttpClient();
+        services.AddHttpClient("Default", options =>
+        {
+            options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
+        }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();
 
@@ -104,6 +107,20 @@ public static class DependencyInjection
         services.AddSingleton<IRunningServerState, RunningServerState>();
         services.AddSingleton<ISerializerService, JsonSerializerService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
+    }
+
+    private static IHttpClientBuilder ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
+    {
+        if (!configuration.GetApplicationSettings().TrustAllCertificates)
+            return httpClientBuilder;
+        
+        return httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
+        {
+            return new HttpClientHandler()
+            {
+                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+            };
+        });
     }
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)

@@ -49,7 +49,7 @@ public class AppAccountService : IAppAccountService
     private readonly NavigationManager _navManager;
     
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
-        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, HttpClient httpClient,
+        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IHttpContextAccessor contextAccessor, IFluentEmail mailService, ISerializerService serializer, NavigationManager navManager)
     {
         _appConfig = configuration.GetApplicationSettings();
@@ -58,7 +58,7 @@ public class AppAccountService : IAppAccountService
         _userRepository = userRepository;
         _localStorage = localStorage;
         _authProvider = authProvider;
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient("Default");
         _contextAccessor = contextAccessor;
         _mailService = mailService;
         _serializer = serializer;
@@ -96,20 +96,18 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            var authResponse = await _httpClient.PostAsJsonAsync(ApiRoutes.Identity.Login.ToFullUrl(_navManager.BaseUri), loginRequest);
-            if (!authResponse.IsSuccessStatusCode)
-                return await Result<UserLoginResponse>.FailAsync(await authResponse.Content.ReadAsStringAsync());
+            var loginResponse = await LoginAsync(loginRequest);
+            if (!loginResponse.Succeeded)
+                return loginResponse;
+            
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Token);
 
-            var loginResponse = _serializer.Deserialize<UserLoginResponse>(await authResponse.Content.ReadAsStringAsync());
-            _contextAccessor.HttpContext!.Session.SetString(LocalStorageConstants.AuthToken, loginResponse.Token);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Data.Token);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.Data.RefreshToken);
 
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Token);
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.RefreshToken);
+            await _authProvider.GetAuthenticationStateAsync(loginResponse.Data.Token);
 
-            await _authProvider.GetAuthenticationStateAsync();
-
-            return await Result<UserLoginResponse>.SuccessAsync(loginResponse);
+            return await Result<UserLoginResponse>.SuccessAsync(loginResponse.Data);
         }
         catch (Exception ex)
         {
@@ -370,8 +368,8 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> SetThemePreference(Guid userId, AppThemeId themeId)
     {
         var currentTheme =
-            await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference);
-        if (currentTheme.Result is null)
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference)).Result!.FirstOrDefault();
+        if (currentTheme is null)
         {
             var newTheme = await _userRepository.AddExtendedAttributeAsync(new AppUserExtendedAttributeAdd
             {
@@ -386,7 +384,7 @@ public class AppAccountService : IAppAccountService
             return await Result.SuccessAsync("Theme updated successfully");
         }
 
-        var updateResult = await _userRepository.UpdateExtendedAttributeAsync(currentTheme.Result.FirstOrDefault()!.Id, themeId.ToString());
+        var updateResult = await _userRepository.UpdateExtendedAttributeAsync(currentTheme.Id, themeId.ToString());
         if (!updateResult.Success)
             return await Result.FailAsync($"Failure occurred attempting to update theme preference: {updateResult.ErrorMessage}");
 
@@ -396,11 +394,11 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult<AppThemeId>> GetThemePreference(Guid userId)
     {
         var currentTheme =
-            await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference);
-        if (currentTheme.Result is null)
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference)).Result!.FirstOrDefault();
+        if (currentTheme is null)
             return await Result<AppThemeId>.FailAsync("No current theme exists for this user");
 
-        var themeValue = currentTheme.Result.FirstOrDefault()!.Value;
+        var themeValue = currentTheme.Value;
         var validTheme = Enum.TryParse<AppThemeId>(themeValue, out var themeId);
         if (!validTheme)
             return await Result<AppThemeId>.FailAsync("Failure occurred attempting to get the theme for this user");
