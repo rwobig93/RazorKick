@@ -1,4 +1,5 @@
-﻿using Domain.Enums.Identity;
+﻿using System.Reflection;
+using Domain.Enums.Identity;
 
 namespace TestBlazorServerApp.Settings;
 
@@ -20,7 +21,7 @@ public static class AppThemes
     {
         Id = AppThemeId.Dark,
         FriendlyName = "Dark",
-        Description = "Easy on the eyes, and awesome, don't forget awesome",
+        Description = "Easy on the eyes and awesome, don't forget awesome",
         Theme = new MudTheme()
         {
             Palette = new Palette()
@@ -135,4 +136,50 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
+    
+    public static readonly AppTheme CustomThemeOne = new()
+    {
+        Id = AppThemeId.CustomOne,
+        FriendlyName = "CustomThemeOne",
+        Description = "First custom theme",
+        Theme = new MudTheme()
+        {
+            Typography = AppTypographies.DefaultTypography,
+            LayoutProperties = AppLayouts.DefaultLayoutProperties
+        }
+    };
+    
+    public static readonly AppTheme CustomThemeTwo = new()
+    {
+        Id = AppThemeId.CustomTwo,
+        FriendlyName = "CustomThemeTwo",
+        Description = "Second custom theme",
+        Theme = new MudTheme()
+        {
+            Typography = AppTypographies.DefaultTypography,
+            LayoutProperties = AppLayouts.DefaultLayoutProperties
+        }
+    };
+    
+    public static readonly AppTheme CustomThemeThree = new()
+    {
+        Id = AppThemeId.CustomThree,
+        FriendlyName = "CustomThemeThree",
+        Description = "Third custom theme",
+        Theme = new MudTheme()
+        {
+            Typography = AppTypographies.DefaultTypography,
+            LayoutProperties = AppLayouts.DefaultLayoutProperties
+        }
+    };
+
+    public static List<AppTheme> GetAvailableThemes()
+    {
+        var fields = typeof(AppThemes)
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+
+        return (from fi in fields select fi.GetValue(null)
+            into propertyValue
+            where propertyValue is not null select (AppTheme)propertyValue).ToList();
+    }
 }

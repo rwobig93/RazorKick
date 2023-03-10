@@ -14,7 +14,7 @@
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
                 <MudMenu Icon="@Icons.Filled.Settings" Color="Color.Inherit" Dense="true" Direction="Direction.Left">
-                    @foreach (var theme in GetAvailableThemes())
+                    @foreach (var theme in _availableThemes)
                     {
                         <div class="px-2">
                             <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
@@ -43,7 +43,7 @@
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
                 <MudMenu Icon="@Icons.Filled.Settings" Color="Color.Inherit" Dense="true" Direction="Direction.Left">
-                    @foreach (var theme in GetAvailableThemes())
+                    @foreach (var theme in _availableThemes)
                     {
                         <div class="px-2">
                             <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
@@ -56,9 +56,9 @@
                     }
                 </MudMenu>
             </MudAppBar>
-            <MudDrawer @bind-Open="_isDrawerOpen" ClipMode="DrawerClipMode.Always"
+            <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always"
                        Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false">
-                <NavMenu DisplayTooltips="@(!_isDrawerOpen)"/>
+                <NavMenu DisplayTooltips="@(!_userPreferences.DrawerDefaultOpen)"/>
             </MudDrawer>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.Medium">

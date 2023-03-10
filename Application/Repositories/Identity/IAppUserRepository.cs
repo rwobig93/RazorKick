@@ -22,6 +22,8 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
+    Task<DatabaseActionResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
+    Task<DatabaseActionResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
     Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name);

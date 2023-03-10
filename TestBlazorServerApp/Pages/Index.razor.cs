@@ -16,10 +16,13 @@ public partial class Index
     private string BaseUrl => NavManager.BaseUri;
 
     private UserBasicResponse _loggedInUser = new();
-    
-    protected override async Task OnInitializedAsync()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await UpdateLoggedInUser();
+        if (firstRender)
+        {
+            await UpdateLoggedInUser();
+        }
     }
 
     private async Task UpdateLoggedInUser()

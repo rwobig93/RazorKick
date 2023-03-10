@@ -330,6 +330,58 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
+                AppUserPreferences.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
+            
+            if (existingPreference is null)
+                await _database.SaveData(AppUserPreferences.Insert, preferenceUpdate.ToCreate());
+            else
+                await _database.SaveData(AppUserPreferences.Update, preferenceUpdate);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, "UpdatePreferences", ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserPreferenceFull>> GetPreferences(Guid userId)
+    {
+        DatabaseActionResult<AppUserPreferenceFull> actionReturn = new();
+
+        try
+        {
+            var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
+                AppUserPreferences.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
+            
+            if (existingPreference is null)
+            {
+                var newPreferences = new AppUserPreferenceCreate() {OwnerId = userId};
+                var createdId = await _database.SaveDataReturnId(
+                    AppUserPreferences.Insert, newPreferences);
+                existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
+                        AppUserPreferences.GetById, new {Id = createdId})).FirstOrDefault();
+            }
+            
+            actionReturn.Succeed(existingPreference!.ToFull());
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserPreferences.GetByOwnerId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId)
     {
         DatabaseActionResult<AppUserExtendedAttributeDb> actionReturn = new();

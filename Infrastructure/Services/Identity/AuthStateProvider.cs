@@ -1,10 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Claims;
-using System.Security.Principal;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Models.Identity;
 using Application.Services.System;
-using Application.Settings.Identity;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;

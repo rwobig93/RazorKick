@@ -1,5 +1,4 @@
 using Application.Helpers.Identity;
-using Application.Settings.Identity;
 using Shared.Requests.Identity.Permission;
 
 namespace Application.Models.Identity;

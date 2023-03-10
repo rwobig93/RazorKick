@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.Constants.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Bcrypt = BCrypt.Net.BCrypt;

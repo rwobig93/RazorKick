@@ -1,6 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,6 +20,7 @@ using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 using FluentEmail.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
@@ -29,7 +29,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
-using Shared.Routes;
 using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
@@ -365,45 +364,22 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult> SetThemePreference(Guid userId, AppThemeId themeId)
+    public async Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate)
     {
-        var currentTheme =
-            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference)).Result!.FirstOrDefault();
-        if (currentTheme is null)
-        {
-            var newTheme = await _userRepository.AddExtendedAttributeAsync(new AppUserExtendedAttributeAdd
-            {
-                OwnerId = userId,
-                Name = "ThemePreferencePrimary",
-                Value = themeId.ToString(),
-                Type = ExtendedAttributeType.ThemePreference
-            });
-            if (!newTheme.Success)
-                return await Result.FailAsync($"Failure occurred attempting to update theme preference: {newTheme.ErrorMessage}");
+        var updateRequest = await _userRepository.UpdatePreferences(userId, preferenceUpdate);
+        if (!updateRequest.Success)
+            return await Result.FailAsync($"Failure occurred attempting to update preferences: {updateRequest.ErrorMessage}");
 
-            return await Result.SuccessAsync("Theme updated successfully");
-        }
-
-        var updateResult = await _userRepository.UpdateExtendedAttributeAsync(currentTheme.Id, themeId.ToString());
-        if (!updateResult.Success)
-            return await Result.FailAsync($"Failure occurred attempting to update theme preference: {updateResult.ErrorMessage}");
-
-        return await Result.SuccessAsync("Theme updated successfully");
+        return await Result.SuccessAsync("Preferences updated successfully");
     }
 
-    public async Task<IResult<AppThemeId>> GetThemePreference(Guid userId)
+    public async Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId)
     {
-        var currentTheme =
-            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ThemePreference)).Result!.FirstOrDefault();
-        if (currentTheme is null)
-            return await Result<AppThemeId>.FailAsync("No current theme exists for this user");
+        var preferences = await _userRepository.GetPreferences(userId);
+        if (!preferences.Success)
+            return await Result<AppUserPreferenceFull>.FailAsync($"Failure occurred getting preferences: {preferences.ErrorMessage}");
 
-        var themeValue = currentTheme.Value;
-        var validTheme = Enum.TryParse<AppThemeId>(themeValue, out var themeId);
-        if (!validTheme)
-            return await Result<AppThemeId>.FailAsync("Failure occurred attempting to get the theme for this user");
-        
-        return await Result<AppThemeId>.SuccessAsync(themeId);
+        return await Result<AppUserPreferenceFull>.SuccessAsync(preferences.Result!);
     }
 
     private async Task<string> GenerateJwtAsync(AppUserDb user)
