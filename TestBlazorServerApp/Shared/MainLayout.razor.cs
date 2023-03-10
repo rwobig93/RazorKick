@@ -86,53 +86,47 @@ public partial class MainLayout
         }
     }
 
+    private AppThemeCustom GetPreferenceThemeFromId(AppThemeId themeId)
+    {
+        return themeId switch
+        {
+            AppThemeId.CustomOne => _userPreferences.CustomThemeOne,
+            AppThemeId.CustomTwo => _userPreferences.CustomThemeTwo,
+            AppThemeId.CustomThree => _userPreferences.CustomThemeThree,
+            _ => throw new ArgumentOutOfRangeException(nameof(themeId), themeId, null)
+        };
+    }
+
     private void UpdateCustomThemes()
     {
-        if (_userPreferences.CustomThemeOne is not null)
+        foreach (var customThemeId in AppThemes.GetCustomThemeIds())
         {
-            var firstTheme = _availableThemes.FirstOrDefault(x => x.Id == AppThemeId.CustomOne);
-            firstTheme!.FriendlyName = _userPreferences.CustomThemeOne.ThemeName;
-            firstTheme.Description = _userPreferences.CustomThemeOne.ThemeDescription;
-            firstTheme.Theme.Palette = new Palette()
+            var matchingTheme = _availableThemes.FirstOrDefault(x => x.Id == customThemeId);
+            var preferenceTheme = GetPreferenceThemeFromId(customThemeId);
+            
+            matchingTheme!.FriendlyName = preferenceTheme.ThemeName;
+            matchingTheme.Description = preferenceTheme.ThemeDescription;
+            matchingTheme.Theme.Palette = new Palette()
             {
-                Primary = _userPreferences.CustomThemeOne.ColorPrimary,
-                Secondary = _userPreferences.CustomThemeOne.ColorSecondary,
-                Tertiary = _userPreferences.CustomThemeOne.ColorTertiary,
-                Background = _userPreferences.CustomThemeOne.ColorBackground,
-                Success = _userPreferences.CustomThemeOne.ColorSuccess,
-                Error = _userPreferences.CustomThemeOne.ColorError
-            };
-        }
-        
-        if (_userPreferences.CustomThemeTwo is not null)
-        {
-            var secondTheme = _availableThemes.FirstOrDefault(x => x.Id == AppThemeId.CustomTwo);
-            secondTheme!.FriendlyName = _userPreferences.CustomThemeTwo.ThemeName;
-            secondTheme.Description = _userPreferences.CustomThemeTwo.ThemeDescription;
-            secondTheme.Theme.Palette = new Palette()
-            {
-                Primary = _userPreferences.CustomThemeTwo.ColorPrimary,
-                Secondary = _userPreferences.CustomThemeTwo.ColorSecondary,
-                Tertiary = _userPreferences.CustomThemeTwo.ColorTertiary,
-                Background = _userPreferences.CustomThemeTwo.ColorBackground,
-                Success = _userPreferences.CustomThemeTwo.ColorSuccess,
-                Error = _userPreferences.CustomThemeTwo.ColorError
-            };
-        }
-        
-        if (_userPreferences.CustomThemeThree is not null)
-        {
-            var thirdtheme = _availableThemes.FirstOrDefault(x => x.Id == AppThemeId.CustomThree);
-            thirdtheme!.FriendlyName = _userPreferences.CustomThemeThree.ThemeName;
-            thirdtheme.Description = _userPreferences.CustomThemeThree.ThemeDescription;
-            thirdtheme.Theme.Palette = new Palette()
-            {
-                Primary = _userPreferences.CustomThemeThree.ColorPrimary,
-                Secondary = _userPreferences.CustomThemeThree.ColorSecondary,
-                Tertiary = _userPreferences.CustomThemeThree.ColorTertiary,
-                Background = _userPreferences.CustomThemeThree.ColorBackground,
-                Success = _userPreferences.CustomThemeThree.ColorSuccess,
-                Error = _userPreferences.CustomThemeThree.ColorError
+                Primary = preferenceTheme.ColorPrimary,
+                Secondary = preferenceTheme.ColorSecondary,
+                Tertiary = preferenceTheme.ColorTertiary,
+                Background = preferenceTheme.ColorBackground,
+                Success = preferenceTheme.ColorSuccess,
+                Error = preferenceTheme.ColorError,
+                BackgroundGrey = preferenceTheme.ColorNavBar,
+                TextDisabled = "rgba(255,255,255, 0.26)",
+                Surface = preferenceTheme.ColorBackground,
+                DrawerBackground = preferenceTheme.ColorNavBar,
+                DrawerText = preferenceTheme.ColorPrimary,
+                AppbarBackground = preferenceTheme.ColorTitleBar,
+                AppbarText = preferenceTheme.ColorPrimary,
+                TextPrimary = preferenceTheme.ColorPrimary,
+                TextSecondary = preferenceTheme.ColorSecondary,
+                ActionDefault = "#adadb1",
+                ActionDisabled = "rgba(255,255,255, 0.26)",
+                ActionDisabledBackground = "rgba(255,255,255, 0.12)",
+                DrawerIcon = preferenceTheme.ColorPrimary
             };
         }
     }

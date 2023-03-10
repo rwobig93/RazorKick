@@ -8,12 +8,9 @@
                      <p>Authorizing...</p>
                 </Authorizing>
                 <NotAuthorized>
-                    @if (context.User.Identity.IsAuthenticated)
+                    @if (context.User.Identity!.IsAuthenticated)
                     {
-                        <LayoutView Layout="@typeof(NotAuthorized)">
-                            <MudText Typo="Typo.h5" Class="mt-6" Align="Align.Center">You don't have access to this page</MudText>
-                            <MudText Typo="Typo.h5" Class="mb-6" Align="Align.Center">You sneaky devil you!</MudText>
-                        </LayoutView>
+                        <NotAuthorized/>
                     }
                     else
                     {
@@ -24,8 +21,8 @@
         </Found>
         <NotFound>
             <CascadingAuthenticationState>
-                <LayoutView Layout="@typeof(NotFound)">
-                    <MudText Typo="Typo.h5" Class="mt-3" Align="Align.Center">The page you went to doesn't exist</MudText>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <NotFound/>
                 </LayoutView>
             </CascadingAuthenticationState>
         </NotFound>

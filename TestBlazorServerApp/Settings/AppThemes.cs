@@ -13,6 +13,9 @@ public static class AppThemes
             AppThemeId.Darker => DarkerTheme,
             AppThemeId.Hacker => HackerTheme,
             AppThemeId.Bright => BrightTheme,
+            AppThemeId.CustomOne => CustomThemeOne,
+            AppThemeId.CustomTwo => CustomThemeTwo,
+            AppThemeId.CustomThree => CustomThemeThree,
             _ => DarkTheme
         };
     }
@@ -22,6 +25,7 @@ public static class AppThemes
         Id = AppThemeId.Dark,
         FriendlyName = "Dark",
         Description = "Easy on the eyes and awesome, don't forget awesome",
+        Icon = Icons.Filled.DarkMode,
         Theme = new MudTheme()
         {
             Palette = new Palette()
@@ -55,6 +59,7 @@ public static class AppThemes
         Id = AppThemeId.Darker,
         FriendlyName = "Darker",
         Description = "I get it, you wanna go darker, I don't blame you",
+        Icon = Icons.Outlined.Lightbulb,
         Theme = new MudTheme()
         {
             Palette = new Palette()
@@ -88,6 +93,7 @@ public static class AppThemes
         Id = AppThemeId.Hacker,
         FriendlyName = "Hackerman",
         Description = "I'm not normal and I never will be, no matter what world I'm in",
+        Icon = Icons.Filled.Code,
         Theme = new MudTheme()
         {
             Palette = new Palette()
@@ -121,6 +127,7 @@ public static class AppThemes
         Id = AppThemeId.Bright,
         FriendlyName = "Bright",
         Description = "I mean if you're into that sort of thing, we still gave you that option",
+        Icon = Icons.Filled.WbSunny,
         Theme = new MudTheme()
         {
             Palette = new Palette()
@@ -142,6 +149,7 @@ public static class AppThemes
         Id = AppThemeId.CustomOne,
         FriendlyName = "CustomThemeOne",
         Description = "First custom theme",
+        Icon = Icons.Filled.LooksOne,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -154,6 +162,7 @@ public static class AppThemes
         Id = AppThemeId.CustomTwo,
         FriendlyName = "CustomThemeTwo",
         Description = "Second custom theme",
+        Icon = Icons.Filled.LooksTwo,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -166,6 +175,7 @@ public static class AppThemes
         Id = AppThemeId.CustomThree,
         FriendlyName = "CustomThemeThree",
         Description = "Third custom theme",
+        Icon = Icons.Filled.Looks3,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -181,5 +191,15 @@ public static class AppThemes
         return (from fi in fields select fi.GetValue(null)
             into propertyValue
             where propertyValue is not null select (AppTheme)propertyValue).ToList();
+    }
+
+    public static List<AppThemeId> GetCustomThemeIds()
+    {
+        return new List<AppThemeId>()
+        {
+            AppThemeId.CustomOne,
+            AppThemeId.CustomTwo,
+            AppThemeId.CustomThree
+        };
     }
 }

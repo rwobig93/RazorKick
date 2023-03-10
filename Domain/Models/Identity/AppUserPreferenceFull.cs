@@ -10,9 +10,9 @@ public class AppUserPreferenceFull
     public Guid OwnerId { get; set; }
     public AppThemeId ThemePreference { get; set; } = AppThemeId.Dark;
     public bool DrawerDefaultOpen { get; set; } = false;
-    public AppThemeCustom CustomThemeOne { get; set; } = new();
-    public AppThemeCustom CustomThemeTwo { get; set; } = new();
-    public AppThemeCustom CustomThemeThree { get; set; } = new();
+    public AppThemeCustom CustomThemeOne { get; set; } = AppThemeCustom.GetExampleCustomOne();
+    public AppThemeCustom CustomThemeTwo { get; set; } = AppThemeCustom.GetExampleCustomTwo();
+    public AppThemeCustom CustomThemeThree { get; set; } = AppThemeCustom.GetExampleCustomThree();
 }
 
 public static class AppUserPreferenceFullExtensions
@@ -27,7 +27,7 @@ public static class AppUserPreferenceFullExtensions
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
             CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeOne),
             CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeTwo)
+            CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeThree)
         };
     }
 

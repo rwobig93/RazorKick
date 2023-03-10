@@ -1,8 +1,4 @@
-﻿@using TestBlazorServerApp.Settings
-@inherits LayoutComponentBase
-
-<MudThemeProvider Theme="AppThemes.DarkTheme.Theme" />
-<MudSnackbarProvider />
+﻿
 <MudContainer MaxWidth="MaxWidth.Small">
 <MudSpacer/>
   <div class="d-flex flex-column mt-15">
@@ -336,7 +332,8 @@
     </g>
     </g>
     </svg>
-    @Body
+    <MudText Typo="Typo.h5" Class="mt-6" Align="Align.Center">You don't have access to this page</MudText>
+    <MudText Typo="Typo.h5" Class="mb-6" Align="Align.Center">You sneaky devil you!</MudText>
     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
       <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" Link="/">Go Home</MudButton>
     </MudItem>

@@ -10,9 +10,9 @@ public class AppUserPreferenceCreate
     public Guid OwnerId { get; set; }
     public AppThemeId ThemePreference { get; set; } = AppThemeId.Dark;
     public bool DrawerDefaultOpen { get; set; } = true;
-    public string? CustomThemeOne { get; set; } = JsonConvert.SerializeObject(new AppThemeCustom());
-    public string? CustomThemeTwo { get; set; } = JsonConvert.SerializeObject(new AppThemeCustom());
-    public string? CustomThemeThree { get; set; } = JsonConvert.SerializeObject(new AppThemeCustom());
+    public string? CustomThemeOne { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomOne());
+    public string? CustomThemeTwo { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomTwo());
+    public string? CustomThemeThree { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomThree());
 }
 
 public static class AppUserPreferenceCreateExtensions
