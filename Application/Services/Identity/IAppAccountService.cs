@@ -15,7 +15,7 @@ public interface IAppAccountService
     Task<string> GetEmailConfirmationUrl(Guid userId);
     Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode);
     Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest);
-    Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest);
+    Task<IResult> ForgotPasswordConfirmationAsync(ResetPasswordRequest resetRequest);
     Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);

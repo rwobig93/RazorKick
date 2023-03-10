@@ -22,6 +22,8 @@ using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
+using FluentEmail.Core.Models;
+using Hangfire;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
@@ -196,10 +198,9 @@ public class AppAccountService : IAppAccountService
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
             EmailConstants.PathRegistrationConfirmation);
         var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
-            .UsingTemplateFromFile(templatePath, new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username}).SendAsync();
-        if (!sendResponse.Successful)
-            return await Result.FailAsync(string.Join(Environment.NewLine, sendResponse.ErrorMessages));
-        
+            .UsingTemplateFromFile(templatePath, new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username})
+            .SendAsync();
+
         if (!sendResponse.Successful)
             return await Result.FailAsync(
                 $"Account was registered successfully but a failure occurred attempting to send an email to " +
@@ -318,7 +319,7 @@ public class AppAccountService : IAppAccountService
         await _userRepository.UpdateAsync(updateObject);
     }
 
-    public async Task<IResult> ResetPasswordAsync(ResetPasswordRequest resetRequest)
+    public async Task<IResult> ForgotPasswordConfirmationAsync(ResetPasswordRequest resetRequest)
     {
         var foundUser = (await _userRepository.GetByEmailAsync(resetRequest.Email)).Result;
         if (foundUser is null)
@@ -332,8 +333,10 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(ErrorMessageConstants.GenericError);
         if (resetRequest.Password != resetRequest.ConfirmPassword)
             return await Result.FailAsync(ErrorMessageConstants.PasswordsNoMatchError);
-        if (resetRequest.RequestCode == previousReset.Value)
-            await SetUserPassword(foundUser.Id, resetRequest.Password);
+        if (resetRequest.RequestCode != previousReset.Value)
+            return await Result.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        await SetUserPassword(foundUser.Id, resetRequest.Password);
 
         await _userRepository.RemoveExtendedAttributeAsync(previousReset.Id);
 
