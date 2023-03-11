@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Security.Claims
+@inherits LayoutComponentBase
 
 <PageTitle>@ApplicationName</PageTitle>
 
@@ -13,20 +14,6 @@
                 <MudSpacer/>
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
-                <MudMenu Icon="@Icons.Filled.Settings" Color="Color.Inherit" Dense="true" Direction="Direction.Left">
-                    <MudSparkLine />
-                    @foreach (var theme in _availableThemes)
-                    {
-                        <div class="px-2">
-                            <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                                <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                                           OnClick="@((e) => ChangeTheme(theme))">
-                                    @theme.FriendlyName
-                                </MudButton>
-                            </MudTooltip>
-                        </div>
-                    }
-                </MudMenu>
             </MudAppBar>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
@@ -43,24 +30,33 @@
                 <MudSpacer/>
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
-                <MudMenu Icon="@Icons.Filled.Settings" Color="Color.Inherit" Dense="true" Direction="Direction.Left">
-                    <MudSparkLine />
-                    @foreach (var theme in _availableThemes)
-                    {
-                        <div class="px-2">
-                            <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                                <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                                           OnClick="@((e) => ChangeTheme(theme))">
-                                    @theme.FriendlyName
-                                </MudButton>
-                            </MudTooltip>
-                        </div>
-                    }
-                </MudMenu>
+                <MudButton OnClick="((e) => SettingsToggle())">
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Image="">
+                        @CurrentUser.Identity?.Name[0]
+                    </MudAvatar>
+                </MudButton>
             </MudAppBar>
             <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always"
-                       Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false">
-                <NavMenu/>
+                       Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false" Anchor="Anchor.Left">
+                <CascadingValue TValue="ClaimsPrincipal" Name="CurrentUser" Value="CurrentUser">
+                    <CascadingValue TValue="string" Name="ApplicationName" Value="ApplicationName">
+                        <NavMenu/>
+                    </CascadingValue>
+                </CascadingValue>
+            </MudDrawer>
+            <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Never"
+                       Elevation="2" Variant="DrawerVariant.Temporary" OpenMiniOnHover="false" Anchor="Anchor.Right">
+                @foreach (var theme in _availableThemes)
+                {
+                    <div class="px-2">
+                        <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
+                                       OnClick="@((e) => ChangeTheme(theme))">
+                                @theme.FriendlyName
+                            </MudButton>
+                        </MudTooltip>
+                    </div>
+                }
             </MudDrawer>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">

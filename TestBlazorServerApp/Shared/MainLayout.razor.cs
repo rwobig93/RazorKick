@@ -12,11 +12,12 @@ namespace TestBlazorServerApp.Shared;
 public partial class MainLayout
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
+    public static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private AppUserPreferenceFull _userPreferences = new();
-    private ClaimsPrincipal _currentUser = new();
+    public ClaimsPrincipal CurrentUser { get; set; } = new();
     private List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
+    private bool _settingsDrawerOpen;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -30,7 +31,7 @@ public partial class MainLayout
 
     private async Task GetCurrentUser()
     {
-        _currentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
+        CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
     }
 
     private static bool IsUserAuthenticated(ClaimsPrincipal? principal)
@@ -42,8 +43,13 @@ public partial class MainLayout
     {
         _userPreferences.DrawerDefaultOpen = !_userPreferences.DrawerDefaultOpen;
 
-        if (IsUserAuthenticated(_currentUser))
-            await AccountService.UpdatePreferences(CurrentUserService.GetIdFromPrincipal(_currentUser), _userPreferences.ToUpdate());
+        if (IsUserAuthenticated(CurrentUser))
+            await AccountService.UpdatePreferences(CurrentUserService.GetIdFromPrincipal(CurrentUser), _userPreferences.ToUpdate());
+    }
+
+    private void SettingsToggle()
+    {
+        _settingsDrawerOpen = !_settingsDrawerOpen;
     }
 
     private async Task ChangeTheme(AppTheme theme)
@@ -53,9 +59,9 @@ public partial class MainLayout
             _userPreferences.ThemePreference = theme.Id;
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
             
-            if (IsUserAuthenticated(_currentUser))
+            if (IsUserAuthenticated(CurrentUser))
             {
-                var userId = CurrentUserService.GetIdFromPrincipal(_currentUser);
+                var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
                 var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
                 if (!result.Succeeded)
                     result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -69,9 +75,9 @@ public partial class MainLayout
 
     private async Task GetPreferences()
     {
-        if (IsUserAuthenticated(_currentUser))
+        if (IsUserAuthenticated(CurrentUser))
         {
-            var userId = CurrentUserService.GetIdFromPrincipal(_currentUser);
+            var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
             var preferences = await AccountService.GetPreferences(userId);
             if (!preferences.Succeeded)
             {
