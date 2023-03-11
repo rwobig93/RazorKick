@@ -1,7 +1,10 @@
+using Application.Constants.Web;
+using Application.Helpers.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
 using Shared.Requests.Identity.User;
+using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
@@ -14,13 +17,14 @@ public partial class Register
     private string DesiredEmail { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
+    private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
     
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
     private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
 
-    private bool PageIsLoading { get; set; } = false;
+    private bool PageIsLoading { get; set; }
 
     private async Task RegisterAsync()
     {
@@ -55,6 +59,11 @@ public partial class Register
             PageIsLoading = false;
             StateHasChanged();
         }
+    }
+
+    private void GoHome()
+    {
+        NavManager.NavigateTo(AppRouteConstants.Identity.Login);
     }
 
     private bool IsRequiredInformationPresent()

@@ -3,12 +3,10 @@
 
 @attribute [AllowAnonymous]
 
-<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+<MudContainer MaxWidth="MaxWidth.Medium">
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12">
-            <div class="d-flex justify-center mt-4">
-                <MudIcon Icon="@Icons.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
-            </div>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
+            <MudIcon Icon="@Icons.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
             <MudText Align="Align.Center" Typo="Typo.h5">Hey there stranger! Please login and stay awhile :)</MudText>
@@ -17,9 +15,9 @@
             <MudTextField @bind-Value="Username" Label="Username" Variant="Variant.Outlined"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-            <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Outlined" InputType="@_passwordInput"
-                          Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
-                          AdornmentAriaLabel="Show Password"/>
+            <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Outlined" InputType="@_passwordInput" 
+                          Style="background-color: transparent;" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
+                          OnAdornmentClick="@TogglePasswordVisibility" AdornmentAriaLabel="Show Password"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurOn" 
@@ -27,19 +25,24 @@
             </MudButton>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurCircular"
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurCircular"
                        OnClick="@RegisterAsync">Register
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurLinear"
+                       OnClick="@ForgotPassword">Forgot Password
             </MudButton>
         </MudItem>
         @if (ServerState.IsRunningInDebugMode)
         {
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.AdminPanelSettings"
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev"
                            OnClick="@DebugFillAdminCreds">Fill Admin Credentials
                 </MudButton>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev"
                            OnClick="@DebugFillBasicCreds">Fill Basic Credentials
                 </MudButton>
             </MudItem>

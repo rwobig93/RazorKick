@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Shared.Requests.Identity.User;
+using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
@@ -59,6 +60,13 @@ public partial class Login
         {
             Snackbar.Add($"Failure Occurred: {ex.Message}", Severity.Error);
         }
+    }
+
+    private void ForgotPassword()
+    {
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
+
+        DialogService.Show<ForgotPasswordComponent>("Forgot Password", dialogOptions);
     }
 
     private bool IsRequiredInformationPresent()

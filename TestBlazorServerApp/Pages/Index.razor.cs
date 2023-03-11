@@ -22,6 +22,7 @@ public partial class Index
         if (firstRender)
         {
             await UpdateLoggedInUser();
+            StateHasChanged();
         }
     }
 

@@ -11,17 +11,12 @@ public partial class ConfirmEmail
     
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     
-    private bool IsCodeValid { get; set; } = false;
-    private bool HasValidationRan { get; set; } = false;
-
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     ParseParametersFromUri();
-    //     await StartEmailConfirmation();
-    // }
+    private bool IsCodeValid { get; set; }
+    private bool HasValidationRan { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // TODO: Update placeholder images on the razor page
         if (firstRender)
         {
             ParseParametersFromUri();

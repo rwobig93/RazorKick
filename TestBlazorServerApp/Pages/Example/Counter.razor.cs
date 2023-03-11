@@ -2,7 +2,7 @@
 
 public partial class Counter
 {
-    private int _currentCount = 0;
+    private int _currentCount;
     private Color _iconColor = Color.Primary;
 
     private void IncrementClick()

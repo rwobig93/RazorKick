@@ -137,11 +137,11 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> CreateUser(UserCreateRequest userRequest, IAppUserRepository repository)
+    private static async Task<IResult> CreateUser(UserCreateRequest userRequest, IAppUserRepository repository, IAppAccountService accountService)
     {
         try
         {
-            var passwordMeetsRequirements = await AccountHelpers.PasswordMeetsRequirements(userRequest.Password);
+            var passwordMeetsRequirements = accountService.PasswordMeetsRequirements(userRequest.Password);
             if (!passwordMeetsRequirements)
                 return await Result.FailAsync("Password provided doesn't meet the requirements");
             

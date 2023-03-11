@@ -69,7 +69,6 @@ public partial class MainLayout
 
     private async Task GetPreferences()
     {
-        // TODO: Theme isn't updating for unauthorized pages - user not having permission
         if (IsUserAuthenticated(_currentUser))
         {
             var userId = CurrentUserService.GetIdFromPrincipal(_currentUser);

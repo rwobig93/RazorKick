@@ -6,6 +6,7 @@ using System.Text;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Communication;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
@@ -26,6 +27,7 @@ using FluentEmail.Core.Models;
 using Hangfire;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -45,13 +47,11 @@ public class AppAccountService : IAppAccountService
     private readonly ILocalStorageService _localStorage;
     private readonly AuthStateProvider _authProvider;
     private readonly HttpClient _httpClient;
-    private readonly IHttpContextAccessor _contextAccessor;
-    private readonly ISerializerService _serializer;
-    private readonly NavigationManager _navManager;
-    
+    private readonly UserManager<AppUserDb> _userManager;
+
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IHttpContextAccessor contextAccessor, IFluentEmail mailService, ISerializerService serializer, NavigationManager navManager)
+        IFluentEmail mailService, UserManager<AppUserDb> userManager)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
@@ -60,10 +60,8 @@ public class AppAccountService : IAppAccountService
         _localStorage = localStorage;
         _authProvider = authProvider;
         _httpClient = httpClientFactory.CreateClient("Default");
-        _contextAccessor = contextAccessor;
         _mailService = mailService;
-        _serializer = serializer;
-        _navManager = navManager;
+        _userManager = userManager;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -134,10 +132,15 @@ public class AppAccountService : IAppAccountService
         }
     }
 
+    public bool PasswordMeetsRequirements(string password)
+    {
+        return AccountHelpers.DoesPasswordMeetRequirements(password);
+    }
+
     private async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserDb user, string password)
     {
         var createUser = user.ToCreateObject();
-        var passwordMeetsRequirements = await AccountHelpers.PasswordMeetsRequirements(password);
+        var passwordMeetsRequirements = PasswordMeetsRequirements(password);
         if (!passwordMeetsRequirements)
         {
             var passwordFailResult = new DatabaseActionResult<Guid>();
@@ -190,18 +193,14 @@ public class AppAccountService : IAppAccountService
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
         
-        // TODO: Re-add email service after validating why it was failing
         var confirmationUrl = await GetEmailConfirmationUrl(createUserResult.Result);
         if (string.IsNullOrWhiteSpace(confirmationUrl))
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
         
-        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
-            EmailConstants.PathRegistrationConfirmation);
-        var sendResponse = await _mailService.Subject("Registration Confirmation").To(newUser.Email)
-            .UsingTemplateFromFile(templatePath, new EmailAction() {ActionUrl = confirmationUrl, Username = newUser.Username})
-            .SendAsync();
+        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
+        var response = await _mailService.SendRegistrationEmail(newUser.Email, newUser.Username, confirmationUrl);
 
-        if (!sendResponse.Successful)
+        if (!response.Successful)
             return await Result.FailAsync(
                 $"Account was registered successfully but a failure occurred attempting to send an email to " +
                 $"the address provided, please contact the administrator for assistance{caveatMessage}");
@@ -273,8 +272,6 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest)
     {
-        // For more information on how to enable account confirmation and password reset please
-        // visit https://go.microsoft.com/fwlink/?LinkID=532713
         var foundUser = (await _userRepository.GetByEmailAsync(forgotRequest.Email!)).Result;
         if (foundUser is null)
             return await Result.FailAsync(ErrorMessageConstants.GenericError);
@@ -291,21 +288,32 @@ public class AppAccountService : IAppAccountService
         
         // Previous pending forgot password exists, return current value
         if (previousReset is not null)
-            return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousReset.Value));
-
-        // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
-        //   and return the generated reset uri
-        var confirmationCode = UrlHelpers.GenerateToken();
-        var newExtendedAttribute = new AppUserExtendedAttributeAdd()
         {
-            OwnerId = foundUser.Id,
-            Name = "ForgotPasswordReset",
-            Type = ExtendedAttributeType.PasswordResetToken,
-            Value = confirmationCode
-        };
-        await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        
-        return await Result.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", newExtendedAttribute.Value));
+            confirmationUri = QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousReset.Value);
+        }
+        else
+        {
+            // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
+            //   and return the generated reset uri
+            var confirmationCode = UrlHelpers.GenerateToken();
+            var newExtendedAttribute = new AppUserExtendedAttributeAdd()
+            {
+                OwnerId = foundUser.Id,
+                Name = "ForgotPasswordReset",
+                Type = ExtendedAttributeType.PasswordResetToken,
+                Value = confirmationCode
+            };
+            await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+            confirmationUri = QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", newExtendedAttribute.Value);
+        }
+
+        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
+        var response = await _mailService.SendPasswordResetEmail(foundUser.Email, foundUser.Username, confirmationUri);
+        if (!response.Successful)
+            return await Result.FailAsync(
+                "Failure occurred attempting to send the password reset email, please reach out to the administrator");
+
+        return await Result.SuccessAsync("Successfully sent password reset to the email provided!");
     }
 
     private async Task SetUserPassword(Guid userId, string newPassword)
@@ -319,9 +327,9 @@ public class AppAccountService : IAppAccountService
         await _userRepository.UpdateAsync(updateObject);
     }
 
-    public async Task<IResult> ForgotPasswordConfirmationAsync(ResetPasswordRequest resetRequest)
+    public async Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword)
     {
-        var foundUser = (await _userRepository.GetByEmailAsync(resetRequest.Email)).Result;
+        var foundUser = (await _userRepository.GetByIdAsync(userId)).Result;
         if (foundUser is null)
             return await Result.FailAsync(ErrorMessageConstants.GenericError);
 
@@ -331,16 +339,20 @@ public class AppAccountService : IAppAccountService
         
         if (previousReset is null)
             return await Result.FailAsync(ErrorMessageConstants.GenericError);
-        if (resetRequest.Password != resetRequest.ConfirmPassword)
+        if (password != confirmPassword)
             return await Result.FailAsync(ErrorMessageConstants.PasswordsNoMatchError);
-        if (resetRequest.RequestCode != previousReset.Value)
+        if (confirmationCode != previousReset.Value)
             return await Result.FailAsync(ErrorMessageConstants.TokenInvalidError);
+
+        var passwordMeetsRequirements = PasswordMeetsRequirements(password);
+        if (!passwordMeetsRequirements)
+            return await Result.FailAsync("Password provided doesn't meet the minimum requirements, please try again");
         
-        await SetUserPassword(foundUser.Id, resetRequest.Password);
+        await SetUserPassword(foundUser.Id, password);
 
         await _userRepository.RemoveExtendedAttributeAsync(previousReset.Id);
 
-        return await Result.SuccessAsync("Password reset was successful");
+        return await Result.SuccessAsync("Password reset was successful, please log back in with your fresh new password!");
     }
 
     public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
