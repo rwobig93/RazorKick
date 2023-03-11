@@ -1,7 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
-using System.Text.RegularExpressions;
 using Application.Constants.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;

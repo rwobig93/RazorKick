@@ -19,6 +19,13 @@ public static class AppRouteConstants
         public const string ForgotPassword = "/identity/reset-password";
     }
 
+    public static class Account
+    {
+        public const string AccountSettings = "/account/settings";
+        public const string Themes = "/account/themes";
+        public const string Security = "/account/security";
+    }
+
     public static class Api
     {
         public const string Root = "/api";

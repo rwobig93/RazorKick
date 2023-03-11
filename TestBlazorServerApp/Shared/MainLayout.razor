@@ -1,4 +1,6 @@
 ﻿@using System.Security.Claims
+@using Domain.Models.Identity
+@using TestBlazorServerApp.Settings
 @inherits LayoutComponentBase
 
 <PageTitle>@ApplicationName</PageTitle>
@@ -36,27 +38,21 @@
                     </MudAvatar>
                 </MudButton>
             </MudAppBar>
-            <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always"
-                       Elevation="2" Variant="DrawerVariant.Mini" OpenMiniOnHover="false" Anchor="Anchor.Left">
-                <CascadingValue TValue="ClaimsPrincipal" Name="CurrentUser" Value="CurrentUser">
-                    <CascadingValue TValue="string" Name="ApplicationName" Value="ApplicationName">
-                        <NavMenu/>
+            <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always" Elevation="2"
+                       Variant="DrawerVariant.Mini" OpenMiniOnHover="false" Anchor="Anchor.Left">
+                <NavMenu/>
+            </MudDrawer>
+            <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
+                       OpenMiniOnHover="false" Anchor="Anchor.Right">
+                <CascadingValue TValue="AppUserPreferenceFull" Name="_userPreferences" Value="_userPreferences">
+                    <CascadingValue TValue="AppTheme" Name="_selectedTheme" Value="_selectedTheme">
+                        <CascadingValue TValue="ClaimsPrincipal" Name="CurrentUser" Value="CurrentUser">
+                            <CascadingValue TValue="List<AppTheme>" Name="_availableThemes" Value="_availableThemes">
+                                <SettingsMenu/>
+                            </CascadingValue>
+                        </CascadingValue>
                     </CascadingValue>
                 </CascadingValue>
-            </MudDrawer>
-            <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Never"
-                       Elevation="2" Variant="DrawerVariant.Temporary" OpenMiniOnHover="false" Anchor="Anchor.Right">
-                @foreach (var theme in _availableThemes)
-                {
-                    <div class="px-2">
-                        <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                                       OnClick="@((e) => ChangeTheme(theme))">
-                                @theme.FriendlyName
-                            </MudButton>
-                        </MudTooltip>
-                    </div>
-                }
             </MudDrawer>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">

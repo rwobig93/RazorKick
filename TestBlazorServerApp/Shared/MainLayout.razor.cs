@@ -12,11 +12,12 @@ namespace TestBlazorServerApp.Shared;
 public partial class MainLayout
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    public static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
-    private AppUserPreferenceFull _userPreferences = new();
+    public AppUserPreferenceFull _userPreferences = new();
     public ClaimsPrincipal CurrentUser { get; set; } = new();
-    private List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
-    private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
+    public List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
+    public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
+    
+    private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private bool _settingsDrawerOpen;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -50,27 +51,6 @@ public partial class MainLayout
     private void SettingsToggle()
     {
         _settingsDrawerOpen = !_settingsDrawerOpen;
-    }
-
-    private async Task ChangeTheme(AppTheme theme)
-    {
-        try
-        {
-            _userPreferences.ThemePreference = theme.Id;
-            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
-            
-            if (IsUserAuthenticated(CurrentUser))
-            {
-                var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
-                var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
-                if (!result.Succeeded)
-                    result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            }
-        }
-        catch
-        {
-            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
-        }
     }
 
     private async Task GetPreferences()
