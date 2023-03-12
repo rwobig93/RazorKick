@@ -11,12 +11,13 @@ namespace TestBlazorServerApp.Shared;
 public partial class SettingsMenu
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    private AppUserPreferenceFull _userPreferences = new();
-    private ClaimsPrincipal CurrentUser { get; set; } = new();
-    private List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
-    private MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
+    [Parameter] public AppUserPreferenceFull UserPreferences { get; set; } = new();
+    [Parameter] public ClaimsPrincipal CurrentUser { get; set; } = new();
+    [Parameter] public List<AppTheme> AvailableThemes { get; set; } = AppThemes.GetAvailableThemes();
+    [Parameter] public MudTheme SelectedTheme { get; set; } = AppThemes.DarkTheme.Theme;
+    [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
+
     private AppTheme _displayTheme = AppThemes.DarkTheme;
-    
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -36,29 +37,24 @@ public partial class SettingsMenu
 
     private void UpdateDisplayTheme()
     {
-        _displayTheme = _availableThemes.FirstOrDefault(x => x.Id == _userPreferences.ThemePreference)!;
+        _displayTheme = AvailableThemes.FirstOrDefault(x => x.Id == UserPreferences.ThemePreference)!;
     }
 
-    private async Task ChangeTheme(AppTheme theme)
+    private string GetDisplayUsername()
     {
-        try
-        {
-            _userPreferences.ThemePreference = theme.Id;
-            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
-            UpdateDisplayTheme();
-            
-            if (IsUserAuthenticated(CurrentUser))
-            {
-                var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
-                var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
-                if (!result.Succeeded)
-                    result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            }
-        }
-        catch
-        {
-            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
-        }
+        if (CurrentUser.Identity?.Name is null)
+            return "";
+        if (CurrentUser.Identity.Name.Length <= 18)
+            return CurrentUser.Identity.Name;
+
+        return CurrentUser.Identity.Name[..18];
+    }
+
+    private async Task ChangeThemeOnLayout(AppTheme theme)
+    {
+        await ThemeChanged.InvokeAsync(theme);
+        // TODO: Display theme isn't updating on change
+        UpdateDisplayTheme();
     }
 
     private async Task LogoutUser()

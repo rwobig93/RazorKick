@@ -1,30 +1,29 @@
 ﻿@using TestBlazorServerApp.Components.Account
 
-<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true">
-    <MudPaper Elevation="5" Class="my-4">
-        <MudItem xs="12" sm="12" md="12">
+<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true" Class="px-2">
+    <MudPaper Elevation="5" Class="d-flex my-4 justify-center align-center mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex ma-4 align-center">
             <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium"/>
-            <MudText Align="Align.Right" Typo="Typo.h5" Class="smaller"> @CurrentUser.Identity?.Name</MudText>
+            <MudText Align="Align.Right" Class="pl-2">@GetDisplayUsername()</MudText>
         </MudItem>
     </MudPaper>
-    <MudPaper Elevation="5" Class="mb-4">
+    <MudPaper Elevation="5" Class="d-flex mb-4">
         <MudNavLink Href="@AppRouteConstants.Account.AccountSettings" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.PersonPin">
             Account Settings
         </MudNavLink>
     </MudPaper>
     <MudPaper Elevation="5">
-        <MudItem Class="d-flex flex-column align-center mb-2">
-            <MudChip Color="Color.Primary">Themes</MudChip>
-            <MudChip Color="Color.Success">Current Theme: @_displayTheme.FriendlyName</MudChip>
+        <MudItem Class="d-flex flex-column align-center pa-2">
+            <MudChip Color="Color.Primary">Current Theme: @_displayTheme.FriendlyName</MudChip>
         </MudItem>
-        <MudItem Class="d-flex flex-column align-center">
-            @foreach (var theme in _availableThemes)
+        <MudItem Class="d-flex flex-column align-center mb-4">
+            @foreach (var theme in AvailableThemes)
             {
                 <div class="px-2">
                     <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
                         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                                   OnClick="@((e) => ChangeTheme(theme))">
+                                   OnClick="@((e) => ChangeThemeOnLayout(theme))">
                             @theme.FriendlyName
                         </MudButton>
                     </MudTooltip>

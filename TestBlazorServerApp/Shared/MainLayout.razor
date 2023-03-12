@@ -43,15 +43,8 @@
             </MudDrawer>
             <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
                        OpenMiniOnHover="false" Anchor="Anchor.Right">
-                <CascadingValue TValue="AppUserPreferenceFull" Name="_userPreferences" Value="_userPreferences">
-                    <CascadingValue TValue="MudTheme" Name="_selectedTheme" Value="_selectedTheme">
-                        <CascadingValue TValue="ClaimsPrincipal" Name="CurrentUser" Value="CurrentUser">
-                            <CascadingValue TValue="List<AppTheme>" Name="_availableThemes" Value="_availableThemes">
-                                <SettingsMenu/>
-                            </CascadingValue>
-                        </CascadingValue>
-                    </CascadingValue>
-                </CascadingValue>
+                <SettingsMenu CurrentUser="CurrentUser" UserPreferences="_userPreferences" AvailableThemes="_availableThemes" 
+                              SelectedTheme="_selectedTheme" ThemeChanged="@(ChangeTheme)"/>
             </MudDrawer>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">

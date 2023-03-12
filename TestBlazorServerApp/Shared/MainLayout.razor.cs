@@ -53,6 +53,27 @@ public partial class MainLayout
         _settingsDrawerOpen = !_settingsDrawerOpen;
     }
 
+    private async Task ChangeTheme(AppTheme theme)
+    {
+        try
+        {
+            _userPreferences.ThemePreference = theme.Id;
+            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
+            
+            if (IsUserAuthenticated(CurrentUser))
+            {
+                var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
+                var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
+                if (!result.Succeeded)
+                    result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            }
+        }
+        catch
+        {
+            _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
+        }
+    }
+
     private async Task GetPreferences()
     {
         if (IsUserAuthenticated(CurrentUser))
