@@ -1,3 +1,68 @@
-﻿@attribute [Route(AppRouteConstants.Index)]
+﻿@using TestBlazorServerApp.Components.Account
 
+@attribute [Route(AppRouteConstants.Account.AccountSettings)]
 
+<MudContainer Class="d-flex pa-4 flex-column align-center">
+    <AccountSettingsMenu/>
+</MudContainer>
+<MudContainer>
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center">
+            <AccountAvatar Username="@CurrentUser.Username" AvatarSize="Size.Large"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTextField Variant="Variant.Outlined" T="string" bind-Value="@CurrentUser.ProfilePictureDataUrl" Label="Profile Image Url"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTextField Variant="Variant.Outlined" T="string" bind-Value="@CurrentUser.Username" ReadOnly="true" Label="Username"/>
+            <MudTextField Variant="Variant.Outlined" T="string" bind-Value="@CurrentUser.EmailAddress" ReadOnly="true" Label="Email Address"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTextField Variant="Variant.Outlined" T="string" bind-Value="@CurrentUser.FirstName" Label="First Name"/>
+            <MudTextField Variant="Variant.Outlined" T="string" bind-Value="@CurrentUser.LastName" Label="Last Name"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex pa-4 flex-column align-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Save"
+                       OnClick="@UpdateAccount">Update Account
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTable Items="@CurrentUser.Roles">
+                <ToolBarContent>
+                    <MudSpacer />
+                    <MudText Typo="Typo.h6">Assigned Roles</MudText>
+                    <MudSpacer />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Description</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudTable Items="@CurrentUser.Permissions">
+                <ToolBarContent>
+                    <MudSpacer />
+                    <MudText Typo="Typo.h6">Assigned Permissions</MudText>
+                    <MudSpacer />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Description</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

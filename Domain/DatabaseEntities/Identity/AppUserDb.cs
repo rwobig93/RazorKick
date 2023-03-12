@@ -50,7 +50,7 @@ public static class AppUserExtensions
         {
             Id = appUser.Id,
             Username = appUser.Username,
-            PasswordSalt = appUser.PasswordSalt,
+            EmailAddress = appUser.Email,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -61,11 +61,10 @@ public static class AppUserExtensions
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
             IsActive = appUser.IsActive,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleDb>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeDb>()
+            ExtendedAttributes = new List<AppUserExtendedAttributeDb>(),
+            Permissions = new List<AppPermissionDb>()
         };
     }
 }

@@ -23,4 +23,9 @@ public partial class AccountSettingsMenu
     {
         CurrentUser = await CurrentUserService.GetCurrentUserBasic() ?? new UserBasicResponse();
     }
+
+    private void NavigateToPage(string route)
+    {
+        NavManager.NavigateTo(route);
+    }
 }

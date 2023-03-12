@@ -3,6 +3,7 @@ using Application.Constants.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
 using Shared.Responses.Identity;
 
@@ -62,7 +63,19 @@ public class CurrentUserService : ICurrentUserService
         return foundUser.Result!.ToBasicResponse();
     }
 
-    public async Task<AppUserDb?> GetCurrentUserFull()
+    public async Task<AppUserFull?> GetCurrentUserFull()
+    {
+        var userId = await GetCurrentUserId();
+        
+        if (userId is null) return null;
+
+        var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
+        if (!foundUser.Success) return null;
+
+        return foundUser.Result!.ToFullObject();
+    }
+
+    public async Task<AppUserDb?> GetCurrentUserDb()
     {
         var userId = await GetCurrentUserId();
         

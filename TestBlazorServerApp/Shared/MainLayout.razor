@@ -1,6 +1,7 @@
 ﻿@using System.Security.Claims
 @using Domain.Models.Identity
 @using TestBlazorServerApp.Settings
+@using TestBlazorServerApp.Components.Account
 @inherits LayoutComponentBase
 
 <PageTitle>@ApplicationName</PageTitle>
@@ -33,9 +34,7 @@
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
                 <MudButton OnClick="((e) => SettingsToggle())">
-                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Image="">
-                        @CurrentUser.Identity?.Name[0]
-                    </MudAvatar>
+                    <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium"/>
                 </MudButton>
             </MudAppBar>
             <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always" Elevation="2"
@@ -45,7 +44,7 @@
             <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
                        OpenMiniOnHover="false" Anchor="Anchor.Right">
                 <CascadingValue TValue="AppUserPreferenceFull" Name="_userPreferences" Value="_userPreferences">
-                    <CascadingValue TValue="AppTheme" Name="_selectedTheme" Value="_selectedTheme">
+                    <CascadingValue TValue="MudTheme" Name="_selectedTheme" Value="_selectedTheme">
                         <CascadingValue TValue="ClaimsPrincipal" Name="CurrentUser" Value="CurrentUser">
                             <CascadingValue TValue="List<AppTheme>" Name="_availableThemes" Value="_availableThemes">
                                 <SettingsMenu/>

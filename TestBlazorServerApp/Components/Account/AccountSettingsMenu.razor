@@ -1,19 +1,11 @@
-﻿<MudDrawer Open="true" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Persistent" Anchor="Anchor.Left">
-    <MudItem xs="12" sm="12" md="12">
-        <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Large" Image="">
-            @CurrentUser.Username[0]
-        </MudAvatar>
-        <MudText Align="Align.Right" Typo="Typo.h3"> @CurrentUser.Username</MudText>
-    </MudItem>
-    <MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
-        <MudNavLink Href="@AppRouteConstants.Account.AccountSettings" Icon="@Icons.Material.Rounded.House">
-            General
-        </MudNavLink>
-        <MudNavLink Href="@AppRouteConstants.Account.Themes" Icon="@Icons.Material.Filled.Api">
-            Themes
-        </MudNavLink>
-        <MudNavLink Href="@AppRouteConstants.Account.Security" Icon="@Icons.Outlined.WorkOutline">
-            Security
-        </MudNavLink>
-    </MudNavMenu>
-</MudDrawer>
+﻿<MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
+    <MudButton OnClick="(e) => NavigateToPage(AppRouteConstants.Account.AccountSettings)">
+        General
+    </MudButton>
+    <MudButton OnClick="(e) => NavigateToPage(AppRouteConstants.Account.Themes)">
+        Themes
+    </MudButton>
+    <MudButton OnClick="(e) => NavigateToPage(AppRouteConstants.Account.Security)">
+        Security
+    </MudButton>
+</MudButtonGroup>

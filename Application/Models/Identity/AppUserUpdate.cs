@@ -1,4 +1,5 @@
 ﻿using Domain.DatabaseEntities.Identity;
+using Domain.Models.Identity;
 using Shared.Enums.Identity;
 using Shared.Requests.Identity.User;
 
@@ -70,6 +71,35 @@ public static class AppUserUpdateExtensions
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             IsActive = appUser.IsActive,
+        };
+    }
+
+    public static AppUserUpdate ToUpdateObject(this AppUserFull appUser)
+    {
+        return new AppUserUpdate
+        {
+            Id = appUser.Id,
+            Username = null,
+            NormalizedUserName = null,
+            Email = null,
+            NormalizedEmail = null,
+            EmailConfirmed = null,
+            PasswordHash = null,
+            PasswordSalt = null,
+            PhoneNumber = null,
+            PhoneNumberConfirmed = null,
+            TwoFactorEnabled = null,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            LastModifiedBy = null,
+            LastModifiedOn = null,
+            IsDeleted = null,
+            DeletedOn = null,
+            IsActive = null,
+            RefreshToken = null,
+            RefreshTokenExpiryTime = null,
+            AccountType = AccountType.User
         };
     }
 }

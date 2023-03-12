@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Application.Constants.Web;
 using Application.Models.Identity;
 using Application.Services.Identity;
 using Domain.Models.Identity;
@@ -58,5 +59,11 @@ public partial class SettingsMenu
         {
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
         }
+    }
+
+    private async Task LogoutUser()
+    {
+        await AccountService.LogoutGuiAsync();
+        NavManager.NavigateTo(AppRouteConstants.Index, true);
     }
 }

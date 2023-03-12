@@ -34,10 +34,4 @@ public partial class Index
 
         _loggedInUser = user;
     }
-
-    private async Task LogoutUser()
-    {
-        await AccountService.LogoutGuiAsync();
-        NavManager.NavigateTo(AppRouteConstants.Index, true);
-    }
 }

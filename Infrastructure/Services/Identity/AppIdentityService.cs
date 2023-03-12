@@ -225,7 +225,7 @@ public class AppIdentityService : IAppIdentityService
         if (foundUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
-        var currentUser = await _currentUserService.GetCurrentUserFull();
+        var currentUser = await _currentUserService.GetCurrentUserDb();
         if (currentUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         
@@ -264,7 +264,7 @@ public class AppIdentityService : IAppIdentityService
         if (requestedUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
-        var currentUser = await _currentUserService.GetCurrentUserFull();
+        var currentUser = await _currentUserService.GetCurrentUserDb();
         if (currentUser is null)
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.AdminRoleName)).Result;

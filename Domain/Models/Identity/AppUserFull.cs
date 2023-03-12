@@ -8,7 +8,7 @@ public class AppUserFull
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
-    public string PasswordSalt { get; set; } = null!;
+    public string? EmailAddress { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }
@@ -19,8 +19,6 @@ public class AppUserFull
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public bool IsActive { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public List<AppRoleDb> Roles { get; set; } = new();
     public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();

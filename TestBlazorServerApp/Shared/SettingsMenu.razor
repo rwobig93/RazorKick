@@ -1,26 +1,41 @@
-﻿<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
-    <MudItem xs="12" sm="12" md="12">
-        <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Medium" Image="">
-            @CurrentUser.Identity?.Name?[0]
-        </MudAvatar>
-        <MudText Align="Align.Right" Typo="Typo.h5" Class="smaller"> @CurrentUser.Identity?.Name?</MudText>
+﻿@using TestBlazorServerApp.Components.Account
+
+<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true">
+    <MudPaper Elevation="5" Class="my-4">
+        <MudItem xs="12" sm="12" md="12">
+            <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium"/>
+            <MudText Align="Align.Right" Typo="Typo.h5" Class="smaller"> @CurrentUser.Identity?.Name</MudText>
+        </MudItem>
+    </MudPaper>
+    <MudPaper Elevation="5" Class="mb-4">
+        <MudNavLink Href="@AppRouteConstants.Account.AccountSettings" Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.PersonPin">
+            Account Settings
+        </MudNavLink>
+    </MudPaper>
+    <MudPaper Elevation="5">
+        <MudItem Class="d-flex flex-column align-center mb-2">
+            <MudChip Color="Color.Primary">Themes</MudChip>
+            <MudChip Color="Color.Success">Current Theme: @_displayTheme.FriendlyName</MudChip>
+        </MudItem>
+        <MudItem Class="d-flex flex-column align-center">
+            @foreach (var theme in _availableThemes)
+            {
+                <div class="px-2">
+                    <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
+                                   OnClick="@((e) => ChangeTheme(theme))">
+                            @theme.FriendlyName
+                        </MudButton>
+                    </MudTooltip>
+                </div>
+            }
+        </MudItem>
+    </MudPaper>
+    <MudSpacer/>
+    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-8 mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Logout"
+                   OnClick="@LogoutUser">Logout
+        </MudButton>
     </MudItem>
-    <MudNavLink Href="@AppRouteConstants.Account.AccountSettings" Target="_blank" Match="NavLinkMatch.Prefix"
-                Icon="@Icons.Material.Filled.PersonPin">
-        Account Settings
-    </MudNavLink>
-    <MudNavGroup Title="Themes" Expanded="true">
-        <MudText Align="Align.Right" Typo="Typo.h5" Class="smaller">Current Theme: @_displayTheme.FriendlyName</MudText>
-        @foreach (var theme in _availableThemes)
-        {
-            <div class="px-2">
-                <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                               OnClick="@((e) => ChangeTheme(theme))">
-                        @theme.FriendlyName
-                    </MudButton>
-                </MudTooltip>
-            </div>
-        }
-    </MudNavGroup>
 </MudNavMenu>

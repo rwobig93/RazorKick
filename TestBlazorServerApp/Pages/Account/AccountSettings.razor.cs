@@ -1,15 +1,19 @@
 ﻿using System.Security.Claims;
+using Application.Models.Identity;
+using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
+using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages.Account;
 
 public partial class AccountSettings
 {
-    [Inject] private IAppAccountService AccountService { get; set; } = null!;
+    [Inject] private IAppAccountService AccountService { get; init; } = null!;
+    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     private AppUserPreferenceFull _userPreferences = new();
-    private ClaimsPrincipal CurrentUser { get; set; } = new();
+    private AppUserFull CurrentUser { get; set; } = new();
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -24,13 +28,16 @@ public partial class AccountSettings
 
     private async Task GetCurrentUser()
     {
-        CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
+        var userId = await CurrentUserService.GetCurrentUserId();
+        if (userId is null)
+            return;
+
+        CurrentUser = (await UserRepository.GetByIdFullAsync((Guid) userId)).Result!;
     }
 
     private async Task GetPreferences()
     {
-        var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
-        var preferences = await AccountService.GetPreferences(userId);
+        var preferences = await AccountService.GetPreferences(CurrentUser.Id);
         if (!preferences.Succeeded)
         {
             preferences.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -38,5 +45,18 @@ public partial class AccountSettings
         }
 
         _userPreferences = preferences.Data;
+    }
+
+    private async Task UpdateAccount()
+    {
+        var updatedAccount = CurrentUser.ToUpdateObject();
+        var requestResult = await UserRepository.UpdateAsync(updatedAccount);
+        if (!requestResult.Success)
+        {
+            Snackbar.Add(requestResult.ErrorMessage, Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Account successfully updated!");
     }
 }
