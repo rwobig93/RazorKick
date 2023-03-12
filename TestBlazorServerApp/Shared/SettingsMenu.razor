@@ -3,7 +3,7 @@
 <MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true" Class="px-2">
     <MudPaper Elevation="5" Class="d-flex my-4 justify-center align-center mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="d-flex ma-4 align-center">
-            <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium"/>
+            <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
             <MudText Align="Align.Right" Class="pl-2">@GetDisplayUsername()</MudText>
         </MudItem>
     </MudPaper>
@@ -15,9 +15,9 @@
     </MudPaper>
     <MudPaper Elevation="5">
         <MudItem Class="d-flex flex-column align-center pa-2">
-            <MudChip Color="Color.Primary">Current Theme: @_displayTheme.FriendlyName</MudChip>
+            <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
         </MudItem>
-        <MudItem Class="d-flex flex-column align-center mb-4">
+        <MudItem Class="d-flex flex-column align-center pb-2">
             @foreach (var theme in AvailableThemes)
             {
                 <div class="px-2">

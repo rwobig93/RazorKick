@@ -34,7 +34,7 @@
                 <MudText Typo="Typo.h5" Class="ml-3">@ApplicationName</MudText>
                 <MudSpacer/>
                 <MudButton OnClick="((e) => SettingsToggle())">
-                    <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium"/>
+                    <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
                 </MudButton>
             </MudAppBar>
             <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always" Elevation="2"
@@ -44,7 +44,7 @@
             <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
                        OpenMiniOnHover="false" Anchor="Anchor.Right">
                 <SettingsMenu CurrentUser="CurrentUser" UserPreferences="_userPreferences" AvailableThemes="_availableThemes" 
-                              SelectedTheme="_selectedTheme" ThemeChanged="@(ChangeTheme)"/>
+                              SelectedTheme="_selectedTheme" ThemeChanged="@(ChangeTheme)" UserFull="UserFull"/>
             </MudDrawer>
             <MudMainContent>
                 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">

@@ -16,6 +16,7 @@ public partial class MainLayout
     public ClaimsPrincipal CurrentUser { get; set; } = new();
     public List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
+    private AppUserFull UserFull { get; set; } = new();
     
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private bool _settingsDrawerOpen;
@@ -33,6 +34,7 @@ public partial class MainLayout
     private async Task GetCurrentUser()
     {
         CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
+        UserFull = await CurrentUserService.GetCurrentUserFull() ?? new AppUserFull();
     }
 
     private static bool IsUserAuthenticated(ClaimsPrincipal? principal)

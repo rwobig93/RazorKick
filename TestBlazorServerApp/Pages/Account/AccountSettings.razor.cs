@@ -58,5 +58,6 @@ public partial class AccountSettings
         }
 
         Snackbar.Add("Account successfully updated!");
+        StateHasChanged();
     }
 }

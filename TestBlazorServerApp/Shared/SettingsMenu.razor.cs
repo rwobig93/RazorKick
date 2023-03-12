@@ -13,18 +13,16 @@ public partial class SettingsMenu
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     [Parameter] public AppUserPreferenceFull UserPreferences { get; set; } = new();
     [Parameter] public ClaimsPrincipal CurrentUser { get; set; } = new();
+    [Parameter] public AppUserFull UserFull { get; set; } = new();
     [Parameter] public List<AppTheme> AvailableThemes { get; set; } = AppThemes.GetAvailableThemes();
     [Parameter] public MudTheme SelectedTheme { get; set; } = AppThemes.DarkTheme.Theme;
     [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
-
-    private AppTheme _displayTheme = AppThemes.DarkTheme;
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            UpdateDisplayTheme();
             StateHasChanged();
             await Task.CompletedTask;
         }
@@ -35,9 +33,13 @@ public partial class SettingsMenu
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
     }
 
-    private void UpdateDisplayTheme()
+    private string GetCurrentThemeName()
     {
-        _displayTheme = AvailableThemes.FirstOrDefault(x => x.Id == UserPreferences.ThemePreference)!;
+        var currentAppTheme = AvailableThemes.FirstOrDefault(x => x.Id == UserPreferences.ThemePreference)!;
+        if (currentAppTheme.FriendlyName.Length <= 12)
+            return currentAppTheme.FriendlyName;
+        
+        return currentAppTheme.FriendlyName[..12];
     }
 
     private string GetDisplayUsername()
@@ -53,8 +55,7 @@ public partial class SettingsMenu
     private async Task ChangeThemeOnLayout(AppTheme theme)
     {
         await ThemeChanged.InvokeAsync(theme);
-        // TODO: Display theme isn't updating on change
-        UpdateDisplayTheme();
+        StateHasChanged();
     }
 
     private async Task LogoutUser()
