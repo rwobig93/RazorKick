@@ -264,6 +264,23 @@ public class AppAccountService : IAppAccountService
         return await Result<string>.SuccessAsync(foundUser.Id.ToString(), $"Account Confirmed for {foundUser.Username}.");
     }
 
+    public async Task SetUserPassword(Guid userId, string newPassword)
+    {
+        var updateObject = new AppUserUpdate() { Id = userId };
+        
+        AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
+        updateObject.PasswordSalt = salt;
+        updateObject.PasswordHash = hash;
+        
+        await _userRepository.UpdateAsync(updateObject);
+    }
+
+    public async Task<bool> IsPasswordCorrect(Guid userId, string password)
+    {
+        var matchingUser = (await _userRepository.GetByIdAsync(userId)).Result;
+        return AccountHelpers.IsPasswordCorrect(password, matchingUser!.PasswordSalt, matchingUser.PasswordHash);
+    }
+
     public async Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest)
     {
         var foundUser = (await _userRepository.GetByEmailAsync(forgotRequest.Email!)).Result;
@@ -308,17 +325,6 @@ public class AppAccountService : IAppAccountService
                 "Failure occurred attempting to send the password reset email, please reach out to the administrator");
 
         return await Result.SuccessAsync("Successfully sent password reset to the email provided!");
-    }
-
-    private async Task SetUserPassword(Guid userId, string newPassword)
-    {
-        var updateObject = new AppUserUpdate() { Id = userId };
-        
-        AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
-        updateObject.PasswordSalt = salt;
-        updateObject.PasswordHash = hash;
-        
-        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword)

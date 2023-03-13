@@ -1,7 +1,9 @@
-﻿using Application.Helpers.Identity;
+﻿using System.Security.Claims;
+using Application.Helpers.Identity;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Shared.Responses.Identity;
@@ -13,11 +15,13 @@ public partial class SecuritySettings
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     
-    private AppUserFull CurrentUser { get; set; } = new();
+    private Guid CurrentUserId { get; set; }
     private string CurrentPassword { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
     private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
+    private InputType _passwordCurrentInput = InputType.Password;
+    private string _passwordCurrentInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
@@ -29,7 +33,6 @@ public partial class SecuritySettings
         if (firstRender)
         {
             await GetCurrentUser();
-            await GetPreferences();
             StateHasChanged();
         }
     }
@@ -40,32 +43,76 @@ public partial class SecuritySettings
         if (userId is null)
             return;
 
-        CurrentUser = (await UserRepository.GetByIdFullAsync((Guid) userId)).Result!;
+        CurrentUserId = (Guid)userId;
     }
 
-    private async Task GetPreferences()
+    private async Task UpdatePassword()
     {
-        var preferences = await AccountService.GetPreferences(CurrentUser.Id);
-        if (!preferences.Succeeded)
-        {
-            preferences.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+        if (!(await IsRequiredInformationPresent()))
             return;
-        }
 
-        _userPreferences = preferences.Data;
-    }
+        await AccountService.SetUserPassword(CurrentUserId, DesiredPassword);
 
-    private async Task UpdateAccount()
-    {
-        var updatedAccount = CurrentUser.ToUpdateObject();
-        var requestResult = await UserRepository.UpdateAsync(updatedAccount);
-        if (!requestResult.Success)
-        {
-            Snackbar.Add(requestResult.ErrorMessage, Severity.Error);
-            return;
-        }
-
-        Snackbar.Add("Account successfully updated!");
+        Snackbar.Add("Password successfully changed!");
         StateHasChanged();
+    }
+
+    private void ToggleCurrentPasswordVisibility()
+    {
+        if (_passwordCurrentInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _passwordCurrentInput = InputType.Text;
+            _passwordCurrentInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+        
+        _passwordCurrentInput = InputType.Password;
+        _passwordCurrentInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (_passwordInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _passwordInput = InputType.Text;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+        
+        _passwordInput = InputType.Password;
+        _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void ToggleConfirmPasswordVisibility()
+    {
+        if (_passwordConfirmInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _passwordConfirmInput = InputType.Text;
+            _passwordConfirmInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+        
+        _passwordConfirmInput = InputType.Password;
+        _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private async Task<bool> IsRequiredInformationPresent()
+    {
+        var informationValid = true;
+        
+        if (string.IsNullOrWhiteSpace(CurrentPassword)) {
+            Snackbar.Add("Current Password field is empty", Severity.Error); informationValid = false; }
+        if (string.IsNullOrWhiteSpace(DesiredPassword)) {
+            Snackbar.Add("Desired Password field is empty", Severity.Error); informationValid = false; }
+        if (string.IsNullOrWhiteSpace(ConfirmPassword)) {
+            Snackbar.Add("Confirm Password field is empty", Severity.Error); informationValid = false; }
+        if (DesiredPassword != ConfirmPassword) {
+            Snackbar.Add("Passwords provided don't match", Severity.Error); informationValid = false; }
+        if (!(await AccountService.IsPasswordCorrect(CurrentUserId, CurrentPassword))) {
+            Snackbar.Add("Current password provided is incorrect", Severity.Error); informationValid = false; }
+        if (!AccountService.PasswordMeetsRequirements(DesiredPassword)) {
+            Snackbar.Add("Desired password doesn't meet the password requirements", Severity.Error); informationValid = false; }
+        
+        return informationValid;
     }
 }
