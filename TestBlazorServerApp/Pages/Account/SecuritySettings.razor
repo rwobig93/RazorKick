@@ -1,0 +1,41 @@
+﻿@using TestBlazorServerApp.Components.Account
+
+@attribute [Route(AppRouteConstants.Account.Security)]
+
+<MudContainer Class="d-flex pa-4 flex-column align-center">
+    <AccountSettingsMenu/>
+</MudContainer>
+
+<MudContainer>
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        <MudPaper Width="98%" Class="pa-4 mb-3">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudTextField @bind-Value="ConfirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="@_passwordConfirmInput"
+                              Adornment="Adornment.End" AdornmentIcon="@_passwordConfirmInputIcon" OnAdornmentClick="@ToggleConfirmPasswordVisibility"
+                              AdornmentAriaLabel="Show Confirm Password"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudTextField @bind-Value="DesiredPassword" Label="Desired Password" Variant="Variant.Outlined" InputType="@_passwordInput"
+                              Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
+                              AdornmentAriaLabel="Show Desired Password"/>
+                <MudMenu Icon="@Icons.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
+                    <MudText Align="Align.Left" Class="mx-4">Minimum Length:     @_passwordRequirements.MinimumLength</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Special:   @_passwordRequirements.RequiresSpecialCharacters</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Numbers:   @_passwordRequirements.RequiresNumbers</MudText>
+                </MudMenu>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudTextField @bind-Value="ConfirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="@_passwordConfirmInput"
+                              Adornment="Adornment.End" AdornmentIcon="@_passwordConfirmInputIcon" OnAdornmentClick="@ToggleConfirmPasswordVisibility"
+                              AdornmentAriaLabel="Show Confirm Password"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurOn" 
+                           OnClick="@RegisterAsync">Lets Do Iiiiiiiiiiiiiiiiit!
+                </MudButton>
+            </MudItem>
+        </MudPaper>
+    </MudGrid>
+</MudContainer>
