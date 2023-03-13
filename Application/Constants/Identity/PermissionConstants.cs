@@ -21,12 +21,9 @@ public static class PermissionConstants
         public const string Delete = "Permissions.Native.Roles.Delete";
     }
 
-    public static class Claims
+    public static class Permissions
     {
-        public const string View = "Permissions.Native.Claims.View";
-        public const string Create = "Permissions.Native.Claims.Create";
-        public const string Edit = "Permissions.Native.Claims.Edit";
-        public const string Delete = "Permissions.Native.Claims.Delete";
+        public const string View = "Permissions.Native.Permissions.View";
     }
     
     public static class Preferences
@@ -37,13 +34,12 @@ public static class PermissionConstants
     public static class Jobs
     {
         public const string View = "Permissions.Native.Jobs.View";
-        public const string JobStatus = "Permissions.Native.Jobs.Status";
+        public const string Status = "Permissions.Native.Jobs.Status";
     }
 
-    public static class Developer
+    public static class Api
     {
-        public const string DevMenu = "Permissions.Native.Developer.Menu";
-        public const string Api = "Permissions.Native.Developer.Api";
+        public const string View = "Permissions.Native.Api.View";
     }
 
     public static class Example

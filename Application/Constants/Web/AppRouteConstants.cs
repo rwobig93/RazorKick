@@ -26,6 +26,13 @@ public static class AppRouteConstants
         public const string Security = "/account/security";
     }
 
+    public static class Admin
+    {
+        public const string UserAdmin = "/admin/users";
+        public const string RoleAdmin = "/admin/roles";
+        public const string PermissionAdmin = "/admin/permissions";
+    }
+
     public static class Api
     {
         public const string Root = "/api";

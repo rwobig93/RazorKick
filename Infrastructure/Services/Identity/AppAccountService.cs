@@ -60,6 +60,7 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
+        // TODO: Add bad password lockout on configurable attempt count, reset sets to 0, successful login sets to 0
         var user = (await _userRepository.GetByUsernameAsync(loginRequest.Username)).Result;
         if (user is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);

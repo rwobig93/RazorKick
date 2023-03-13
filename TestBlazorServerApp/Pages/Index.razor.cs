@@ -33,7 +33,7 @@ public partial class Index
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Api);
+        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.View);
         _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Jobs.View);
     }
 
