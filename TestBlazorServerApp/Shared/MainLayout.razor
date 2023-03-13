@@ -1,12 +1,9 @@
-﻿@using System.Security.Claims
-@using Domain.Models.Identity
-@using TestBlazorServerApp.Settings
-@using TestBlazorServerApp.Components.Account
+﻿@using TestBlazorServerApp.Components.Account
 @inherits LayoutComponentBase
 
 <PageTitle>@ApplicationName</PageTitle>
 
-<MudThemeProvider Theme="@_selectedTheme"/>
+<MudThemeProvider Theme="@_selectedTheme" DefaultScrollbar="false"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 

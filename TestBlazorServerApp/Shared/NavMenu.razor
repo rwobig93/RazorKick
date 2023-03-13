@@ -2,16 +2,36 @@
     <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
         Home
     </MudNavLink>
-    <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
-        API
-    </MudNavLink>
-    <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
-        Jobs Dashboard
-    </MudNavLink>
-    <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
-        Counter
-    </MudNavLink>
-    <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
-        Weather Forecasts
-    </MudNavLink>
+    @if (_canViewCounter || _canViewWeather)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewCounter)
+        {
+            <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
+                Counter
+            </MudNavLink>
+        }
+        @if (_canViewWeather)
+        {
+            <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
+                Weather Forecasts
+            </MudNavLink>
+        }
+    }
+    @if (_canViewApi || _canViewJobs)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewApi)
+        {
+            <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+                API
+            </MudNavLink>
+        }
+        @if (_canViewJobs)
+        {
+            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
+                Jobs Dashboard
+            </MudNavLink>
+        }
+    }
 </MudNavMenu>

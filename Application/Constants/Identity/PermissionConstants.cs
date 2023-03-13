@@ -43,6 +43,7 @@ public static class PermissionConstants
     public static class Developer
     {
         public const string DevMenu = "Permissions.Native.Developer.Menu";
+        public const string Api = "Permissions.Native.Developer.Api";
     }
 
     public static class Example

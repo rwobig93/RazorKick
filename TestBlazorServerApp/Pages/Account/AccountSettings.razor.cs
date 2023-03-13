@@ -1,10 +1,8 @@
-﻿using System.Security.Claims;
-using Application.Models.Identity;
+﻿using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
-using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages.Account;
 

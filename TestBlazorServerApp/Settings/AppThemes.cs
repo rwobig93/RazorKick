@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Domain.Enums.Identity;
+using Domain.Models.Identity;
 
 namespace TestBlazorServerApp.Settings;
 
@@ -200,6 +201,17 @@ public static class AppThemes
             AppThemeId.CustomOne,
             AppThemeId.CustomTwo,
             AppThemeId.CustomThree
+        };
+    }
+
+    public static AppThemeCustom GetPreferenceCustomThemeFromId(AppUserPreferenceFull userPreference, AppThemeId themeId)
+    {
+        return themeId switch
+        {
+            AppThemeId.CustomOne => userPreference.CustomThemeOne,
+            AppThemeId.CustomTwo => userPreference.CustomThemeTwo,
+            AppThemeId.CustomThree => userPreference.CustomThemeThree,
+            _ => throw new ArgumentOutOfRangeException(nameof(themeId), themeId, null)
         };
     }
 }

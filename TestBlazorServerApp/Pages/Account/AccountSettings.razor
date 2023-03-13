@@ -5,26 +5,29 @@
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <AccountSettingsMenu/>
 </MudContainer>
+
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
-        <MudPaper Width="97%" Class="pa-4">
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center">
-                <AccountAvatar Username="@CurrentUser.Username" AvatarSize="Size.Large" ProfileImageUrl="@CurrentUser.ProfilePictureDataUrl"/>
+        <MudPaper Width="98%" Class="pa-4 mb-3">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center pb-4">
+                <AccountAvatar Username="@CurrentUser.Username" AvatarSize="Size.Large" ProfileImageUrl="@CurrentUser.ProfilePictureDataUrl"
+                               Style="width: 100px; height: 100px;"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="px-4">
+                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
+                    Entering an invalid URL for your profile image will result in an empty avatar / circle
+                </MudAlert>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="pa-2">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.ProfilePictureDataUrl" Label="Profile Image 
                 Url"/>
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.Username" ReadOnly="true" Label="Username"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.EmailAddress" ReadOnly="true" Label="Email Address"/>
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.FirstName" Label="First Name"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.LastName" Label="Last Name"/>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex pa-2 flex-column align-center">
@@ -34,7 +37,7 @@
             </MudItem>
         </MudPaper>
         <MudItem xs="12" sm="12" md="12">
-            <MudTable Items="@CurrentUser.Roles">
+            <MudTable Items="@CurrentUser.Roles" Hover="true" Dense="true" Striped="true">
                 <ToolBarContent>
                     <MudSpacer/>
                     <MudText Typo="Typo.h6">Assigned Roles</MudText>
@@ -52,7 +55,7 @@
                 </RowTemplate>
             </MudTable>
         </MudItem>
-        <MudItem xs="12" sm="12" md="12">
+        <MudItem xs="12" sm="12" md="12" Hover="true" Dense="true" Striped="true">
             <MudTable Items="@CurrentUser.Permissions">
                 <ToolBarContent>
                     <MudSpacer/>

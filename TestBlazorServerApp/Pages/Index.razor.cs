@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
-using Application.Constants.Web;
+using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
@@ -14,16 +15,26 @@ public partial class Index
 
     private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private string BaseUrl => NavManager.BaseUri;
-
     private UserBasicResponse _loggedInUser = new();
+    
+    private bool _canViewApi;
+    private bool _canViewJobs;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await UpdateLoggedInUser();
+            await GetPermissions();
             StateHasChanged();
         }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Api);
+        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Jobs.View);
     }
 
     private async Task UpdateLoggedInUser()

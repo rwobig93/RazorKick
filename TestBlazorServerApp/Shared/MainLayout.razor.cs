@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using Application.Models.Identity;
 using Application.Services.Identity;
-using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using TestBlazorServerApp.Settings;
@@ -94,23 +93,12 @@ public partial class MainLayout
         }
     }
 
-    private AppThemeCustom GetPreferenceThemeFromId(AppThemeId themeId)
-    {
-        return themeId switch
-        {
-            AppThemeId.CustomOne => _userPreferences.CustomThemeOne,
-            AppThemeId.CustomTwo => _userPreferences.CustomThemeTwo,
-            AppThemeId.CustomThree => _userPreferences.CustomThemeThree,
-            _ => throw new ArgumentOutOfRangeException(nameof(themeId), themeId, null)
-        };
-    }
-
     private void UpdateCustomThemes()
     {
         foreach (var customThemeId in AppThemes.GetCustomThemeIds())
         {
             var matchingTheme = _availableThemes.FirstOrDefault(x => x.Id == customThemeId);
-            var preferenceTheme = GetPreferenceThemeFromId(customThemeId);
+            var preferenceTheme = AppThemes.GetPreferenceCustomThemeFromId(_userPreferences, customThemeId);
             
             matchingTheme!.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
