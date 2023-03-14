@@ -398,6 +398,33 @@ public class AppAccountService : IAppAccountService
         return await Result<AppUserPreferenceFull>.SuccessAsync(preferences.Result!);
     }
 
+    public async Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (!user.Success)
+            return await Result.FailAsync(user.ErrorMessage);
+        
+        user.Result!.IsActive = enabled;
+
+        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdateObject());
+        if (!updateRequest.Success)
+            return await Result.FailAsync(updateRequest.ErrorMessage);
+
+        var action = enabled ? "Enabled" : "Disabled";
+        return await Result.SuccessAsync($"User account successfully {action}");
+    }
+
+    public async Task<IResult> ForceUserPasswordReset(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (!user.Success)
+            return await Result.FailAsync(user.ErrorMessage);
+
+        // TODO: Invalidate any currently active logins for the account / log them out
+        await SetUserPassword(userId, UrlHelpers.GenerateToken());
+        return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = user.Result!.Email });
+    }
+
     private async Task<string> GenerateJwtAsync(AppUserDb user)
     {
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));

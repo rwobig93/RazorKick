@@ -1,4 +1,5 @@
 ﻿@using TestBlazorServerApp.Components.Account
+@using Domain.DatabaseEntities.Identity
 
 @attribute [Route(AppRouteConstants.Admin.UserAdmin)]
 
@@ -8,70 +9,45 @@
 
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
-        <MudPaper Width="98%" Class="pa-4 mb-3">
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center pb-4">
-                <AccountAvatar Username="@CurrentUser.Username" AvatarSize="Size.Large" ProfileImageUrl="@CurrentUser.ProfilePictureDataUrl"
-                               Style="width: 100px; height: 100px;"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="px-4">
-                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
-                    Entering an invalid URL for your profile image will result in an empty avatar / circle
-                </MudAlert>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
-                <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.ProfilePictureDataUrl" Label="Profile Image 
-                Url"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
-                <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.Username" ReadOnly="true" Label="Username"/>
-                <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.EmailAddress" ReadOnly="true" Label="Email Address"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
-                <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.FirstName" Label="First Name"/>
-                <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.LastName" Label="Last Name"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex pa-2 flex-column align-center">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Save"
-                           OnClick="@UpdateAccount">Update Account
-                </MudButton>
-            </MudItem>
-        </MudPaper>
         <MudItem xs="12" sm="12" md="12">
-            <MudTable Items="@CurrentUser.Roles" Hover="true" Dense="true" Striped="true">
+            <MudTable ServerData="@(new Func<TableState, Task<TableData<AppUserDb>>>(ServerReload))"
+                      Dense="true" Hover="true" @ref="_table" MultiSelection="true" @bind-SelectedItems="_selectedItems">
                 <ToolBarContent>
+                    <MudText Typo="Typo.h6">Users</MudText>
+                    <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
                     <MudSpacer/>
-                    <MudText Typo="Typo.h6">Assigned Roles</MudText>
-                    <MudSpacer/>
+                    <MudButton Color="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="EnableAccounts" Variant="Variant
+                    .Outlined">Enable</MudButton>
+                    <MudButton Color="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="DisableAccounts" Variant="Variant.Outlined">Disable</MudButton>
+                    <MudButton Color="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="ForcePasswordResets" Variant="Variant.Outlined">Force Password Reset</MudButton>
                 </ToolBarContent>
                 <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Description</MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserDb">Id</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserDb">Username</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="Email" T="AppUserDb">Email</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="EmailConfirmed" T="AppUserDb">Email Confirmed</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="IsActive" T="AppUserDb">Enabled</MudTableSortLabel></MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Id">@context.Id</MudTd>
+                    <MudTd DataLabel="Username">@context.Username</MudTd>
+                    <MudTd DataLabel="Email">@context.Email</MudTd>
+                    <MudTd DataLabel="EmailConfirmed">@context.EmailConfirmed</MudTd>
+                    <MudTd DataLabel="Enabled">@context.IsActive</MudTd>
                 </RowTemplate>
-            </MudTable>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" Hover="true" Dense="true" Striped="true">
-            <MudTable Items="@CurrentUser.Permissions">
-                <ToolBarContent>
-                    <MudSpacer/>
-                    <MudText Typo="Typo.h6">Assigned Permissions</MudText>
-                    <MudSpacer/>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Description</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No matching records found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+                <FooterContent>
+                    <MudTd colspan="5">Select All</MudTd>
+                </FooterContent>
             </MudTable>
         </MudItem>
     </MudGrid>

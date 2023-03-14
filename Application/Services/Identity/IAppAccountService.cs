@@ -8,6 +8,7 @@ namespace Application.Services.Identity;
 
 public interface IAppAccountService
 {
+    // TODO: Move all acocunt service returns to IResult
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
     Task<IResult> LogoutGuiAsync();
@@ -22,4 +23,6 @@ public interface IAppAccountService
     Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
+    Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled);
+    Task<IResult> ForceUserPasswordReset(Guid userId);
 }

@@ -18,6 +18,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<AppUserDb>> GetByNormalizedEmailAsync(string normalizedEmail);
     Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);

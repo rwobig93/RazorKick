@@ -208,6 +208,24 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText)
+    {
+        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults =
+                await _database.LoadData<AppUserDb, dynamic>(AppUsers.Search, new { SearchTerm = searchText });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsers.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
