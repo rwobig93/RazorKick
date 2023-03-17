@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
+using System.Security.Principal;
+using Application.Constants.Web;
 using Application.Models.Identity;
 using Application.Services.Identity;
 using Domain.Models.Identity;
@@ -32,11 +34,20 @@ public partial class MainLayout
 
     private async Task GetCurrentUser()
     {
-        CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
-        UserFull = await CurrentUserService.GetCurrentUserFull() ?? new AppUserFull();
+        try
+        {
+            CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
+            UserFull = await CurrentUserService.GetCurrentUserFull() ?? new AppUserFull();
+        }
+        catch
+        {
+            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect
+            await AccountService.LogoutGuiAsync();
+            NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
+        }
     }
 
-    private static bool IsUserAuthenticated(ClaimsPrincipal? principal)
+    private static bool IsUserAuthenticated(IPrincipal? principal)
     {
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
     }

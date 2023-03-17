@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
@@ -39,10 +40,19 @@ public partial class Index
 
     private async Task UpdateLoggedInUser()
     {
-        var user = await CurrentUserService.GetCurrentUserBasic();
-        if (user is null)
-            return;
+        try
+        {
+            var user = await CurrentUserService.GetCurrentUserBasic();
+            if (user is null)
+                return;
 
-        _loggedInUser = user;
+            _loggedInUser = user;
+        }
+        catch
+        {
+            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect
+            await AccountService.LogoutGuiAsync();
+            NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
+        }
     }
 }

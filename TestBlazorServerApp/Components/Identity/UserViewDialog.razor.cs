@@ -22,8 +22,15 @@ public partial class UserViewDialog
 
     private ClaimsPrincipal _currentUser = new();
     private AppUserFull _viewingUser = new();
+    private string? _createdByUsername = "";
+    private string? _modifiedByUsername = "";
+    
     private bool _editMode;
     private bool _canEditUsers;
+    private bool _canViewRoles;
+    private bool _canEditRoles;
+    private bool _canViewPermissions;
+    private bool _canEditPermissions;
     private string _editButtonText = "Enable Edit Mode";
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -39,6 +46,14 @@ public partial class UserViewDialog
     private async Task GetViewingUser()
     {
         _viewingUser = (await UserRepository.GetByIdFullAsync(UserId)).Result!;
+        _createdByUsername = (await UserRepository.GetByIdAsync(_viewingUser.CreatedBy)).Result?.Username;
+        if (_viewingUser.LastModifiedBy is null)
+        {
+            _modifiedByUsername = "";
+            return;
+        }
+        
+        _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Result?.Username;
         // public List<AppRoleDb> Roles { get; set; } = new();
         // public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
         // public List<AppPermissionDb> Permissions { get; set; } = new();
@@ -48,6 +63,10 @@ public partial class UserViewDialog
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Edit);
+        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
+        _canEditRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Edit);
+        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
+        _canEditPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Edit);
     }
 
     private async Task Save()

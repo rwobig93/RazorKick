@@ -1,8 +1,10 @@
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
+using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Domain.Models.Database;
 using Microsoft.Extensions.Hosting;
 using Shared.Enums.Identity;
@@ -15,6 +17,8 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
+
+    private readonly Dictionary<Guid, DatabaseEntityType> _systemOwnedEntities = new();
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
         IAppPermissionRepository permissionRepository)
@@ -57,6 +61,18 @@ public class SqlDatabaseSeederService : IHostedService
             UserConstants.DefaultBasicEmail, UserConstants.DefaultBasicPassword);
         if (basicUser.Success)
             await EnforceRolesForUser(basicUser.Result!.Id, new List<string>() {RoleConstants.DefaultRoleName});
+        
+        var anonymousUser = await CreateOrGetSeedUser(
+            UserConstants.DefaultAnonymousUsername, UserConstants.DefaultAnonymousFirstName, UserConstants.DefaultAnonymousLastName,
+            UserConstants.DefaultAnonymousEmail, UrlHelpers.GenerateToken(64));
+        if (anonymousUser.Success)
+            await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
+        
+        var systemUser = await CreateOrGetSeedUser(
+            UserConstants.DefaultSystemUsername, UserConstants.DefaultSystemFirstName, UserConstants.DefaultSystemLastName,
+            UserConstants.DefaultSystemEmail, UrlHelpers.GenerateToken(64));
+        if (systemUser.Success)
+            await EnforceSystemOwnedEntitiesCreatedBy();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -68,8 +84,13 @@ public class SqlDatabaseSeederService : IHostedService
     private async Task<DatabaseActionResult<AppRoleDb>> CreateOrGetSeedRole(string roleName, string roleDescription)
     {
         var existingRole = await _roleRepository.GetByNameAsync(roleName);
-        if (existingRole.Result is not null || !existingRole.Success)
+        if (!existingRole.Success)
             return existingRole;
+        if (existingRole.Result is not null)
+        {
+            _systemOwnedEntities.Add(existingRole.Result.Id, DatabaseEntityType.Role);
+            return existingRole;
+        }
         
         var createdRole = await _roleRepository.CreateAsync(new AppRoleCreate()
         {
@@ -80,7 +101,8 @@ public class SqlDatabaseSeederService : IHostedService
             CreatedBy = Guid.Empty,
             LastModifiedBy = Guid.Empty
         });
-        _logger.Information("Created missing {RoleName} role with id: {RoleId}", RoleConstants.AdminRoleName, createdRole.Result);
+        _logger.Information("Created missing {RoleName} role with id: {RoleId}", roleName, createdRole.Result);
+        _systemOwnedEntities.Add(createdRole.Result, DatabaseEntityType.Role);
 
         return await _roleRepository.GetByIdAsync(createdRole.Result);
     }
@@ -106,7 +128,6 @@ public class SqlDatabaseSeederService : IHostedService
             _logger.Debug("Added missing {PermissionValue} to role {RoleId} with id {PermissionId}",
                 permission, roleId, addedPermission.Result);
         }
-        _logger.Debug("Finished enforcing seeded permissions for role {roleId}", roleId);
     }
 
     private async Task<DatabaseActionResult<AppUserDb>> CreateOrGetSeedUser(string userName, string firstName, string lastName, string email,
@@ -115,8 +136,13 @@ public class SqlDatabaseSeederService : IHostedService
         var existingUser = await _userRepository.GetByUsernameAsync(userName);
         if (!existingUser.Success)
             _logger.Error("Failed to seed user in database: {UserName} => {ErrorMessage}", userName, existingUser.ErrorMessage);
-        if (existingUser.Result is not null || !existingUser.Success)
+        if (!existingUser.Success)
             return existingUser;
+        if (existingUser.Result is not null)
+        {
+            _systemOwnedEntities.Add(existingUser.Result.Id, DatabaseEntityType.User);
+            return existingUser;
+        }
         
         AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
         
@@ -147,6 +173,7 @@ public class SqlDatabaseSeederService : IHostedService
             AccountType = AccountType.User
         });
         _logger.Information("Created missing {UserName} user with id: {UserId}", userName, createdUser.Result);
+        _systemOwnedEntities.Add(createdUser.Result, DatabaseEntityType.User);
 
         return await _userRepository.GetByIdAsync(createdUser.Result);
     }
@@ -164,5 +191,104 @@ public class SqlDatabaseSeederService : IHostedService
             
             _logger.Debug("Added missing role {RoleId} to user {UserId}", foundRole.Result.Id, userId);
         }
+    }
+
+    private async Task EnforceAnonUserIdToEmptyGuid(Guid currentId)
+    {
+        var desiredAnonUser = await _userRepository.GetByIdAsync(Guid.Empty);
+        if (desiredAnonUser.Result is not null)
+            return;
+        
+        var updatedId = await _userRepository.SetUserId(currentId, Guid.Empty);
+        if (!updatedId.Success)
+        {
+            _logger.Error("Failed to set Anonymous UserId to Empty Guid: {ErrorMessage}", updatedId.ErrorMessage);
+            return;
+        }
+        
+        var anonUserValidation = await _userRepository.GetByIdAsync(Guid.Empty);
+        if (anonUserValidation.Result is null)
+        {
+            _logger.Error("Failed to get Anonymous UserId after update: {ErrorMessage}", anonUserValidation.ErrorMessage);
+            return;
+        }
+        
+        _logger.Information("Anon user ID was validated and is correct: {UserId}", anonUserValidation.Result!.Id);
+    }
+
+    private async Task EnforceSystemOwnedEntitiesCreatedBy()
+    {
+        var systemUser = await _userRepository.GetByEmailAsync(UserConstants.DefaultSystemEmail);
+        if (!systemUser.Success)
+        {
+            _logger.Error("Failed to get System User for owned entity enforcement: {ErrorMessage}", systemUser.ErrorMessage);
+            return;
+        }
+
+        foreach (var ownedEntity in _systemOwnedEntities)
+        {
+            switch (ownedEntity.Value)
+            {
+                case DatabaseEntityType.User:
+                    await EnforceUserCreatedBySystem(ownedEntity.Key, systemUser.Result!.Id);
+                    break;
+                case DatabaseEntityType.Role:
+                    await EnforceRoleCreatedBySystem(ownedEntity.Key, systemUser.Result!.Id);
+                    break;
+                case DatabaseEntityType.Permission:
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
+    private async Task EnforceUserCreatedBySystem(Guid userId, Guid systemUserId)
+    {
+        var foundUser = await _userRepository.GetByIdAsync(userId);
+        if (!foundUser.Success)
+        {
+            _logger.Error("Failure occurred attempting to get system user for user creation: {UserId} :: {ErrorMessage}",
+                userId, foundUser.ErrorMessage);
+            return;
+        }
+        
+        if (foundUser.Result!.CreatedBy == systemUserId)
+            return;
+
+        var idEnforcement = await _userRepository.SetCreatedById(userId, systemUserId);
+        if (!idEnforcement.Success)
+        {
+            _logger.Error("Failure occurred attempting to enforce user system creation: {UserId} :: {ErrorMessage}",
+                userId, idEnforcement.ErrorMessage);
+            return;
+        }
+        
+        _logger.Information("UserId corrected to system creation: {UserId} > {SystemUserId}",
+            userId, systemUserId);
+    }
+
+    private async Task EnforceRoleCreatedBySystem(Guid roleId, Guid systemUserId)
+    {
+        var foundRole = await _roleRepository.GetByIdAsync(roleId);
+        if (!foundRole.Success)
+        {
+            _logger.Error("Failure occurred attempting to get system user for role creation: {RoleId} :: {ErrorMessage}",
+                roleId, foundRole.ErrorMessage);
+            return;
+        }
+        
+        if (foundRole.Result!.CreatedBy == systemUserId)
+            return;
+
+        var idEnforcement = await _roleRepository.SetCreatedById(roleId, systemUserId);
+        if (!idEnforcement.Success)
+        {
+            _logger.Error("Failure occurred attempting to enforce role system creation: {RoleId} :: {ErrorMessage}",
+                roleId, idEnforcement.ErrorMessage);
+            return;
+        }
+        
+        _logger.Information("RoleId corrected to system creation: {RoleId} > {SystemUserId}",
+            roleId, systemUserId);
     }
 }

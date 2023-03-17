@@ -24,6 +24,7 @@ public static class PermissionConstants
     public static class Permissions
     {
         public const string View = "Permissions.Native.Permissions.View";
+        public const string Edit = "Permissions.Native.Permissions.Edit";
     }
     
     public static class Preferences

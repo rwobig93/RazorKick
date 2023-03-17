@@ -18,9 +18,9 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                     [RoleId] UNIQUEIDENTIFIER NOT NULL,
                     CONSTRAINT User_Role_PK PRIMARY KEY (UserId, RoleId),
                     CONSTRAINT FK_User
-                        FOREIGN KEY (UserId) REFERENCES dbo.[AppUsers] (Id),
+                        FOREIGN KEY (UserId) REFERENCES dbo.[AppUsers] (Id) ON UPDATE CASCADE,
                     CONSTRAINT FK_Role
-                        FOREIGN KEY (RoleId) REFERENCES dbo.[AppRoles] (Id)
+                        FOREIGN KEY (RoleId) REFERENCES dbo.[AppRoles] (Id) ON UPDATE CASCADE
                 )
             end"
     };

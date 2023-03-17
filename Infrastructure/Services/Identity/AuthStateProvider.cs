@@ -17,17 +17,19 @@ public class AuthStateProvider : AuthenticationStateProvider
     private readonly ISerializerService _serializer;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly ILocalStorageService _localStorage;
+    private readonly ILogger _logger;
 
     public AuthStateProvider(HttpClient httpClient, ISerializerService serializer,
-        IHttpContextAccessor contextAccessor, ILocalStorageService localStorage)
+        IHttpContextAccessor contextAccessor, ILocalStorageService localStorage, ILogger logger)
     {
         _serializer = serializer;
         _contextAccessor = contextAccessor;
         _localStorage = localStorage;
+        _logger = logger;
         _httpClient = httpClient;
     }
 
-    private string authToken = "";
+    private string _authToken = "";
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
@@ -38,10 +40,10 @@ public class AuthStateProvider : AuthenticationStateProvider
                 return new AuthenticationState(currentPrincipal);
 
             await GetSavedAuthToken();
-            if (string.IsNullOrWhiteSpace(authToken))
+            if (string.IsNullOrWhiteSpace(_authToken))
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
             
-            return GenerateNewAuthenticationState(authToken);
+            return GenerateNewAuthenticationState(_authToken);
         }
         catch
         {
@@ -51,7 +53,7 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     public async Task<AuthenticationState> GetAuthenticationStateAsync(string providedToken)
     {
-        authToken = providedToken;
+        _authToken = providedToken;
         return await GetAuthenticationStateAsync();
     }
 
@@ -70,13 +72,13 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     private async Task GetSavedAuthToken()
     {
-        authToken = GetTokenFromHttpSession();
+        _authToken = GetTokenFromHttpSession();
             
-        if (string.IsNullOrWhiteSpace(authToken))
-            authToken = await GetTokenFromLocalStorage();
+        if (string.IsNullOrWhiteSpace(_authToken))
+            _authToken = await GetTokenFromLocalStorage();
             
-        if (string.IsNullOrWhiteSpace(authToken))
-            authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(_authToken))
+            _authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
     }
 
     private ClaimsPrincipal GetPrincipalFromHttpContext()
@@ -143,8 +145,15 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     public void DeauthenticateUser()
     {
-        var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
-        var authState = Task.FromResult(new AuthenticationState(anonymousUser));
+        try
+        {
+            var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
+            var authState = Task.FromResult(new AuthenticationState(anonymousUser));
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning("Error occurred attempting to deauthenticate user: {ErrorMessage}", ex.Message);
+        }
 
         // NotifyAuthenticationStateChanged(authState);
     }

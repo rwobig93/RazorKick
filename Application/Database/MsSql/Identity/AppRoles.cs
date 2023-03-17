@@ -166,4 +166,20 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 where Id = COALESCE(@Id, Id);
             end"
     };
+    
+    public static readonly MsSqlStoredProcedure SetCreatedById = new()
+    {
+        Table = Table,
+        Action = "SetCreatedById",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_SetCreatedById]
+                @Id UNIQUEIDENTIFIER,
+                @CreatedBy UNIQUEIDENTIFIER
+            AS
+            begin
+                update dbo.[AppRoles]
+                set CreatedBy = @CreatedBy
+                where Id = @Id;
+            end"
+    };
 }

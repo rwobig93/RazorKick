@@ -16,6 +16,16 @@ public static class UserConstants
     public const string DefaultBasicLastName = "Maybe";
     public const string DefaultBasicEmail = "TheNeutral@doop.future";
     public const string DefaultBasicPassword = "wFWHo^^@Lv%df$Exo7h&KWeTj35t4g3GBu^LPz9^35KCDT6A@K#zMZ3";
+    
+    public const string DefaultSystemUsername = "System";
+    public const string DefaultSystemFirstName = "The";
+    public const string DefaultSystemLastName = "System";
+    public const string DefaultSystemEmail = "TheSystem@localhost.local";
+    
+    public const string DefaultAnonymousUsername = "Anonymous";
+    public const string DefaultAnonymousFirstName = "Anonymous";
+    public const string DefaultAnonymousLastName = "User";
+    public const string DefaultAnonymousEmail = "Who@am.i";
 
     public static PasswordOptions PasswordRequirements = new()
     {

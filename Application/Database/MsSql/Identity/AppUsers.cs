@@ -301,4 +301,37 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 where Id = COALESCE(@Id, Id);
             end"
     };
+
+    public static readonly MsSqlStoredProcedure SetUserId = new()
+    {
+        Table = Table,
+        Action = "SetUserId",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_SetUserId]
+                @CurrentId UNIQUEIDENTIFIER,
+                @NewId UNIQUEIDENTIFIER
+            AS
+            begin
+                update dbo.[AppUsers]
+                set Id = @NewId
+                OUTPUT @NewId
+                where Id = @CurrentId;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure SetCreatedById = new()
+    {
+        Table = Table,
+        Action = "SetCreatedById",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_SetCreatedById]
+                @Id UNIQUEIDENTIFIER,
+                @CreatedBy UNIQUEIDENTIFIER
+            AS
+            begin
+                update dbo.[AppUsers]
+                set CreatedBy = @CreatedBy
+                where Id = @Id;
+            end"
+    };
 }

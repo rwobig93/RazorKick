@@ -158,6 +158,23 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult> SetCreatedById(Guid roleId, Guid createdById)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(AppRoles.SetCreatedById, new { Id = roleId, CreatedBy = createdById });
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppRoles.SetCreatedById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId)
     {
         DatabaseActionResult<bool> actionReturn = new();

@@ -208,6 +208,40 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            var updatedId = await _database.SaveDataReturnId(AppUsers.SetUserId, new { CurrentId = currentId, NewId = newId });
+            actionReturn.Succeed(updatedId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsers.SetUserId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(AppUsers.SetCreatedById, new { Id = userId, CreatedBy = createdById });
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsers.SetCreatedById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText)
     {
         DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
