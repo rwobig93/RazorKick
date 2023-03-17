@@ -1,0 +1,53 @@
+@using Application.Constants.Identity
+
+@attribute [Authorize(PermissionConstants.Users.View)]
+
+<MudDialog Class="pa-4 justify-center my-4 mud-text-align-center">
+    <DialogContent>
+        @if (_canEditUsers)
+        {
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEditMode">@_editButtonText
+                </MudButton>
+            </MudItem>
+        }
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap pa-2 gap-4">
+            <MudText>ID: @_viewingUser.Id</MudText>
+            <MudText>Email Address: @_viewingUser.EmailAddress</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap pa-2 gap-4">
+            <MudText>Username: @_viewingUser.Username</MudText>
+            <MudText>Account Type: @_viewingUser.AccountType</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap pa-2 gap-4">
+            <MudText>Created By: @_viewingUser.CreatedBy</MudText>
+            <MudText>Created: @_viewingUser.CreatedOn</MudText>
+            <MudText>Last Modified By: @_viewingUser.LastModifiedBy</MudText>
+            <MudText>Modified: @_viewingUser.LastModifiedOn</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap pa-2 gap-4">
+            <MudTextField @bind-Value="_viewingUser.FirstName" Label="First Name" Variant="Variant.Outlined" ReadOnly="@(!_editMode)"/>
+            <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" ReadOnly="@(!_editMode)"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap pa-2 gap-4">
+            <MudCheckBox @bind-Checked="_viewingUser.IsActive" Label="Is Enabled" ReadOnly="@(!_editMode)"/>
+            <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" ReadOnly="@(!_editMode)"/>
+        </MudItem>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Close">Close
+            </MudButton>
+        </MudItem>
+        @if (_editMode)
+        {
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save" 
+                           OnClick="@Save">Save
+                </MudButton>
+            </MudItem>
+        }
+    </DialogActions>
+</MudDialog>

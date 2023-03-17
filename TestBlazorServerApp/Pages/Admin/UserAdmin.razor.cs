@@ -4,6 +4,7 @@ using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
+using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -133,5 +134,13 @@ public partial class UserAdmin
             else
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
         }
+    }
+
+    private void ViewUser(Guid userId)
+    {
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters() { { "UserId", userId } };
+
+        DialogService.Show<UserViewDialog>("View User", dialogParameters, dialogOptions);
     }
 }

@@ -64,9 +64,9 @@ public partial class Login
 
     private void ForgotPassword()
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        DialogService.Show<ForgotPasswordComponent>("Forgot Password", dialogOptions);
+        DialogService.Show<ForgotPasswordDialog>("Forgot Password", dialogOptions);
     }
 
     private bool IsRequiredInformationPresent()

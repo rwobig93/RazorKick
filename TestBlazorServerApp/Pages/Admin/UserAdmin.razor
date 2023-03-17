@@ -3,10 +3,6 @@
 
 @attribute [Route(AppRouteConstants.Admin.UserAdmin)]
 
-<MudContainer Class="d-flex pa-4 flex-column align-center">
-    <AccountSettingsMenu/>
-</MudContainer>
-
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
         <MudItem xs="12" sm="12" md="12">
@@ -14,15 +10,28 @@
                       Dense="true" Hover="true" @ref="_table" MultiSelection="true" @bind-SelectedItems="_selectedItems">
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">Users</MudText>
+                    <MudSpacer/>
+                    <MudTooltip Text="Enable" Class="px-2">
+                        <MudButton Color="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="EnableAccounts" Variant="Variant.Outlined">
+                          <MudIcon Icon="@Icons.Material.Filled.LockOpen"/>
+                        </MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Disable" Class="px-2">
+                        <MudButton Color="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="DisableAccounts" Variant="Variant.Outlined">
+                          <MudIcon Icon="@Icons.Material.Filled.Lock"/>
+                        </MudButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Force Password Reset" Class="px-2">
+                        <MudButton Color="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="ForcePasswordResets" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Filled.LockReset"/>
+                        </MudButton>
+                    </MudTooltip>
+                    <MudSpacer/>
                     <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
-                    <MudSpacer/>
-                    <MudButton Color="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="EnableAccounts" Variant="Variant
-                    .Outlined">Enable</MudButton>
-                    <MudButton Color="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="DisableAccounts" Variant="Variant.Outlined">Disable</MudButton>
-                    <MudButton Color="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="ForcePasswordResets" Variant="Variant.Outlined">Force Password Reset</MudButton>
                 </ToolBarContent>
                 <HeaderContent>
+                    <MudTh></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserDb">Id</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserDb">Username</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="Email" T="AppUserDb">Email</MudTableSortLabel></MudTh>
@@ -30,6 +39,13 @@
                     <MudTh><MudTableSortLabel SortLabel="IsActive" T="AppUserDb">Enabled</MudTableSortLabel></MudTh>
                 </HeaderContent>
                 <RowTemplate>
+                    <MudTd>
+                        <MudTooltip Text="View">
+                            <MudButton Color="Color.Warning" OnClick="@(() => ViewUser(context.Id))" Variant="Variant.Outlined">
+                                <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
+                            </MudButton>
+                        </MudTooltip>
+                    </MudTd>
                     <MudTd DataLabel="Id">@context.Id</MudTd>
                     <MudTd DataLabel="Username">@context.Username</MudTd>
                     <MudTd DataLabel="Email">@context.Email</MudTd>

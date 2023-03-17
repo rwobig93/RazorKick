@@ -8,7 +8,7 @@ using Shared.Requests.Identity.User;
 
 namespace TestBlazorServerApp.Components.Identity;
 
-public partial class ForgotPasswordComponent
+public partial class ForgotPasswordDialog
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
