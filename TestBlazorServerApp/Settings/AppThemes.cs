@@ -148,7 +148,7 @@ public static class AppThemes
     public static readonly AppTheme CustomThemeOne = new()
     {
         Id = AppThemeId.CustomOne,
-        FriendlyName = "CustomThemeOne",
+        FriendlyName = "Custom 1",
         Description = "First custom theme",
         Icon = Icons.Filled.LooksOne,
         Theme = new MudTheme()
@@ -161,7 +161,7 @@ public static class AppThemes
     public static readonly AppTheme CustomThemeTwo = new()
     {
         Id = AppThemeId.CustomTwo,
-        FriendlyName = "CustomThemeTwo",
+        FriendlyName = "Custom 2",
         Description = "Second custom theme",
         Icon = Icons.Filled.LooksTwo,
         Theme = new MudTheme()
@@ -174,7 +174,7 @@ public static class AppThemes
     public static readonly AppTheme CustomThemeThree = new()
     {
         Id = AppThemeId.CustomThree,
-        FriendlyName = "CustomThemeThree",
+        FriendlyName = "Custom 3",
         Description = "Third custom theme",
         Icon = Icons.Filled.Looks3,
         Theme = new MudTheme()

@@ -17,7 +17,9 @@ public partial class SettingsMenu
     [Parameter] public List<AppTheme> AvailableThemes { get; set; } = AppThemes.GetAvailableThemes();
     [Parameter] public MudTheme SelectedTheme { get; set; } = AppThemes.DarkTheme.Theme;
     [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
-    
+
+    private bool _testToggleOne;
+    private bool _testToggleTwo;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

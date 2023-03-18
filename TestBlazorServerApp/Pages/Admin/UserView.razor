@@ -10,27 +10,36 @@
 }
 else
 {
-    @if (_canEditUsers)
-    {
-        <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 ma-4 pa-4 justify-center align-center mud-text-align-center">
+    <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 me-4 pa-4 justify-center align-center mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="GoBack">Go Back
+        </MudButton>
+        @if (_canEditUsers)
+        {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                        OnClick="ToggleEditMode">@_editButtonText
             </MudButton>
-            @if (_canEditRoles)
-            {
-                // TODO: Add edit roles and permissions methods to open dialogs
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.PermContactCalendar"
-                           OnClick="ToggleEditMode">Edit Roles
-                </MudButton>
-            }
-            @if (_canEditPermissions)
-            {
-                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.PermIdentity"
-                           OnClick="ToggleEditMode">Edit Permissions
-                </MudButton>
-            }
-        </MudPaper>
-    }
+        }
+        @if (_canEditRoles)
+        {
+            // TODO: Add edit roles and permissions methods to open dialogs
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.PermContactCalendar"
+                       OnClick="ToggleEditMode">Edit Roles
+            </MudButton>
+        }
+        @if (_canAddPermissions || _canRemovePermissions)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.PermIdentity"
+                       OnClick="ToggleEditMode">Edit Permissions
+            </MudButton>
+        }
+        @if (_editMode)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="@Save">Save Changes
+            </MudButton>
+        }
+    </MudPaper>
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-2 gap-4">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Informational</MudText>
@@ -65,61 +74,48 @@ else
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" ReadOnly="@(!_editMode)"/>
         </MudItem>
     </MudPaper>
-    @if (_canViewRoles || _canViewPermissions)
+    @if (_canViewRoles)
     {
-        <MudPaper Elevation="8" Class="d-flex ma-4 flex-wrap justify-center align-center mud-text-align-center">
-            @if (_canViewRoles)
-            {
-                <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap justify-center align-center mud-text-align-center">
-                    <MudTable Items="@_viewingUser.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                        <ToolBarContent>
-                            <MudSpacer/>
-                            <MudText Typo="Typo.h6">Assigned Roles</MudText>
-                            <MudSpacer/>
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh></MudTh>
-                            <MudTh>Name</MudTh>
-                            <MudTh>Description</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
-                            <MudTd DataLabel="Description">@context.Description</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                </MudItem>
-            }
-            @if (_canViewPermissions)
-            {
-                <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap justify-center align-center mud-text-align-center">
-                    <MudTable Items="@_viewingUser.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                        <ToolBarContent>
-                            <MudSpacer/>
-                            <MudText Typo="Typo.h6">Assigned Permissions</MudText>
-                            <MudSpacer/>
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh></MudTh>
-                            <MudTh>Name</MudTh>
-                            <MudTh>Description</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
-                            <MudTd DataLabel="Description">@context.Description</MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                </MudItem>
-            }
+        <MudPaper Elevation="8" Class="d-flex ma-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Roles</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_viewingUser.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
         </MudPaper>
     }
-    @if (_editMode)
+    @if (_canViewPermissions)
     {
-        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save" 
-                       OnClick="@Save">Save
-            </MudButton>
-        </MudItem>
+        <MudPaper Elevation="8" Class="d-flex ma-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Permissions</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_viewingUser.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
     }
 }

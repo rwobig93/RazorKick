@@ -13,23 +13,34 @@
             Account Settings
         </MudNavLink>
     </MudPaper>
+    <MudPaper Elevation="5" Class="d-flex mb-4">
+        <MudExpansionPanel Text="Quick Settings" Class="d-flex flex-column align-center">
+            @* TODO: Bind switches to new preferences *@
+            <MudItem Class="py-2">
+                <MudSwitch @bind-Checked="_testToggleOne" Class="mud-theme-secondary rounded-pill" Label="Menu Expand On Hover"/>
+            </MudItem>
+            <MudItem Class="py-2">
+                <MudSwitch @bind-Checked="_testToggleTwo" Class="mud-theme-secondary rounded-pill" Label="Gear Avatar "/>
+            </MudItem>
+        </MudExpansionPanel>
+    </MudPaper>
     <MudPaper Elevation="5">
-        <MudItem Class="d-flex flex-column align-center pa-2">
-            <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
-        </MudItem>
-        <MudItem Class="d-flex flex-column align-center pb-2">
-            @foreach (var theme in AvailableThemes)
-            {
-                <div class="px-2">
+        <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
+            <MudItem>
+                <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
+            </MudItem>
+            <MudItem Class="d-flex flex-column align-center">
+                @foreach (var theme in AvailableThemes)
+                {
                     <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
                         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
                                    OnClick="@((e) => ChangeThemeOnLayout(theme))">
                             @theme.FriendlyName
                         </MudButton>
                     </MudTooltip>
-                </div>
-            }
-        </MudItem>
+                }
+            </MudItem>
+        </MudExpansionPanel>
     </MudPaper>
     <MudSpacer/>
     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-8 mud-text-align-center">

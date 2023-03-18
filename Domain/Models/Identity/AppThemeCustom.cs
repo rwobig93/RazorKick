@@ -17,7 +17,7 @@ public class AppThemeCustom
     {
         return new AppThemeCustom
         {
-            ThemeName = "Example Custom 1",
+            ThemeName = "Custom 1",
             ThemeDescription = "I'm a bit uhm... custom ;)",
             ColorPrimary = "#C9E302",
             ColorSecondary = "#EB7003",
@@ -34,7 +34,7 @@ public class AppThemeCustom
     {
         return new AppThemeCustom
         {
-            ThemeName = "Example Custom 2",
+            ThemeName = "Custom 2",
             ThemeDescription = "Pink Cyberpunk Homegirl!",
             ColorPrimary = "#EA00CE",
             ColorSecondary = "#AD00EA",
@@ -51,7 +51,7 @@ public class AppThemeCustom
     {
         return new AppThemeCustom
         {
-            ThemeName = "Example Custom 3",
+            ThemeName = "Custom 3",
             ThemeDescription = "I work part time as a Lasik machine",
             ColorPrimary = "#00FFD8",
             ColorSecondary = "#00FF00",

@@ -2,12 +2,14 @@
 using Application.Api.v1.Identity;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Services.System;
 using Hangfire;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -73,12 +75,16 @@ public static class WebServerConfiguration
     private static void SetupRunningServerState(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
+        
         #if DEBUG
             serverState.IsRunningInDebugMode = true;
         #else
             serverState.IsRunningInDebugMode = false;
         #endif
+        
+        serverState.ApplicationName = configuration.GetApplicationSettings().ApplicationName;
     }
 
     private static void ValidateDatabaseStructure(this IHost app)

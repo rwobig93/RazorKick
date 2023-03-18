@@ -4,8 +4,8 @@
 @attribute [Route(AppRouteConstants.Admin.Users)]
 
 <MudContainer>
-    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12">
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
+        <MudItem xs="16" sm="20" md="28" lg="36">
             <MudTable ServerData="@(new Func<TableState, Task<TableData<AppUserDb>>>(ServerReload))"
                       Dense="true" Hover="true" @ref="_table" MultiSelection="true" @bind-SelectedItems="_selectedItems">
                 <ToolBarContent>
@@ -34,7 +34,7 @@
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh></MudTh>
-                    <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserDb">Id</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserDb">Id (Last 4)</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserDb">Username</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="Email" T="AppUserDb">Email</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortLabel="EmailConfirmed" T="AppUserDb">Email Confirmed</MudTableSortLabel></MudTh>
@@ -48,7 +48,7 @@
                             </MudButton>
                         </MudTooltip>
                     </MudTd>
-                    <MudTd DataLabel="Id">@context.Id</MudTd>
+                    <MudTd DataLabel="Id">@context.Id.ToString()[(context.Id.ToString().Length - 4)..]</MudTd>
                     <MudTd DataLabel="Username">@context.Username</MudTd>
                     <MudTd DataLabel="Email">@context.Email</MudTd>
                     <MudTd DataLabel="EmailConfirmed">@context.EmailConfirmed</MudTd>

@@ -1,7 +1,7 @@
 ﻿@attribute [Route(AppRouteConstants.Index)]
 
 <MudContainer>
-    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
         <MudItem xs="12" sm="12" md="12">
             <div class="d-flex justify-center mt-4">
                 <MudIcon Icon="@Icons.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
@@ -9,7 +9,7 @@
         </MudItem>
         <MudItem xs="12" sm="12" md="12">
             <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
-                Hello @_loggedInUser.Username! Welcome to @ApplicationName!
+                Hello @_loggedInUser.Username! Welcome to @ServerState.ApplicationName!
             </MudText>
         </MudItem>
         @if (_canViewApi)
@@ -34,7 +34,7 @@
         }
         <MudItem xs="12" sm="12" md="12">
             <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
-                @ApplicationName is a work in progress, more to come!
+                @ServerState.ApplicationName is a work in progress, more to come!
             </MudAlert>
         </MudItem>
         <MudExpansionPanel Class="mud-theme-appbar-background" Text="Documentation" MaxHeight="150">

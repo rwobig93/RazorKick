@@ -1,11 +1,13 @@
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Models.Database;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Shared.Enums.Identity;
 
@@ -17,16 +19,18 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
+    private readonly IConfiguration _configuration;
 
     private readonly Dictionary<Guid, DatabaseEntityType> _systemOwnedEntities = new();
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IAppPermissionRepository permissionRepository)
+        IAppPermissionRepository permissionRepository, IConfiguration configuration)
     {
         _logger = logger;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
+        _configuration = configuration;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -34,16 +38,24 @@ public class SqlDatabaseSeederService : IHostedService
         _logger.Debug("Starting to seed database");
         await SeedDatabaseRoles();
         await SeedDatabaseUsers();
+        await EnforceSystemOwnedEntitiesCreatedBy();
         _logger.Information("Finished seeding database");
     }
 
     private async Task SeedDatabaseRoles()
     {
-        var adminRole = await CreateOrGetSeedRole(RoleConstants.AdminRoleName, RoleConstants.AdminRoleDescription);
+        var adminRole = await CreateOrGetSeedRole(
+            RoleConstants.DefaultRoles.AdminName, RoleConstants.DefaultRoles.AdminDescription);
         if (adminRole.Success)
             await EnforcePermissionsForRole(adminRole.Result!.Id, PermissionConstants.GetAllPermissions());
+        
+        var moderatorRole = await CreateOrGetSeedRole(
+            RoleConstants.DefaultRoles.ModeratorName, RoleConstants.DefaultRoles.ModeratorDescription);
+        if (moderatorRole.Success)
+            await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionConstants.GetModeratorRolePermissions());
 
-        var defaultRole = await CreateOrGetSeedRole(RoleConstants.DefaultRoleName, RoleConstants.DefaultRoleDescription);
+        var defaultRole = await CreateOrGetSeedRole(
+            RoleConstants.DefaultRoles.DefaultName, RoleConstants.DefaultRoles.DefaultDescription);
         if (defaultRole.Success)
             await EnforcePermissionsForRole(defaultRole.Result!.Id, PermissionConstants.GetDefaultRolePermissions());
     }
@@ -51,28 +63,38 @@ public class SqlDatabaseSeederService : IHostedService
     private async Task SeedDatabaseUsers()
     {
         var adminUser = await CreateOrGetSeedUser(
-            UserConstants.DefaultAdminUsername, UserConstants.DefaultAdminFirstName, UserConstants.DefaultAdminLastName,
-            UserConstants.DefaultAdminEmail, UserConstants.DefaultAdminPassword);
+            UserConstants.DefaultUsers.AdminUsername, UserConstants.DefaultUsers.AdminFirstName, UserConstants.DefaultUsers.AdminLastName,
+            UserConstants.DefaultUsers.AdminEmail, UserConstants.DefaultUsers.AdminPassword);
         if (adminUser.Success)
-            await EnforceRolesForUser(adminUser.Result!.Id, new List<string>() {RoleConstants.AdminRoleName});
-        
-        var basicUser = await CreateOrGetSeedUser(
-            UserConstants.DefaultBasicUsername, UserConstants.DefaultBasicFirstName, UserConstants.DefaultBasicLastName,
-            UserConstants.DefaultBasicEmail, UserConstants.DefaultBasicPassword);
-        if (basicUser.Success)
-            await EnforceRolesForUser(basicUser.Result!.Id, new List<string>() {RoleConstants.DefaultRoleName});
+            await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
+
+        if (_configuration.GetApplicationSettings().EnforceNonSystemAndAdminAccounts)
+        {
+            var moderatorUser = await CreateOrGetSeedUser(
+                UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,
+                UserConstants.DefaultUsers.ModeratorLastName, UserConstants.DefaultUsers.ModeratorEmail, UserConstants.DefaultUsers.ModeratorPassword);
+            if (moderatorUser.Success)
+                await EnforceRolesForUser(moderatorUser.Result!.Id, RoleConstants.GetModeratorRoleNames());
+            
+            var basicUser = await CreateOrGetSeedUser(
+                UserConstants.DefaultUsers.BasicUsername, UserConstants.DefaultUsers.BasicFirstName, UserConstants.DefaultUsers.BasicLastName,
+                UserConstants.DefaultUsers.BasicEmail, UserConstants.DefaultUsers.BasicPassword);
+            if (basicUser.Success)
+                await EnforceRolesForUser(basicUser.Result!.Id, RoleConstants.GetDefaultRoleNames());
+        }
         
         var anonymousUser = await CreateOrGetSeedUser(
-            UserConstants.DefaultAnonymousUsername, UserConstants.DefaultAnonymousFirstName, UserConstants.DefaultAnonymousLastName,
-            UserConstants.DefaultAnonymousEmail, UrlHelpers.GenerateToken(64));
+            UserConstants.DefaultUsers.AnonymousUsername, UserConstants.DefaultUsers.AnonymousFirstName,
+            UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
         if (anonymousUser.Success)
             await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
         
+        // System user needs to be enforced last
         var systemUser = await CreateOrGetSeedUser(
-            UserConstants.DefaultSystemUsername, UserConstants.DefaultSystemFirstName, UserConstants.DefaultSystemLastName,
-            UserConstants.DefaultSystemEmail, UrlHelpers.GenerateToken(64));
+            UserConstants.DefaultUsers.SystemUsername, UserConstants.DefaultUsers.SystemFirstName, UserConstants.DefaultUsers.SystemLastName,
+            UserConstants.DefaultUsers.SystemEmail, UrlHelpers.GenerateToken(64));
         if (systemUser.Success)
-            await EnforceSystemOwnedEntitiesCreatedBy();
+            await EnforceRolesForUser(systemUser.Result!.Id, RoleConstants.GetDefaultRoleNames());
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -218,7 +240,7 @@ public class SqlDatabaseSeederService : IHostedService
 
     private async Task EnforceSystemOwnedEntitiesCreatedBy()
     {
-        var systemUser = await _userRepository.GetByEmailAsync(UserConstants.DefaultSystemEmail);
+        var systemUser = await _userRepository.GetByEmailAsync(UserConstants.DefaultUsers.SystemEmail);
         if (!systemUser.Success)
         {
             _logger.Error("Failed to get System User for owned entity enforcement: {ErrorMessage}", systemUser.ErrorMessage);

@@ -115,13 +115,19 @@ public partial class Login
     
     private void DebugFillAdminCreds()
     {
-        Username = UserConstants.DefaultAdminUsername;
-        Password = UserConstants.DefaultAdminPassword;
+        Username = UserConstants.DefaultUsers.AdminUsername;
+        Password = UserConstants.DefaultUsers.AdminPassword;
+    }
+    
+    private void DebugFillModeratorCreds()
+    {
+        Username = UserConstants.DefaultUsers.ModeratorUsername;
+        Password = UserConstants.DefaultUsers.ModeratorPassword;
     }
     
     private void DebugFillBasicCreds()
     {
-        Username = UserConstants.DefaultBasicUsername;
-        Password = UserConstants.DefaultBasicPassword;
+        Username = UserConstants.DefaultUsers.BasicUsername;
+        Password = UserConstants.DefaultUsers.BasicPassword;
     }
 }

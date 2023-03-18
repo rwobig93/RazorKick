@@ -24,7 +24,8 @@ public static class PermissionConstants
     public static class Permissions
     {
         public const string View = "Permissions.Native.Permissions.View";
-        public const string Edit = "Permissions.Native.Permissions.Edit";
+        public const string Add = "Permissions.Native.Permissions.Add";
+        public const string Remove = "Permissions.Native.Permissions.Remove";
     }
     
     public static class Preferences
@@ -65,6 +66,25 @@ public static class PermissionConstants
         return (from prop in typeof(PermissionConstants).GetNestedTypes().SelectMany(
             c => c.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)) 
             select prop.GetValue(null) into propertyValue where propertyValue is not null select propertyValue.ToString()!).ToList();
+    }
+
+    public static List<string> GetModeratorRolePermissions()
+    {
+        return new List<string>()
+        {
+            Jobs.View,
+            Permissions.View,
+            Permissions.Add,
+            Permissions.Remove,
+            Roles.View,
+            Roles.Edit,
+            Roles.Create,
+            Roles.Delete,
+            Users.View,
+            Users.Edit,
+            Users.Create,
+            Users.Delete
+        };
     }
 
     public static List<string> GetDefaultRolePermissions()

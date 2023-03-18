@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
@@ -28,7 +29,8 @@ public partial class UserView
     private bool _canViewRoles;
     private bool _canEditRoles;
     private bool _canViewPermissions;
-    private bool _canEditPermissions;
+    private bool _canAddPermissions;
+    private bool _canRemovePermissions;
     private string _editButtonText = "Enable Edit Mode";
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -90,7 +92,8 @@ public partial class UserView
         _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
         _canEditRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Edit);
         _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
-        _canEditPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Edit);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
     }
 
     private async Task Save()
@@ -103,5 +106,10 @@ public partial class UserView
     {
         _editMode = !_editMode;
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo(AppRouteConstants.Admin.Users);
     }
 }

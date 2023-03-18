@@ -4,6 +4,7 @@ using System.Security.Principal;
 using Application.Constants.Web;
 using Application.Models.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using TestBlazorServerApp.Settings;
@@ -13,13 +14,12 @@ namespace TestBlazorServerApp.Shared;
 public partial class MainLayout
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
+    [Inject] private IRunningServerState ServerState { get; set; } = null!;
     public AppUserPreferenceFull _userPreferences = new();
     public ClaimsPrincipal CurrentUser { get; set; } = new();
-    public List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
+    public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
     private AppUserFull UserFull { get; set; } = new();
-    
-    private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
     private bool _settingsDrawerOpen;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

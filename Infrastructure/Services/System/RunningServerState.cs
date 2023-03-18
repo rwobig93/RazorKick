@@ -5,4 +5,5 @@ namespace Infrastructure.Services.System;
 public class RunningServerState : IRunningServerState
 {
     public bool IsRunningInDebugMode { get; set; }
+    public string ApplicationName { get; set; } = "";
 }

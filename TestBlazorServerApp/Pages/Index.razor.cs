@@ -4,6 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Microsoft.AspNetCore.Components;
 using Shared.Responses.Identity;
 
@@ -13,8 +14,7 @@ public partial class Index
 {
     [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-
-    private static string ApplicationName => Assembly.GetExecutingAssembly().GetName().Name ?? "TestBlazorServerApp";
+    [Inject] private IRunningServerState ServerState { get; init; } = null!;
     private string BaseUrl => NavManager.BaseUri;
     private UserBasicResponse _loggedInUser = new();
     
