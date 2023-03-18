@@ -23,10 +23,19 @@ public partial class Index
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        try
         {
-            await UpdateLoggedInUser();
-            await GetPermissions();
+            if (firstRender)
+            {
+                await UpdateLoggedInUser();
+                await GetPermissions();
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect due to being unauthorized
+            await AccountService.LogoutGuiAsync();
             StateHasChanged();
         }
     }
@@ -40,19 +49,10 @@ public partial class Index
 
     private async Task UpdateLoggedInUser()
     {
-        try
-        {
-            var user = await CurrentUserService.GetCurrentUserBasic();
-            if (user is null)
-                return;
+        var user = await CurrentUserService.GetCurrentUserBasic();
+        if (user is null)
+            return;
 
-            _loggedInUser = user;
-        }
-        catch
-        {
-            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect
-            await AccountService.LogoutGuiAsync();
-            NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
-        }
+        _loggedInUser = user;
     }
 }

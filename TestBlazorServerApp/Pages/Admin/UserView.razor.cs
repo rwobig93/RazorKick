@@ -1,18 +1,15 @@
 using System.Security.Claims;
-using Application.Constants.Communication;
 using Application.Constants.Identity;
-using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Application.Services.System;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
-using Shared.Requests.Identity.User;
+using Microsoft.AspNetCore.WebUtilities;
 
-namespace TestBlazorServerApp.Components.Identity;
+namespace TestBlazorServerApp.Pages.Admin;
 
-public partial class UserViewDialog
+public partial class UserView
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
@@ -24,7 +21,8 @@ public partial class UserViewDialog
     private AppUserFull _viewingUser = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
-    
+
+    private bool _invalidDataProvided;
     private bool _editMode;
     private bool _canEditUsers;
     private bool _canViewRoles;
@@ -35,12 +33,38 @@ public partial class UserViewDialog
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        try
         {
-            await GetViewingUser();
-            await GetPermissions();
+            if (firstRender)
+            {
+                ParseParametersFromUri();
+                await GetViewingUser();
+                await GetPermissions();
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            _invalidDataProvided = true;
             StateHasChanged();
         }
+    }
+
+    private bool ParseParametersFromUri()
+    {
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+        
+        if (queryParameters.TryGetValue("userId", out var queryUserId))
+        {
+            var providedIdIsValid = Guid.TryParse(queryUserId, out var parsedUserId);
+            if (!providedIdIsValid)
+                throw new InvalidDataException("Invalid UserId provided for user view");
+            
+            UserId = parsedUserId;
+        }
+
+        return true;
     }
 
     private async Task GetViewingUser()
@@ -79,10 +103,5 @@ public partial class UserViewDialog
     {
         _editMode = !_editMode;
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
-    }
-
-    private void Close()
-    {
-        MudDialog.Close();
     }
 }

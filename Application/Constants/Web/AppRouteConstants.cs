@@ -28,9 +28,10 @@ public static class AppRouteConstants
 
     public static class Admin
     {
-        public const string UserAdmin = "/admin/users";
-        public const string RoleAdmin = "/admin/roles";
-        public const string PermissionAdmin = "/admin/permissions";
+        public const string Users = "/admin/users";
+        public const string UserView = "/admin/user/view";
+        public const string Roles = "/admin/roles";
+        public const string Permissions = "/admin/permissions";
     }
 
     public static class Api

@@ -1,9 +1,11 @@
-﻿using Application.Models.Identity;
+﻿using Application.Constants.Web;
+using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
@@ -138,9 +140,7 @@ public partial class UserAdmin
 
     private void ViewUser(Guid userId)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() { { "UserId", userId } };
-
-        DialogService.Show<UserViewDialog>("View User", dialogParameters, dialogOptions);
+        var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.UserView, "userId", userId.ToString());
+        NavManager.NavigateTo(viewUserUri, true);
     }
 }
