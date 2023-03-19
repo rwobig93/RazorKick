@@ -19,6 +19,8 @@ public static class PermissionConstants
         public const string Create = "Permissions.Native.Roles.Create";
         public const string Edit = "Permissions.Native.Roles.Edit";
         public const string Delete = "Permissions.Native.Roles.Delete";
+        public const string Add = "Permissions.Native.Roles.Add";
+        public const string Remove = "Permissions.Native.Roles.Remove";
     }
 
     public static class Permissions

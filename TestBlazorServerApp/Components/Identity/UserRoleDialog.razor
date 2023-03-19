@@ -1,0 +1,34 @@
+@using Application.Constants.Identity
+
+@attribute [Authorize(PermissionConstants.Users.Edit)]
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center">
+    <DialogContent>
+        <MudTabs>
+            @if (_canRemoveRoles)
+            {
+                <MudTabPanel Text="Assigned">
+
+                </MudTabPanel>
+            }
+            @if (_canAddRoles)
+            {
+                <MudTabPanel Text="Available">
+
+                </MudTabPanel>
+            }
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Cancel">Cancel
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="Save">Save
+            </MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

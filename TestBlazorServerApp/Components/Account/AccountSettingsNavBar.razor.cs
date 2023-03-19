@@ -4,7 +4,7 @@ using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Components.Account;
 
-public partial class AccountSettingsMenu
+public partial class AccountSettingsNavBar
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     private UserBasicResponse CurrentUser { get; set; } = new();

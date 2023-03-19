@@ -1,7 +1,9 @@
 ﻿@using TestBlazorServerApp.Components.Account
 @using Domain.DatabaseEntities.Identity
+@using Application.Constants.Identity
 
 @attribute [Route(AppRouteConstants.Admin.Users)]
+@attribute [Authorize(PermissionConstants.Users.View)]
 
 <MudContainer>
     <MudGrid Class="pa-4 justify-center mud-text-align-center">
