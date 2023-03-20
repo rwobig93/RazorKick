@@ -7,6 +7,7 @@ using Application.Services.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -111,5 +112,13 @@ public partial class UserView
     private void GoBack()
     {
         NavManager.NavigateTo(AppRouteConstants.Admin.Users);
+    }
+
+    private void EditRoles()
+    {
+        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
     }
 }
