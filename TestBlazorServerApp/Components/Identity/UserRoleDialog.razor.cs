@@ -25,6 +25,7 @@ public partial class UserRoleDialog
     private List<AppRoleDb> _availableRoles = new();
     private HashSet<AppRoleDb> _addRoles = new();
     private HashSet<AppRoleDb> _removeRoles = new();
+    private Guid _currentUserId;
     private bool _canRemoveRoles;
     private bool _canAddRoles;
     
@@ -41,6 +42,7 @@ public partial class UserRoleDialog
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
         _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
     }
@@ -71,7 +73,7 @@ public partial class UserRoleDialog
                 return;
             }
 
-            _availableRoles = allRoles.Result!.Except(userRoles.Result!).ToList();
+            _availableRoles = allRoles.Result!.Where(x => userRoles.Result!.All(r => r.Id != x.Id)).ToList();
         }
     }
 
@@ -104,7 +106,7 @@ public partial class UserRoleDialog
 
         foreach (var role in _assignedRoles.Where(role => currentRoles.Result!.All(x => x.Id != role.Id)))
         {
-            var addRole = await RoleRepository.AddUserToRoleAsync(UserId, role.Id);
+            var addRole = await RoleRepository.AddUserToRoleAsync(UserId, role.Id, _currentUserId);
             if (!addRole.Success)
             {
                 Snackbar.Add(addRole.ErrorMessage, Severity.Error);
@@ -116,7 +118,7 @@ public partial class UserRoleDialog
 
         foreach (var role in currentRoles.Result!.Where(role => _assignedRoles.All(x => x.Id != role.Id)))
         {
-            var removeRole = await RoleRepository.RemoveUserFromRoleAsync(UserId, role.Id);
+            var removeRole = await RoleRepository.RemoveUserFromRoleAsync(UserId, role.Id, _currentUserId);
             if (!removeRole.Success)
             {
                 Snackbar.Add(removeRole.ErrorMessage, Severity.Error);
@@ -131,6 +133,6 @@ public partial class UserRoleDialog
 
     private void Cancel()
     {
-        MudDialog.Close();
+        MudDialog.Cancel();
     }
 }

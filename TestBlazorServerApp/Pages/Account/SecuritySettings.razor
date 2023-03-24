@@ -9,6 +9,9 @@
 <MudContainer>
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
         <MudPaper Width="98%" Class="pa-4 mb-3">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Change Password</MudText>
+            </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2">
                 <MudTextField @bind-Value="CurrentPassword" Label="Current Password" Variant="Variant.Outlined" InputType="@_passwordCurrentInput"
                               Adornment="Adornment.End" AdornmentIcon="@_passwordCurrentInputIcon" OnAdornmentClick="@ToggleCurrentPasswordVisibility"

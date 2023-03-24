@@ -295,7 +295,7 @@ public class AppIdentityService : IAppIdentityService
                 continue;
             }
 
-            var removeResult = (await _roleRepository.RemoveUserFromRoleAsync(requestedUser.Id, foundRole.Id)).Success;
+            var removeResult = (await _roleRepository.RemoveUserFromRoleAsync(requestedUser.Id, foundRole.Id, currentUser.Id)).Success;
             if (!removeResult)
             {
                 resultList.Add(IdentityResult.Failed(new IdentityError()

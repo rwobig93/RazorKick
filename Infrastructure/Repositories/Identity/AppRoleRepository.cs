@@ -1,8 +1,10 @@
-﻿using Application.Database.MsSql.Identity;
+﻿using System.Runtime.CompilerServices;
+using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 
@@ -12,11 +14,13 @@ public class AppRoleRepository : IAppRoleRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppRoleRepository(ISqlDataService database, ILogger logger)
+    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync()
@@ -141,13 +145,14 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
             await _database.SaveData(AppRoles.Delete, new {Id = id});
+            // TODO: Inject modifyingUserId into auditing
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -194,13 +199,35 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId)
+    public async Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, string roleName)
+    {
+        DatabaseActionResult<bool> actionReturn = new();
+
+        try
+        {
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
+                AppRoles.GetByName, new {Name = roleName})).FirstOrDefault();
+            var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
+                AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = foundRole!.Name})).FirstOrDefault();
+            var hasRole = userRoleJunction is not null;
+            actionReturn.Succeed(hasRole);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, "IsUserInRoleAsync_RoleName", ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
+            await UpdateLastModifiedUserRole(userId, roleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -211,13 +238,14 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
+    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
+            await UpdateLastModifiedUserRole(userId, roleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -248,5 +276,14 @@ public class AppRoleRepository : IAppRoleRepository
         }
 
         return actionReturn;
+    }
+
+    private async Task UpdateLastModifiedUserRole(Guid userId, Guid roleId, Guid modifyingUserId)
+    {
+        // TODO: Add last modifying to all remaining repositories
+        await _database.SaveData(AppUsers.Update,
+            new {Id = userId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
+        await _database.SaveData(AppRoles.Update,
+            new {Id = roleId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
     }
 }

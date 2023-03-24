@@ -81,9 +81,6 @@ public partial class UserView
         }
         
         _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Result?.Username;
-        // public List<AppRoleDb> Roles { get; set; } = new();
-        // public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
-        // public List<AppPermissionDb> Permissions { get; set; } = new();
     }
 
     private async Task GetPermissions()
@@ -114,11 +111,17 @@ public partial class UserView
         NavManager.NavigateTo(AppRouteConstants.Admin.Users);
     }
 
-    private void EditRoles()
+    private async Task EditRoles()
     {
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialog = DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        {
+            await GetViewingUser();
+            StateHasChanged();
+        }
     }
 }

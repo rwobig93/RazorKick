@@ -3,6 +3,7 @@ using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.Role;
@@ -93,14 +94,15 @@ public static class RoleEndpoints
         }
     }
 
-    private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleRepository repository)
+    private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleRepository repository, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUser = await currentUserService.GetApiCurrentUserId();
             var roleResponse = (await repository.GetByIdAsync(roleId)).Result;
             if (roleResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
-            
-            await repository.DeleteAsync(roleId);
+
+            await repository.DeleteAsync(roleId, currentUser);
             return await Result.SuccessAsync("Successfully deleted role!");
         }
         catch (Exception ex)
@@ -124,11 +126,12 @@ public static class RoleEndpoints
         }
     }
 
-    private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleRepository repository)
+    private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleRepository repository, ICurrentUserService currentUserService)
     {
         try
         {
-            var roleResponse = await repository.AddUserToRoleAsync(userId, roleId);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var roleResponse = await repository.AddUserToRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Success) return await Result<bool>.FailAsync(roleResponse.ErrorMessage);
             
             return await Result<bool>.SuccessAsync("Successfully added user to role!");
@@ -139,11 +142,12 @@ public static class RoleEndpoints
         }
     }
 
-    private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleRepository repository)
+    private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleRepository repository, ICurrentUserService currentUserService)
     {
         try
         {
-            var roleResponse = await repository.RemoveUserFromRoleAsync(userId, roleId);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var roleResponse = await repository.RemoveUserFromRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Success) return await Result<bool>.FailAsync(roleResponse.ErrorMessage);
             
             return await Result<bool>.SuccessAsync("Successfully removes user from role!");

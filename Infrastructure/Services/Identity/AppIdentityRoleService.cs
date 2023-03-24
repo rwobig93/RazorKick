@@ -1,4 +1,5 @@
-﻿using Application.Models.Identity;
+﻿using Application.Constants.Identity;
+using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
@@ -9,10 +10,12 @@ namespace Infrastructure.Services.Identity;
 public class AppIdentityRoleService : IAppIdentityRoleService
 {
     private readonly IAppRoleRepository _roleRepository;
+    private readonly IAppUserRepository _userRepository;
 
-    public AppIdentityRoleService(IAppRoleRepository roleRepository)
+    public AppIdentityRoleService(IAppRoleRepository roleRepository, IAppUserRepository userRepository)
     {
         _roleRepository = roleRepository;
+        _userRepository = userRepository;
     }
 
     public void Dispose()
@@ -38,7 +41,8 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task<IdentityResult> DeleteAsync(AppRoleDb role, CancellationToken cancellationToken)
     {
-        var deleteRequest = await _roleRepository.DeleteAsync(role.Id);
+        var systemUser = await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
+        var deleteRequest = await _roleRepository.DeleteAsync(role.Id, systemUser.Result!.Id);
         return !deleteRequest.Success ? 
             IdentityResult.Failed(new IdentityError() {Code = "RoleDeleteFail", Description = deleteRequest.ErrorMessage}) : 
             IdentityResult.Success;

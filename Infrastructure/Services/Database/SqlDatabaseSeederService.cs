@@ -94,7 +94,7 @@ public class SqlDatabaseSeederService : IHostedService
             UserConstants.DefaultUsers.SystemUsername, UserConstants.DefaultUsers.SystemFirstName, UserConstants.DefaultUsers.SystemLastName,
             UserConstants.DefaultUsers.SystemEmail, UrlHelpers.GenerateToken(64));
         if (systemUser.Success)
-            await EnforceRolesForUser(systemUser.Result!.Id, RoleConstants.GetDefaultRoleNames());
+            await EnforceRolesForUser(systemUser.Result!.Id, RoleConstants.GetAdminRoleNames());
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -209,7 +209,7 @@ public class SqlDatabaseSeederService : IHostedService
                 continue;
             
             var foundRole = await _roleRepository.GetByNameAsync(role);
-            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id);
+            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id, Guid.Empty);
             
             _logger.Debug("Added missing role {RoleId} to user {UserId}", foundRole.Result.Id, userId);
         }
