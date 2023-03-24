@@ -65,10 +65,10 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppRoles]
                 where Id = @Id
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     
@@ -81,10 +81,10 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(256)
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppRoles]
                 where Name = @Name
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     
@@ -97,10 +97,10 @@ public class AppRoles : ISqlEnforcedEntityMsSql
                 @NormalizedName NVARCHAR(256)
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppRoles]
                 where NormalizedName = @NormalizedName
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     

@@ -47,10 +47,10 @@ public class Books : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select Id, Name, Author
+                SELECT TOP 1 Id, Name, Author
                 from dbo.[Books]
                 where Id = @Id
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     

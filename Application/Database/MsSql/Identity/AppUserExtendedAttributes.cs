@@ -62,10 +62,10 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
+                SELECT TOP 1 Id, OwnerId, Name, Value, Type
                 from dbo.[AppUserExtendedAttributes]
                 where Id = @Id
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     

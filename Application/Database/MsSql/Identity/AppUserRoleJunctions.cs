@@ -95,11 +95,11 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId AND
                       RoleId = @RoleId
-                LIMIT 1;
+                ORDER BY UserId;
             end"
     };
     

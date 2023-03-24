@@ -62,10 +62,10 @@ public class BookReviews : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select Id, BookId, Author, Content
+                SELECT TOP 1 Id, BookId, Author, Content
                 from dbo.[BookReviews]
                 where Id = @Id AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     

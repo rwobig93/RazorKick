@@ -99,7 +99,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where Email = @Email AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -115,7 +115,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where Email = @Email AND IsDeleted = 1
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -131,7 +131,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where NormalizedEmail = @NormalizedEmail AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -144,10 +144,10 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppUsers]
                 where Id = @Id AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -163,7 +163,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where Username = @Username AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -179,7 +179,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where Username = @Username AND IsDeleted = 1
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 
@@ -195,7 +195,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUsers]
                 where NormalizedUsername = @NormalizedUsername AND IsDeleted = 0
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
 

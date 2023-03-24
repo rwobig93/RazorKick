@@ -45,10 +45,10 @@ public class BookGenres : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select Id, Name, Value
+                SELECT TOP 1 Id, Name, Value
                 from dbo.[BookGenres]
                 where Name = @Id
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     
@@ -61,10 +61,10 @@ public class BookGenres : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(50)
             AS
             begin
-                select Id, Name, Value
+                SELECT TOP 1 Id, Name, Value
                 from dbo.[BookGenres]
                 where Name = @Name
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     

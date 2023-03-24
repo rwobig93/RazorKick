@@ -98,10 +98,10 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppPermissions]
                 where Id = @Id
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     
@@ -114,10 +114,10 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(256)
             AS
             begin
-                select *
+                SELECT TOP 1 *
                 from dbo.[AppPermissions]
                 where Name = @Name
-                LIMIT 1;
+                ORDER BY Id;
             end"
     };
     
