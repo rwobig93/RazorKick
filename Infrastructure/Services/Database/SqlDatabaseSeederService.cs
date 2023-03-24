@@ -251,6 +251,7 @@ public class SqlDatabaseSeederService : IHostedService
         {
             switch (ownedEntity.Value)
             {
+                // TODO: Initial DB seed is failing w/ object not set to instance of an object error
                 case DatabaseEntityType.User:
                     await EnforceUserCreatedBySystem(ownedEntity.Key, systemUser.Result!.Id);
                     break;
