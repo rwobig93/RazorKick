@@ -30,7 +30,7 @@ else
         @if (_canAddPermissions || _canRemovePermissions)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.PermIdentity"
-                       OnClick="ToggleEditMode">Edit Permissions
+                       OnClick="EditPermissions">Edit Permissions
             </MudButton>
         }
         @if (_editMode)
@@ -74,6 +74,7 @@ else
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
     </MudPaper>
+    @* TODO: Add ExtendedAttributes view if viewer has permission *@
     @if (_canViewRoles)
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
@@ -100,7 +101,7 @@ else
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Permissions</MudText>
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Directly Assigned Permissions</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudTable Items="@_viewingUser.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">

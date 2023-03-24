@@ -139,7 +139,7 @@ public class SqlDatabaseSeederService : IHostedService
 
             var convertedPermission = permission.ToAppPermissionCreate();
             convertedPermission.RoleId = roleId;
-            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission);
+            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission, Guid.Empty);
             if (!addedPermission.Success)
             {
                 _logger.Error("Failed to enforce permission {PermissionValue} on role {RoleId}: {ErrorMessage}",

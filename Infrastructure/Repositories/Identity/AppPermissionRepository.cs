@@ -3,6 +3,7 @@ using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 
@@ -12,11 +13,13 @@ public class AppPermissionRepository : IAppPermissionRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppPermissionRepository(ISqlDataService database, ILogger logger)
+    public AppPermissionRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -247,7 +250,7 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
@@ -257,6 +260,7 @@ public class AppPermissionRepository : IAppPermissionRepository
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
 
             var createdId = await _database.SaveDataReturnId(AppPermissions.Insert, createObject);
+            await UpdateLastModifiedUserRole(createObject.UserId, createObject.RoleId, modifyingUserId);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -284,13 +288,15 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            var permission = await GetByIdAsync(id);
             await _database.SaveData(AppPermissions.Delete, new {Id = id});
+            await UpdateLastModifiedUserRole(permission.Result!.UserId, permission.Result!.RoleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -355,5 +361,22 @@ public class AppPermissionRepository : IAppPermissionRepository
         }
 
         return actionReturn;
+    }
+
+    private async Task UpdateLastModifiedUserRole(Guid? userId, Guid? roleId, Guid modifyingUserId)
+    {
+        if (userId is not null)
+        {
+            await _database.SaveData(AppUsers.Update,
+                new {Id = userId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
+            return;
+        }
+
+        if (roleId is not null)
+        {
+            await _database.SaveData(AppRoles.Update,
+                new {Id = roleId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
+            return;
+        }
     }
 }

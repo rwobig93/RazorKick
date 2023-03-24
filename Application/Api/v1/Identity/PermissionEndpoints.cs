@@ -3,6 +3,7 @@ using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.Permission;
@@ -63,14 +64,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionRepository repository)
+    private static async Task<IResult> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionRepository repository,
+        ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var createRequest = permissionRequest.ToCreate();
             createRequest.CreatedBy = Guid.Empty;
             
-            var result = await repository.CreateAsync(createRequest);
+            var result = await repository.CreateAsync(createRequest, currentUserId);
             if (!result.Success)
                 return await Result.FailAsync(result.ErrorMessage);
             
@@ -82,14 +85,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionRepository repository)
+    private static async Task<IResult> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionRepository repository,
+        ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var createRequest = permissionRequest.ToCreate();
             createRequest.CreatedBy = Guid.Empty;
             
-            var result = await repository.CreateAsync(createRequest);
+            var result = await repository.CreateAsync(createRequest, currentUserId);
             if (!result.Success)
                 return await Result.FailAsync(result.ErrorMessage);
             
@@ -117,14 +122,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> DeletePermission(Guid permissionId, IAppPermissionRepository repository)
+    private static async Task<IResult> DeletePermission(Guid permissionId, IAppPermissionRepository repository,
+        ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var permissionResponse = (await repository.GetByIdAsync(permissionId)).Result;
             if (permissionResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
             
-            await repository.DeleteAsync(permissionId);
+            await repository.DeleteAsync(permissionId, currentUserId);
             return await Result.SuccessAsync("Successfully deleted permission!");
         }
         catch (Exception ex)
@@ -174,16 +181,17 @@ public static class PermissionEndpoints
     }
 
     private static async Task<IResult> RemovePermissionFromUser(PermissionRemoveFromUserRequest permissionRequest, IAppPermissionRepository 
-    repository)
+    repository, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var foundPermission =
                 await repository.GetByUserIdAndValueAsync(permissionRequest.UserId, permissionRequest.PermissionValue);
             if (foundPermission.Success)
                 return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id);
+            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id, currentUserId);
             if (!permissionResponse.Success) return await Result<bool>.FailAsync(permissionResponse.ErrorMessage);
             
             return await Result<bool>.SuccessAsync("Successfully removes user from permission!");
@@ -195,16 +203,17 @@ public static class PermissionEndpoints
     }
 
     private static async Task<IResult> RemovePermissionFromRole(PermissionRemoveFromRoleRequest permissionRequest, IAppPermissionRepository 
-    repository)
+    repository, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var foundPermission =
                 await repository.GetByRoleIdAndValueAsync(permissionRequest.RoleId, permissionRequest.PermissionValue);
             if (foundPermission.Success)
                 return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id);
+            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id, currentUserId);
             if (!permissionResponse.Success) return await Result<bool>.FailAsync(permissionResponse.ErrorMessage);
             
             return await Result<bool>.SuccessAsync("Successfully removes user from permission!");

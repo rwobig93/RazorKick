@@ -14,13 +14,15 @@ public class AppUserRepository : IAppUserRepository
 {
     private readonly ISqlDataService _database;
     private readonly IAppRoleRepository _roleRepository;
+    private readonly IAppPermissionRepository _permissionRepository;
     private readonly ILogger _logger;
 
-    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger)
+    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger, IAppPermissionRepository permissionRepository)
     {
         _database = database;
         _roleRepository = roleRepository;
         _logger = logger;
+        _permissionRepository = permissionRepository;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
@@ -91,6 +93,9 @@ public class AppUserRepository : IAppUserRepository
 
             var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
             fullUser.ExtendedAttributes = foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>();
+
+            var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(foundUser!.Id);
+            fullUser.Permissions = foundPermissions.Result?.ToList() ?? new List<AppPermissionDb>();
 
             actionReturn.Succeed(fullUser);
         }

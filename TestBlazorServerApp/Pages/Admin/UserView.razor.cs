@@ -124,4 +124,18 @@ public partial class UserView
             StateHasChanged();
         }
     }
+
+    private async Task EditPermissions()
+    {
+        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        {
+            await GetViewingUser();
+            StateHasChanged();
+        }
+    }
 }

@@ -14,7 +14,7 @@ public class AppPermissionCreate
     public string Access { get; set; } = "";
     public string Description { get; set; } = "";
     public Guid CreatedBy { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
 }
@@ -67,7 +67,7 @@ public static class AppPermissionCreateExtensions
             Name = permissionName,
             Group = permissionGroup,
             Access = permissionAccess,
-            Description = $"{permissionAccess} access to {permissionName} {permissionGroup}",
+            Description = $"{permissionAccess} access to {permissionName}",
             CreatedBy = Guid.Empty,
             CreatedOn = DateTime.Now,
             LastModifiedBy = null,
