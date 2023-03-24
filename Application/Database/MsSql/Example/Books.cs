@@ -49,7 +49,8 @@ public class Books : ISqlEnforcedEntityMsSql
             begin
                 select Id, Name, Author
                 from dbo.[Books]
-                where Id = @Id;
+                where Id = @Id
+                LIMIT 1;
             end"
     };
     

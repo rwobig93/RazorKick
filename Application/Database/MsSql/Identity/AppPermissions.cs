@@ -100,7 +100,8 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppPermissions]
-                where Id = @Id;
+                where Id = @Id
+                LIMIT 1;
             end"
     };
     
@@ -115,7 +116,8 @@ public class AppPermissions : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppPermissions]
-                where Name = @Name;
+                where Name = @Name
+                LIMIT 1;
             end"
     };
     

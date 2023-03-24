@@ -79,7 +79,8 @@ public class AppUserPreferences : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUserPreferences]
-                where Id = @Id;
+                where Id = @Id
+                LIMIT 1;
             end"
     };
     

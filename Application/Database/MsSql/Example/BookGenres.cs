@@ -47,7 +47,8 @@ public class BookGenres : ISqlEnforcedEntityMsSql
             begin
                 select Id, Name, Value
                 from dbo.[BookGenres]
-                where Name = @Id;
+                where Name = @Id
+                LIMIT 1;
             end"
     };
     
@@ -62,7 +63,8 @@ public class BookGenres : ISqlEnforcedEntityMsSql
             begin
                 select Id, Name, Value
                 from dbo.[BookGenres]
-                where Name = @Name;
+                where Name = @Name
+                LIMIT 1;
             end"
     };
     

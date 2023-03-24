@@ -64,7 +64,8 @@ public class BookReviews : ISqlEnforcedEntityMsSql
             begin
                 select Id, BookId, Author, Content
                 from dbo.[BookReviews]
-                where Id = @Id AND IsDeleted = 0;
+                where Id = @Id AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
     

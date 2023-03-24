@@ -98,7 +98,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Email = @Email AND IsDeleted = 0;
+                where Email = @Email AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
 
@@ -113,7 +114,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Email = @Email AND IsDeleted = 1;
+                where Email = @Email AND IsDeleted = 1
+                LIMIT 1;
             end"
     };
 
@@ -128,7 +130,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where NormalizedEmail = @NormalizedEmail AND IsDeleted = 0;
+                where NormalizedEmail = @NormalizedEmail AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
 
@@ -143,7 +146,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Id = @Id AND IsDeleted = 0;
+                where Id = @Id AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
 
@@ -158,7 +162,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Username = @Username AND IsDeleted = 0;
+                where Username = @Username AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
 
@@ -173,7 +178,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where Username = @Username AND IsDeleted = 1;
+                where Username = @Username AND IsDeleted = 1
+                LIMIT 1;
             end"
     };
 
@@ -188,7 +194,8 @@ public class AppUsers : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppUsers]
-                where NormalizedUsername = @NormalizedUsername AND IsDeleted = 0;
+                where NormalizedUsername = @NormalizedUsername AND IsDeleted = 0
+                LIMIT 1;
             end"
     };
 

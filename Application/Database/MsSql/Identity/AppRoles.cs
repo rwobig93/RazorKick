@@ -67,7 +67,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppRoles]
-                where Id = @Id;
+                where Id = @Id
+                LIMIT 1;
             end"
     };
     
@@ -82,7 +83,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppRoles]
-                where Name = @Name;
+                where Name = @Name
+                LIMIT 1;
             end"
     };
     
@@ -97,7 +99,8 @@ public class AppRoles : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[AppRoles]
-                where NormalizedName = @NormalizedName;
+                where NormalizedName = @NormalizedName
+                LIMIT 1;
             end"
     };
     

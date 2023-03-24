@@ -98,7 +98,8 @@ public class AppUserRoleJunctions : ISqlEnforcedEntityMsSql
                 select *
                 from dbo.[AppUserRoleJunctions]
                 where UserId = @UserId AND
-                      RoleId = @RoleId;
+                      RoleId = @RoleId
+                LIMIT 1;
             end"
     };
     

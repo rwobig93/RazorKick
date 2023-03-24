@@ -64,7 +64,8 @@ public class AppUserExtendedAttributes : ISqlEnforcedEntityMsSql
             begin
                 select Id, OwnerId, Name, Value, Type
                 from dbo.[AppUserExtendedAttributes]
-                where Id = @Id;
+                where Id = @Id
+                LIMIT 1;
             end"
     };
     
