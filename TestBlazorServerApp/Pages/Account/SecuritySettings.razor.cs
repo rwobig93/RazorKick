@@ -1,10 +1,6 @@
-﻿using System.Security.Claims;
-using Application.Helpers.Identity;
-using Application.Models.Identity;
+﻿using Application.Helpers.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Domain.DatabaseEntities.Identity;
-using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Shared.Responses.Identity;
 

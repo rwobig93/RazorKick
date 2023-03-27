@@ -1,6 +1,4 @@
-using Application.Constants.Communication;
 using Application.Constants.Identity;
-using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
@@ -8,7 +6,6 @@ using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Components;
-using Shared.Requests.Identity.User;
 
 namespace TestBlazorServerApp.Components.Identity;
 

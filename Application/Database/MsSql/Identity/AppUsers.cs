@@ -258,6 +258,7 @@ public class AppUsers : ISqlEnforcedEntityMsSql
                 where FirstName LIKE '%' + @SearchTerm + '%'
                     OR LastName LIKE '%' + @SearchTerm + '%'
                     OR Email LIKE '%' + @SearchTerm + '%'
+                    OR Id LIKE '%' + @SearchTerm + '%'
                 AND IsDeleted = 0;
             end"
     };

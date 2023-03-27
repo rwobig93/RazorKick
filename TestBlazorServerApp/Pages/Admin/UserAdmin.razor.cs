@@ -1,12 +1,10 @@
 ﻿using Application.Constants.Web;
-using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -19,7 +17,7 @@ public partial class UserAdmin
     private IEnumerable<AppUserDb> _pagedData = new List<AppUserDb>();
     private HashSet<AppUserDb> _selectedItems = new();
     private string _searchString = "";
-    private int _totalUsers = 0;
+    private int _totalUsers;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -53,42 +51,27 @@ public partial class UserAdmin
         
         data = data.Where(user =>
         {
-            if (string.IsNullOrWhiteSpace(_searchString))
-                return true;
-            if (user.Username.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.Email!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.FirstName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.LastName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.Id.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
+            if (string.IsNullOrWhiteSpace(_searchString)) return true;
+            if (user.Username.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+            if (user.Email!.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+            if (user.FirstName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+            if (user.LastName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+            if (user.Id.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
             
             return false;
         }).ToArray();
         
         _totalUsers = data.Count();
-        
-        switch (state.SortLabel)
+
+        data = state.SortLabel switch
         {
-            case "Id":
-                data = data.OrderByDirection(state.SortDirection, o => o.Id);
-                break;
-            case "Username":
-                data = data.OrderByDirection(state.SortDirection, o => o.Username);
-                break;
-            case "Email":
-                data = data.OrderByDirection(state.SortDirection, o => o.Email);
-                break;
-            case "EmailConfirmed":
-                data = data.OrderByDirection(state.SortDirection, o => o.EmailConfirmed);
-                break;
-            case "IsActive":
-                data = data.OrderByDirection(state.SortDirection, o => o.IsActive);
-                break;
-        }
+            "Id" => data.OrderByDirection(state.SortDirection, o => o.Id),
+            "Username" => data.OrderByDirection(state.SortDirection, o => o.Username),
+            "Email" => data.OrderByDirection(state.SortDirection, o => o.Email),
+            "EmailConfirmed" => data.OrderByDirection(state.SortDirection, o => o.EmailConfirmed),
+            "IsActive" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
+            _ => data
+        };
 
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         

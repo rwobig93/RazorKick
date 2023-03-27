@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Application.Database.MsSql.Identity;
+﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;

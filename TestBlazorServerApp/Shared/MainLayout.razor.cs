@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Security.Principal;
 using Application.Constants.Web;
 using Application.Models.Identity;
