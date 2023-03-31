@@ -8,6 +8,7 @@ namespace Domain.DatabaseEntities.Identity;
 
 public class AppUserDb : IdentityUser<Guid>, IAuditableEntity<Guid>
 {
+    // TODO: Add bad password attempt count, locked out state, force reauthenticate, force token regen
     public override Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;
@@ -20,8 +21,10 @@ public class AppUserDb : IdentityUser<Guid>, IAuditableEntity<Guid>
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
+    // TODO: Change to IsEnabled
     public bool IsActive { get; set; }
     public string? RefreshToken { get; set; }
+    // TODO: Change to FullLoginRequiredTime
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
 }

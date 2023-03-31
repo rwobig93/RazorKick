@@ -1,4 +1,5 @@
 using Application.Constants.Identity;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
@@ -20,8 +21,8 @@ public partial class UserPermissionDialog
     [Parameter] public Guid UserId { get; set; }
     
     private List<AppPermissionDb> _assignedPermissions = new();
-    private List<AppPermissionDb> _availablePermissions = new();
-    private HashSet<AppPermissionDb> _addPermissions = new();
+    private List<AppPermissionCreate> _availablePermissions = new();
+    private HashSet<AppPermissionCreate> _addPermissions = new();
     private HashSet<AppPermissionDb> _removePermissions = new();
     private Guid _currentUserId;
     private bool _canRemovePermissions;
@@ -59,28 +60,54 @@ public partial class UserPermissionDialog
 
         if (_canRemovePermissions)
         {
-            _assignedPermissions = userPermissions.Result!.ToList();
+            _assignedPermissions = userPermissions.Result!
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access)
+                .ToList();
         }
 
         if (_canAddPermissions)
         {
-            var allPermissions = await PermissionRepository.GetAllAsync();
-            if (!allPermissions.Success)
-            {
-                Snackbar.Add(allPermissions.ErrorMessage, Severity.Error);
-                return;
-            }
+            var allPermissions = PermissionConstants.GetAllPermissions().ToAppPermissionCreates();
 
-            _availablePermissions = allPermissions.Result!.Where(x => userPermissions.Result!.All(r => r.Id != x.Id)).ToList();
+            _availablePermissions = allPermissions
+                .Except(userPermissions.Result!.ToCreates(), new PermissionCreateComparer())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access)
+                .ToList();;
         }
     }
+    
+    private readonly TableGroupDefinition<AppPermissionDb> _groupDefinitionDb = new()
+    {
+        GroupName = "Category",
+        Indentation = false,
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = (p) => p.Name
+    };
+    
+    private readonly TableGroupDefinition<AppPermissionCreate> _groupDefinitionCreate = new()
+    {
+        GroupName = "Category",
+        Indentation = false,
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = (p) => p.Name
+    };
 
     private void AddPermissions()
     {
         foreach (var permission in _addPermissions)
         {
             _availablePermissions.Remove(permission);
-            _assignedPermissions.Add(permission);
+            
+            var permissionConverted = permission.ToDb();
+            permissionConverted.CreatedBy = _currentUserId;
+
+            _assignedPermissions.Add(permissionConverted);
         }
     }
 
@@ -89,7 +116,11 @@ public partial class UserPermissionDialog
         foreach (var permission in _removePermissions)
         {
             _assignedPermissions.Remove(permission);
-            _availablePermissions.Add(permission);
+            
+            var permissionConverted = permission.ToCreate();
+            permissionConverted.CreatedBy = _currentUserId;
+            
+            _availablePermissions.Add(permissionConverted);
         }
     }
     

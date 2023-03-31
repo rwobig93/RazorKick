@@ -14,6 +14,7 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
@@ -42,10 +43,12 @@ public class AppAccountService : IAppAccountService
     private readonly AuthStateProvider _authProvider;
     private readonly HttpClient _httpClient;
     private readonly UserManager<AppUserDb> _userManager;
+    private readonly IDateTimeService _dateTime;
+    private readonly ICurrentUserService _currentUserService;
 
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IFluentEmail mailService, UserManager<AppUserDb> userManager)
+        IFluentEmail mailService, UserManager<AppUserDb> userManager, IDateTimeService dateTime, ICurrentUserService currentUserService)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
@@ -56,6 +59,8 @@ public class AppAccountService : IAppAccountService
         _httpClient = httpClientFactory.CreateClient("Default");
         _mailService = mailService;
         _userManager = userManager;
+        _dateTime = dateTime;
+        _currentUserService = currentUserService;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -76,7 +81,7 @@ public class AppAccountService : IAppAccountService
 
         user.RefreshToken = GenerateRefreshToken();
         user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_appConfig.TokenExpirationDays);
-        var update = await _userRepository.UpdateAsync(user.ToUpdateObject());
+        var update = await _userRepository.UpdateAsync(user.ToUpdateObject(), Guid.Empty);
         if (!update.Success)
             return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
 
@@ -152,7 +157,7 @@ public class AppAccountService : IAppAccountService
         createUser.NormalizedUserName = createUser.Username.NormalizeForDatabase();
         createUser.NormalizedEmail = createUser.Email.NormalizeForDatabase();
 
-        return await _userRepository.CreateAsync(createUser);
+        return await _userRepository.CreateAsync(createUser, Guid.Empty);
     }
 
     public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
@@ -257,7 +262,7 @@ public class AppAccountService : IAppAccountService
         foundUser.EmailConfirmed = true;
         foundUser.IsActive = true;
         var userUpdate = foundUser.ToUpdateObject();
-        var confirmEmail = await _userRepository.UpdateAsync(userUpdate);
+        var confirmEmail = await _userRepository.UpdateAsync(userUpdate, Guid.Empty);
         if (!confirmEmail.Success)
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
@@ -268,13 +273,15 @@ public class AppAccountService : IAppAccountService
 
     public async Task SetUserPassword(Guid userId, string newPassword)
     {
+        var submittingUserId = await _currentUserService.GetApiCurrentUserId();
+        
         var updateObject = new AppUserUpdate() { Id = userId };
         
         AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
         updateObject.PasswordSalt = salt;
         updateObject.PasswordHash = hash;
         
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, submittingUserId);
     }
 
     public async Task<bool> IsPasswordCorrect(Guid userId, string password)
@@ -371,7 +378,7 @@ public class AppAccountService : IAppAccountService
             return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
         user.RefreshToken = GenerateRefreshToken();
-        var update = await _userRepository.UpdateAsync(user.ToUpdateObject());
+        var update = await _userRepository.UpdateAsync(user.ToUpdateObject(), Guid.Empty);
         if (!update.Success)
             return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
 
@@ -401,13 +408,15 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled)
     {
+        var submittingUserId = await _currentUserService.GetApiCurrentUserId();
+        
         var user = await _userRepository.GetByIdAsync(userId);
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
         
         user.Result!.IsActive = enabled;
 
-        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdateObject());
+        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdateObject(), submittingUserId);
         if (!updateRequest.Success)
             return await Result.FailAsync(updateRequest.ErrorMessage);
 

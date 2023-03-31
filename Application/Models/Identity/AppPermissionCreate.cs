@@ -1,4 +1,5 @@
 using Application.Helpers.Identity;
+using Domain.DatabaseEntities.Identity;
 using Shared.Requests.Identity.Permission;
 
 namespace Application.Models.Identity;
@@ -21,6 +22,50 @@ public class AppPermissionCreate
 
 public static class AppPermissionCreateExtensions
 {
+    public static AppPermissionCreate ToCreate(this AppPermissionDb permissionDb)
+    {
+        return new AppPermissionCreate
+        {
+            RoleId = permissionDb.RoleId,
+            UserId = permissionDb.UserId,
+            ClaimType = permissionDb.ClaimType,
+            ClaimValue = permissionDb.ClaimValue,
+            Name = permissionDb.Name,
+            Group = permissionDb.Group,
+            Access = permissionDb.Access,
+            Description = permissionDb.Description,
+            CreatedBy = permissionDb.CreatedBy,
+            CreatedOn = permissionDb.CreatedOn,
+            LastModifiedBy = permissionDb.LastModifiedBy,
+            LastModifiedOn = permissionDb.LastModifiedOn
+        };
+    }
+
+    public static List<AppPermissionCreate> ToCreates(this IEnumerable<AppPermissionDb> permissionDbs)
+    {
+        return permissionDbs.Select(x => x.ToCreate()).ToList();
+    }
+
+    public static AppPermissionDb ToDb(this AppPermissionCreate permissionCreate)
+    {
+        return new AppPermissionDb
+        {
+            RoleId = permissionCreate.RoleId,
+            ClaimType = permissionCreate.ClaimType,
+            ClaimValue = permissionCreate.ClaimValue,
+            Id = Guid.Empty,
+            UserId = permissionCreate.UserId,
+            Name = permissionCreate.Name,
+            Group = permissionCreate.Group,
+            Access = permissionCreate.Access,
+            Description = permissionCreate.Description,
+            CreatedBy = permissionCreate.CreatedBy,
+            CreatedOn = permissionCreate.CreatedOn,
+            LastModifiedBy = permissionCreate.LastModifiedBy,
+            LastModifiedOn = permissionCreate.LastModifiedOn
+        };
+    }
+    
     public static AppPermissionCreate ToCreate(this PermissionCreateForRoleRequest permissionCreate)
     {
         return new AppPermissionCreate
@@ -73,5 +118,10 @@ public static class AppPermissionCreateExtensions
             LastModifiedBy = null,
             LastModifiedOn = null
         };
+    }
+
+    public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<string> permissionValues)
+    {
+        return permissionValues.Select(x => x.ToAppPermissionCreate()).ToList();
     }
 }

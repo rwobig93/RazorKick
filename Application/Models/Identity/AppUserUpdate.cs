@@ -67,10 +67,28 @@ public static class AppUserUpdateExtensions
         return new AppUserUpdate
         {
             Id = appUser.Id,
+            Username = null,
+            NormalizedUserName = null,
+            Email = null,
+            NormalizedEmail = null,
+            EmailConfirmed = null,
+            PasswordHash = null,
+            PasswordSalt = null,
+            PhoneNumber = null,
+            PhoneNumberConfirmed = null,
+            TwoFactorEnabled = null,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            LastModifiedBy = null,
+            LastModifiedOn = null,
+            IsDeleted = null,
+            DeletedOn = null,
             IsActive = appUser.IsActive,
+            RefreshToken = null,
+            RefreshTokenExpiryTime = null,
+            AccountType = AccountType.User,
+
         };
     }
 
@@ -92,14 +110,15 @@ public static class AppUserUpdateExtensions
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            LastModifiedBy = null,
+            LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = null,
             IsDeleted = null,
             DeletedOn = null,
-            IsActive = null,
+            IsActive = appUser.IsActive,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
-            AccountType = AccountType.User
+            AccountType = AccountType.User,
+
         };
     }
 }

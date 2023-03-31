@@ -6,44 +6,47 @@ public static class PermissionConstants
 {
     public static class Users
     {
-        public const string View = "Permissions.Native.Users.View";
-        public const string Create = "Permissions.Native.Users.Create";
-        public const string Edit = "Permissions.Native.Users.Edit";
-        public const string Delete = "Permissions.Native.Users.Delete";
-        public const string Export = "Permissions.Native.Users.Export";
+        public const string View = "Permissions.Identity.Users.View";
+        public const string Create = "Permissions.Identity.Users.Create";
+        public const string Edit = "Permissions.Identity.Users.Edit";
+        public const string Delete = "Permissions.Identity.Users.Delete";
+        public const string Export = "Permissions.Identity.Users.Export";
+        public const string Enable = "Permissions.Identity.Users.Enable";
+        public const string Disable = "Permissions.Identity.Users.Disable";
+        public const string ResetPassword = "Permissions.Identity.Users.ResetPassword";
     }
 
     public static class Roles
     {
-        public const string View = "Permissions.Native.Roles.View";
-        public const string Create = "Permissions.Native.Roles.Create";
-        public const string Edit = "Permissions.Native.Roles.Edit";
-        public const string Delete = "Permissions.Native.Roles.Delete";
-        public const string Add = "Permissions.Native.Roles.Add";
-        public const string Remove = "Permissions.Native.Roles.Remove";
+        public const string View = "Permissions.Identity.Roles.View";
+        public const string Create = "Permissions.Identity.Roles.Create";
+        public const string Edit = "Permissions.Identity.Roles.Edit";
+        public const string Delete = "Permissions.Identity.Roles.Delete";
+        public const string Add = "Permissions.Identity.Roles.Add";
+        public const string Remove = "Permissions.Identity.Roles.Remove";
     }
 
     public static class Permissions
     {
-        public const string View = "Permissions.Native.Permissions.View";
-        public const string Add = "Permissions.Native.Permissions.Add";
-        public const string Remove = "Permissions.Native.Permissions.Remove";
+        public const string View = "Permissions.Identity.Permissions.View";
+        public const string Add = "Permissions.Identity.Permissions.Add";
+        public const string Remove = "Permissions.Identity.Permissions.Remove";
     }
     
     public static class Preferences
     {
-        public const string ChangeTheme = "Permissions.Native.Preferences.ChangeTheme";
+        public const string ChangeTheme = "Permissions.Identity.Preferences.ChangeTheme";
     }
 
     public static class Jobs
     {
-        public const string View = "Permissions.Native.Jobs.View";
-        public const string Status = "Permissions.Native.Jobs.Status";
+        public const string View = "Permissions.System.Jobs.View";
+        public const string Status = "Permissions.System.Jobs.Status";
     }
 
     public static class Api
     {
-        public const string View = "Permissions.Native.Api.View";
+        public const string View = "Permissions.System.Api.View";
     }
 
     public static class Example
@@ -54,9 +57,9 @@ public static class PermissionConstants
 
     public static class Audit
     {
-        public const string View = "Permissions.Native.Audit.View";
-        public const string Export = "Permissions.Native.Audit.Export";
-        public const string Search = "Permissions.Native.Audit.Search";
+        public const string View = "Permissions.System.Audit.View";
+        public const string Export = "Permissions.System.Audit.Export";
+        public const string Search = "Permissions.System.Audit.Search";
     }
     
     /// <summary>
@@ -85,7 +88,10 @@ public static class PermissionConstants
             Users.View,
             Users.Edit,
             Users.Create,
-            Users.Delete
+            Users.Delete,
+            Users.Disable,
+            Users.Enable,
+            Users.ResetPassword
         };
     }
 

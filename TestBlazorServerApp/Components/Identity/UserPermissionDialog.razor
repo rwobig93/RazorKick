@@ -1,16 +1,30 @@
 @using Application.Constants.Identity
+@using Application.Models.Identity
 @using Domain.DatabaseEntities.Identity
 
 @attribute [Authorize(PermissionConstants.Users.Edit)]
 
-<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center">
+<style>
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+</style>
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center" ContentStyle="max-height: 600px; overflow-y: scroll">
     <DialogContent>
         <MudTabs Centered="true" Border="true" Elevation="20" Rounded="true">
             @if (_canRemovePermissions)
             {
                 <MudTabPanel Text="Assigned">
-                    <MudTable Items="@_assignedPermissions" Hover="true" Dense="true" Striped="true" @bind-SelectedItems="_removePermissions" 
-                       MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" Height="400px">
+                    <MudTable Items="@_assignedPermissions" Hover="true" Dense="false" Striped="true" 
+                    @bind-SelectedItems="_removePermissions" 
+                              MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" GroupBy="@_groupDefinitionDb"
+                              GroupHeaderStyle="background-color:var(--mud-palette-background-grey)" Height="400px">
                         <ToolBarContent>
                             <MudContainer Class="d-flex flex-wrap gap-4">
                                 <MudText Typo="Typo.h6">Assigned Permissions</MudText>
@@ -19,6 +33,18 @@
                                            Disabled="@(_removePermissions.Count < 1)" OnClick="RemovePermissions">Remove</MudButton>
                             </MudContainer>
                         </ToolBarContent>
+                        <ColGroup>
+                            <col style="width: 60px;" />
+                            @if (_groupDefinitionDb.Expandable)
+                            {
+                                <col style="width: 60px;" />
+                            }
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </ColGroup>
                         <HeaderContent>
                             @* TODO: Convert items to ServerData function to allow sort label functionality *@
                             <MudTh></MudTh>
@@ -27,6 +53,9 @@
                             <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionDb">Access</MudTableSortLabel></MudTh>
                             <MudTh>Description</MudTh>
                         </HeaderContent>
+                        <GroupHeaderTemplate>
+                            <MudTh colspan="5">@($"{context.GroupName}: {context.Key}")</MudTh>
+                        </GroupHeaderTemplate>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
                             <MudTd DataLabel="Group">@context.Group</MudTd>
@@ -40,8 +69,10 @@
             @if (_canAddPermissions)
             {
                 <MudTabPanel Text="Available">
-                    <MudTable Items="@_availablePermissions" Hover="true" Dense="true" Striped="true" @bind-SelectedItems="_addPermissions" 
-                    MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" Height="400px">
+                    <MudTable Items="@_availablePermissions" Hover="true" Dense="false" Striped="true" 
+                    @bind-SelectedItems="_addPermissions" 
+                              MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" GroupBy="@_groupDefinitionCreate"
+                              GroupHeaderStyle="background-color:var(--mud-palette-background-grey)" Height="400px">
                         <ToolBarContent>
                             <MudContainer Class="d-flex flex-wrap gap-4">
                                 <MudText Typo="Typo.h6">Available Permissions</MudText>
@@ -50,13 +81,28 @@
                                            Disabled="@(_addPermissions.Count < 1)" OnClick="AddPermissions">Add</MudButton>
                             </MudContainer>
                         </ToolBarContent>
+                        <ColGroup>
+                            <col style="width: 60px;" />
+                            @if (_groupDefinitionCreate.Expandable)
+                            {
+                                <col style="width: 60px;" />
+                            }
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </ColGroup>
                         <HeaderContent>
                             <MudTh></MudTh>
                             <MudTh><MudTableSortLabel SortLabel="Group" T="AppPermissionDb">Group</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortLabel="Name" T="AppPermissionDb">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="Name" T="AppPermissionDb">Category</MudTableSortLabel></MudTh>
                             <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionDb">Access</MudTableSortLabel></MudTh>
                             <MudTh>Description</MudTh>
                         </HeaderContent>
+                        <GroupHeaderTemplate>
+                            <MudTh colspan="5">@($"{context.GroupName}: {context.Key}")</MudTh>
+                        </GroupHeaderTemplate>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
                             <MudTd DataLabel="Group">@context.Group</MudTd>

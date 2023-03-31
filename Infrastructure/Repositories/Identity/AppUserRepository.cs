@@ -3,6 +3,7 @@ using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
@@ -16,13 +17,17 @@ public class AppUserRepository : IAppUserRepository
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly ILogger _logger;
+    private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
 
-    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger, IAppPermissionRepository permissionRepository)
+    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger, IAppPermissionRepository permissionRepository, IDateTimeService dateTime, IRunningServerState serverState)
     {
         _database = database;
         _roleRepository = roleRepository;
         _logger = logger;
         _permissionRepository = permissionRepository;
+        _dateTime = dateTime;
+        _serverState = serverState;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
@@ -89,13 +94,23 @@ public class AppUserRepository : IAppUserRepository
             var fullUser = foundUser!.ToFullObject();
 
             var foundRoles = await _roleRepository.GetRolesForUser(foundUser!.Id);
-            fullUser.Roles = foundRoles.Result?.ToList() ?? new List<AppRoleDb>();
+            fullUser.Roles = (foundRoles.Result?.ToList() ?? new List<AppRoleDb>())
+                .OrderBy(x => x.Name)
+                .ToList();
 
             var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
-            fullUser.ExtendedAttributes = foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>();
+            fullUser.ExtendedAttributes = (foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>())
+                .OrderBy(x => x.Type)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Value)
+                .ToList();
 
             var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(foundUser!.Id);
-            fullUser.Permissions = foundPermissions.Result?.ToList() ?? new List<AppPermissionDb>();
+            fullUser.Permissions = (foundPermissions.Result?.ToList() ?? new List<AppPermissionDb>())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access)
+                .ToList();
 
             actionReturn.Succeed(fullUser);
         }
@@ -179,12 +194,17 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject)
+    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, Guid updateUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+            
+            // Guid.Empty will be passed for things like login - we will just set this to the system user
+            updateObject.LastModifiedBy = updateUserId == Guid.Empty ? _serverState.SystemUserId : updateUserId;
+            
             await _database.SaveData(AppUsers.Update, updateObject);
             actionReturn.Succeed();
         }
@@ -265,12 +285,16 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, Guid createdById)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
+            createObject.CreatedBy = createdById;
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
+            createObject.RefreshTokenExpiryTime = _dateTime.NowDatabaseTime;
+            
             var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
             actionReturn.Succeed(createdId);
         }

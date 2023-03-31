@@ -136,10 +136,13 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> CreateUser(UserCreateRequest userRequest, IAppUserRepository repository, IAppAccountService accountService)
+    private static async Task<IResult> CreateUser(UserCreateRequest userRequest, IAppUserRepository repository, IAppAccountService 
+    accountService, ICurrentUserService currentUserService)
     {
         try
         {
+            var submittingUserId = await currentUserService.GetApiCurrentUserId();
+            
             var passwordMeetsRequirements = accountService.PasswordMeetsRequirements(userRequest.Password);
             if (!passwordMeetsRequirements)
                 return await Result.FailAsync("Password provided doesn't meet the requirements");
@@ -147,7 +150,7 @@ public static class UserEndpoints
             var createRequest = userRequest.ToCreateObject();
             createRequest.CreatedBy = Guid.Empty;
             
-            var result = await repository.CreateAsync(createRequest);
+            var result = await repository.CreateAsync(createRequest, submittingUserId);
             if (!result.Success)
                 return await Result.FailAsync(result.ErrorMessage);
             
@@ -159,14 +162,16 @@ public static class UserEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateUser(UserUpdateRequest userRequest, IAppUserRepository repository)
+    private static async Task<IResult> UpdateUser(UserUpdateRequest userRequest, IAppUserRepository repository, ICurrentUserService currentUserService)
     {
         try
         {
+            var submittingUserId = await currentUserService.GetApiCurrentUserId();
+
             var userResponse = (await repository.GetByIdAsync(userRequest.Id)).Result;
             if (userResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
             
-            await repository.UpdateAsync(userRequest.ToUpdateObject());
+            await repository.UpdateAsync(userRequest.ToUpdateObject(), submittingUserId);
             return await Result.SuccessAsync("Successfully updated user!");
         }
         catch (Exception ex)

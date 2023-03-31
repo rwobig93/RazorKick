@@ -54,11 +54,11 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.CreatedOn" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingUser.CreatedOn" Format="@_dateDisplayFormat" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_modifiedByUsername" Label="Last Modified By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.LastModifiedOn" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingUser.LastModifiedOn" Format="@_dateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     <MudPaper Elevation="8" Class="d-flex flex-column justify-center ma-4 pa-4 gap-4">
@@ -70,7 +70,7 @@ else
             <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudCheckBox @bind-Checked="_viewingUser.IsActive" Label="Is Enabled" Disabled="@(!_editMode)" Class="pe-4"/>
+            <MudCheckBox @bind-Checked="_viewingUser.IsActive" Label="Is Enabled" Disabled="@(!_enableEditable)" Class="pe-4"/>
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
     </MudPaper>
@@ -107,12 +107,16 @@ else
                 <MudTable Items="@_viewingUser.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
                     <HeaderContent>
                         <MudTh></MudTh>
-                        <MudTh>Name</MudTh>
+                        <MudTh>Group</MudTh>
+                        <MudTh>Category</MudTh>
+                        <MudTh>Access</MudTh>
                         <MudTh>Description</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                        <MudTd DataLabel="Group">@context.Group</MudTd>
                         <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Access">@context.Access</MudTd>
                         <MudTd DataLabel="Description">@context.Description</MudTd>
                     </RowTemplate>
                 </MudTable>

@@ -48,7 +48,7 @@ public partial class AccountSettings
     private async Task UpdateAccount()
     {
         var updatedAccount = CurrentUser.ToUpdateObject();
-        var requestResult = await UserRepository.UpdateAsync(updatedAccount);
+        var requestResult = await UserRepository.UpdateAsync(updatedAccount, CurrentUser.Id);
         if (!requestResult.Success)
         {
             Snackbar.Add(requestResult.ErrorMessage, Severity.Error);

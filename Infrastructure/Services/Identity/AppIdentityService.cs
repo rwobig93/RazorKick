@@ -54,7 +54,7 @@ public class AppIdentityService : IAppIdentityService
             NormalizedUserName = newUserName.NormalizeForDatabase()
         };
         
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<string> GetNormalizedUserNameAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -66,14 +66,14 @@ public class AppIdentityService : IAppIdentityService
     {
         var updateObject = new AppUserUpdate() { Id = user.Id, NormalizedUserName = normalizedName };
         
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<IdentityResult> CreateAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         try
         {
-            await _userRepository.CreateAsync(user.ToCreateObject());
+            await _userRepository.CreateAsync(user.ToCreateObject(), Guid.Empty);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -89,7 +89,7 @@ public class AppIdentityService : IAppIdentityService
             var updateUser = user.ToUpdateObject();
             updateUser.LastModifiedOn = DateTime.Now;
 
-            await _userRepository.UpdateAsync(updateUser);
+            await _userRepository.UpdateAsync(updateUser, Guid.Empty);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -125,7 +125,7 @@ public class AppIdentityService : IAppIdentityService
     public async Task SetEmailAsync(AppUserDb user, string email, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, Email = email};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<string> GetEmailAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -141,7 +141,7 @@ public class AppIdentityService : IAppIdentityService
     public async Task SetEmailConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, EmailConfirmed = confirmed};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<AppUserDb> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
@@ -157,13 +157,13 @@ public class AppIdentityService : IAppIdentityService
     public async Task SetNormalizedEmailAsync(AppUserDb user, string normalizedEmail, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, NormalizedEmail = normalizedEmail};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task SetPhoneNumberAsync(AppUserDb user, string phoneNumber, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumber = phoneNumber};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<string> GetPhoneNumberAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -179,13 +179,13 @@ public class AppIdentityService : IAppIdentityService
     public async Task SetPhoneNumberConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumberConfirmed = confirmed};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task SetTwoFactorEnabledAsync(AppUserDb user, bool enabled, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, TwoFactorEnabled = enabled};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<bool> GetTwoFactorEnabledAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -196,7 +196,7 @@ public class AppIdentityService : IAppIdentityService
     public async Task SetPasswordHashAsync(AppUserDb user, string passwordHash, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate() {Id = user.Id, PasswordHash = passwordHash};
-        await _userRepository.UpdateAsync(updateObject);
+        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<string> GetPasswordHashAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -324,7 +324,8 @@ public class AppIdentityService : IAppIdentityService
 
         try
         {
-            await _userRepository.UpdateAsync(new AppUserUpdate(){ Id = requestedUser.Id, IsActive = activeRequest.IsActive});
+            await _userRepository.UpdateAsync(
+                new AppUserUpdate(){ Id = requestedUser.Id, IsActive = activeRequest.IsActive}, Guid.Empty);
             return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsActive}");
         }
         catch (Exception ex)
