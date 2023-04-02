@@ -1,12 +1,12 @@
 @using Application.Constants.Identity
 @using TestBlazorServerApp.Components.Shared
 
-@attribute [Route(AppRouteConstants.Admin.UserView)]
-@attribute [Authorize(PermissionConstants.Users.View)]
+@attribute [Route(AppRouteConstants.Admin.RoleView)]
+@attribute [Authorize(PermissionConstants.Roles.View)]
 
 @if (_invalidDataProvided)
 {
-    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid User ID provided"/>
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Role ID provided"/>
 }
 else
 {
@@ -14,17 +14,17 @@ else
         <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                    OnClick="GoBack">Go Back
         </MudButton>
-        @if (_canEditUsers)
+        @if (_canEditRoles)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                        OnClick="ToggleEditMode">@_editButtonText
             </MudButton>
         }
-        @if (_canEditRoles)
+        @if (_canAddRoles || _canRemoveRoles)
         {
             // TODO: Add edit roles and permissions methods to open dialogs
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.PermContactCalendar"
-                       OnClick="EditRoles">Edit Roles
+                       OnClick="EditUserMembership">Edit Users
             </MudButton>
         }
         @if (_canAddPermissions || _canRemovePermissions)
@@ -43,31 +43,24 @@ else
     @* TODO: Revisit conveying editable fields, maybe add primary color to editable when edit mode==true, then enable all fields *@
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Account Properties</MudText>
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Role Properties</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingUser.Id" Label="ID" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.EmailAddress" Label="Email Address" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.Id" Label="ID" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingUser.Username" Label="Username" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.AccountType" Label="Account Type" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.Name" Label="Username" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingUser.FirstName" Label="First Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudCheckBox @bind-Checked="_viewingUser.IsActive" Label="Is Enabled" Disabled="@(!_enableEditable)" Class="pe-4"/>
-            <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_viewingRole.Description" Label="First Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.CreatedOn" Format="@DateDisplayFormat" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.CreatedOn" Format="@DateDisplayFormat" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_modifiedByUsername" Label="Last Modified By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.LastModifiedOn" Format="@DateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.LastModifiedOn" Format="@DateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     @* TODO: Add ExtendedAttributes view if viewer has permission *@
@@ -78,7 +71,7 @@ else
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Roles</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudTable Items="@_viewingUser.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                <MudTable Items="@_viewingRole.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
                     <HeaderContent>
                         <MudTh></MudTh>
                         <MudTh>Name</MudTh>
@@ -100,7 +93,7 @@ else
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Directly Assigned Permissions</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudTable Items="@_viewingUser.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                <MudTable Items="@_viewingRole.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
                     <HeaderContent>
                         <MudTh></MudTh>
                         <MudTh>Group</MudTh>

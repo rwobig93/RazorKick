@@ -110,6 +110,24 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText)
+    {
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults =
+                await _database.LoadData<AppRoleDb, dynamic>(AppRoles.Search, new { SearchTerm = searchText });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppRoles.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
@@ -127,7 +145,7 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
+    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, Guid updateUserId)
     {
         DatabaseActionResult actionReturn = new();
 
@@ -272,6 +290,28 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, "GetRolesForUser", ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetUsersForRole(Guid roleId)
+    {
+        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
+
+        try
+        {
+            var userIds = await _database.LoadData<Guid, dynamic>(
+                AppUserRoleJunctions.GetUsersOfRole, new {RoleId = roleId});
+
+            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
+            var matchingUsers = allUsers.Where(x => userIds.Any(u => u == x.Id));
+
+            actionReturn.Succeed(matchingUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, "GetUsersForRole", ex.Message);
         }
 
         return actionReturn;

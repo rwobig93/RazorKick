@@ -174,6 +174,6 @@ public partial class UserAdmin
     private void ViewUser(Guid userId)
     {
         var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.UserView, "userId", userId.ToString());
-        NavManager.NavigateTo(viewUserUri, true);
+        NavManager.NavigateTo(viewUserUri);
     }
 }

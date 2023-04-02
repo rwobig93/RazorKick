@@ -15,6 +15,7 @@ public partial class NavMenu
     private bool _canViewCounter;
     private bool _canViewWeather;
     private bool _canViewUsers;
+    private bool _canViewRoles;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -33,5 +34,6 @@ public partial class NavMenu
         _canViewCounter = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Example.Counter);
         _canViewWeather = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Example.Weather);
         _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.View);
+        _canViewRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.View);
     }
 }

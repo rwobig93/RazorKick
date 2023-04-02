@@ -5,6 +5,7 @@ using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -12,31 +13,29 @@ using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
-public partial class UserView
+public partial class RoleView
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
+    [Inject] private IAppRoleRepository RoleRepository { get; init; } = null!;
     [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     
-    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public Guid RoleId { get; set; }
 
     private ClaimsPrincipal _currentUser = new();
-    private AppUserFull _viewingUser = new();
+    private AppRoleDb _viewingRole = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
 
     private bool _invalidDataProvided;
     private bool _editMode;
-    private bool _canEditUsers;
-    private bool _canEnableUsers;
-    private bool _canDisableUsers;
-    private bool _canViewRoles;
     private bool _canEditRoles;
+    private bool _canAddRoles;
+    private bool _canRemoveRoles;
     private bool _canViewPermissions;
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
-    private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -46,7 +45,7 @@ public partial class UserView
             if (firstRender)
             {
                 ParseParametersFromUri();
-                await GetViewingUser();
+                await GetViewingRole();
                 await GetPermissions();
                 StateHasChanged();
             }
@@ -69,29 +68,27 @@ public partial class UserView
         if (!providedIdIsValid)
             throw new InvalidDataException("Invalid UserId provided for user view");
             
-        UserId = parsedUserId;
+        RoleId = parsedUserId;
     }
 
-    private async Task GetViewingUser()
+    private async Task GetViewingRole()
     {
-        _viewingUser = (await UserRepository.GetByIdFullAsync(UserId)).Result!;
-        _createdByUsername = (await UserRepository.GetByIdAsync(_viewingUser.CreatedBy)).Result?.Username;
-        if (_viewingUser.LastModifiedBy is null)
+        _viewingRole = (await RoleRepository.GetByIdAsync(RoleId)).Result!;
+        _createdByUsername = (await UserRepository.GetByIdAsync(_viewingRole.CreatedBy)).Result?.Username;
+        if (_viewingRole.LastModifiedBy is null)
         {
             _modifiedByUsername = "";
             return;
         }
         
-        _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Result?.Username;
+        _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Result?.Username;
     }
 
     private async Task GetPermissions()
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Edit);
-        _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Disable);
-        _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Enable);
-        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
+        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Remove);
         _canEditRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Edit);
         _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
@@ -102,7 +99,7 @@ public partial class UserView
     {
         var submittingUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
         
-        var updateResult = await UserRepository.UpdateAsync(_viewingUser.ToUpdateObject(), submittingUserId);
+        var updateResult = await RoleRepository.UpdateAsync(_viewingRole.ToUpdateObject(), submittingUserId);
         if (!updateResult.Success)
         {
             Snackbar.Add(updateResult.ErrorMessage, Severity.Error);
@@ -110,8 +107,8 @@ public partial class UserView
         }
         
         ToggleEditMode();
-        await GetViewingUser();
-        Snackbar.Add("User successfully updated!", Severity.Success);
+        await GetViewingRole();
+        Snackbar.Add("Role successfully updated!", Severity.Success);
         StateHasChanged();
     }
 
@@ -119,8 +116,8 @@ public partial class UserView
     {
         if (!_canDisableUsers && !_canEnableUsers) return false;
         if (_canDisableUsers && _canEnableUsers) return true;
-        if (_canDisableUsers && _viewingUser.IsActive) return true;
-        if (_canEnableUsers && !_viewingUser.IsActive) return true;
+        if (_canDisableUsers && _viewingRole.IsActive) return true;
+        if (_canEnableUsers && !_viewingRole.IsActive) return true;
 
         return false;
     }
@@ -135,33 +132,33 @@ public partial class UserView
 
     private void GoBack()
     {
-        NavManager.NavigateTo(AppRouteConstants.Admin.Users);
+        NavManager.NavigateTo(AppRouteConstants.Admin.Roles);
     }
 
-    private async Task EditRoles()
+    private async Task EditUserMembership()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
+        var dialogParameters = new DialogParameters() {{"UserId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && (bool)dialogResult.Data)
         {
-            await GetViewingUser();
+            await GetViewingRole();
             StateHasChanged();
         }
     }
 
     private async Task EditPermissions()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
+        var dialogParameters = new DialogParameters() {{"UserId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && (bool)dialogResult.Data)
         {
-            await GetViewingUser();
+            await GetViewingRole();
             StateHasChanged();
         }
     }

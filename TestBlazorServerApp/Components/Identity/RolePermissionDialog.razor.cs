@@ -10,15 +10,13 @@ using Microsoft.AspNetCore.Components;
 
 namespace TestBlazorServerApp.Components.Identity;
 
-public partial class UserPermissionDialog
+public partial class RolePermissionDialog
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
+    [Inject] private IAppRoleRepository RoleRepository { get; init; } = null!;
     [Inject] private IAppPermissionRepository PermissionRepository { get; init; } = null!;
 
-    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public Guid RoleId { get; set; }
     
     private List<AppPermissionDb> _assignedPermissions = new();
     private List<AppPermissionCreate> _availablePermissions = new();
@@ -51,16 +49,16 @@ public partial class UserPermissionDialog
         if (!_canRemovePermissions && !_canAddPermissions)
             return;
 
-        var userPermissions = await PermissionRepository.GetAllDirectForUserAsync(UserId);
-        if (!userPermissions.Success)
+        var rolePermissions = await PermissionRepository.GetAllForRoleAsync(RoleId);
+        if (!rolePermissions.Success)
         {
-            Snackbar.Add(userPermissions.ErrorMessage, Severity.Error);
+            Snackbar.Add(rolePermissions.ErrorMessage, Severity.Error);
             return;
         }
 
         if (_canRemovePermissions)
         {
-            _assignedPermissions = userPermissions.Result!
+            _assignedPermissions = rolePermissions.Result!
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access)
@@ -72,7 +70,7 @@ public partial class UserPermissionDialog
             var allPermissions = PermissionConstants.GetAllPermissions().ToAppPermissionCreates();
 
             _availablePermissions = allPermissions
-                .Except(userPermissions.Result!.ToCreates(), new PermissionCreateComparer())
+                .Except(rolePermissions.Result!.ToCreates(), new PermissionCreateComparer())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access)
@@ -126,7 +124,7 @@ public partial class UserPermissionDialog
     
     private async Task Save()
     {
-        var currentPermissions = await PermissionRepository.GetAllDirectForUserAsync(UserId);
+        var currentPermissions = await PermissionRepository.GetAllForRoleAsync(RoleId);
         if (!currentPermissions.Success)
         {
             Snackbar.Add(currentPermissions.ErrorMessage, Severity.Error);
@@ -137,7 +135,7 @@ public partial class UserPermissionDialog
         {
             var addPermission = await PermissionRepository.CreateAsync(new AppPermissionCreate
             {
-                UserId = UserId,
+                RoleId = RoleId,
                 ClaimType = permission.ClaimType!,
                 ClaimValue = permission.ClaimValue!,
                 Name = permission.Name,

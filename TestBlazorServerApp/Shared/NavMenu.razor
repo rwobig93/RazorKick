@@ -34,13 +34,19 @@
             </MudNavLink>
         }
     }
-    @if (_canViewUsers)
+    @if (_canViewUsers || _canViewRoles)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewUsers)
         {
             <MudNavLink Href="@AppRouteConstants.Admin.Users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisorAccount">
                 User Admin
+            </MudNavLink>
+        }
+        @if (_canViewRoles)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.Roles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PermContactCalendar">
+                Role Admin
             </MudNavLink>
         }
     }
