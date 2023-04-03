@@ -49,7 +49,7 @@ else
             <MudTextField @bind-Value="_viewingRole.Id" Label="ID" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingRole.Name" Label="Name" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.Name" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_viewingRole.Description" Label="Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
@@ -67,7 +67,7 @@ else
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Directly Assigned Permissions</MudText>
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Permissions</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudTable Items="@_viewingRole.Permissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
@@ -93,19 +93,23 @@ else
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Roles</MudText>
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Users</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudTable Items="@_viewingRole.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                <MudTable Items="@_viewingRole.Users" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
                     <HeaderContent>
-                        <MudTh></MudTh>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Description</MudTh>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Username</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>EmailConfirmed</MudTh>
+                        <MudTh>Enabled</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                        <MudTd DataLabel="Id">@context.Id</MudTd>
+                        <MudTd DataLabel="Name">@context.Username</MudTd>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="EmailConfirmed">@context.EmailConfirmed</MudTd>
+                        <MudTd DataLabel="Enabled">@context.IsActive</MudTd>
                     </RowTemplate>
                 </MudTable>
             </MudItem>

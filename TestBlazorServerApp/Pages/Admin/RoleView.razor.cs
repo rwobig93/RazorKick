@@ -23,7 +23,7 @@ public partial class RoleView
     [Parameter] public Guid RoleId { get; set; }
 
     private ClaimsPrincipal _currentUser = new();
-    private AppRoleDb _viewingRole = new();
+    private AppRoleFull _viewingRole = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
@@ -63,18 +63,18 @@ public partial class RoleView
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
-        if (!queryParameters.TryGetValue("userId", out var queryUserId)) return;
+        if (!queryParameters.TryGetValue("roleId", out var queryRoleId)) return;
         
-        var providedIdIsValid = Guid.TryParse(queryUserId, out var parsedUserId);
+        var providedIdIsValid = Guid.TryParse(queryRoleId, out var parsedRoleId);
         if (!providedIdIsValid)
-            throw new InvalidDataException("Invalid UserId provided for user view");
+            throw new InvalidDataException("Invalid RoleId provided for role view");
             
-        RoleId = parsedUserId;
+        RoleId = parsedRoleId;
     }
 
     private async Task GetViewingRole()
     {
-        _viewingRole = (await RoleRepository.GetByIdAsync(RoleId)).Result!;
+        _viewingRole = (await RoleRepository.GetByIdFullAsync(RoleId)).Result!;
         _createdByUsername = (await UserRepository.GetByIdAsync(_viewingRole.CreatedBy)).Result?.Username;
         if (_viewingRole.LastModifiedBy is null)
         {
@@ -101,7 +101,7 @@ public partial class RoleView
     {
         var submittingUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
         
-        var updateResult = await RoleRepository.UpdateAsync(_viewingRole.ToUpdateObject(), submittingUserId);
+        var updateResult = await RoleRepository.UpdateAsync(_viewingRole.ToUpdate(), submittingUserId);
         if (!updateResult.Success)
         {
             Snackbar.Add(updateResult.ErrorMessage, Severity.Error);

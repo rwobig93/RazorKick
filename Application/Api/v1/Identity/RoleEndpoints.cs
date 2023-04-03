@@ -78,14 +78,17 @@ public static class RoleEndpoints
         }
     }
 
-    private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleRepository repository)
+    private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleRepository repository,
+        ICurrentUserService currentUserService)
     {
         try
         {
+            var submittingUserId = await currentUserService.GetApiCurrentUserId();
+            
             var roleResponse = (await repository.GetByIdAsync(roleRequest.Id)).Result;
             if (roleResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
             
-            await repository.UpdateAsync(roleRequest.ToUpdate());
+            await repository.UpdateAsync(roleRequest.ToUpdate(), submittingUserId);
             return await Result.SuccessAsync("Successfully updated role!");
         }
         catch (Exception ex)

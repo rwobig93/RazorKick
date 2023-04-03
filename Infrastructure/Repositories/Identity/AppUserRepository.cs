@@ -14,18 +14,14 @@ namespace Infrastructure.Repositories.Identity;
 public class AppUserRepository : IAppUserRepository
 {
     private readonly ISqlDataService _database;
-    private readonly IAppRoleRepository _roleRepository;
-    private readonly IAppPermissionRepository _permissionRepository;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
 
-    public AppUserRepository(ISqlDataService database, IAppRoleRepository roleRepository, ILogger logger, IAppPermissionRepository permissionRepository, IDateTimeService dateTime, IRunningServerState serverState)
+    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState)
     {
         _database = database;
-        _roleRepository = roleRepository;
         _logger = logger;
-        _permissionRepository = permissionRepository;
         _dateTime = dateTime;
         _serverState = serverState;
     }
@@ -90,23 +86,26 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetById, new {Id = userId})).FirstOrDefault();
-
             var fullUser = foundUser!.ToFullObject();
-
-            var foundRoles = await _roleRepository.GetRolesForUser(foundUser!.Id);
-            fullUser.Roles = (foundRoles.Result?.ToList() ?? new List<AppRoleDb>())
+            
+            var roleIds = await _database.LoadData<Guid, dynamic>(
+                AppUserRoleJunctions.GetRolesOfUser, new {UserId = userId});
+            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
+            var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
+            fullUser.Roles = (matchingRoles.ToList())
                 .OrderBy(x => x.Name)
                 .ToList();
 
-            var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser.Id);
+            var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser!.Id);
             fullUser.ExtendedAttributes = (foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>())
                 .OrderBy(x => x.Type)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Value)
                 .ToList();
 
-            var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(foundUser!.Id);
-            fullUser.Permissions = (foundPermissions.Result?.ToList() ?? new List<AppPermissionDb>())
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissions.GetByUserId, new {UserId = userId});
+            fullUser.Permissions = (foundPermissions.ToList())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access)

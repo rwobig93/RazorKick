@@ -1,4 +1,5 @@
 ﻿using Domain.Contracts;
+using Domain.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Shared.Responses.Identity;
 
@@ -59,6 +60,20 @@ public static class AppRoleDbExtensions
             Name = roleResponse.Name,
             Id = roleResponse.Id,
             Description = roleResponse.Description
+        };
+    }
+
+    public static AppRoleFull ToFull(this AppRoleDb roleDb)
+    {
+        return new AppRoleFull
+        {
+            Id = roleDb.Id,
+            Name = roleDb.Name,
+            Description = roleDb.Description,
+            CreatedBy = roleDb.CreatedBy,
+            CreatedOn = roleDb.CreatedOn,
+            LastModifiedBy = roleDb.LastModifiedBy,
+            LastModifiedOn = roleDb.LastModifiedOn
         };
     }
 }

@@ -6,6 +6,7 @@ using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 
 namespace Infrastructure.Repositories.Identity;
 
@@ -57,18 +58,51 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid roleId)
     {
         DatabaseActionResult<AppRoleDb> actionReturn = new();
 
         try
         {
-            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = id})).FirstOrDefault();
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = roleId})).FirstOrDefault();
             actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppRoles.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppRoleFull>> GetByIdFullAsync(Guid roleId)
+    {
+        DatabaseActionResult<AppRoleFull> actionReturn = new();
+
+        try
+        {
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = roleId})).FirstOrDefault();
+
+            var fullRole = foundRole!.ToFull();
+
+            var foundUsers = await GetUsersForRole(roleId);
+            fullRole.Users = (foundUsers.Result?.ToList() ?? new List<AppUserDb>())
+                .OrderBy(x => x.Username)
+                .ToList();
+
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissions.GetByRoleId, new {RoleId = roleId});
+            fullRole.Permissions = foundPermissions.ToList()
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access)
+                .ToList();
+
+            actionReturn.Succeed(fullRole);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, "GetByIdFullAsync", ex.Message);
         }
 
         return actionReturn;

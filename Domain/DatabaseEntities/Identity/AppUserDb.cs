@@ -29,7 +29,7 @@ public class AppUserDb : IdentityUser<Guid>, IAuditableEntity<Guid>
     public AccountType AccountType { get; set; } = AccountType.User;
 }
 
-public static class AppUserExtensions
+public static class AppUserDbExtensions
 {
     public static UserBasicResponse ToBasicResponse(this AppUserDb appUser)
     {

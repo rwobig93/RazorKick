@@ -1,5 +1,6 @@
 ﻿using Application.Helpers.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Models.Identity;
 using Shared.Requests.Identity.Role;
 
 namespace Application.Models.Identity;
@@ -48,6 +49,22 @@ public static class AppRoleUpdateExtensions
             CreatedOn = default,
             LastModifiedBy = null,
             LastModifiedOn = null
+        };
+    }
+
+    public static AppRoleUpdate ToUpdate(this AppRoleFull roleFull)
+    {
+        return new AppRoleUpdate
+        {
+            Id = roleFull.Id,
+            Name = roleFull.Name,
+            NormalizedName = roleFull.Name!.NormalizeForDatabase(),
+            ConcurrencyStamp = null,
+            Description = roleFull.Description,
+            CreatedBy = roleFull.CreatedBy,
+            CreatedOn = roleFull.CreatedOn,
+            LastModifiedBy = roleFull.LastModifiedBy,
+            LastModifiedOn = roleFull.LastModifiedOn
         };
     }
 }

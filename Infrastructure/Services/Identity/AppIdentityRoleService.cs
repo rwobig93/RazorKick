@@ -33,7 +33,7 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task<IdentityResult> UpdateAsync(AppRoleDb role, CancellationToken cancellationToken)
     {
-        var updateRequest = await _roleRepository.UpdateAsync(role.ToUpdateObject());
+        var updateRequest = await _roleRepository.UpdateAsync(role.ToUpdateObject(), Guid.Empty);
         return !updateRequest.Success ? 
             IdentityResult.Failed(new IdentityError() {Code = "RoleUpdateFail", Description = updateRequest.ErrorMessage}) : 
             IdentityResult.Success;
@@ -61,7 +61,7 @@ public class AppIdentityRoleService : IAppIdentityRoleService
     public async Task SetRoleNameAsync(AppRoleDb role, string roleName, CancellationToken cancellationToken)
     {
         var updateObject = new AppRoleUpdate() {Name = role.Name};
-        await _roleRepository.UpdateAsync(updateObject);
+        await _roleRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<string> GetNormalizedRoleNameAsync(AppRoleDb role, CancellationToken cancellationToken)
@@ -72,7 +72,7 @@ public class AppIdentityRoleService : IAppIdentityRoleService
     public async Task SetNormalizedRoleNameAsync(AppRoleDb role, string normalizedName, CancellationToken cancellationToken)
     {
         var updateObject = new AppRoleUpdate() {NormalizedName = role.NormalizedName};
-        await _roleRepository.UpdateAsync(updateObject);
+        await _roleRepository.UpdateAsync(updateObject, Guid.Empty);
     }
 
     public async Task<AppRoleDb> FindByIdAsync(string roleId, CancellationToken cancellationToken)
