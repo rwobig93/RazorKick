@@ -49,10 +49,10 @@ else
             <MudTextField @bind-Value="_viewingRole.Id" Label="ID" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingRole.Name" Label="Username" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_viewingRole.Name" Label="Name" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_viewingRole.Description" Label="First Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_viewingRole.Description" Label="Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>
@@ -63,29 +63,6 @@ else
             <MudTextField @bind-Value="_viewingRole.LastModifiedOn" Format="@DateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
-    @* TODO: Add ExtendedAttributes view if viewer has permission *@
-    @if (_canViewRoles)
-    {
-        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Roles</MudText>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudTable Items="@_viewingRole.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                    <HeaderContent>
-                        <MudTh></MudTh>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Description</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Description">@context.Description</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MudItem>
-        </MudPaper>
-    }
     @if (_canViewPermissions)
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
@@ -106,6 +83,28 @@ else
                         <MudTd DataLabel="Group">@context.Group</MudTd>
                         <MudTd DataLabel="Name">@context.Name</MudTd>
                         <MudTd DataLabel="Access">@context.Access</MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
+    }
+    @if (_canViewUsers)
+    {
+        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Assigned Roles</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_viewingRole.Roles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
                         <MudTd DataLabel="Description">@context.Description</MudTd>
                     </RowTemplate>
                 </MudTable>

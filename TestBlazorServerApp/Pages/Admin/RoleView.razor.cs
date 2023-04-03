@@ -36,6 +36,7 @@ public partial class RoleView
     private bool _canViewPermissions;
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
+    private bool _canViewUsers;
     private string _editButtonText = "Enable Edit Mode";
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -93,6 +94,7 @@ public partial class RoleView
         _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
+        _canViewUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.View);
     }
 
     private async Task Save()
@@ -112,22 +114,11 @@ public partial class RoleView
         StateHasChanged();
     }
 
-    private bool CanEditEnabled()
-    {
-        if (!_canDisableUsers && !_canEnableUsers) return false;
-        if (_canDisableUsers && _canEnableUsers) return true;
-        if (_canDisableUsers && _viewingRole.IsActive) return true;
-        if (_canEnableUsers && !_viewingRole.IsActive) return true;
-
-        return false;
-    }
-
     private void ToggleEditMode()
     {
         _editMode = !_editMode;
 
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
-        _enableEditable = _editMode && CanEditEnabled();
     }
 
     private void GoBack()
@@ -137,10 +128,10 @@ public partial class RoleView
 
     private async Task EditUserMembership()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingRole.Id}};
+        var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialog = DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && (bool)dialogResult.Data)
         {
@@ -151,10 +142,10 @@ public partial class RoleView
 
     private async Task EditPermissions()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingRole.Id}};
+        var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
+        var dialog = DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && (bool)dialogResult.Data)
         {
