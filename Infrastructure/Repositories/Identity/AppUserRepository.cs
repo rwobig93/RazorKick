@@ -79,48 +79,6 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserFull>> GetByIdFullAsync(Guid userId)
-    {
-        DatabaseActionResult<AppUserFull> actionReturn = new();
-
-        try
-        {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetById, new {Id = userId})).FirstOrDefault();
-            var fullUser = foundUser!.ToFullObject();
-            
-            var roleIds = await _database.LoadData<Guid, dynamic>(
-                AppUserRoleJunctions.GetRolesOfUser, new {UserId = userId});
-            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
-            var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
-            fullUser.Roles = (matchingRoles.ToList())
-                .OrderBy(x => x.Name)
-                .ToList();
-
-            var foundAttributes = await GetAllUserExtendedAttributesAsync(foundUser!.Id);
-            fullUser.ExtendedAttributes = (foundAttributes.Result?.ToList() ?? new List<AppUserExtendedAttributeDb>())
-                .OrderBy(x => x.Type)
-                .ThenBy(x => x.Name)
-                .ThenBy(x => x.Value)
-                .ToList();
-
-            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissions.GetByUserId, new {UserId = userId});
-            fullUser.Permissions = (foundPermissions.ToList())
-                .OrderBy(x => x.Group)
-                .ThenBy(x => x.Name)
-                .ThenBy(x => x.Access)
-                .ToList();
-
-            actionReturn.Succeed(fullUser);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, "GetByIdFullAsync", ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username)
     {
         DatabaseActionResult<AppUserDb> actionReturn = new();

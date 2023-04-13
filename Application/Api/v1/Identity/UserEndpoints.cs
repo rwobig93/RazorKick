@@ -5,7 +5,6 @@ using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
-using Domain.Models.Identity;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
 using Shared.Routes;

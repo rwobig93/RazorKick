@@ -1,5 +1,4 @@
 ﻿using Domain.DatabaseEntities.Identity;
-using Domain.Models.Identity;
 using Shared.Enums.Identity;
 using Shared.Requests.Identity.User;
 

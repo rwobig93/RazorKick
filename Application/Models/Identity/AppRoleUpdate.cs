@@ -1,6 +1,5 @@
 ﻿using Application.Helpers.Identity;
 using Domain.DatabaseEntities.Identity;
-using Domain.Models.Identity;
 using Shared.Requests.Identity.Role;
 
 namespace Application.Models.Identity;

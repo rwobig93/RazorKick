@@ -132,15 +132,22 @@ public class AppAccountService : IAppAccountService
         }
     }
 
-    public bool PasswordMeetsRequirements(string password)
+    public async Task<IResult<bool>> PasswordMeetsRequirements(string password)
     {
-        return AccountHelpers.DoesPasswordMeetRequirements(password);
+        try
+        {
+            return await Result<bool>.SuccessAsync(AccountHelpers.DoesPasswordMeetRequirements(password));
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(ex.Message);
+        }
     }
 
     private async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserDb user, string password)
     {
         var createUser = user.ToCreateObject();
-        var passwordMeetsRequirements = PasswordMeetsRequirements(password);
+        var passwordMeetsRequirements = (await PasswordMeetsRequirements(password)).Data;
         if (!passwordMeetsRequirements)
         {
             var passwordFailResult = new DatabaseActionResult<Guid>();
@@ -194,7 +201,7 @@ public class AppAccountService : IAppAccountService
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
         
-        var confirmationUrl = await GetEmailConfirmationUrl(createUserResult.Result);
+        var confirmationUrl = (await GetEmailConfirmationUrl(createUserResult.Result)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
         
@@ -210,7 +217,7 @@ public class AppAccountService : IAppAccountService
             $"Account {newUser.UserName} successfully registered, please check your email to confirm!{caveatMessage}");
     }
 
-    public async Task<string> GetEmailConfirmationUrl(Guid userId)
+    public async Task<IResult<string>> GetEmailConfirmationUrl(Guid userId)
     {
         var previousConfirmations =
             (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.EmailConfirmationToken)).Result;
@@ -221,7 +228,8 @@ public class AppAccountService : IAppAccountService
         
         // Previous pending account registration exists, return current value
         if (previousConfirmation is not null)
-            return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value);
+            return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(
+                confirmationUri, "confirmationCode", previousConfirmation.Value));
 
         // No currently pending account registration exists so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri
@@ -235,10 +243,10 @@ public class AppAccountService : IAppAccountService
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         if (!addAttributeRequest.Success)
-            return "";
+            return await Result<string>.FailAsync(addAttributeRequest.ErrorMessage);
         
         // TODO: Split confirmation code and URI return for API endpoints to register a user programmatically
-        return QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode);
+        return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode));
     }
 
     public async Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode)
@@ -271,23 +279,42 @@ public class AppAccountService : IAppAccountService
         return await Result<string>.SuccessAsync(foundUser.Id.ToString(), $"Account Confirmed for {foundUser.Username}.");
     }
 
-    public async Task SetUserPassword(Guid userId, string newPassword)
+    public async Task<IResult> SetUserPassword(Guid userId, string newPassword)
     {
-        var submittingUserId = await _currentUserService.GetApiCurrentUserId();
+        try
+        {
+            var submittingUserId = await _currentUserService.GetApiCurrentUserId();
         
-        var updateObject = new AppUserUpdate() { Id = userId };
+            var updateObject = new AppUserUpdate() { Id = userId };
         
-        AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
-        updateObject.PasswordSalt = salt;
-        updateObject.PasswordHash = hash;
+            AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
+            updateObject.PasswordSalt = salt;
+            updateObject.PasswordHash = hash;
         
-        await _userRepository.UpdateAsync(updateObject, submittingUserId);
+            var result = await _userRepository.UpdateAsync(updateObject, submittingUserId);
+            if (!result.Success)
+                return await Result.FailAsync(result.ErrorMessage);
+            
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
     }
 
-    public async Task<bool> IsPasswordCorrect(Guid userId, string password)
+    public async Task<IResult<bool>> IsPasswordCorrect(Guid userId, string password)
     {
-        var matchingUser = (await _userRepository.GetByIdAsync(userId)).Result;
-        return AccountHelpers.IsPasswordCorrect(password, matchingUser!.PasswordSalt, matchingUser.PasswordHash);
+        try
+        {
+            var matchingUser = (await _userRepository.GetByIdAsync(userId)).Result;
+            var passwordCorrect = AccountHelpers.IsPasswordCorrect(password, matchingUser!.PasswordSalt, matchingUser.PasswordHash);
+            return await Result<bool>.SuccessAsync(passwordCorrect);
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(ex.Message);
+        }
     }
 
     public async Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest)
@@ -353,7 +380,7 @@ public class AppAccountService : IAppAccountService
         if (confirmationCode != previousReset.Value)
             return await Result.FailAsync(ErrorMessageConstants.TokenInvalidError);
 
-        var passwordMeetsRequirements = PasswordMeetsRequirements(password);
+        var passwordMeetsRequirements = (await PasswordMeetsRequirements(password)).Data;
         if (!passwordMeetsRequirements)
             return await Result.FailAsync("Password provided doesn't meet the minimum requirements, please try again");
         

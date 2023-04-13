@@ -1,7 +1,6 @@
 ﻿using Application.Models.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
-using Domain.Models.Identity;
 
 namespace Application.Repositories.Identity;
 
@@ -10,7 +9,6 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync();
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid roleId);
-    Task<DatabaseActionResult<AppRoleFull>> GetByIdFullAsync(Guid roleId);
     Task<DatabaseActionResult<AppRoleDb>> GetByNameAsync(string roleName);
     Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText);

@@ -1,9 +1,9 @@
 ﻿using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
-using Domain.Models.Identity;
 using Microsoft.AspNetCore.Http;
 using Shared.Responses.Identity;
 
@@ -58,9 +58,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        if (!foundUser.Success) return null;
-
-        return foundUser.Result!.ToBasicResponse();
+        return !foundUser.Success ? null : foundUser.Result!.ToBasicResponse();
     }
 
     public async Task<AppUserFull?> GetCurrentUserFull()
@@ -70,9 +68,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        if (!foundUser.Success) return null;
-
-        return foundUser.Result!.ToFullObject();
+        return !foundUser.Success ? null : foundUser.Result!.ToFull();
     }
 
     public async Task<AppUserDb?> GetCurrentUserDb()
@@ -82,8 +78,6 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        if (!foundUser.Success) return null;
-
-        return foundUser.Result!;
+        return !foundUser.Success ? null : foundUser.Result!;
     }
 }

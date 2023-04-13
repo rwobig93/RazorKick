@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Domain.Contracts;
+﻿using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Shared.Responses.Identity;
 
@@ -21,21 +20,6 @@ public class AppPermissionDb : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
 
 public static class AppPermissionDbExtensions
 {
-    public static Claim ToClaim(this AppPermissionDb appPermission)
-    {
-        return new Claim(appPermission.ClaimType, appPermission.ClaimValue);
-    }
-
-    public static IEnumerable<Claim> ToClaims(this IEnumerable<AppPermissionDb> appPermissions)
-    {
-        return appPermissions.Select(x => new Claim(x.ClaimType, x.ClaimValue));
-    }
-
-    public static IEnumerable<Claim> ToClaims(this IEnumerable<AppRoleDb> appRoles)
-    {
-        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name));
-    }
-
     public static PermissionResponse ToResponse(this AppPermissionDb permission)
     {
         return new PermissionResponse

@@ -11,7 +11,6 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync();
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppUserDb>> GetByIdAsync(Guid id);
-    Task<DatabaseActionResult<AppUserFull>> GetByIdFullAsync(Guid id);
     Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username);
     Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername);
     Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email);

@@ -1,5 +1,4 @@
 ﻿using Domain.Contracts;
-using Domain.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Shared.Enums.Identity;
 using Shared.Responses.Identity;
@@ -45,29 +44,5 @@ public static class AppUserDbExtensions
     public static List<UserBasicResponse> ToBasicResponses(this IEnumerable<AppUserDb> appUsers)
     {
         return appUsers.Select(x => x.ToBasicResponse()).ToList();
-    }
-
-    public static AppUserFull ToFullObject(this AppUserDb appUser)
-    {
-        return new AppUserFull
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            EmailAddress = appUser.Email,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            CreatedBy = appUser.CreatedBy,
-            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            CreatedOn = appUser.CreatedOn,
-            LastModifiedBy = appUser.LastModifiedBy,
-            LastModifiedOn = appUser.LastModifiedOn,
-            IsDeleted = appUser.IsDeleted,
-            DeletedOn = appUser.DeletedOn,
-            IsActive = appUser.IsActive,
-            AccountType = appUser.AccountType,
-            Roles = new List<AppRoleDb>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeDb>(),
-            Permissions = new List<AppPermissionDb>()
-        };
     }
 }
