@@ -13,13 +13,13 @@ public class AppRoleRepository : IAppRoleRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _dateTime;
 
-    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTimeService)
+    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
-        _dateTimeService = dateTimeService;
+        _dateTime = dateTime;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync()
@@ -46,7 +46,7 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {TableName = AppRoles.Table.TableName})).FirstOrDefault();
+                General.GetRowCount, new {AppRoles.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
@@ -145,7 +145,7 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, Guid updateUserId)
+    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
     {
         DatabaseActionResult actionReturn = new();
 
@@ -162,14 +162,13 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(AppRoles.Delete, new {Id = id});
-            // TODO: Inject modifyingUserId into auditing
+            await _database.SaveData(AppRoles.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -237,14 +236,13 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
-            await UpdateLastModifiedUserRole(userId, roleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -255,14 +253,13 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
             await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
-            await UpdateLastModifiedUserRole(userId, roleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -315,14 +312,5 @@ public class AppRoleRepository : IAppRoleRepository
         }
 
         return actionReturn;
-    }
-
-    private async Task UpdateLastModifiedUserRole(Guid userId, Guid roleId, Guid modifyingUserId)
-    {
-        // TODO: Add last modifying to all remaining repositories
-        await _database.SaveData(AppUsers.Update,
-            new {Id = userId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
-        await _database.SaveData(AppRoles.Update,
-            new {Id = roleId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
     }
 }

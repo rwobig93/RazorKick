@@ -8,6 +8,7 @@ using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.Permission;
 using Shared.Responses.Identity;
+using Shared.Routes;
 
 namespace Application.Api.v1.Identity;
 
@@ -15,48 +16,54 @@ public static class PermissionEndpoints
 {
     public static void MapEndpointsPermissions(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/identity/permissions", GetAllPermissions).ApiVersionOne();
-        app.MapGet("/api/identity/permission", GetPermission).ApiVersionOne();
-        app.MapDelete("/api/identity/permission", DeletePermission).ApiVersionOne();
-        app.MapPut("/api/identity/permission", UpdatePermission).ApiVersionOne();
+        // Permissions
+        app.MapGet(ApiRoutes.Identity.Permission.GetAll, GetAllPermissions).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.Permission.GetById, GetPermission).ApiVersionOne();
+        app.MapDelete(ApiRoutes.Identity.Permission.Delete, DeletePermission).ApiVersionOne();
+        app.MapPut(ApiRoutes.Identity.Permission.Update, UpdatePermission).ApiVersionOne();
         
-        app.MapGet("/api/identity/permissions/user/direct", GetDirectPermissionsForUser).ApiVersionOne();
-        app.MapGet("/api/identity/permissions/user/all", GetAllPermissionsForUser).ApiVersionOne();
-        app.MapPost("/api/identity/permission/user/add", AddPermissionToUser).ApiVersionOne();
-        app.MapPost("/api/identity/permission/user/remove", RemovePermissionFromUser).ApiVersionOne();
-        app.MapGet("/api/identity/permission/user/has", DoesUserHavePermission).ApiVersionOne();
+        // Users
+        app.MapGet(ApiRoutes.Identity.Permission.GetDirectPermissionsForUser, GetDirectPermissionsForUser).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.Permission.GetAllPermissionsForUser, GetAllPermissionsForUser).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Permission.AddPermissionToUser, AddPermissionToUser).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Permission.RemovePermissionFromUser, RemovePermissionFromUser).ApiVersionOne();
+        app.MapGet(ApiRoutes.Identity.Permission.DoesUserHavePermission, DoesUserHavePermission).ApiVersionOne();
         
-        app.MapGet("/api/identity/permission/role", GetAllPermissionsForRole).ApiVersionOne();
-        app.MapPost("/api/identity/permission/role/add", AddPermissionToRole).ApiVersionOne();
-        app.MapPost("/api/identity/permission/role/remove", RemovePermissionFromRole).ApiVersionOne();
-        app.MapPost("/api/identity/permission/role/has", DoesRoleHavePermission).ApiVersionOne();
+        // Roles
+        app.MapGet(ApiRoutes.Identity.Permission.GetAllPermissionsForRole, GetAllPermissionsForRole).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Permission.AddPermissionToRole, AddPermissionToRole).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Permission.RemovePermissionFromRole, RemovePermissionFromRole).ApiVersionOne();
+        app.MapPost(ApiRoutes.Identity.Permission.DoesRoleHavePermission, DoesRoleHavePermission).ApiVersionOne();
     }
-    
-    public static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionRepository repository)
+
+    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionService permissionService)
     {
         try
         {
-            var allPermissions = await repository.GetAllAsync();
-            if (!allPermissions.Success)
-                return await Result<List<PermissionResponse>>.FailAsync(allPermissions.ErrorMessage);
+            var allPermissions = await permissionService.GetAllAsync();
+            if (!allPermissions.Succeeded)
+                return await Result<List<PermissionResponse>>.FailAsync(allPermissions.Messages);
 
-            return await Result<List<PermissionResponse>>.SuccessAsync(allPermissions.Result!.ToResponses());
+            return await Result<List<PermissionResponse>>.SuccessAsync(allPermissions.Data.ToResponses());
         }
         catch (Exception ex)
         {
             return await Result<List<PermissionResponse>>.FailAsync(ex.Message);
         }
     }
-    
-    public static async Task<IResult<PermissionResponse>> GetPermission(Guid permissionId, IAppPermissionRepository repository)
+
+    private static async Task<IResult<PermissionResponse>> GetPermission([FromQuery]Guid permissionId, IAppPermissionService permissionService)
     {
         try
         {
-            var permission = await repository.GetByIdAsync(permissionId);
-            if (!permission.Success)
+            var foundPermission = await permissionService.GetByIdAsync(permissionId);
+            if (!foundPermission.Succeeded)
+                return await Result<PermissionResponse>.FailAsync(foundPermission.Messages);
+
+            if (foundPermission.Data is null)
                 return await Result<PermissionResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
 
-            return await Result<PermissionResponse>.SuccessAsync(permission.Result!.ToResponse());
+            return await Result<PermissionResponse>.SuccessAsync(foundPermission.Data.ToResponse());
         }
         catch (Exception ex)
         {
@@ -64,56 +71,42 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionRepository repository,
-        ICurrentUserService currentUserService)
+    private static async Task<IResult> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionService permissionService)
     {
         try
         {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
-            var createRequest = permissionRequest.ToCreate();
-            createRequest.CreatedBy = Guid.Empty;
+            var addRequest = permissionRequest.ToCreate();
             
-            var result = await repository.CreateAsync(createRequest, currentUserId);
-            if (!result.Success)
-                return await Result.FailAsync(result.ErrorMessage);
-            
-            return await Result.SuccessAsync("Successfully created permission!");
+            return await permissionService.CreateAsync(addRequest);
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await Result<Guid>.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionRepository repository,
-        ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionService 
+    permissionService)
     {
         try
         {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
-            var createRequest = permissionRequest.ToCreate();
-            createRequest.CreatedBy = Guid.Empty;
+            var addRequest = permissionRequest.ToCreate();
             
-            var result = await repository.CreateAsync(createRequest, currentUserId);
-            if (!result.Success)
-                return await Result.FailAsync(result.ErrorMessage);
-            
-            return await Result.SuccessAsync("Successfully created permission!");
+            return await permissionService.CreateAsync(addRequest);
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await Result<Guid>.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult> UpdatePermission(PermissionUpdateRequest permissionRequest, IAppPermissionRepository repository)
+    private static async Task<IResult> UpdatePermission(PermissionUpdateRequest permissionRequest, IAppPermissionService permissionService)
     {
         try
         {
-            var permissionResponse = (await repository.GetByIdAsync(permissionRequest.Id)).Result;
-            if (permissionResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+            var updateRequest = await permissionService.UpdateAsync(permissionRequest.ToUpdate());
+            if (!updateRequest.Succeeded) return updateRequest;
             
-            await repository.UpdateAsync(permissionRequest.ToUpdate());
             return await Result.SuccessAsync("Successfully updated permission!");
         }
         catch (Exception ex)
@@ -122,16 +115,13 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> DeletePermission(Guid permissionId, IAppPermissionRepository repository,
-        ICurrentUserService currentUserService)
+    private static async Task<IResult> DeletePermission(Guid permissionId, IAppPermissionService permissionService)
     {
         try
         {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
-            var permissionResponse = (await repository.GetByIdAsync(permissionId)).Result;
-            if (permissionResponse is null) return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+            var deleteRequest = await permissionService.DeleteAsync(permissionId);
+            if (!deleteRequest.Succeeded) return deleteRequest;
             
-            await repository.DeleteAsync(permissionId, currentUserId);
             return await Result.SuccessAsync("Successfully deleted permission!");
         }
         catch (Exception ex)
@@ -141,18 +131,15 @@ public static class PermissionEndpoints
     }
 
     private static async Task<IResult<bool>> DoesUserHavePermission([FromQuery]Guid userId, [FromQuery]Guid permissionId, 
-    IAppPermissionRepository repository)
+    IAppPermissionService permissionService)
     {
         try
         {
-            var foundPermission = await repository.GetByIdAsync(permissionId);
-            if (foundPermission.Success)
-                return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            var foundPermission = await permissionService.GetByIdAsync(permissionId);
+            if (!foundPermission.Succeeded) return await Result<bool>.FailAsync(foundPermission.Messages);
+            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.UserIncludingRolesHasPermission(userId, foundPermission.Result!.ClaimValue);
-            if (!permissionResponse.Success) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
-            
-            return await Result<bool>.SuccessAsync(permissionResponse.Result);
+            return await permissionService.UserIncludingRolesHasPermission(userId, foundPermission.Data!.ClaimValue);
         }
         catch (Exception ex)
         {
@@ -161,18 +148,15 @@ public static class PermissionEndpoints
     }
 
     private static async Task<IResult<bool>> DoesRoleHavePermission([FromQuery]Guid roleId, [FromQuery]Guid permissionId, 
-        IAppPermissionRepository repository)
+        IAppPermissionService permissionService)
     {
         try
         {
-            var foundPermission = await repository.GetByIdAsync(permissionId);
-            if (foundPermission.Success)
-                return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            var foundPermission = await permissionService.GetByIdAsync(permissionId);
+            if (!foundPermission.Succeeded) return await Result<bool>.FailAsync(foundPermission.Messages);
+            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.RoleHasPermission(roleId, foundPermission.Result!.ClaimValue);
-            if (!permissionResponse.Success) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
-            
-            return await Result<bool>.SuccessAsync(permissionResponse.Result);
+            return await permissionService.RoleHasPermission(roleId, foundPermission.Data!.ClaimValue);
         }
         catch (Exception ex)
         {
@@ -180,43 +164,41 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> RemovePermissionFromUser(PermissionRemoveFromUserRequest permissionRequest, IAppPermissionRepository 
-    repository, ICurrentUserService currentUserService)
+    private static async Task<IResult> RemovePermissionFromUser(PermissionRemoveFromUserRequest permissionRequest,
+        IAppPermissionService permissionService)
     {
         try
         {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var foundPermission =
-                await repository.GetByUserIdAndValueAsync(permissionRequest.UserId, permissionRequest.PermissionValue);
-            if (foundPermission.Success)
-                return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                await permissionService.GetByUserIdAndValueAsync(permissionRequest.UserId, permissionRequest.PermissionValue);
+            if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
+            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id, currentUserId);
-            if (!permissionResponse.Success) return await Result<bool>.FailAsync(permissionResponse.ErrorMessage);
+            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id);
+            if (!permissionResponse.Succeeded) return permissionResponse;
             
-            return await Result<bool>.SuccessAsync("Successfully removes user from permission!");
+            return await Result.SuccessAsync("Successfully removed permission from user!");
         }
         catch (Exception ex)
         {
-            return await Result<bool>.FailAsync(ex.Message);
+            return await Result.FailAsync(ex.Message);
         }
     }
 
-    private static async Task<IResult> RemovePermissionFromRole(PermissionRemoveFromRoleRequest permissionRequest, IAppPermissionRepository 
-    repository, ICurrentUserService currentUserService)
+    private static async Task<IResult> RemovePermissionFromRole(PermissionRemoveFromRoleRequest permissionRequest,
+        IAppPermissionService permissionService)
     {
         try
         {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
             var foundPermission =
-                await repository.GetByRoleIdAndValueAsync(permissionRequest.RoleId, permissionRequest.PermissionValue);
-            if (foundPermission.Success)
-                return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                await permissionService.GetByUserIdAndValueAsync(permissionRequest.RoleId, permissionRequest.PermissionValue);
+            if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
+            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await repository.DeleteAsync(foundPermission.Result!.Id, currentUserId);
-            if (!permissionResponse.Success) return await Result<bool>.FailAsync(permissionResponse.ErrorMessage);
-            
-            return await Result<bool>.SuccessAsync("Successfully removes user from permission!");
+            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id);
+            if (!permissionResponse.Succeeded) return permissionResponse;
+
+            return await Result<bool>.SuccessAsync("Successfully removed permission from role!");
         }
         catch (Exception ex)
         {
@@ -224,14 +206,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult<List<PermissionResponse>>> GetDirectPermissionsForUser(Guid userId, IAppPermissionRepository repository)
+    private static async Task<IResult<List<PermissionResponse>>> GetDirectPermissionsForUser([FromQuery]Guid userId,
+        IAppPermissionService permissionService)
     {
         try
         {
-            var permissionResponse = await repository.GetAllDirectForUserAsync(userId);
-            if (!permissionResponse.Success) return await Result<List<PermissionResponse>>.FailAsync(permissionResponse.ErrorMessage);
-            
-            return await Result<List<PermissionResponse>>.SuccessAsync(permissionResponse.Result!.ToResponses());
+            var foundPermissions = await permissionService.GetAllDirectForUserAsync(userId);
+            if (!foundPermissions.Succeeded)
+                return await Result<List<PermissionResponse>>.FailAsync(foundPermissions.Messages);
+
+            return await Result<List<PermissionResponse>>.SuccessAsync(foundPermissions.Data.ToResponses());
         }
         catch (Exception ex)
         {
@@ -239,14 +223,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForUser(Guid userId, IAppPermissionRepository repository)
+    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForUser([FromQuery]Guid userId,
+        IAppPermissionService permissionService)
     {
         try
         {
-            var permissionResponse = await repository.GetAllIncludingRolesForUserAsync(userId);
-            if (!permissionResponse.Success) return await Result<List<PermissionResponse>>.FailAsync(permissionResponse.ErrorMessage);
-            
-            return await Result<List<PermissionResponse>>.SuccessAsync(permissionResponse.Result!.ToResponses());
+            var foundPermissions = await permissionService.GetAllIncludingRolesForUserAsync(userId);
+            if (!foundPermissions.Succeeded)
+                return await Result<List<PermissionResponse>>.FailAsync(foundPermissions.Messages);
+
+            return await Result<List<PermissionResponse>>.SuccessAsync(foundPermissions.Data.ToResponses());
         }
         catch (Exception ex)
         {
@@ -254,14 +240,16 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForRole(Guid roleId, IAppPermissionRepository repository)
+    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForRole([FromQuery]Guid roleId,
+        IAppPermissionService permissionService)
     {
         try
         {
-            var permissionResponse = await repository.GetAllForRoleAsync(roleId);
-            if (!permissionResponse.Success) return await Result<List<PermissionResponse>>.FailAsync(permissionResponse.ErrorMessage);
-            
-            return await Result<List<PermissionResponse>>.SuccessAsync(permissionResponse.Result!.ToResponses());
+            var foundPermissions = await permissionService.GetAllForRoleAsync(roleId);
+            if (!foundPermissions.Succeeded)
+                return await Result<List<PermissionResponse>>.FailAsync(foundPermissions.Messages);
+
+            return await Result<List<PermissionResponse>>.SuccessAsync(foundPermissions.Data.ToResponses());
         }
         catch (Exception ex)
         {

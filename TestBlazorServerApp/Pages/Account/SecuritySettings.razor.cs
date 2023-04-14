@@ -1,5 +1,4 @@
 ﻿using Application.Helpers.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Shared.Responses.Identity;
@@ -9,7 +8,6 @@ namespace TestBlazorServerApp.Pages.Account;
 public partial class SecuritySettings
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     
     private Guid CurrentUserId { get; set; }
     private string CurrentPassword { get; set; } = "";
@@ -104,9 +102,9 @@ public partial class SecuritySettings
             Snackbar.Add("Confirm Password field is empty", Severity.Error); informationValid = false; }
         if (DesiredPassword != ConfirmPassword) {
             Snackbar.Add("Passwords provided don't match", Severity.Error); informationValid = false; }
-        if (!(await AccountService.IsPasswordCorrect(CurrentUserId, CurrentPassword))) {
+        if (!(await AccountService.IsPasswordCorrect(CurrentUserId, CurrentPassword)).Data) {
             Snackbar.Add("Current password provided is incorrect", Severity.Error); informationValid = false; }
-        if (!AccountService.PasswordMeetsRequirements(DesiredPassword)) {
+        if (!(await AccountService.PasswordMeetsRequirements(DesiredPassword)).Data) {
             Snackbar.Add("Desired password doesn't meet the password requirements", Severity.Error); informationValid = false; }
         
         return informationValid;

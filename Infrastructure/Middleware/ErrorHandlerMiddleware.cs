@@ -33,12 +33,12 @@ public class ErrorHandlerMiddleware
 
             switch (error)
             {
-                case ApiException e:
+                case ApiException:
                     // custom application error
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     break;
 
-                case KeyNotFoundException e:
+                case KeyNotFoundException:
                     // not found error
                     response.StatusCode = (int)HttpStatusCode.NotFound;
                     break;

@@ -134,6 +134,10 @@ public static class DependencyInjection
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
         });
+        services.AddSingleton<IAppUserService, AppUserService>();
+        services.AddSingleton<IAppRoleService, AppRoleService>();
+        services.AddSingleton<IAppPermissionService, AppPermissionService>();
+        
         services.AddScoped<AuthStateProvider>();
         services.AddTransient<AuthenticationStateProvider, AuthStateProvider>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

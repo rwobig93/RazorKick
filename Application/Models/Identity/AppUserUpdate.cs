@@ -30,7 +30,7 @@ public class AppUserUpdate
 
 public static class AppUserUpdateExtensions
 {
-    public static AppUserUpdate ToUpdateObject(this AppUserDb appUser)
+    public static AppUserUpdate ToUpdate(this AppUserDb appUser)
     {
         return new AppUserUpdate
         {
@@ -57,7 +57,7 @@ public static class AppUserUpdateExtensions
         };
     }
     
-    public static AppUserUpdate ToUpdateObject(this UserUpdateRequest appUser)
+    public static AppUserUpdate ToUpdate(this UserUpdateRequest appUser)
     {
         return new AppUserUpdate
         {
@@ -85,7 +85,7 @@ public static class AppUserUpdateExtensions
         };
     }
 
-    public static AppUserUpdate ToUpdateObject(this AppUserFull appUser)
+    public static AppUserUpdate ToUpdate(this AppUserFull appUser)
     {
         return new AppUserUpdate
         {

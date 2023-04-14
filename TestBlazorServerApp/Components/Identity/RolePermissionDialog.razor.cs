@@ -2,7 +2,7 @@ using Application.Constants.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
-using Application.Repositories.Identity;
+using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Components;
 
@@ -11,15 +11,15 @@ namespace TestBlazorServerApp.Components.Identity;
 public partial class RolePermissionDialog
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
-    [Inject] private IAppRoleRepository RoleRepository { get; init; } = null!;
-    [Inject] private IAppPermissionRepository PermissionRepository { get; init; } = null!;
+    [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
 
     [Parameter] public Guid RoleId { get; set; }
     
-    private List<AppPermissionDb> _assignedPermissions = new();
+    private List<AppPermissionSlim> _assignedPermissions = new();
     private List<AppPermissionCreate> _availablePermissions = new();
     private HashSet<AppPermissionCreate> _addPermissions = new();
-    private HashSet<AppPermissionDb> _removePermissions = new();
+    private HashSet<AppPermissionSlim> _removePermissions = new();
     private Guid _currentUserId;
     private bool _canRemovePermissions;
     private bool _canAddPermissions;
@@ -47,16 +47,16 @@ public partial class RolePermissionDialog
         if (!_canRemovePermissions && !_canAddPermissions)
             return;
 
-        var rolePermissions = await PermissionRepository.GetAllForRoleAsync(RoleId);
-        if (!rolePermissions.Success)
+        var rolePermissions = await PermissionService.GetAllForRoleAsync(RoleId);
+        if (!rolePermissions.Succeeded)
         {
-            Snackbar.Add(rolePermissions.ErrorMessage, Severity.Error);
+            rolePermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
         if (_canRemovePermissions)
         {
-            _assignedPermissions = rolePermissions.Result!
+            _assignedPermissions = rolePermissions.Data
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access)
@@ -68,11 +68,11 @@ public partial class RolePermissionDialog
             var allPermissions = PermissionConstants.GetAllPermissions().ToAppPermissionCreates();
 
             _availablePermissions = allPermissions
-                .Except(rolePermissions.Result!.ToCreates(), new PermissionCreateComparer())
+                .Except(rolePermissions.Data.ToCreates(), new PermissionCreateComparer())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access)
-                .ToList();;
+                .ToList();
         }
     }
     
@@ -100,7 +100,7 @@ public partial class RolePermissionDialog
         {
             _availablePermissions.Remove(permission);
             
-            var permissionConverted = permission.ToDb();
+            var permissionConverted = permission.ToSlim();
             permissionConverted.CreatedBy = _currentUserId;
 
             _assignedPermissions.Add(permissionConverted);
@@ -122,16 +122,16 @@ public partial class RolePermissionDialog
     
     private async Task Save()
     {
-        var currentPermissions = await PermissionRepository.GetAllForRoleAsync(RoleId);
-        if (!currentPermissions.Success)
+        var currentPermissions = await PermissionService.GetAllForRoleAsync(RoleId);
+        if (!currentPermissions.Succeeded)
         {
-            Snackbar.Add(currentPermissions.ErrorMessage, Severity.Error);
+            currentPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
-        foreach (var permission in _assignedPermissions.Where(perm => currentPermissions.Result!.All(x => x.Id != perm.Id)))
+        foreach (var permission in _assignedPermissions.Where(perm => currentPermissions.Data.All(x => x.Id != perm.Id)))
         {
-            var addPermission = await PermissionRepository.CreateAsync(new AppPermissionCreate
+            var addPermission = await PermissionService.CreateAsync(new AppPermissionCreate
             {
                 RoleId = RoleId,
                 ClaimType = permission.ClaimType!,
@@ -141,23 +141,23 @@ public partial class RolePermissionDialog
                 Access = permission.Access,
                 Description = permission.Description,
                 CreatedBy = _currentUserId
-            }, _currentUserId);
+            });
             
-            if (!addPermission.Success)
+            if (!addPermission.Succeeded)
             {
-                Snackbar.Add(addPermission.ErrorMessage, Severity.Error);
+                addPermission.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 continue;
             }
 
             Snackbar.Add($"Successfully added permission {permission.Group}.{permission.Name}.{permission.Access}", Severity.Success);
         }
 
-        foreach (var permission in currentPermissions.Result!.Where(perm => _assignedPermissions.All(x => x.Id != perm.Id)))
+        foreach (var permission in currentPermissions.Data.Where(perm => _assignedPermissions.All(x => x.Id != perm.Id)))
         {
-            var removePermission = await PermissionRepository.DeleteAsync(permission.Id, _currentUserId);
-            if (!removePermission.Success)
+            var removePermission = await PermissionService.DeleteAsync(permission.Id);
+            if (!removePermission.Succeeded)
             {
-                Snackbar.Add(removePermission.ErrorMessage, Severity.Error);
+                removePermission.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 continue;
             }
 

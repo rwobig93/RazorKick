@@ -129,14 +129,14 @@ public class AuthStateProvider : AuthenticationStateProvider
                 new Claim(ClaimTypes.Name, userName)
             }, JwtBearerDefaults.AuthenticationScheme));
 
-        var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+        Task.FromResult(new AuthenticationState(authenticatedUser));
 
         // NotifyAuthenticationStateChanged(authState);
     }
 
     public void IndicateUserAuthenticationSuccess(AuthenticationState authState)
     {
-        var taskAuthState = Task.FromResult(authState);
+        Task.FromResult(authState);
         _contextAccessor.HttpContext!.User = new ClaimsPrincipal(authState.User.Identities);
         AuthenticationStateUser = authState.User;
 
@@ -148,7 +148,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         try
         {
             var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
-            var authState = Task.FromResult(new AuthenticationState(anonymousUser));
+            Task.FromResult(new AuthenticationState(anonymousUser));
         }
         catch (Exception ex)
         {

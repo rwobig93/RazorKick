@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Application.Constants.Communication;
+﻿using Application.Constants.Communication;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -8,7 +7,6 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
-using Microsoft.Extensions.FileProviders;
 
 namespace Infrastructure.Services.Identity;
 
@@ -213,6 +211,9 @@ public class AppUserService : IAppUserService
             var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
             if (currentUserId is null)
                 return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
+
+            if (currentUserId == Guid.Empty)
+                return await Result.FailAsync(ErrorMessageConstants.GenericError);
             
             // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
             updateObject.LastModifiedBy = currentUserId;
@@ -237,6 +238,9 @@ public class AppUserService : IAppUserService
             var currentUserId = await _currentUserService.GetCurrentUserId();
             if (currentUserId is null)
                 return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
+
+            if (currentUserId == Guid.Empty)
+                return await Result.FailAsync(ErrorMessageConstants.GenericError);
             
             // TODO: Add auditing trail for user deleting the account
             // updateObject.LastModifiedBy = currentUserId;
@@ -262,7 +266,8 @@ public class AppUserService : IAppUserService
             if (!searchResult.Success)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 
-            var results = searchResult.Result?.ToSlims() ?? new List<AppUserSlim>();
+            var results = (searchResult.Result?.ToSlims() ?? new List<AppUserSlim>())
+                .OrderBy(x => x.Username);
 
             return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(results);
         }
@@ -279,6 +284,9 @@ public class AppUserService : IAppUserService
             var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
             if (currentUserId is null)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.UnauthenticatedError);
+
+            if (currentUserId == Guid.Empty)
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
             
             // TODO: Add auditing trail
             createObject.CreatedBy = currentUserId;
@@ -422,7 +430,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var getRequest = await _userRepository.GetUserExtendedAttributesByNameAsync(userId, name);
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {
@@ -434,7 +448,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var getRequest = await _userRepository.GetAllUserExtendedAttributesAsync(userId);
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {
@@ -446,7 +466,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var getRequest = await _userRepository.GetAllExtendedAttributesByTypeAsync(type);
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {
@@ -458,7 +484,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var getRequest = await _userRepository.GetAllExtendedAttributesByNameAsync(name);
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {
@@ -470,7 +502,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var getRequest = await _userRepository.GetAllExtendedAttributesAsync();
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {

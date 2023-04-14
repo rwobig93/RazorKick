@@ -6,6 +6,7 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Application.Settings.AppSettings;
@@ -19,15 +20,17 @@ public class AppIdentityService : IAppIdentityService
     private readonly IAppUserRepository _userRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IAppRoleRepository _roleRepository;
-    private readonly AppConfiguration _appConfig;
+    private readonly IRunningServerState _serverState;
+    private readonly IDateTimeService _dateTime;
 
-    public AppIdentityService(IAppUserRepository userRepository, IConfiguration configuration,
-        ICurrentUserService currentUserService, IAppRoleRepository roleRepository)
+    public AppIdentityService(IAppUserRepository userRepository, ICurrentUserService currentUserService, IAppRoleRepository roleRepository,
+        IRunningServerState serverState, IDateTimeService dateTime)
     {
         _userRepository = userRepository;
         _currentUserService = currentUserService;
         _roleRepository = roleRepository;
-        _appConfig = configuration.GetApplicationSettings();
+        _serverState = serverState;
+        _dateTime = dateTime;
     }
 
     public void Dispose()
@@ -51,10 +54,12 @@ public class AppIdentityService : IAppIdentityService
         {
             Id = user.Id,
             Username = newUserName,
-            NormalizedUserName = newUserName.NormalizeForDatabase()
+            NormalizedUserName = newUserName.NormalizeForDatabase(),
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
         };
         
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<string> GetNormalizedUserNameAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -64,16 +69,24 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetNormalizedUserNameAsync(AppUserDb user, string normalizedName, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() { Id = user.Id, NormalizedUserName = normalizedName };
-        
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, NormalizedUserName = normalizedName,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<IdentityResult> CreateAsync(AppUserDb user, CancellationToken cancellationToken)
     {
         try
         {
-            await _userRepository.CreateAsync(user.ToCreateObject(), Guid.Empty);
+            user.LastModifiedBy = _serverState.SystemUserId;
+            user.LastModifiedOn = _dateTime.NowDatabaseTime;
+            
+            await _userRepository.CreateAsync(user.ToCreateObject());
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -86,10 +99,13 @@ public class AppIdentityService : IAppIdentityService
     {
         try
         {
-            var updateUser = user.ToUpdateObject();
+            var updateUser = user.ToUpdate();
             updateUser.LastModifiedOn = DateTime.Now;
+            updateUser.LastModifiedBy = _serverState.SystemUserId;
+            updateUser.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-            await _userRepository.UpdateAsync(updateUser, Guid.Empty);
+
+            await _userRepository.UpdateAsync(updateUser);
             return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception ex)
@@ -124,8 +140,14 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetEmailAsync(AppUserDb user, string email, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, Email = email};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, Email = email,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<string> GetEmailAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -140,8 +162,14 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetEmailConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, EmailConfirmed = confirmed};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, EmailConfirmed = confirmed,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<AppUserDb> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
@@ -156,14 +184,26 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetNormalizedEmailAsync(AppUserDb user, string normalizedEmail, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, NormalizedEmail = normalizedEmail};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, NormalizedEmail = normalizedEmail,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task SetPhoneNumberAsync(AppUserDb user, string phoneNumber, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumber = phoneNumber};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, PhoneNumber = phoneNumber,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<string> GetPhoneNumberAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -178,14 +218,26 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetPhoneNumberConfirmedAsync(AppUserDb user, bool confirmed, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, PhoneNumberConfirmed = confirmed};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, PhoneNumberConfirmed = confirmed,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+        
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task SetTwoFactorEnabledAsync(AppUserDb user, bool enabled, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, TwoFactorEnabled = enabled};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, TwoFactorEnabled = enabled,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+        
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<bool> GetTwoFactorEnabledAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -195,8 +247,14 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task SetPasswordHashAsync(AppUserDb user, string passwordHash, CancellationToken cancellationToken)
     {
-        var updateObject = new AppUserUpdate() {Id = user.Id, PasswordHash = passwordHash};
-        await _userRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppUserUpdate
+        {
+            Id = user.Id, PasswordHash = passwordHash,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+        
+        await _userRepository.UpdateAsync(updateObject);
     }
 
     public async Task<string> GetPasswordHashAsync(AppUserDb user, CancellationToken cancellationToken)
@@ -230,7 +288,7 @@ public class AppIdentityService : IAppIdentityService
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.AdminName)).Result;
-        var userIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
+        var userIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(RoleConstants.DefaultRoles.AdminName);
         
         if (!userIsAdmin && requestContainsAdmin)
@@ -269,7 +327,7 @@ public class AppIdentityService : IAppIdentityService
             return await Result<List<IdentityResult>>.FailAsync(ErrorMessageConstants.GenericError);
         var adminRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.AdminName)).Result;
         
-        var currentUserIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser!.Id, adminRole!.Id)).Result;
+        var currentUserIsAdmin = (await _roleRepository.IsUserInRoleAsync(currentUser.Id, adminRole!.Id)).Result;
         var requestContainsAdmin = roleRequest.RoleNames.Contains(adminRole.Name);
         var requestIsForSelf = requestedUser.Id == currentUser.Id;
         var requestIsForDefaultAdmin = requestedUser.Username == UserConstants.DefaultUsers.AdminUsername;
@@ -295,7 +353,7 @@ public class AppIdentityService : IAppIdentityService
                 continue;
             }
 
-            var removeResult = (await _roleRepository.RemoveUserFromRoleAsync(requestedUser.Id, foundRole.Id, currentUser.Id)).Success;
+            var removeResult = (await _roleRepository.RemoveUserFromRoleAsync(requestedUser.Id, foundRole.Id)).Success;
             if (!removeResult)
             {
                 resultList.Add(IdentityResult.Failed(new IdentityError()
@@ -324,8 +382,14 @@ public class AppIdentityService : IAppIdentityService
 
         try
         {
-            await _userRepository.UpdateAsync(
-                new AppUserUpdate(){ Id = requestedUser.Id, IsActive = activeRequest.IsActive}, Guid.Empty);
+            var userUpdate = new AppUserUpdate
+            {
+                Id = requestedUser.Id, IsActive = activeRequest.IsActive,
+                LastModifiedBy = _serverState.SystemUserId,
+                LastModifiedOn = _dateTime.NowDatabaseTime
+            };
+            
+            await _userRepository.UpdateAsync(userUpdate);
             return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsActive}");
         }
         catch (Exception ex)

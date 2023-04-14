@@ -250,7 +250,7 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
@@ -260,7 +260,6 @@ public class AppPermissionRepository : IAppPermissionRepository
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
 
             var createdId = await _database.SaveDataReturnId(AppPermissions.Insert, createObject);
-            await UpdateLastModifiedUserRole(createObject.UserId, createObject.RoleId, modifyingUserId);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -288,15 +287,14 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var permission = await GetByIdAsync(id);
+            await GetByIdAsync(id);
             await _database.SaveData(AppPermissions.Delete, new {Id = id});
-            await UpdateLastModifiedUserRole(permission.Result!.UserId, permission.Result!.RoleId, modifyingUserId);
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -361,22 +359,5 @@ public class AppPermissionRepository : IAppPermissionRepository
         }
 
         return actionReturn;
-    }
-
-    private async Task UpdateLastModifiedUserRole(Guid? userId, Guid? roleId, Guid modifyingUserId)
-    {
-        if (userId is not null)
-        {
-            await _database.SaveData(AppUsers.Update,
-                new {Id = userId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
-            return;
-        }
-
-        if (roleId is not null)
-        {
-            await _database.SaveData(AppRoles.Update,
-                new {Id = roleId, LastModifiedBy = modifyingUserId, LastModifiedOn = _dateTimeService.NowDatabaseTime});
-            return;
-        }
     }
 }

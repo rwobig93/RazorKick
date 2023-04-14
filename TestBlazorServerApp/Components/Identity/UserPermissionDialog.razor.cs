@@ -145,7 +145,7 @@ public partial class UserPermissionDialog
                 Access = permission.Access,
                 Description = permission.Description,
                 CreatedBy = _currentUserId
-            }, _currentUserId);
+            });
             
             if (!addPermission.Success)
             {
@@ -158,7 +158,7 @@ public partial class UserPermissionDialog
 
         foreach (var permission in currentPermissions.Result!.Where(perm => _assignedPermissions.All(x => x.Id != perm.Id)))
         {
-            var removePermission = await PermissionRepository.DeleteAsync(permission.Id, _currentUserId);
+            var removePermission = await PermissionRepository.DeleteAsync(permission.Id);
             if (!removePermission.Success)
             {
                 Snackbar.Add(removePermission.ErrorMessage, Severity.Error);

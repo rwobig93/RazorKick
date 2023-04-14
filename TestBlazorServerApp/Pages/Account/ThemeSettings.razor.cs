@@ -1,5 +1,4 @@
 ﻿using Application.Models.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
@@ -12,7 +11,7 @@ namespace TestBlazorServerApp.Pages.Account;
 public partial class ThemeSettings
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
     private AppUserPreferenceFull _userPreferences = new();
     private AppUserFull CurrentUser { get; set; } = new();
     private AppThemeCustom _editingTheme = AppThemeCustom.GetExampleCustomOne();
@@ -43,7 +42,7 @@ public partial class ThemeSettings
         if (userId is null)
             return;
 
-        CurrentUser = (await UserRepository.GetByIdFullAsync((Guid) userId)).Result!;
+        CurrentUser = (await UserService.GetByIdFullAsync((Guid) userId)).Data!;
     }
 
     private async Task GetPreferences()
@@ -79,10 +78,10 @@ public partial class ThemeSettings
     private async Task UpdatePreferences()
     {
         var updatePreferences = _userPreferences.ToUpdate();
-        var requestResult = await UserRepository.UpdatePreferences(CurrentUser.Id, updatePreferences);
-        if (!requestResult.Success)
+        var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
+        if (!requestResult.Succeeded)
         {
-            Snackbar.Add(requestResult.ErrorMessage, Severity.Error);
+            requestResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 

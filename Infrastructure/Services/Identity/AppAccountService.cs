@@ -42,13 +42,15 @@ public class AppAccountService : IAppAccountService
     private readonly ILocalStorageService _localStorage;
     private readonly AuthStateProvider _authProvider;
     private readonly HttpClient _httpClient;
-    private readonly UserManager<AppUserDb> _userManager;
     private readonly IDateTimeService _dateTime;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRunningServerState _serverState;
+    private readonly ISerializerService _serializer;
 
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IFluentEmail mailService, UserManager<AppUserDb> userManager, IDateTimeService dateTime, ICurrentUserService currentUserService)
+        IFluentEmail mailService, IDateTimeService dateTime, ICurrentUserService currentUserService, IRunningServerState serverState,
+        ISerializerService serializer)
     {
         _appConfig = configuration.GetApplicationSettings();
         _appPermissionRepository = appPermissionRepository;
@@ -58,9 +60,10 @@ public class AppAccountService : IAppAccountService
         _authProvider = authProvider;
         _httpClient = httpClientFactory.CreateClient("Default");
         _mailService = mailService;
-        _userManager = userManager;
         _dateTime = dateTime;
         _currentUserService = currentUserService;
+        _serverState = serverState;
+        _serializer = serializer;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -79,9 +82,12 @@ public class AppAccountService : IAppAccountService
         if (!user.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
 
+        user.LastModifiedBy = _serverState.SystemUserId;
+        user.LastModifiedOn = _dateTime.NowDatabaseTime;
         user.RefreshToken = GenerateRefreshToken();
         user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_appConfig.TokenExpirationDays);
-        var update = await _userRepository.UpdateAsync(user.ToUpdateObject(), Guid.Empty);
+        
+        var update = await _userRepository.UpdateAsync(user.ToUpdate());
         if (!update.Success)
             return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
 
@@ -156,15 +162,15 @@ public class AppAccountService : IAppAccountService
         }
 
         AccountHelpers.GenerateHashAndSalt(password, out var salt, out var hash);
-        createUser.CreatedOn = DateTime.Now;
-        createUser.CreatedBy = Guid.Empty;
+        createUser.CreatedOn = _dateTime.NowDatabaseTime;
+        createUser.CreatedBy = _serverState.SystemUserId;
         createUser.RefreshTokenExpiryTime = DateTime.Now;
         createUser.PasswordSalt = salt;
         createUser.PasswordHash = hash;
         createUser.NormalizedUserName = createUser.Username.NormalizeForDatabase();
         createUser.NormalizedEmail = createUser.Email.NormalizeForDatabase();
 
-        return await _userRepository.CreateAsync(createUser, Guid.Empty);
+        return await _userRepository.CreateAsync(createUser);
     }
 
     public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
@@ -194,9 +200,9 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(createUserResult.ErrorMessage);
 
         var caveatMessage = "";
-        var systemUser = await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
+        await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
         var defaultRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.DefaultName)).Result;
-        var addToRoleResult = await _roleRepository.AddUserToRoleAsync(createUserResult.Result, defaultRole!.Id, systemUser.Result!.Id);
+        var addToRoleResult = await _roleRepository.AddUserToRoleAsync(createUserResult.Result, defaultRole!.Id);
         if (!addToRoleResult.Success)
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
@@ -269,8 +275,12 @@ public class AppAccountService : IAppAccountService
         
         foundUser.EmailConfirmed = true;
         foundUser.IsActive = true;
-        var userUpdate = foundUser.ToUpdateObject();
-        var confirmEmail = await _userRepository.UpdateAsync(userUpdate, Guid.Empty);
+        
+        var userUpdate = foundUser.ToUpdate();
+        userUpdate.LastModifiedBy = _serverState.SystemUserId;
+        userUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
+        
+        var confirmEmail = await _userRepository.UpdateAsync(userUpdate);
         if (!confirmEmail.Success)
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
@@ -290,8 +300,10 @@ public class AppAccountService : IAppAccountService
             AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
             updateObject.PasswordSalt = salt;
             updateObject.PasswordHash = hash;
+            updateObject.LastModifiedBy = _serverState.SystemUserId;
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
         
-            var result = await _userRepository.UpdateAsync(updateObject, submittingUserId);
+            var result = await _userRepository.UpdateAsync(updateObject);
             if (!result.Success)
                 return await Result.FailAsync(result.ErrorMessage);
             
@@ -398,14 +410,20 @@ public class AppAccountService : IAppAccountService
         
         var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
         var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
+        
         var user = (await _userRepository.GetByEmailAsync(userEmail)).Result;
         if (user == null)
             return await Result<UserLoginResponse>.FailAsync("User Not Found.");
+        
         if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
             return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
+        
         var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
         user.RefreshToken = GenerateRefreshToken();
-        var update = await _userRepository.UpdateAsync(user.ToUpdateObject(), Guid.Empty);
+        user.LastModifiedBy = _serverState.SystemUserId;
+        user.LastModifiedOn = _dateTime.NowDatabaseTime;
+        
+        var update = await _userRepository.UpdateAsync(user.ToUpdate());
         if (!update.Success)
             return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
 
@@ -430,20 +448,29 @@ public class AppAccountService : IAppAccountService
         if (!preferences.Success)
             return await Result<AppUserPreferenceFull>.FailAsync($"Failure occurred getting preferences: {preferences.ErrorMessage}");
 
-        return await Result<AppUserPreferenceFull>.SuccessAsync(preferences.Result!);
+        if (preferences.Result is null)
+            return await Result<AppUserPreferenceFull>.FailAsync("Preferences couldn't be found for the UserId provided");
+
+        var preferencesFull = preferences.Result.ToFull();
+            
+        preferencesFull.CustomThemeOne = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeOne!);
+        preferencesFull.CustomThemeTwo = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeTwo!);
+        preferencesFull.CustomThemeThree = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeThree!);
+
+        return await Result<AppUserPreferenceFull>.SuccessAsync(preferencesFull);
     }
 
     public async Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled)
     {
-        var submittingUserId = await _currentUserService.GetApiCurrentUserId();
-        
         var user = await _userRepository.GetByIdAsync(userId);
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
         
         user.Result!.IsActive = enabled;
+        user.Result!.LastModifiedBy = _serverState.SystemUserId;
+        user.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdateObject(), submittingUserId);
+        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdate());
         if (!updateRequest.Success)
             return await Result.FailAsync(updateRequest.ErrorMessage);
 

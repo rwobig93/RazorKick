@@ -101,14 +101,12 @@ else
                         <MudTh>Id</MudTh>
                         <MudTh>Username</MudTh>
                         <MudTh>Email</MudTh>
-                        <MudTh>EmailConfirmed</MudTh>
                         <MudTh>Enabled</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Id">@context.Id</MudTd>
                         <MudTd DataLabel="Name">@context.Username</MudTd>
-                        <MudTd DataLabel="Email">@context.Email</MudTd>
-                        <MudTd DataLabel="EmailConfirmed">@context.EmailConfirmed</MudTd>
+                        <MudTd DataLabel="Email">@context.EmailAddress</MudTd>
                         <MudTd DataLabel="Enabled">@context.IsActive</MudTd>
                     </RowTemplate>
                 </MudTable>

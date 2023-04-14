@@ -1,5 +1,6 @@
 ﻿using Domain.DatabaseEntities.Identity;
 using Shared.Enums.Identity;
+using Shared.Responses.Identity;
 
 namespace Application.Models.Identity;
 
@@ -70,5 +71,21 @@ public static class AppUserSlimExtensions
     public static IEnumerable<AppUserSlim> ToSlims(this IEnumerable<AppUserDb> appUserDbs)
     {
         return appUserDbs.Select(x => x.ToSlim());
+    }
+    
+    public static UserBasicResponse ToResponse(this AppUserSlim appUser)
+    {
+        return new UserBasicResponse()
+        {
+            Id = appUser.Id,
+            Username = appUser.Username,
+            CreatedOn = appUser.CreatedOn,
+            IsActive = appUser.IsActive
+        };
+    }
+
+    public static List<UserBasicResponse> ToResponses(this IEnumerable<AppUserSlim> appUsers)
+    {
+        return appUsers.Select(x => x.ToResponse()).ToList();
     }
 }

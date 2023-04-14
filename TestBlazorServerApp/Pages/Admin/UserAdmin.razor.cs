@@ -2,9 +2,7 @@
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -13,13 +11,12 @@ namespace TestBlazorServerApp.Pages.Admin;
 public partial class UserAdmin
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
-    private AppUserFull CurrentUser { get; set; } = new();
-    private MudTable<AppUserDb> _table = new();
-    private IEnumerable<AppUserDb> _pagedData = new List<AppUserDb>();
-    private HashSet<AppUserDb> _selectedItems = new();
+    [Inject] private IAppUserService UserService { get; init; } = null!;
+    private MudTable<AppUserSlim> _table = new();
+    private IEnumerable<AppUserSlim> _pagedData = new List<AppUserSlim>();
+    private HashSet<AppUserSlim> _selectedItems = new();
     private string _searchString = "";
-    private int _totalUsers = 0;
+    private int _totalUsers;
 
     private bool _canEnableUsers;
     private bool _canDisableUsers;
@@ -30,19 +27,9 @@ public partial class UserAdmin
     {
         if (firstRender)
         {
-            await GetCurrentUser();
             await GetPermissions();
             StateHasChanged();
         }
-    }
-
-    private async Task GetCurrentUser()
-    {
-        var userId = await CurrentUserService.GetCurrentUserId();
-        if (userId is null)
-            return;
-
-        CurrentUser = (await UserRepository.GetByIdFullAsync((Guid) userId)).Result!;
     }
 
     private async Task GetPermissions()
@@ -55,16 +42,16 @@ public partial class UserAdmin
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers;
     }
     
-    private async Task<TableData<AppUserDb>> ServerReload(TableState state)
+    private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
     {
-        var usersResult = await UserRepository.SearchAsync(_searchString);
-        if (!usersResult.Success)
+        var usersResult = await UserService.SearchAsync(_searchString);
+        if (!usersResult.Succeeded)
         {
-            Snackbar.Add(usersResult.ErrorMessage, Severity.Error);
-            return new TableData<AppUserDb>();
+            usersResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return new TableData<AppUserSlim>();
         }
 
-        var data = usersResult.Result!;
+        var data = usersResult.Data;
         
         data = data.Where(user =>
         {
@@ -72,7 +59,7 @@ public partial class UserAdmin
                 return true;
             if (user.Username.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
-            if (user.Email!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            if (user.EmailAddress!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
             if (user.FirstName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -95,10 +82,7 @@ public partial class UserAdmin
                 data = data.OrderByDirection(state.SortDirection, o => o.Username);
                 break;
             case "Email":
-                data = data.OrderByDirection(state.SortDirection, o => o.Email);
-                break;
-            case "EmailConfirmed":
-                data = data.OrderByDirection(state.SortDirection, o => o.EmailConfirmed);
+                data = data.OrderByDirection(state.SortDirection, o => o.EmailAddress);
                 break;
             case "IsActive":
                 data = data.OrderByDirection(state.SortDirection, o => o.IsActive);
@@ -107,7 +91,7 @@ public partial class UserAdmin
 
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         
-        return new TableData<AppUserDb>() {TotalItems = _totalUsers, Items = _pagedData};
+        return new TableData<AppUserSlim>() {TotalItems = _totalUsers, Items = _pagedData};
     }
 
     private void OnSearch(string text)

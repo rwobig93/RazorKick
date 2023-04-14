@@ -2,6 +2,7 @@
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
 
@@ -11,11 +12,16 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 {
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppUserRepository _userRepository;
+    private readonly IRunningServerState _serverState;
+    private readonly IDateTimeService _dateTime;
 
-    public AppIdentityRoleService(IAppRoleRepository roleRepository, IAppUserRepository userRepository)
+    public AppIdentityRoleService(IAppRoleRepository roleRepository, IAppUserRepository userRepository, IRunningServerState serverState,
+        IDateTimeService dateTime)
     {
         _roleRepository = roleRepository;
         _userRepository = userRepository;
+        _serverState = serverState;
+        _dateTime = dateTime;
     }
 
     public void Dispose()
@@ -33,7 +39,10 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task<IdentityResult> UpdateAsync(AppRoleDb role, CancellationToken cancellationToken)
     {
-        var updateRequest = await _roleRepository.UpdateAsync(role.ToUpdateObject(), Guid.Empty);
+        role.LastModifiedBy = _serverState.SystemUserId;
+        role.LastModifiedOn = _dateTime.NowDatabaseTime;
+        
+        var updateRequest = await _roleRepository.UpdateAsync(role.ToUpdateObject());
         return !updateRequest.Success ? 
             IdentityResult.Failed(new IdentityError() {Code = "RoleUpdateFail", Description = updateRequest.ErrorMessage}) : 
             IdentityResult.Success;
@@ -41,8 +50,11 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task<IdentityResult> DeleteAsync(AppRoleDb role, CancellationToken cancellationToken)
     {
+        role.LastModifiedBy = _serverState.SystemUserId;
+        role.LastModifiedOn = _dateTime.NowDatabaseTime;
+
         var systemUser = await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
-        var deleteRequest = await _roleRepository.DeleteAsync(role.Id, systemUser.Result!.Id);
+        var deleteRequest = await _roleRepository.DeleteAsync(role.Id);
         return !deleteRequest.Success ? 
             IdentityResult.Failed(new IdentityError() {Code = "RoleDeleteFail", Description = deleteRequest.ErrorMessage}) : 
             IdentityResult.Success;
@@ -60,8 +72,14 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task SetRoleNameAsync(AppRoleDb role, string roleName, CancellationToken cancellationToken)
     {
-        var updateObject = new AppRoleUpdate() {Name = role.Name};
-        await _roleRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppRoleUpdate
+        {
+            Name = role.Name,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _roleRepository.UpdateAsync(updateObject);
     }
 
     public async Task<string> GetNormalizedRoleNameAsync(AppRoleDb role, CancellationToken cancellationToken)
@@ -71,8 +89,14 @@ public class AppIdentityRoleService : IAppIdentityRoleService
 
     public async Task SetNormalizedRoleNameAsync(AppRoleDb role, string normalizedName, CancellationToken cancellationToken)
     {
-        var updateObject = new AppRoleUpdate() {NormalizedName = role.NormalizedName};
-        await _roleRepository.UpdateAsync(updateObject, Guid.Empty);
+        var updateObject = new AppRoleUpdate
+        {
+            NormalizedName = role.NormalizedName,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        };
+
+        await _roleRepository.UpdateAsync(updateObject);
     }
 
     public async Task<AppRoleDb> FindByIdAsync(string roleId, CancellationToken cancellationToken)

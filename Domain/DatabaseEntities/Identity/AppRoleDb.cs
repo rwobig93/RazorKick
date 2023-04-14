@@ -21,37 +21,6 @@ public class AppRoleDb : IdentityRole<Guid>, IAuditableEntity<Guid>
 
 public static class AppRoleDbExtensions
 {
-    public static RoleResponse ToResponse(this AppRoleDb appRole)
-    {
-        return new RoleResponse
-        {
-            Id = appRole.Id,
-            Name = appRole.Name,
-            Description = appRole.Description ?? ""
-        };
-    }
-    
-    public static List<RoleResponse> ToResponses(this IEnumerable<AppRoleDb> appRoles)
-    {
-        return appRoles.Select(x => x.ToResponse()).ToList();
-    }
-    
-    public static RoleFullResponse ToFullResponse(this AppRoleDb appRole)
-    {
-        return new RoleFullResponse
-        {
-            Id = appRole.Id,
-            Name = appRole.Name,
-            Description = appRole.Description ?? "",
-            Permissions = new List<PermissionResponse>()
-        };
-    }
-    
-    public static List<RoleFullResponse> ToFullResponses(this IEnumerable<AppRoleDb> appRoles)
-    {
-        return appRoles.Select(x => x.ToFullResponse()).ToList();
-    }
-
     public static AppRoleDb ToDb(this RoleResponse roleResponse)
     {
         return new AppRoleDb

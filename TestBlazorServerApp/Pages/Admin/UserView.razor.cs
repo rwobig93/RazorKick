@@ -3,7 +3,6 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -14,8 +13,7 @@ namespace TestBlazorServerApp.Pages.Admin;
 public partial class UserView
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
     
     [Parameter] public Guid UserId { get; set; }
 
@@ -73,15 +71,15 @@ public partial class UserView
 
     private async Task GetViewingUser()
     {
-        _viewingUser = (await UserRepository.GetByIdFullAsync(UserId)).Result!;
-        _createdByUsername = (await UserRepository.GetByIdAsync(_viewingUser.CreatedBy)).Result?.Username;
+        _viewingUser = (await UserService.GetByIdFullAsync(UserId)).Data!;
+        _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
         if (_viewingUser.LastModifiedBy is null)
         {
             _modifiedByUsername = "";
             return;
         }
         
-        _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Result?.Username;
+        _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Data?.Username;
     }
 
     private async Task GetPermissions()
@@ -99,12 +97,10 @@ public partial class UserView
 
     private async Task Save()
     {
-        var submittingUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
-        
-        var updateResult = await UserRepository.UpdateAsync(_viewingUser.ToUpdateObject(), submittingUserId);
-        if (!updateResult.Success)
+        var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate());
+        if (!updateResult.Succeeded)
         {
-            Snackbar.Add(updateResult.ErrorMessage, Severity.Error);
+            updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
         

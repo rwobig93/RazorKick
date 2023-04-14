@@ -46,6 +46,31 @@ public static class AppPermissionSlimExtensions
     {
         return appPermissionDbs.Select(x => x.ToSlim());
     }
+
+    public static AppPermissionSlim ToSlim(this AppPermissionCreate permissionCreate)
+    {
+        return new AppPermissionSlim
+        {
+            Id = Guid.Empty,
+            UserId = permissionCreate.UserId,
+            RoleId = permissionCreate.RoleId,
+            ClaimType = permissionCreate.ClaimType,
+            ClaimValue = permissionCreate.ClaimValue,
+            Name = permissionCreate.Name,
+            Group = permissionCreate.Group,
+            Access = permissionCreate.Access,
+            Description = permissionCreate.Description,
+            CreatedBy = permissionCreate.CreatedBy,
+            CreatedOn = permissionCreate.CreatedOn,
+            LastModifiedBy = permissionCreate.LastModifiedBy,
+            LastModifiedOn = permissionCreate.LastModifiedOn
+        };
+    }
+
+    public static IEnumerable<AppPermissionSlim> ToSlims(this IEnumerable<AppPermissionCreate> appPermissionCreates)
+    {
+        return appPermissionCreates.Select(x => x.ToSlim());
+    }
     
     public static PermissionResponse ToResponse(this AppPermissionSlim permission)
     {

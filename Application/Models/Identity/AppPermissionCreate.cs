@@ -41,9 +41,33 @@ public static class AppPermissionCreateExtensions
         };
     }
 
-    public static List<AppPermissionCreate> ToCreates(this IEnumerable<AppPermissionDb> permissionDbs)
+    public static IEnumerable<AppPermissionCreate> ToCreates(this IEnumerable<AppPermissionDb> permissionDbs)
     {
         return permissionDbs.Select(x => x.ToCreate()).ToList();
+    }
+    
+    public static AppPermissionCreate ToCreate(this AppPermissionSlim permissionSlim)
+    {
+        return new AppPermissionCreate
+        {
+            RoleId = permissionSlim.RoleId,
+            UserId = permissionSlim.UserId,
+            ClaimType = permissionSlim.ClaimType,
+            ClaimValue = permissionSlim.ClaimValue,
+            Name = permissionSlim.Name,
+            Group = permissionSlim.Group,
+            Access = permissionSlim.Access,
+            Description = permissionSlim.Description,
+            CreatedBy = permissionSlim.CreatedBy,
+            CreatedOn = permissionSlim.CreatedOn,
+            LastModifiedBy = permissionSlim.LastModifiedBy,
+            LastModifiedOn = permissionSlim.LastModifiedOn
+        };
+    }
+
+    public static IEnumerable<AppPermissionCreate> ToCreates(this IEnumerable<AppPermissionSlim> permissionSlims)
+    {
+        return permissionSlims.Select(x => x.ToCreate()).ToList();
     }
 
     public static AppPermissionDb ToDb(this AppPermissionCreate permissionCreate)

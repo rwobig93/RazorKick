@@ -16,10 +16,10 @@ public interface IAppUserService
     Task<IResult<AppUserFull?>> GetByUsernameFullAsync(string username);
     Task<IResult<AppUserSlim?>> GetByEmailAsync(string email);
     Task<IResult<AppUserFull?>> GetByEmailFullAsync(string email);
-    Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate);
+    Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
     Task<IResult> DeleteAsync(Guid userId);
     Task<IResult<IEnumerable<AppUserSlim>>> SearchAsync(string searchText);
-    Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate);
+    Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
     Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
     Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<IResult> RemoveExtendedAttributeAsync(Guid attributeId);

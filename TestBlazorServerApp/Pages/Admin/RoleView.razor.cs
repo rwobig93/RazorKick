@@ -3,7 +3,6 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -14,9 +13,8 @@ namespace TestBlazorServerApp.Pages.Admin;
 public partial class RoleView
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppRoleRepository RoleRepository { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
+    [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
     
     [Parameter] public Guid RoleId { get; set; }
 
@@ -72,15 +70,15 @@ public partial class RoleView
 
     private async Task GetViewingRole()
     {
-        _viewingRole = (await RoleRepository.GetByIdFullAsync(RoleId)).Result!;
-        _createdByUsername = (await UserRepository.GetByIdAsync(_viewingRole.CreatedBy)).Result?.Username;
+        _viewingRole = (await RoleService.GetByIdFullAsync(RoleId)).Data!;
+        _createdByUsername = (await UserService.GetByIdAsync(_viewingRole.CreatedBy)).Data?.Username;
         if (_viewingRole.LastModifiedBy is null)
         {
             _modifiedByUsername = "";
             return;
         }
         
-        _modifiedByUsername = (await UserRepository.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Result?.Username;
+        _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
     }
 
     private async Task GetPermissions()
@@ -97,12 +95,10 @@ public partial class RoleView
 
     private async Task Save()
     {
-        var submittingUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
-        
-        var updateResult = await RoleRepository.UpdateAsync(_viewingRole.ToUpdate(), submittingUserId);
-        if (!updateResult.Success)
+        var updateResult = await RoleService.UpdateAsync(_viewingRole.ToUpdate());
+        if (!updateResult.Succeeded)
         {
-            Snackbar.Add(updateResult.ErrorMessage, Severity.Error);
+            updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
         

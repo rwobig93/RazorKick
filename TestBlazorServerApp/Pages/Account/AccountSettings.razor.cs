@@ -1,16 +1,12 @@
 ﻿using Application.Models.Identity;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 
 namespace TestBlazorServerApp.Pages.Account;
 
 public partial class AccountSettings
 {
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
-    private AppUserPreferenceFull _userPreferences = new();
+    [Inject] private IAppUserService UserService { get; init; } = null!;
     private AppUserFull CurrentUser { get; set; } = new();
     
     
@@ -19,7 +15,6 @@ public partial class AccountSettings
         if (firstRender)
         {
             await GetCurrentUser();
-            await GetPreferences();
             StateHasChanged();
         }
     }
@@ -30,28 +25,16 @@ public partial class AccountSettings
         if (userId is null)
             return;
 
-        CurrentUser = (await UserRepository.GetByIdFullAsync((Guid) userId)).Result!;
-    }
-
-    private async Task GetPreferences()
-    {
-        var preferences = await AccountService.GetPreferences(CurrentUser.Id);
-        if (!preferences.Succeeded)
-        {
-            preferences.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        _userPreferences = preferences.Data;
+        CurrentUser = (await UserService.GetByIdFullAsync((Guid) userId)).Data!;
     }
 
     private async Task UpdateAccount()
     {
-        var updatedAccount = CurrentUser.ToUpdateObject();
-        var requestResult = await UserRepository.UpdateAsync(updatedAccount, CurrentUser.Id);
-        if (!requestResult.Success)
+        var updatedAccount = CurrentUser.ToUpdate();
+        var requestResult = await UserService.UpdateAsync(updatedAccount);
+        if (!requestResult.Succeeded)
         {
-            Snackbar.Add(requestResult.ErrorMessage, Severity.Error);
+            requestResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 

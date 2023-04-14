@@ -7,15 +7,14 @@ public interface IAppRoleService
 {
     Task<IResult<IEnumerable<AppRoleSlim>>> GetAllAsync();
     Task<IResult<int>> GetCountAsync();
-    Task<IResult<AppRoleSlim>> GetByIdAsync(Guid roleId);
-    Task<IResult<AppRoleFull>> GetByIdFullAsync(Guid roleId);
-    Task<IResult<AppRoleSlim>> GetByNameAsync(string roleName);
-    Task<IResult<AppRoleFull>> GetByNameFullAsync(Guid roleId);
+    Task<IResult<AppRoleSlim?>> GetByIdAsync(Guid roleId);
+    Task<IResult<AppRoleFull?>> GetByIdFullAsync(Guid roleId);
+    Task<IResult<AppRoleSlim?>> GetByNameAsync(string roleName);
+    Task<IResult<AppRoleFull?>> GetByNameFullAsync(string roleName);
     Task<IResult<IEnumerable<AppRoleSlim>>> SearchAsync(string searchText);
-    Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject);
-    Task<IResult> UpdateAsync(AppRoleUpdate updateObject);
+    Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false);
+    Task<IResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false);
     Task<IResult> DeleteAsync(Guid id);
-    Task<IResult> SetCreatedById(Guid roleId, Guid createdById);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, string roleName);
     Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId);

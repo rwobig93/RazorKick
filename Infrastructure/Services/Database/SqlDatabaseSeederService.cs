@@ -144,7 +144,7 @@ public class SqlDatabaseSeederService : IHostedService
             var convertedPermission = permission.ToAppPermissionCreate();
             convertedPermission.RoleId = roleId;
             convertedPermission.CreatedBy = _systemUser.Id;
-            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission, Guid.Empty);
+            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission);
             if (!addedPermission.Success)
             {
                 _logger.Error("Failed to enforce permission {PermissionValue} on role {RoleId}: {ErrorMessage}",
@@ -195,22 +195,19 @@ public class SqlDatabaseSeederService : IHostedService
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
             AccountType = AccountType.User
-        }, _systemUser.Id);
+        });
         _logger.Information("Created missing {UserName} user with id: {UserId}", userName, createdUser.Result);
 
         return await _userRepository.GetByIdAsync(createdUser.Result);
     }
 
-    private async Task EnforceRolesForUser(Guid userId, List<string> roleNames)
+    private async Task EnforceRolesForUser(Guid userId, IEnumerable<string> roleNames)
     {
         var currentRoles = await _roleRepository.GetRolesForUser(userId);
-        foreach (var role in roleNames)
+        foreach (var role in roleNames.Where(role => !currentRoles.Result!.Any(x => x.Name == role)))
         {
-            if (currentRoles.Result!.Any(x => x.Name == role))
-                continue;
-            
             var foundRole = await _roleRepository.GetByNameAsync(role);
-            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id, Guid.Empty);
+            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id);
             
             _logger.Debug("Added missing role {RoleId} to user {UserId}", foundRole.Result.Id, userId);
         }

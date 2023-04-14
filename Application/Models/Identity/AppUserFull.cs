@@ -90,4 +90,23 @@ public static class AppUserFullExtensions
             Permissions = new List<AppPermissionSlim>()
         };
     }
+    
+    public static UserFullResponse ToResponse(this AppUserFull appUser)
+    {
+        return new UserFullResponse
+        {
+            Id = appUser.Id,
+            Username = appUser.Username,
+            CreatedOn = appUser.CreatedOn,
+            IsActive = appUser.IsActive,
+            AccountType = appUser.AccountType,
+            ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
+            Permissions = appUser.Permissions.ToResponses()
+        };
+    }
+
+    public static List<UserFullResponse> ToResponses(this IEnumerable<AppUserFull> appUsers)
+    {
+        return appUsers.Select(x => x.ToResponse()).ToList();
+    }
 }

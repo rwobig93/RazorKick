@@ -46,7 +46,7 @@ public static class AccountHelpers
             var validEmail = new MailAddress(emailAddress);
             if (verifyHost)
             {
-                var hostEntry = Dns.GetHostEntry(validEmail.Host);
+                Dns.GetHostEntry(validEmail.Host);
             }
             
             return true;
