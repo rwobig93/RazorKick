@@ -1,10 +1,14 @@
-﻿using Application.Models.Identity;
+﻿using System.Collections;
+using Application.Constants.Communication;
+using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
+using Microsoft.Extensions.FileProviders;
 
 namespace Infrastructure.Services.Identity;
 
@@ -13,19 +17,67 @@ public class AppUserService : IAppUserService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly ISerializerService _serializer;
 
-    public AppUserService(IAppUserRepository userRepository, IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository)
+    public AppUserService(IAppUserRepository userRepository, IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
+        ICurrentUserService currentUserService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
+        _currentUserService = currentUserService;
+        _dateTime = dateTime;
+        _serverState = serverState;
+        _serializer = serializer;
+    }
+
+    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserDb userDb)
+    {
+        var fullUser = userDb.ToFull();
+        
+        var userRoles = await _roleRepository.GetRolesForUser(userDb.Id);
+        if (!userRoles.Success)
+            return await Result<AppUserFull?>.FailAsync(userRoles.ErrorMessage);
+
+        fullUser.Roles = (userRoles.Result?.ToSlims() ?? new List<AppRoleSlim>())
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        var foundAttributes = await _userRepository.GetAllUserExtendedAttributesAsync(userDb.Id);
+        if (!foundAttributes.Success)
+            return await Result<AppUserFull?>.FailAsync(foundAttributes.ErrorMessage);
+
+        fullUser.ExtendedAttributes = (foundAttributes.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>())
+            .OrderBy(x => x.Type)
+            .ThenBy(x => x.Name)
+            .ThenBy(x => x.Value)
+            .ToList();
+
+        var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userDb.Id);
+        if (!foundPermissions.Success)
+            return await Result<AppUserFull?>.FailAsync(foundPermissions.ErrorMessage);
+
+        fullUser.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+            .OrderBy(x => x.Group)
+            .ThenBy(x => x.Name)
+            .ThenBy(x => x.Access)
+            .ToList();
+
+        return await Result<AppUserFull?>.SuccessAsync(fullUser);
     }
 
     public async Task<IResult<IEnumerable<AppUserSlim>>> GetAllAsync()
     {
         try
         {
+            var users = await _userRepository.GetAllAsync();
+            if (!users.Success)
+                return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
 
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(users.Result!.ToSlims());
         }
         catch (Exception ex)
         {
@@ -37,7 +89,11 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var userCount = await _userRepository.GetCountAsync();
+            if (!userCount.Success)
+                return await Result<int>.FailAsync(userCount.ErrorMessage);
 
+            return await Result<int>.SuccessAsync(userCount.Result);
         }
         catch (Exception ex)
         {
@@ -45,117 +101,128 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<AppUserSlim>> GetByIdAsync(Guid id)
-    {
-        try
-        {
-
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserSlim>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult<AppUserFull>> GetByIdFullAsync(Guid userId)
+    public async Task<IResult<AppUserSlim?>> GetByIdAsync(Guid userId)
     {
         try
         {
             var foundUser = await _userRepository.GetByIdAsync(userId);
             if (!foundUser.Success)
-                return await Result<AppUserFull>.FailAsync(foundUser.ErrorMessage);
+                return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
 
-            var fullUser = foundUser.Result!.ToFull();
+            return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSlim?>.FailAsync(ex.Message);
+        }
+    }
 
-            var userRoles = await _roleRepository.GetRolesForUser(userId);
-            if (!userRoles.Success)
-                return await Result<AppUserFull>.FailAsync(userRoles.ErrorMessage);
+    public async Task<IResult<AppUserFull?>> GetByIdFullAsync(Guid userId)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByIdAsync(userId);
+            if (!foundUser.Success)
+                return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
+
+            if (foundUser.Result is null)
+                return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
+
+            return await ConvertToFullAsync(foundUser.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserFull?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserSlim?>> GetByUsernameAsync(string username)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByUsernameAsync(username);
+            if (!foundUser.Success)
+                return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
+
+            return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSlim?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserFull?>> GetByUsernameFullAsync(string username)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByUsernameAsync(username);
+            if (!foundUser.Success)
+                return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
+
+            if (foundUser.Result is null)
+                return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
+
+            return await ConvertToFullAsync(foundUser.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserFull?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserSlim?>> GetByEmailAsync(string email)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByEmailAsync(email);
+            if (!foundUser.Success)
+                return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
+
+            return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSlim?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserFull?>> GetByEmailFullAsync(string email)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByEmailAsync(email);
+            if (!foundUser.Success)
+                return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
+
+            if (foundUser.Result is null)
+                return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
+
+            return await ConvertToFullAsync(foundUser.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserFull?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false)
+    {
+        try
+        {
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
+            if (currentUserId is null)
+                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
             
-            fullUser.Roles = (userRoles.Result?.ToSlims() ?? new List<AppRoleSlim>())
-                .OrderBy(x => x.Name)
-                .ToList();
+            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+            updateObject.LastModifiedBy = currentUserId;
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-            var foundAttributes = await _userRepository.GetAllUserExtendedAttributesAsync(userId);
-            if (!foundAttributes.Success)
-                return await Result<AppUserFull>.FailAsync(foundAttributes.ErrorMessage);
+            var updateUser = await _userRepository.UpdateAsync(updateObject);
+            if (!updateUser.Success)
+                return await Result.FailAsync(updateUser.ErrorMessage);
 
-            fullUser.ExtendedAttributes = (foundAttributes.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>())
-                .OrderBy(x => x.Type)
-                .ThenBy(x => x.Name)
-                .ThenBy(x => x.Value)
-                .ToList();
-
-            var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userId);
-            if (!foundPermissions.Success)
-                return await Result<AppUserFull>.FailAsync(foundPermissions.ErrorMessage);
-            
-            fullUser.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
-                .OrderBy(x => x.Group)
-                .ThenBy(x => x.Name)
-                .ThenBy(x => x.Access)
-                .ToList();
-
-            return await Result<AppUserFull>.SuccessAsync(fullUser);
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserFull>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult<AppUserSlim>> GetByUsernameAsync(string username)
-    {
-        try
-        {
-
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserSlim>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult<AppUserFull>> GetByUsernameFullAsync(Guid id)
-    {
-        try
-        {
-
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserFull>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult<AppUserSlim>> GetByEmailAsync(string email)
-    {
-        try
-        {
-
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserSlim>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult<AppUserFull>> GetByEmailFullAsync(Guid id)
-    {
-        try
-        {
-
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserFull>.FailAsync(ex.Message);
-        }
-    }
-
-    public async Task<IResult> UpdateAsync(AppUserUpdate updateObject)
-    {
-        try
-        {
-
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
@@ -163,11 +230,23 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult> DeleteAsync(Guid id)
+    public async Task<IResult> DeleteAsync(Guid userId)
     {
         try
         {
+            var currentUserId = await _currentUserService.GetCurrentUserId();
+            if (currentUserId is null)
+                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
+            
+            // TODO: Add auditing trail for user deleting the account
+            // updateObject.LastModifiedBy = currentUserId;
+            // updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
+            var deleteUser = await _userRepository.DeleteAsync(userId);
+            if (!deleteUser.Success)
+                return await Result.FailAsync(deleteUser.ErrorMessage);
+
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
@@ -179,7 +258,13 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var searchResult = await _userRepository.SearchAsync(searchText);
+            if (!searchResult.Success)
+                return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 
+            var results = searchResult.Result?.ToSlims() ?? new List<AppUserSlim>();
+
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(results);
         }
         catch (Exception ex)
         {
@@ -187,11 +272,23 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(AppUserCreate createObject)
+    public async Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false)
     {
         try
         {
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
+            if (currentUserId is null)
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.UnauthenticatedError);
+            
+            // TODO: Add auditing trail
+            createObject.CreatedBy = currentUserId;
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
 
+            var createUser = await _userRepository.CreateAsync(createObject);
+            if (!createUser.Success)
+                return await Result<Guid>.FailAsync(createUser.ErrorMessage);
+
+            return await Result<Guid>.SuccessAsync(createUser.Result);
         }
         catch (Exception ex)
         {
@@ -203,7 +300,11 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var addRequest = await _userRepository.AddExtendedAttributeAsync(addAttribute);
+            if (!addRequest.Success)
+                return await Result<Guid>.FailAsync(addRequest.ErrorMessage);
 
+            return await Result<Guid>.SuccessAsync(addRequest.Result);
         }
         catch (Exception ex)
         {
@@ -215,7 +316,11 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var updateRequest = await _userRepository.UpdateExtendedAttributeAsync(attributeId, newValue);
+            if (!updateRequest.Success)
+                return await Result.FailAsync(updateRequest.ErrorMessage);
 
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
@@ -227,7 +332,11 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(attributeId);
+            if (!removeRequest.Success)
+                return await Result.FailAsync(removeRequest.ErrorMessage);
 
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
@@ -239,7 +348,11 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var updateRequest = await _userRepository.UpdatePreferences(userId, preferenceUpdate);
+            if (!updateRequest.Success)
+                return await Result.FailAsync(updateRequest.ErrorMessage);
 
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
@@ -247,43 +360,65 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId)
+    public async Task<IResult<AppUserPreferenceFull?>> GetPreferences(Guid userId)
     {
         try
         {
+            var preferenceRequest = await _userRepository.GetPreferences(userId);
+            if (!preferenceRequest.Success)
+                return await Result<AppUserPreferenceFull?>.FailAsync(preferenceRequest.ErrorMessage);
 
+            var preferencesFull = preferenceRequest.Result?.ToFull();
+            if (preferencesFull is null)
+                return await Result<AppUserPreferenceFull?>.FailAsync(preferencesFull);
+            
+            preferencesFull.CustomThemeOne = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeOne!);
+            preferencesFull.CustomThemeTwo = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeTwo!);
+            preferencesFull.CustomThemeThree = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeThree!);
+
+            return await Result<AppUserPreferenceFull?>.SuccessAsync(preferencesFull);
         }
         catch (Exception ex)
         {
-            return await Result<AppUserPreferenceFull>.FailAsync(ex.Message);
+            return await Result<AppUserPreferenceFull?>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId)
+    public async Task<IResult<AppUserExtendedAttributeSlim?>> GetExtendedAttributeByIdAsync(Guid attributeId)
     {
         try
         {
+            var getRequest = await _userRepository.GetExtendedAttributeByIdAsync(attributeId);
+            if (!getRequest.Success)
+                return await Result<AppUserExtendedAttributeSlim?>.FailAsync(getRequest.ErrorMessage);
 
+            return await Result<AppUserExtendedAttributeSlim?>.SuccessAsync(getRequest.Result?.ToSlim());
         }
         catch (Exception ex)
         {
-            return await Result<AppUserExtendedAttributeDb>.FailAsync(ex.Message);
+            return await Result<AppUserExtendedAttributeSlim?>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type)
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type)
     {
         try
         {
+            var getRequest = await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, type);
+            if (!getRequest.Success)
+                return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
+            var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
+
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.SuccessAsync(attributes);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name)
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name)
     {
         try
         {
@@ -291,11 +426,11 @@ public class AppUserService : IAppUserService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllUserExtendedAttributesAsync(Guid userId)
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllUserExtendedAttributesAsync(Guid userId)
     {
         try
         {
@@ -303,11 +438,11 @@ public class AppUserService : IAppUserService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type)
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type)
     {
         try
         {
@@ -315,11 +450,11 @@ public class AppUserService : IAppUserService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByNameAsync(string name)
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesByNameAsync(string name)
     {
         try
         {
@@ -327,11 +462,11 @@ public class AppUserService : IAppUserService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync()
+    public async Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesAsync()
     {
         try
         {
@@ -339,7 +474,7 @@ public class AppUserService : IAppUserService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserExtendedAttributeDb>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
         }
     }
 }

@@ -16,14 +16,12 @@ public class AppUserRepository : IAppUserRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
 
-    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState)
+    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _serverState = serverState;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
@@ -50,7 +48,7 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {TableName = AppUsers.Table.TableName})).FirstOrDefault();
+                General.GetRowCount, new {AppUsers.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
@@ -151,17 +149,12 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, Guid updateUserId)
+    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-            
-            // Guid.Empty will be passed for things like login - we will just set this to the system user
-            updateObject.LastModifiedBy = updateUserId == Guid.Empty ? _serverState.SystemUserId : updateUserId;
-            
             await _database.SaveData(AppUsers.Update, updateObject);
             actionReturn.Succeed();
         }
@@ -179,7 +172,7 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUsers.Delete, new {Id = userId});
+            await _database.SaveData(AppUsers.Delete, new {Id = userId, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -242,16 +235,12 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, Guid createdById)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
-            createObject.CreatedBy = createdById;
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-            createObject.RefreshTokenExpiryTime = _dateTime.NowDatabaseTime;
-            
             var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -392,9 +381,9 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserPreferenceFull>> GetPreferences(Guid userId)
+    public async Task<DatabaseActionResult<AppUserPreferenceDb>> GetPreferences(Guid userId)
     {
-        DatabaseActionResult<AppUserPreferenceFull> actionReturn = new();
+        DatabaseActionResult<AppUserPreferenceDb> actionReturn = new();
 
         try
         {
@@ -410,7 +399,7 @@ public class AppUserRepository : IAppUserRepository
                         AppUserPreferences.GetById, new {Id = createdId})).FirstOrDefault();
             }
             
-            actionReturn.Succeed(existingPreference!.ToFull());
+            actionReturn.Succeed(existingPreference!);
         }
         catch (Exception ex)
         {

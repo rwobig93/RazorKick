@@ -50,11 +50,12 @@ public class AppUsers : ISqlEnforcedEntityMsSql
         Action = "Delete",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Delete]
-                @Id UNIQUEIDENTIFIER
+                @Id UNIQUEIDENTIFIER,
+                @DeletedOn datetime2
             AS
             begin
                 update dbo.[AppUsers]
-                set IsDeleted = 1
+                set IsDeleted = 1, DeletedOn = @DeletedOn
                 where Id = @Id;
             end"
     };

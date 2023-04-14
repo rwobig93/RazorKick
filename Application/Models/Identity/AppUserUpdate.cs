@@ -22,8 +22,6 @@ public class AppUserUpdate
     public string? ProfilePictureDataUrl { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public bool? IsDeleted { get; set; }
-    public DateTime? DeletedOn { get; set; }
     public bool? IsActive { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
@@ -52,8 +50,6 @@ public static class AppUserUpdateExtensions
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
-            IsDeleted = appUser.IsDeleted,
-            DeletedOn = appUser.DeletedOn,
             IsActive = appUser.IsActive,
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
@@ -81,9 +77,7 @@ public static class AppUserUpdateExtensions
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = null,
             LastModifiedOn = null,
-            IsDeleted = null,
-            DeletedOn = null,
-            IsActive = appUser.IsActive,
+            IsActive = null,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
             AccountType = AccountType.User,
@@ -111,8 +105,6 @@ public static class AppUserUpdateExtensions
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = null,
-            IsDeleted = null,
-            DeletedOn = null,
             IsActive = appUser.IsActive,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,

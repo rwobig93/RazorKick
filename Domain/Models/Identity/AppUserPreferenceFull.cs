@@ -25,9 +25,9 @@ public static class AppUserPreferenceFullExtensions
             OwnerId = preferenceDb.OwnerId,
             ThemePreference = preferenceDb.ThemePreference,
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeOne),
-            CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceDb.CustomThemeThree)
+            CustomThemeOne = AppThemeCustom.GetExampleCustomOne(),
+            CustomThemeTwo = AppThemeCustom.GetExampleCustomTwo(),
+            CustomThemeThree = AppThemeCustom.GetExampleCustomThree()
         };
     }
 
@@ -39,9 +39,9 @@ public static class AppUserPreferenceFullExtensions
             OwnerId = preferenceFull.OwnerId,
             ThemePreference = preferenceFull.ThemePreference,
             DrawerDefaultOpen = preferenceFull.DrawerDefaultOpen,
-            CustomThemeOne = JsonConvert.SerializeObject(preferenceFull.CustomThemeOne),
-            CustomThemeTwo = JsonConvert.SerializeObject(preferenceFull.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.SerializeObject(preferenceFull.CustomThemeThree)
+            CustomThemeOne = string.Empty,
+            CustomThemeTwo = string.Empty,
+            CustomThemeThree = string.Empty
         };
     }
 }

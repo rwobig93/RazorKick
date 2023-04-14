@@ -6,5 +6,4 @@ public class UserUpdateRequest
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? ProfilePictureDataUrl { get; set; }
-    public bool? IsActive { get; set; }
 }
