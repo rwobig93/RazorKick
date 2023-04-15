@@ -225,7 +225,7 @@ public static class DependencyInjection
             })
             .AddJwtBearer(bearer =>
             {
-                bearer.RequireHttpsMetadata = false;
+                bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -240,22 +240,20 @@ public static class DependencyInjection
 
                 bearer.Events = new JwtBearerEvents
                 {
-                    OnAuthenticationFailed = c =>
+                    OnAuthenticationFailed = auth =>
                     {
-                        if (c.Exception is SecurityTokenExpiredException)
+                        if (auth.Exception is SecurityTokenExpiredException)
                         {
-                            c.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
-                            c.Response.ContentType = "application/json";
-                            var result = JsonConvert.SerializeObject(Result.Fail("The Token is expired."));
-                            return c.Response.WriteAsync(result);
+                            auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                            auth.Response.ContentType = "application/json";
+                            var authExpired = JsonConvert.SerializeObject(Result.Fail("Authentication Token has expired, please login again"));
+                            return auth.Response.WriteAsync(authExpired);
                         }
-                        else
-                        {
-                            c.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                            c.Response.ContentType = "application/json";
-                            var result = JsonConvert.SerializeObject(Result.Fail("An unhandled error has occurred."));
-                            return c.Response.WriteAsync(result);
-                        }
+                        
+                        auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                        auth.Response.ContentType = "application/json";
+                        var generalError = JsonConvert.SerializeObject(Result.Fail("An unhandled error has occurred."));
+                        return auth.Response.WriteAsync(generalError);
                     },
                     OnChallenge = context =>
                     {
@@ -264,8 +262,8 @@ public static class DependencyInjection
                         
                         context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(Result.Fail("You are not Authorized."));
-                        return context.Response.WriteAsync(result);
+                        var permissionFailure = JsonConvert.SerializeObject(Result.Fail("You don't have permission to this resource"));
+                        return context.Response.WriteAsync(permissionFailure);
 
                     },
                     OnForbidden = context =>
@@ -273,7 +271,7 @@ public static class DependencyInjection
                         context.Response.StatusCode = (int) HttpStatusCode.Forbidden;
                         context.Response.ContentType = "application/json";
                         var result = JsonConvert.SerializeObject(
-                            Result.Fail("You are not authorized to access this resource."));
+                            Result.Fail("You hath been forbidden, do thy bidding my masta, it's a disasta, skywalka we're afta!"));
                         return context.Response.WriteAsync(result);
                     },
                 };
