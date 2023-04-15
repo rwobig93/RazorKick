@@ -1,7 +1,6 @@
 ﻿using Application.Constants.Web;
-using Application.Repositories.Identity;
+using Application.Models.Identity;
 using Application.Services.Identity;
-using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -9,23 +8,22 @@ namespace TestBlazorServerApp.Pages.Admin;
 
 public partial class RoleAdmin
 {
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppRoleRepository RoleRepository { get; init; } = null!;
-    private MudTable<AppRoleDb> _table = new();
-    private IEnumerable<AppRoleDb> _pagedData = new List<AppRoleDb>();
+    [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    private MudTable<AppRoleSlim> _table = new();
+    private IEnumerable<AppRoleSlim> _pagedData = new List<AppRoleSlim>();
     private string _searchString = "";
-    private int _totalRoles = 0;
+    private int _totalRoles;
     
-    private async Task<TableData<AppRoleDb>> ServerReload(TableState state)
+    private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
     {
-        var rolesResult = await RoleRepository.SearchAsync(_searchString);
-        if (!rolesResult.Success)
+        var rolesResult = await RoleService.SearchAsync(_searchString);
+        if (!rolesResult.Succeeded)
         {
-            Snackbar.Add(rolesResult.ErrorMessage, Severity.Error);
-            return new TableData<AppRoleDb>();
+            rolesResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return new TableData<AppRoleSlim>();
         }
 
-        var data = rolesResult.Result!;
+        var data = rolesResult.Data;
         
         data = data.Where(user =>
         {
@@ -50,7 +48,7 @@ public partial class RoleAdmin
 
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         
-        return new TableData<AppRoleDb>() {TotalItems = _totalRoles, Items = _pagedData};
+        return new TableData<AppRoleSlim>() {TotalItems = _totalRoles, Items = _pagedData};
     }
 
     private void OnSearch(string text)

@@ -2,7 +2,6 @@
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
-using Domain.Models.Identity;
 
 namespace Application.Repositories.Identity;
 

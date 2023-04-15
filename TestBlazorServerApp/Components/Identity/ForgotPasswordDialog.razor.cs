@@ -13,7 +13,7 @@ public partial class ForgotPasswordDialog
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
 
     private string EmailAddress { get; set; } = "";
     private bool PageIsLoading { get; set; }
@@ -60,8 +60,8 @@ public partial class ForgotPasswordDialog
 
     private async Task<bool> DoesEmailExist()
     {
-        var foundUser = await UserRepository.GetByEmailAsync(EmailAddress);
-        return foundUser.Result is not null;
+        var foundUser = await UserService.GetByEmailAsync(EmailAddress);
+        return foundUser.Data is not null;
     }
 
     private void DebugFillEmail()

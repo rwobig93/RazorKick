@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
-using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
@@ -10,10 +9,8 @@ namespace TestBlazorServerApp.Pages;
 
 public partial class Index
 {
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    private string BaseUrl => NavManager.BaseUri;
     private UserBasicResponse _loggedInUser = new();
     
     private bool _canViewApi;
@@ -32,7 +29,7 @@ public partial class Index
         }
         catch
         {
-            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect due to being unauthorized
+            // User has old saved token so we'll force a local storage clear and de-authenticate then redirect due to being unauthorized
             await AccountService.LogoutGuiAsync();
             StateHasChanged();
         }

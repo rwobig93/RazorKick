@@ -11,7 +11,6 @@ namespace TestBlazorServerApp.Components.Identity;
 public partial class RolePermissionDialog
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
-    [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
 
     [Parameter] public Guid RoleId { get; set; }
@@ -76,7 +75,7 @@ public partial class RolePermissionDialog
         }
     }
     
-    private readonly TableGroupDefinition<AppPermissionDb> _groupDefinitionDb = new()
+    private readonly TableGroupDefinition<AppPermissionSlim> _groupDefinitionDb = new()
     {
         GroupName = "Category",
         Indentation = false,
@@ -134,8 +133,8 @@ public partial class RolePermissionDialog
             var addPermission = await PermissionService.CreateAsync(new AppPermissionCreate
             {
                 RoleId = RoleId,
-                ClaimType = permission.ClaimType!,
-                ClaimValue = permission.ClaimValue!,
+                ClaimType = permission.ClaimType,
+                ClaimValue = permission.ClaimValue,
                 Name = permission.Name,
                 Group = permission.Group,
                 Access = permission.Access,

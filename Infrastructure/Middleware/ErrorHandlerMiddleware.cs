@@ -31,23 +31,14 @@ public class ErrorHandlerMiddleware
             response.ContentType = "application/json";
             var responseModel = await Result<string>.FailAsync(error.Message);
 
-            switch (error)
+            response.StatusCode = error switch
             {
-                case ApiException:
-                    // custom application error
-                    response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    break;
-
-                case KeyNotFoundException:
-                    // not found error
-                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                    break;
-
-                default:
-                    // unhandled error
-                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    break;
-            }
+                ApiException =>
+                    (int) HttpStatusCode.BadRequest,
+                KeyNotFoundException =>
+                    (int) HttpStatusCode.NotFound,
+                _ => (int) HttpStatusCode.InternalServerError
+            };
             var result = JsonSerializer.Serialize(responseModel);
             await response.WriteAsync(result);
         }

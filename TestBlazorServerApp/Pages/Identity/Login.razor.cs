@@ -22,7 +22,6 @@ public partial class Login
 {
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserRepository UserRepository { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -113,19 +112,19 @@ public partial class Login
         ShowAuth = !ShowAuth;
     }
     
-    private void DebugFillAdminCreds()
+    private void DebugFillAdminCredentials()
     {
         Username = UserConstants.DefaultUsers.AdminUsername;
         Password = UserConstants.DefaultUsers.AdminPassword;
     }
     
-    private void DebugFillModeratorCreds()
+    private void DebugFillModeratorCredentials()
     {
         Username = UserConstants.DefaultUsers.ModeratorUsername;
         Password = UserConstants.DefaultUsers.ModeratorPassword;
     }
     
-    private void DebugFillBasicCreds()
+    private void DebugFillBasicCredentials()
     {
         Username = UserConstants.DefaultUsers.BasicUsername;
         Password = UserConstants.DefaultUsers.BasicPassword;
