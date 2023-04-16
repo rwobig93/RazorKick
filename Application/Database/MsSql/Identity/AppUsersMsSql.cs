@@ -2,9 +2,9 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Identity;
 
-public class AppUsers : ISqlEnforcedEntityMsSql
+public class AppUsersMsSql : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsers).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersMsSql).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {

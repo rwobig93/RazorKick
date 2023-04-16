@@ -8,11 +8,10 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Requests.Identity.Role;
 
-namespace Infrastructure.Repositories.Identity;
+namespace Infrastructure.Repositories.MsSql.Identity;
 
-public class AppRoleRepository : IAppRoleRepository
+public class AppRoleRepositoryMsSql : IAppRoleRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
@@ -20,7 +19,7 @@ public class AppRoleRepository : IAppRoleRepository
     private readonly IRunningServerState _serverState;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
+    public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
         IServiceScopeFactory scopeFactory)
     {
         _database = database;
@@ -43,7 +42,7 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
-                AppRoles.Table.TableName, createRole.Name, ex.Message);
+                AppRolesMsSql.Table.TableName, createRole.Name, ex.Message);
         }
     }
 
@@ -61,7 +60,7 @@ public class AppRoleRepository : IAppRoleRepository
         catch (Exception ex)
         {
             _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
-                AppRoles.Table.TableName, updateRole.Id, ex.Message);
+                AppRolesMsSql.Table.TableName, updateRole.Id, ex.Message);
         }
     }
 
@@ -71,12 +70,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetAll, new { });
+            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(AppRolesMsSql.GetAll, new { });
             actionReturn.Succeed(allRoles);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -89,12 +88,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {AppRoles.Table.TableName})).FirstOrDefault();
+                GeneralMsSql.GetRowCount, new {AppRolesMsSql.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, General.GetRowCount.Path, ex.Message);
+            actionReturn.FailLog(_logger, GeneralMsSql.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -106,12 +105,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRoles.GetById, new {Id = roleId})).FirstOrDefault();
+            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(AppRolesMsSql.GetById, new {Id = roleId})).FirstOrDefault();
             actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -124,12 +123,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
-                AppRoles.GetByName, new {Name = roleName})).FirstOrDefault();
+                AppRolesMsSql.GetByName, new {Name = roleName})).FirstOrDefault();
             actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.GetByName.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -142,12 +141,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
-                AppRoles.GetByNormalizedName, new {NormalizedName = normalizedRoleName})).FirstOrDefault();
+                AppRolesMsSql.GetByNormalizedName, new {NormalizedName = normalizedRoleName})).FirstOrDefault();
             actionReturn.Succeed(foundRole!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.GetByNormalizedName.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.GetByNormalizedName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -160,12 +159,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var searchResults =
-                await _database.LoadData<AppRoleDb, dynamic>(AppRoles.Search, new { SearchTerm = searchText });
+                await _database.LoadData<AppRoleDb, dynamic>(AppRolesMsSql.Search, new { SearchTerm = searchText });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.Search.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.Search.Path, ex.Message);
         }
 
         return actionReturn;
@@ -178,12 +177,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await UpdateAuditing(createObject, systemUpdate);
-            var createdId = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
+            var createdId = await _database.SaveDataReturnId(AppRolesMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -196,12 +195,12 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             await UpdateAuditing(updateObject, systemUpdate);
-            await _database.SaveData(AppRoles.Update, updateObject);
+            await _database.SaveData(AppRolesMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -213,12 +212,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppRoles.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
+            await _database.SaveData(AppRolesMsSql.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -230,12 +229,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppRoles.SetCreatedById, new { Id = roleId, CreatedBy = createdById });
+            await _database.SaveData(AppRolesMsSql.SetCreatedById, new { Id = roleId, CreatedBy = createdById });
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppRoles.SetCreatedById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppRolesMsSql.SetCreatedById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -248,13 +247,13 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
-                AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = roleId})).FirstOrDefault();
+                AppUserRoleJunctionsMsSql.GetByUserRoleId, new {UserId = userId, RoleId = roleId})).FirstOrDefault();
             var hasRole = userRoleJunction is not null;
             actionReturn.Succeed(hasRole);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.GetByUserRoleId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.GetByUserRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -267,9 +266,9 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
-                AppRoles.GetByName, new {Name = roleName})).FirstOrDefault();
+                AppRolesMsSql.GetByName, new {Name = roleName})).FirstOrDefault();
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
-                AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = foundRole!.Name})).FirstOrDefault();
+                AppUserRoleJunctionsMsSql.GetByUserRoleId, new {UserId = userId, RoleId = foundRole!.Name})).FirstOrDefault();
             var hasRole = userRoleJunction is not null;
             actionReturn.Succeed(hasRole);
         }
@@ -287,12 +286,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
+            await _database.SaveData(AppUserRoleJunctionsMsSql.Insert, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -304,12 +303,12 @@ public class AppRoleRepository : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
+            await _database.SaveData(AppUserRoleJunctionsMsSql.Delete, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -322,7 +321,7 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var roleIds = await _database.LoadData<Guid, dynamic>(
-                AppUserRoleJunctions.GetRolesOfUser, new {UserId = userId});
+                AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = userId});
 
             var allRoles = (await GetAllAsync()).Result ?? new List<AppRoleDb>();
             var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
@@ -344,9 +343,9 @@ public class AppRoleRepository : IAppRoleRepository
         try
         {
             var userIds = await _database.LoadData<Guid, dynamic>(
-                AppUserRoleJunctions.GetUsersOfRole, new {RoleId = roleId});
+                AppUserRoleJunctionsMsSql.GetUsersOfRole, new {RoleId = roleId});
 
-            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
+            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.GetAll, new { });
             var matchingUsers = allUsers.Where(x => userIds.Any(u => u == x.Id));
 
             actionReturn.Succeed(matchingUsers);

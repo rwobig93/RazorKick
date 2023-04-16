@@ -5,14 +5,14 @@ using Application.Services.Database;
 using Domain.DatabaseEntities.Example;
 using Domain.Models.Database;
 
-namespace Infrastructure.Repositories.Example;
+namespace Infrastructure.Repositories.MsSql.Example;
 
-public class BookReviewRepository : IBookReviewRepository
+public class BookReviewRepositoryMsSql : IBookReviewRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     
-    public BookReviewRepository(ISqlDataService database, ILogger logger)
+    public BookReviewRepositoryMsSql(ISqlDataService database, ILogger logger)
     {
         _database = database;
         _logger = logger;
@@ -24,12 +24,12 @@ public class BookReviewRepository : IBookReviewRepository
         
         try
         {
-            var allReviews = (await _database.LoadData<BookReviewDb, dynamic>(BookReviews.GetAll, new { })).ToList();
+            var allReviews = (await _database.LoadData<BookReviewDb, dynamic>(BookReviewsMsSql.GetAll, new { })).ToList();
             actionReturn.Succeed(allReviews);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.GetAll.Path, ex.Message);
         }
         
         return actionReturn;
@@ -41,12 +41,12 @@ public class BookReviewRepository : IBookReviewRepository
         
         try
         {
-            var createdId = await _database.SaveDataReturnId(BookReviews.Insert, createObject);
+            var createdId = await _database.SaveDataReturnId(BookReviewsMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.Insert.Path, ex.Message);
         }
         
         return actionReturn;
@@ -59,12 +59,12 @@ public class BookReviewRepository : IBookReviewRepository
         try
         {
             var foundReview = (await _database.LoadData<BookReviewDb, dynamic>(
-                BookReviews.GetById, new {Id = id})).FirstOrDefault();
+                BookReviewsMsSql.GetById, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundReview);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.GetById.Path, ex.Message);
         }
         
         return actionReturn;
@@ -76,12 +76,12 @@ public class BookReviewRepository : IBookReviewRepository
         
         try
         {
-            await _database.SaveData(BookReviews.Update, updateObject);
+            await _database.SaveData(BookReviewsMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.Update.Path, ex.Message);
         }
         
         return actionReturn;
@@ -93,12 +93,12 @@ public class BookReviewRepository : IBookReviewRepository
         
         try
         {
-            await _database.SaveData(BookReviews.Delete, new {Id = id});
+            await _database.SaveData(BookReviewsMsSql.Delete, new {Id = id});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.Delete.Path, ex.Message);
         }
         
         return actionReturn;
@@ -111,12 +111,12 @@ public class BookReviewRepository : IBookReviewRepository
         try
         {
             var foundReviews = (await _database.LoadData<BookReviewDb, dynamic>(
-                BookReviews.GetByBookId, new {BookId = bookId})).ToList();
+                BookReviewsMsSql.GetByBookId, new {BookId = bookId})).ToList();
             actionReturn.Succeed(foundReviews);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.GetByBookId.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.GetByBookId.Path, ex.Message);
         }
         
         return actionReturn;
@@ -129,12 +129,12 @@ public class BookReviewRepository : IBookReviewRepository
         try
         {
             var foundReviews = (await _database.LoadData<BookReviewDb, dynamic>(
-                BookReviews.GetAllFromAuthor, new {Author = author})).ToList();
+                BookReviewsMsSql.GetAllFromAuthor, new {Author = author})).ToList();
             actionReturn.Succeed(foundReviews);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookReviews.GetAllFromAuthor.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookReviewsMsSql.GetAllFromAuthor.Path, ex.Message);
         }
         
         return actionReturn;

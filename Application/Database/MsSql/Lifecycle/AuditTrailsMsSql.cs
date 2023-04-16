@@ -2,9 +2,9 @@
 
 namespace Application.Database.MsSql.Lifecycle;
 
-public class AuditTrails : ISqlEnforcedEntityMsSql
+public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrails).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrailsMsSql).GetDbScriptsFromClass();
 
     public static readonly MsSqlTable Table = new()
     {

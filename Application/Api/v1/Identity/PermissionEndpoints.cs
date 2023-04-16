@@ -19,8 +19,6 @@ public static class PermissionEndpoints
         // Permissions
         app.MapGet(ApiRoutes.Identity.Permission.GetAll, GetAllPermissions).ApiVersionOne();
         app.MapGet(ApiRoutes.Identity.Permission.GetById, GetPermission).ApiVersionOne();
-        app.MapDelete(ApiRoutes.Identity.Permission.Delete, DeletePermission).ApiVersionOne();
-        app.MapPut(ApiRoutes.Identity.Permission.Update, UpdatePermission).ApiVersionOne();
         
         // Users
         app.MapGet(ApiRoutes.Identity.Permission.GetDirectPermissionsForUser, GetDirectPermissionsForUser).ApiVersionOne();
@@ -97,36 +95,6 @@ public static class PermissionEndpoints
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
-        }
-    }
-
-    private static async Task<IResult> UpdatePermission(PermissionUpdateRequest permissionRequest, IAppPermissionService permissionService)
-    {
-        try
-        {
-            var updateRequest = await permissionService.UpdateAsync(permissionRequest.ToUpdate());
-            if (!updateRequest.Succeeded) return updateRequest;
-            
-            return await Result.SuccessAsync("Successfully updated permission!");
-        }
-        catch (Exception ex)
-        {
-            return await Result.FailAsync(ex.Message);
-        }
-    }
-
-    private static async Task<IResult> DeletePermission(Guid permissionId, IAppPermissionService permissionService)
-    {
-        try
-        {
-            var deleteRequest = await permissionService.DeleteAsync(permissionId);
-            if (!deleteRequest.Succeeded) return deleteRequest;
-            
-            return await Result.SuccessAsync("Successfully deleted permission!");
-        }
-        catch (Exception ex)
-        {
-            return await Result.FailAsync(ex.Message);
         }
     }
 

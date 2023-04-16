@@ -17,8 +17,8 @@ using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
-using Infrastructure.Repositories.Example;
-using Infrastructure.Repositories.Identity;
+using Infrastructure.Repositories.MsSql.Example;
+using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
@@ -50,13 +50,13 @@ public static class DependencyInjection
         builder.Services.AddSettingsConfiguration(builder.Configuration);
         builder.Services.AddSystemServices(builder.Configuration);
 
-        builder.Services.AddRepositories();
+        builder.Services.AddRepositories(builder.Configuration);
         builder.Services.AddApplicationServices();
 
         builder.Services.AddApiServices();
         builder.Services.AddAuthServices(builder.Configuration);
  
-        builder.Services.AddDatabaseServices();
+        builder.Services.AddDatabaseServices(builder.Configuration);
 
         return builder;
     }
@@ -71,13 +71,15 @@ public static class DependencyInjection
     {
         configuration.ConfigureMailSettings(services);
         configuration.ConfigureApplicationSettings(services);
+        configuration.ConfigureDatabaseSettings(services);
     }
 
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHangfire(x =>
         {
-            x.UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection"));
+            // TODO: Validate database provider options for hangfire, would determine route for supported DB providers
+            x.UseSqlServerStorage(configuration.GetDatabaseSettings().Core);
             x.UseDarkDashboard();
         });
         services.AddHangfireServer();
@@ -172,14 +174,28 @@ public static class DependencyInjection
         });
     }
 
-    private static void AddRepositories(this IServiceCollection services)
+    private static void AddRepositories(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IBookRepository, BookRepository>();
-        services.AddSingleton<IBookGenreRepository, BookGenreRepository>();
-        services.AddSingleton<IBookReviewRepository, BookReviewRepository>();
-        services.AddSingleton<IAppUserRepository, AppUserRepository>();
-        services.AddSingleton<IAppRoleRepository, AppRoleRepository>();
-        services.AddSingleton<IAppPermissionRepository, AppPermissionRepository>();
+        var databaseProvider = configuration.GetDatabaseSettings().Provider;
+        switch (databaseProvider)
+        {
+            case "MsSql":
+                services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
+                services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
+                services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
+                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                break;
+            default:
+                services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
+                services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
+                services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
+                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                break;
+        }
     }
 
     private static void AddApplicationServices(this IServiceCollection services)
@@ -205,10 +221,13 @@ public static class DependencyInjection
         });
     }
 
-    private static void AddDatabaseServices(this IServiceCollection services)
+    private static void AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
     {
         // TODO: Add more sql support, currently we only support MsSql
-        services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
+        if (configuration.GetDatabaseSettings().Provider == "MsSql")
+            services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
+        else
+            throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
 
         // Seeds the targeted database using the indicated provider on startup
         services.AddHostedService<SqlDatabaseSeederService>();

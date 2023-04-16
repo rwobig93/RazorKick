@@ -10,5 +10,5 @@ public class AppConfiguration : IAppSettingsSection
     public int TokenExpirationDays { get; set; } = 7;
     public int SessionIdleTimeoutMinutes { get; set; } = 240;
     public bool TrustAllCertificates { get; set; }
-    public bool EnforceNonSystemAndAdminAccounts { get; set; } = false;
+    public bool EnforceNonSystemAndAdminAccounts { get; set; }
 }

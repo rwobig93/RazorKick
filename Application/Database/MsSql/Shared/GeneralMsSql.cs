@@ -2,9 +2,9 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Shared;
 
-public class General : ISqlEnforcedEntityMsSql
+public class GeneralMsSql : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(General).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GeneralMsSql).GetDbScriptsFromClass();
     
     public static readonly MsSqlStoredProcedure GetRowCount = new()
     {

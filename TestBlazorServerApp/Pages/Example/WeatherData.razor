@@ -13,10 +13,18 @@
           Virtualize="true" Loading="@(_forecasts == null)" Filter="@SearchFunction" @bind-selected="_selectedItem"
           FixedFooter="true" FixedHeader="true">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Weather Forcast</MudText>
-        <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        <MudContainer Class="d-flex flex-wrap gap-4">
+            <MudText Typo="Typo.h6">Weather Forecast</MudText>
+            <MudSpacer/>
+            <MudTooltip Text="Refresh Data">
+                <MudButton Color="Color.Success" OnClick="@RefreshWeatherData" Variant="Variant.Outlined">
+                    <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
+                </MudButton>
+            </MudTooltip>
+            <MudSpacer/>
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+        </MudContainer>
     </ToolBarContent>
     <HeaderContent>
         <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" 

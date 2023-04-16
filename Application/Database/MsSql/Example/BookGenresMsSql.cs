@@ -2,9 +2,9 @@ using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Example;
 
-public class BookGenres : ISqlEnforcedEntityMsSql
+public class BookGenresMsSql : ISqlEnforcedEntityMsSql
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(BookGenres).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(BookGenresMsSql).GetDbScriptsFromClass();
     
     public static readonly MsSqlTable Table = new()
     {

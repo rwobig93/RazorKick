@@ -14,6 +14,16 @@ public static class RoleConstants
         public const string DefaultDescription = "Default role with base permissions, granted to every account by default";
     }
 
+    public static List<string> GetUnchangeableRoleNames()
+    {
+        return new List<string>()
+        {
+            DefaultRoles.AdminName,
+            DefaultRoles.ModeratorName,
+            DefaultRoles.DefaultName
+        };
+    }
+
     public static List<string> GetAdminRoleNames()
     {
         return new List<string>()

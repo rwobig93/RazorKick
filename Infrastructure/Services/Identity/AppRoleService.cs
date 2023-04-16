@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -193,6 +194,10 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            var roleToChange = await GetByIdAsync(updateObject.Id);
+            if (RoleConstants.GetUnchangeableRoleNames().Contains(roleToChange.Data!.Name!) && roleToChange.Data!.Name! != updateObject.Name)
+                return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
+
             var updateRequest = await _roleRepository.UpdateAsync(updateObject);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);

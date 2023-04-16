@@ -1,4 +1,5 @@
-﻿using Application.Settings.AppSettings;
+﻿using Application.Settings;
+using Application.Settings.AppSettings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,5 +33,18 @@ public static class AppConfigurationHelpers
     public static MailConfiguration GetMailSettings(this IConfiguration configuration)
     {
         return configuration.GetSection(MailConfiguration.SectionName).Get<MailConfiguration>();
+    }
+    
+    public static DatabaseConfiguration ConfigureDatabaseSettings(
+        this IConfiguration configuration, IServiceCollection services)
+    {
+        var dbSettingsConfiguration = configuration.GetSection(DatabaseConfiguration.SectionName);
+        services.Configure<MailConfiguration>(dbSettingsConfiguration);
+        return dbSettingsConfiguration.Get<DatabaseConfiguration>();
+    }
+
+    public static DatabaseConfiguration GetDatabaseSettings(this IConfiguration configuration)
+    {
+        return configuration.GetSection(DatabaseConfiguration.SectionName).Get<DatabaseConfiguration>();
     }
 }

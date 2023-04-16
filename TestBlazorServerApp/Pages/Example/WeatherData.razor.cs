@@ -16,7 +16,7 @@ public partial class WeatherData
 
     protected override async Task OnInitializedAsync()
     {
-        _forecasts = await WeatherForecast.GetForecastAsync(new WeatherForecastRequest());
+        await RefreshWeatherData();
     }
 
     private bool SearchFunction(WeatherDataResponse weatherResponse)
@@ -27,5 +27,10 @@ public partial class WeatherData
             return true;
         return $"{weatherResponse.TemperatureC} {weatherResponse.TemperatureF}".Contains(_searchString, 
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task RefreshWeatherData()
+    {
+        _forecasts = await WeatherForecast.GetForecastAsync(new WeatherForecastRequest());
     }
 }

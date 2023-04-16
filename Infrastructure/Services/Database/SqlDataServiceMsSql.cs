@@ -30,7 +30,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
 
         return await connection.ExecuteAsync(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -38,7 +38,7 @@ public class SqlDataServiceMsSql : ISqlDataService
     public async Task<Guid> SaveDataReturnId<TParameters>(
         ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection")
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
 
         return await connection.ExecuteScalarAsync<Guid>(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -48,7 +48,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
 
         return await connection.QueryAsync<TDataClass>(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -59,7 +59,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
 
         return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
     }
@@ -70,7 +70,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
 
         return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
     }
@@ -104,7 +104,7 @@ public class SqlDataServiceMsSql : ISqlDataService
     {
         try
         {
-            using IDbConnection connection = new SqlConnection(_configuration.GetConnectionString(connectionId));
+            using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
             connection.Execute(dbEntity.SqlStatement);
             _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
                 dbEntity.Type, dbEntity.FriendlyName);

@@ -10,9 +10,9 @@ using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure.Repositories.Identity;
+namespace Infrastructure.Repositories.MsSql.Identity;
 
-public class AppUserRepository : IAppUserRepository
+public class AppUserRepositoryMsSql : IAppUserRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
@@ -20,7 +20,7 @@ public class AppUserRepository : IAppUserRepository
     private readonly IRunningServerState _serverState;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
+    public AppUserRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
         IServiceScopeFactory scopeFactory)
     {
         _database = database;
@@ -43,7 +43,7 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
-                AppUsers.Table.TableName, createUser.Username, ex.Message);
+                AppUsersMsSql.Table.TableName, createUser.Username, ex.Message);
         }
     }
 
@@ -61,7 +61,7 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
-                AppUsers.Table.TableName, updateUser.Id, ex.Message);
+                AppUsersMsSql.Table.TableName, updateUser.Id, ex.Message);
         }
     }
 
@@ -71,12 +71,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsers.GetAll, new { });
+            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.GetAll, new { });
             actionReturn.Succeed(allUsers);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -89,12 +89,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                General.GetRowCount, new {AppUsers.Table.TableName})).FirstOrDefault();
+                GeneralMsSql.GetRowCount, new {AppUsersMsSql.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, General.GetRowCount.Path, ex.Message);
+            actionReturn.FailLog(_logger, GeneralMsSql.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -107,12 +107,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsers.GetById, new {Id = userId})).FirstOrDefault();
+                AppUsersMsSql.GetById, new {Id = userId})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -125,12 +125,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsers.GetByUsername, new {Username = username})).FirstOrDefault();
+                AppUsersMsSql.GetByUsername, new {Username = username})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetByUsername.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByUsername.Path, ex.Message);
         }
 
         return actionReturn;
@@ -143,12 +143,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsers.GetByNormalizedUsername, new {NormalizedUsername = normalizedUsername})).FirstOrDefault();
+                AppUsersMsSql.GetByNormalizedUsername, new {NormalizedUsername = normalizedUsername})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetByNormalizedUsername.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByNormalizedUsername.Path, ex.Message);
         }
 
         return actionReturn;
@@ -161,12 +161,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsers.GetByEmail, new {Email = email})).FirstOrDefault();
+                AppUsersMsSql.GetByEmail, new {Email = email})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetByEmail.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByEmail.Path, ex.Message);
         }
 
         return actionReturn;
@@ -179,12 +179,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsers.GetByNormalizedEmail, new {NormalizedEmail = normalizedEmail})).FirstOrDefault();
+                AppUsersMsSql.GetByNormalizedEmail, new {NormalizedEmail = normalizedEmail})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.GetByNormalizedEmail.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByNormalizedEmail.Path, ex.Message);
         }
 
         return actionReturn;
@@ -197,12 +197,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await UpdateAuditing(createObject, systemUpdate);
-            var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
+            var createdId = await _database.SaveDataReturnId(AppUsersMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -215,12 +215,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             await UpdateAuditing(updateObject, systemUpdate);
-            await _database.SaveData(AppUsers.Update, updateObject);
+            await _database.SaveData(AppUsersMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -234,12 +234,12 @@ public class AppUserRepository : IAppUserRepository
         {
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
             await UpdateAsync(new AppUserUpdate() {Id = userId, IsActive = false});
-            await _database.SaveData(AppUsers.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(AppUsersMsSql.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -251,12 +251,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            var updatedId = await _database.SaveDataReturnId(AppUsers.SetUserId, new { CurrentId = currentId, NewId = newId });
+            var updatedId = await _database.SaveDataReturnId(AppUsersMsSql.SetUserId, new { CurrentId = currentId, NewId = newId });
             actionReturn.Succeed(updatedId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.SetUserId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.SetUserId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -268,12 +268,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUsers.SetCreatedById, new { Id = userId, CreatedBy = createdById });
+            await _database.SaveData(AppUsersMsSql.SetCreatedById, new { Id = userId, CreatedBy = createdById });
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.SetCreatedById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.SetCreatedById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -286,12 +286,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var searchResults =
-                await _database.LoadData<AppUserDb, dynamic>(AppUsers.Search, new { SearchTerm = searchText });
+                await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.Search, new { SearchTerm = searchText });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUsers.Search.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUsersMsSql.Search.Path, ex.Message);
         }
 
         return actionReturn;
@@ -304,14 +304,14 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundMembership = await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
-                AppUserRoleJunctions.GetByUserRoleId, new {UserId = userId, RoleId = roleId});
+                AppUserRoleJunctionsMsSql.GetByUserRoleId, new {UserId = userId, RoleId = roleId});
 
             var isMember = foundMembership.FirstOrDefault() is not null;
             actionReturn.Succeed(isMember);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.GetByUserRoleId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.GetByUserRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -323,12 +323,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Insert, new {UserId = userId, RoleId = roleId});
+            await _database.SaveData(AppUserRoleJunctionsMsSql.Insert, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -340,12 +340,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctions.Delete, new {UserId = userId, RoleId = roleId});
+            await _database.SaveData(AppUserRoleJunctionsMsSql.Delete, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserRoleJunctions.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -357,12 +357,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            var createdId = await _database.SaveDataReturnId(AppUserExtendedAttributes.Insert, addAttribute);
+            var createdId = await _database.SaveDataReturnId(AppUserExtendedAttributesMsSql.Insert, addAttribute);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -374,12 +374,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUserExtendedAttributes.Update, new {Id = attributeId, Value = newValue});
+            await _database.SaveData(AppUserExtendedAttributesMsSql.Update, new {Id = attributeId, Value = newValue});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -391,12 +391,12 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUserExtendedAttributes.Delete, new {Id = attributeId});
+            await _database.SaveData(AppUserExtendedAttributesMsSql.Delete, new {Id = attributeId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -409,12 +409,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
-                AppUserPreferences.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
+                AppUserPreferencesMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
             
             if (existingPreference is null)
-                await _database.SaveData(AppUserPreferences.Insert, preferenceUpdate.ToCreate());
+                await _database.SaveData(AppUserPreferencesMsSql.Insert, preferenceUpdate.ToCreate());
             else
-                await _database.SaveData(AppUserPreferences.Update, preferenceUpdate);
+                await _database.SaveData(AppUserPreferencesMsSql.Update, preferenceUpdate);
             
             actionReturn.Succeed();
         }
@@ -433,22 +433,22 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
-                AppUserPreferences.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
+                AppUserPreferencesMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
             
             if (existingPreference is null)
             {
                 var newPreferences = new AppUserPreferenceCreate() {OwnerId = userId};
                 var createdId = await _database.SaveDataReturnId(
-                    AppUserPreferences.Insert, newPreferences);
+                    AppUserPreferencesMsSql.Insert, newPreferences);
                 existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
-                        AppUserPreferences.GetById, new {Id = createdId})).FirstOrDefault();
+                        AppUserPreferencesMsSql.GetById, new {Id = createdId})).FirstOrDefault();
             }
             
             actionReturn.Succeed(existingPreference!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserPreferences.GetByOwnerId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserPreferencesMsSql.GetByOwnerId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -461,12 +461,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttribute = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetById, new {Id = attributeId})).FirstOrDefault();
+                AppUserExtendedAttributesMsSql.GetById, new {Id = attributeId})).FirstOrDefault();
             actionReturn.Succeed(foundAttribute!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -480,12 +480,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfTypeForOwner, new {OwnerId = userId, Type = type});
+                AppUserExtendedAttributesMsSql.GetAllOfTypeForOwner, new {OwnerId = userId, Type = type});
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfTypeForOwner.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAllOfTypeForOwner.Path, ex.Message);
         }
 
         return actionReturn;
@@ -499,12 +499,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfNameForOwner, new {OwnerId = userId, Name = name});
+                AppUserExtendedAttributesMsSql.GetAllOfNameForOwner, new {OwnerId = userId, Name = name});
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfNameForOwner.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAllOfNameForOwner.Path, ex.Message);
         }
 
         return actionReturn;
@@ -517,12 +517,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetByOwnerId, new {OwnerId = userId});
+                AppUserExtendedAttributesMsSql.GetByOwnerId, new {OwnerId = userId});
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetByOwnerId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetByOwnerId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -536,12 +536,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAllOfType, new {Type = type});
+                AppUserExtendedAttributesMsSql.GetAllOfType, new {Type = type});
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAllOfType.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAllOfType.Path, ex.Message);
         }
 
         return actionReturn;
@@ -554,12 +554,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetByName, new {Name = name});
+                AppUserExtendedAttributesMsSql.GetByName, new {Name = name});
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetByName.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -572,12 +572,12 @@ public class AppUserRepository : IAppUserRepository
         try
         {
             var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributes.GetAll, new { });
+                AppUserExtendedAttributesMsSql.GetAll, new { });
             actionReturn.Succeed(foundAttributes);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppUserExtendedAttributes.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;

@@ -86,4 +86,8 @@
       <None Remove="EmailTemplates\PasswordReset.cshtml" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Repositories\MsSql\" />
+    </ItemGroup>
+
 </Project>

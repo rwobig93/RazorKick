@@ -6,14 +6,14 @@ using Domain.DatabaseEntities.Example;
 using Domain.Models.Database;
 using Domain.Models.Example;
 
-namespace Infrastructure.Repositories.Example;
+namespace Infrastructure.Repositories.MsSql.Example;
 
-public class BookGenreRepository : IBookGenreRepository
+public class BookGenreRepositoryMsSql : IBookGenreRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     
-    public BookGenreRepository(ISqlDataService database, ILogger logger)
+    public BookGenreRepositoryMsSql(ISqlDataService database, ILogger logger)
     {
         _database = database;
         _logger = logger;
@@ -25,12 +25,12 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            var allGenres = (await _database.LoadData<BookGenreDb, dynamic>(BookGenres.GetAll, new { })).ToList();
+            var allGenres = (await _database.LoadData<BookGenreDb, dynamic>(BookGenresMsSql.GetAll, new { })).ToList();
             actionReturn.Succeed(allGenres);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.GetAll.Path, ex.Message);
         }
         
         return actionReturn;
@@ -42,12 +42,12 @@ public class BookGenreRepository : IBookGenreRepository
         
         try
         {
-            var createdId = await _database.SaveDataReturnId(BookGenres.Insert, genreCreate);
+            var createdId = await _database.SaveDataReturnId(BookGenresMsSql.Insert, genreCreate);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.Insert.Path, ex.Message);
         }
         
         return actionReturn;
@@ -60,12 +60,12 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
-                BookGenres.GetById, new {Id = id})).FirstOrDefault();
+                BookGenresMsSql.GetById, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.GetById.Path, ex.Message);
         }
         
         return actionReturn;
@@ -78,12 +78,12 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
-                BookGenres.GetByName, new {Name = genreName})).FirstOrDefault();
+                BookGenresMsSql.GetByName, new {Name = genreName})).FirstOrDefault();
             actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.GetByName.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.GetByName.Path, ex.Message);
         }
         
         return actionReturn;
@@ -96,12 +96,12 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var foundGenre = (await _database.LoadData<BookGenreDb, dynamic>(
-                BookGenres.GetByValue, new {Value = genreValue})).FirstOrDefault();
+                BookGenresMsSql.GetByValue, new {Value = genreValue})).FirstOrDefault();
             actionReturn.Succeed(foundGenre);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.GetByValue.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.GetByValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -113,12 +113,12 @@ public class BookGenreRepository : IBookGenreRepository
 
         try
         {
-            await _database.SaveData(BookGenres.Update, genreUpdate);
+            await _database.SaveData(BookGenresMsSql.Update, genreUpdate);
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -130,12 +130,12 @@ public class BookGenreRepository : IBookGenreRepository
 
         try
         {
-            await _database.SaveData(BookGenres.Delete, new {Id = id});
+            await _database.SaveData(BookGenresMsSql.Delete, new {Id = id});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenres.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenresMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -147,12 +147,12 @@ public class BookGenreRepository : IBookGenreRepository
 
         try
         {
-            await _database.SaveData(BookGenreJunctions.Insert, new {BookId = bookId, GenreId = genreId});
+            await _database.SaveData(BookGenreJunctionsMsSql.Insert, new {BookId = bookId, GenreId = genreId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenreJunctions.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenreJunctionsMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -164,12 +164,12 @@ public class BookGenreRepository : IBookGenreRepository
 
         try
         {
-            await _database.SaveData(BookGenreJunctions.Delete, new {BookId = bookId, GenreId = genreId});
+            await _database.SaveData(BookGenreJunctionsMsSql.Delete, new {BookId = bookId, GenreId = genreId});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, BookGenreJunctions.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, BookGenreJunctionsMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -182,7 +182,7 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var bookGenreIds = await _database.LoadData<Guid, dynamic>(
-                BookGenreJunctions.GetGenresForBook, new { BookId = bookId });
+                BookGenreJunctionsMsSql.GetGenresForBook, new { BookId = bookId });
 
             var allGenres = (await GetAllAsync()).Result ?? new List<BookGenreDb>();
             var matchingGenres = allGenres.Where(x => bookGenreIds.Any(p => p == x.Id)).ToList();
@@ -204,10 +204,10 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var bookIds = await _database.LoadData<Guid, dynamic>(
-                BookGenreJunctions.GetBooksForGenre, new { GenreId = genreId });
+                BookGenreJunctionsMsSql.GetBooksForGenre, new { GenreId = genreId });
 
             var allBooks = await _database.LoadData<BookDb, dynamic>(
-                Books.GetAll, new { });
+                BooksMsSql.GetAll, new { });
 
             var matchingBooks = allBooks.Where(x => bookIds.Any(p => p == x.Id)).ToList();
 
@@ -228,13 +228,13 @@ public class BookGenreRepository : IBookGenreRepository
         try
         {
             var mappings = await _database.LoadData<BookGenreJunctionDb, dynamic>(
-                BookGenreJunctions.GetAll, new { });
+                BookGenreJunctionsMsSql.GetAll, new { });
 
             var allBooks = await _database.LoadData<BookDb, dynamic>(
-                Books.GetAll, new { });
+                BooksMsSql.GetAll, new { });
 
             var allGenres = await _database.LoadData<BookGenreDb, dynamic>(
-                BookGenres.GetAll, new { });
+                BookGenresMsSql.GetAll, new { });
 
             var mappingList = mappings.ToList().Select(mapping => new BookGenreJunctionFull()
             {
