@@ -47,47 +47,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\ExampleUser\spExampleUser_Delete.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\ExampleUser\spExampleUser_Get.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\ExampleUser\spExampleUser_GetAll.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\ExampleUser\spExampleUser_Insert.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\ExampleUser\spExampleUser_Update.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_Delete.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_GetAll.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_GetByUserRoleId.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_GetRolesOfUser.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_GetUsersOfRole.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_Insert.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Junction_UR\spJunction_UR_Search.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Delete.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_GetAll.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_GetById.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Insert.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Search.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\Role\spRole_Update.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Delete.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetAll.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetByOwnerId.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_GetByOwnerIdAndType.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Insert.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\UserExtendedAttribute\spUserExtendedAttribute_Update.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Delete.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetByEmail.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetById.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetAll.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_GetByUsername.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Insert.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Search.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\StoredProcedures\User\spUser_Update.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\ExampleUser.sql" />
       <None Remove="DatabaseScripts\MsSql\Tables\Roles.sql" />
-      <EmbeddedResource Include="DatabaseScripts\MsSql\Tables\Roles.sql" />
       <None Remove="EmailTemplates\RegistrationConfirmation.cshtml" />
       <None Remove="EmailTemplates\PasswordReset.cshtml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Repositories\MsSql\" />
     </ItemGroup>
 
 </Project>

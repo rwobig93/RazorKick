@@ -63,11 +63,11 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.CreatedOn" Format="@DateDisplayFormat" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_createdOn" Format="@DateDisplayFormat" Label="Created" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_modifiedByUsername" Label="Last Modified By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_viewingUser.LastModifiedOn" Format="@DateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_modifiedOn" Format="@DateDisplayFormat" Label="Last Modified" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     @* TODO: Add ExtendedAttributes view if viewer has permission *@

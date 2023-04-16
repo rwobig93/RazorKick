@@ -22,6 +22,8 @@ public partial class RoleView
     private AppRoleFull _viewingRole = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
+    private DateTime? _createdOn;
+    private DateTime? _modifiedOn;
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
 
     private bool _invalidDataProvided;
@@ -72,13 +74,14 @@ public partial class RoleView
     {
         _viewingRole = (await RoleService.GetByIdFullAsync(RoleId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingRole.CreatedBy)).Data?.Username;
-        if (_viewingRole.LastModifiedBy is null)
-        {
-            _modifiedByUsername = "";
-            return;
-        }
+        // TODO: Add timezone id gather from local system/client
+        _createdOn = _viewingRole.CreatedOn.ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
         
-        _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
+        if (_viewingRole.LastModifiedBy is not null)
+        {
+            _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
+            _modifiedOn = ((DateTime) _viewingRole.LastModifiedOn!).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+        }
     }
 
     private async Task GetPermissions()

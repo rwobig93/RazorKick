@@ -21,6 +21,8 @@ public partial class UserView
     private AppUserFull _viewingUser = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
+    private DateTime? _createdOn;
+    private DateTime? _modifiedOn;
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
 
     private bool _invalidDataProvided;
@@ -73,13 +75,14 @@ public partial class UserView
     {
         _viewingUser = (await UserService.GetByIdFullAsync(UserId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
-        if (_viewingUser.LastModifiedBy is null)
-        {
-            _modifiedByUsername = "";
-            return;
-        }
+        // TODO: Add timezone id gather from local system/client
+        _createdOn = _viewingUser.CreatedOn.ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
         
-        _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Data?.Username;
+        if (_viewingUser.LastModifiedBy is not null)
+        {
+            _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Data?.Username;
+            _modifiedOn = ((DateTime) _viewingUser.LastModifiedOn!).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+        }
     }
 
     private async Task GetPermissions()
