@@ -3,9 +3,11 @@ using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.Identity;
 
@@ -13,13 +15,53 @@ public class AppPermissionRepository : IAppPermissionRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AppPermissionRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTimeService)
+    public AppPermissionRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
+        IServiceScopeFactory scopeFactory)
     {
         _database = database;
         _logger = logger;
-        _dateTimeService = dateTimeService;
+        _dateTime = dateTime;
+        _serverState = serverState;
+        _scopeFactory = scopeFactory;
+    }
+
+    private async Task UpdateAuditing(AppPermissionCreate createPermission, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            createPermission.CreatedBy = currentUserId ?? createPermission.CreatedBy;
+            createPermission.CreatedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
+                AppPermissions.Table.TableName, createPermission.Name, ex.Message);
+        }
+    }
+
+    private async Task UpdateAuditing(AppPermissionUpdate updatePermission, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+            updatePermission.LastModifiedBy = currentUserId ?? updatePermission.LastModifiedBy;
+            updatePermission.LastModifiedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
+                AppPermissions.Table.TableName, updatePermission.Id, ex.Message);
+        }
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -250,7 +292,7 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, bool systemUpdate = false)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
@@ -259,6 +301,7 @@ public class AppPermissionRepository : IAppPermissionRepository
             if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
 
+            await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppPermissions.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -270,12 +313,13 @@ public class AppPermissionRepository : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject)
+    public async Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject, bool systemUpdate = false)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            await UpdateAuditing(updateObject, systemUpdate);
             await _database.SaveData(AppPermissions.Update, updateObject);
             actionReturn.Succeed();
         }

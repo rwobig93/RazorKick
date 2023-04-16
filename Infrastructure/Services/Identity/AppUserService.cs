@@ -15,18 +15,16 @@ public class AppUserService : IAppUserService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
 
     public AppUserService(IAppUserRepository userRepository, IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
-        ICurrentUserService currentUserService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer)
+        IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _currentUserService = currentUserService;
         _dateTime = dateTime;
         _serverState = serverState;
         _serializer = serializer;
@@ -208,17 +206,6 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
-            updateObject.LastModifiedBy = currentUserId;
-            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var updateUser = await _userRepository.UpdateAsync(updateObject);
             if (!updateUser.Success)
                 return await Result.FailAsync(updateUser.ErrorMessage);
@@ -235,17 +222,6 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var currentUserId = await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail for user deleting the account
-            // updateObject.LastModifiedBy = currentUserId;
-            // updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var deleteUser = await _userRepository.DeleteAsync(userId);
             if (!deleteUser.Success)
                 return await Result.FailAsync(deleteUser.ErrorMessage);
@@ -281,17 +257,6 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail
-            createObject.CreatedBy = currentUserId;
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createUser = await _userRepository.CreateAsync(createObject);
             if (!createUser.Success)
                 return await Result<Guid>.FailAsync(createUser.ErrorMessage);

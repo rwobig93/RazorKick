@@ -3,10 +3,12 @@ using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.Identity;
 
@@ -15,12 +17,52 @@ public class AppUserRepository : IAppUserRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
+    public AppUserRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
+        IServiceScopeFactory scopeFactory)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
+        _scopeFactory = scopeFactory;
+        _serverState = serverState;
+    }
+
+    private async Task UpdateAuditing(AppUserCreate createUser, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            createUser.CreatedBy = currentUserId ?? createUser.CreatedBy;
+            createUser.CreatedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
+                AppUsers.Table.TableName, createUser.Username, ex.Message);
+        }
+    }
+
+    private async Task UpdateAuditing(AppUserUpdate updateUser, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+            updateUser.LastModifiedBy = currentUserId ?? updateUser.LastModifiedBy;
+            updateUser.LastModifiedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
+                AppUsers.Table.TableName, updateUser.Id, ex.Message);
+        }
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
@@ -148,12 +190,31 @@ public class AppUserRepository : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            await UpdateAuditing(createObject, systemUpdate);
+            var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsers.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            await UpdateAuditing(updateObject, systemUpdate);
             await _database.SaveData(AppUsers.Update, updateObject);
             actionReturn.Succeed();
         }
@@ -171,7 +232,9 @@ public class AppUserRepository : IAppUserRepository
 
         try
         {
-            await _database.SaveData(AppUsers.Delete, new {Id = userId, DeletedOn = _dateTime.NowDatabaseTime});
+            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
+            await UpdateAsync(new AppUserUpdate() {Id = userId, IsActive = false});
+            await _database.SaveData(AppUsers.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -229,23 +292,6 @@ public class AppUserRepository : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsers.Search.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
-    {
-        DatabaseActionResult<Guid> actionReturn = new();
-
-        try
-        {
-            var createdId = await _database.SaveDataReturnId(AppUsers.Insert, createObject);
-            actionReturn.Succeed(createdId);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, AppUsers.Insert.Path, ex.Message);
         }
 
         return actionReturn;

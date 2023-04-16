@@ -11,15 +11,12 @@ namespace Infrastructure.Services.Identity;
 public class AppPermissionService : IAppPermissionService
 {
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
 
-    public AppPermissionService(IAppPermissionRepository permissionRepository, ICurrentUserService currentUserService, IDateTimeService dateTime,
-        IRunningServerState serverState)
+    public AppPermissionService(IAppPermissionRepository permissionRepository, IDateTimeService dateTime, IRunningServerState serverState)
     {
         _permissionRepository = permissionRepository;
-        _currentUserService = currentUserService;
         _dateTime = dateTime;
         _serverState = serverState;
     }
@@ -260,16 +257,6 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
-            
-            createObject.LastModifiedBy = currentUserId;
-            createObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Success)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
@@ -286,16 +273,6 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            updateObject.LastModifiedBy = currentUserId;
-            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var updateRequest = await _permissionRepository.UpdateAsync(updateObject);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
@@ -312,17 +289,6 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            var currentUserId = await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail for user deleting the account
-            // updateObject.LastModifiedBy = currentUserId;
-            // updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var deleteRequest = await _permissionRepository.DeleteAsync(permissionId);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);

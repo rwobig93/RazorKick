@@ -43,13 +43,12 @@ public class AppAccountService : IAppAccountService
     private readonly AuthStateProvider _authProvider;
     private readonly HttpClient _httpClient;
     private readonly IDateTimeService _dateTime;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
 
     public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IFluentEmail mailService, IDateTimeService dateTime, ICurrentUserService currentUserService, IRunningServerState serverState,
+        IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState,
         ISerializerService serializer)
     {
         _appConfig = configuration.GetApplicationSettings();
@@ -61,7 +60,6 @@ public class AppAccountService : IAppAccountService
         _httpClient = httpClientFactory.CreateClient("Default");
         _mailService = mailService;
         _dateTime = dateTime;
-        _currentUserService = currentUserService;
         _serverState = serverState;
         _serializer = serializer;
     }
@@ -293,8 +291,6 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            var submittingUserId = await _currentUserService.GetApiCurrentUserId();
-        
             var updateObject = new AppUserUpdate() { Id = userId };
         
             AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);

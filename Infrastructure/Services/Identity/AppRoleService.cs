@@ -12,16 +12,14 @@ public class AppRoleService : IAppRoleService
 {
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly ICurrentUserService _currentUserService;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
 
     public AppRoleService(IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
-        ICurrentUserService currentUserService, IDateTimeService dateTime, IRunningServerState serverState)
+        IDateTimeService dateTime, IRunningServerState serverState)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _currentUserService = currentUserService;
         _dateTime = dateTime;
         _serverState = serverState;
     }
@@ -179,17 +177,6 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.GenericError);
-
-            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
-            createObject.CreatedBy = (Guid)currentUserId;
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-            
             var createRequest = await _roleRepository.CreateAsync(createObject);
             if (!createRequest.Success)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
@@ -206,17 +193,6 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
-            updateObject.LastModifiedBy = currentUserId;
-            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var updateRequest = await _roleRepository.UpdateAsync(updateObject);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
@@ -233,17 +209,6 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var currentUserId = await _currentUserService.GetCurrentUserId();
-            if (currentUserId is null)
-                return await Result.FailAsync(ErrorMessageConstants.UnauthenticatedError);
-
-            if (currentUserId == Guid.Empty)
-                return await Result.FailAsync(ErrorMessageConstants.GenericError);
-            
-            // TODO: Add auditing trail for user deleting the account
-            // updateObject.LastModifiedBy = currentUserId;
-            // updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-
             var deleteRequest = await _roleRepository.DeleteAsync(id);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);

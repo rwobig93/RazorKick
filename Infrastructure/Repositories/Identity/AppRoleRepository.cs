@@ -3,9 +3,12 @@ using Application.Database.MsSql.Shared;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.Database;
+using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
+using Microsoft.Extensions.DependencyInjection;
+using Shared.Requests.Identity.Role;
 
 namespace Infrastructure.Repositories.Identity;
 
@@ -14,12 +17,52 @@ public class AppRoleRepository : IAppRoleRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
+    public AppRoleRepository(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
+        IServiceScopeFactory scopeFactory)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
+        _serverState = serverState;
+        _scopeFactory = scopeFactory;
+    }
+
+    private async Task UpdateAuditing(AppRoleCreate createRole, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            createRole.CreatedBy = currentUserId ?? createRole.CreatedBy;
+            createRole.CreatedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
+                AppRoles.Table.TableName, createRole.Name, ex.Message);
+        }
+    }
+
+    private async Task UpdateAuditing(AppRoleUpdate updateRole, bool systemUpdate = false)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
+            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
+            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+            updateRole.LastModifiedBy = currentUserId ?? updateRole.LastModifiedBy;
+            updateRole.LastModifiedOn = _dateTime.NowDatabaseTime;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
+                AppRoles.Table.TableName, updateRole.Id, ex.Message);
+        }
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync()
@@ -128,12 +171,13 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
+            await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppRoles.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -145,12 +189,13 @@ public class AppRoleRepository : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
+    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            await UpdateAuditing(updateObject, systemUpdate);
             await _database.SaveData(AppRoles.Update, updateObject);
             actionReturn.Succeed();
         }

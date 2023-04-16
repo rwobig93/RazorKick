@@ -14,12 +14,12 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername);
     Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email);
     Task<DatabaseActionResult<AppUserDb>> GetByNormalizedEmailAsync(string normalizedEmail);
-    Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject);
+    Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
+    Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
     Task<DatabaseActionResult> DeleteAsync(Guid id);
     Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId);
     Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById);
     Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText);
-    Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
