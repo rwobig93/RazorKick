@@ -5,6 +5,7 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Hangfire;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
 
@@ -75,7 +77,7 @@ public static class WebServerConfiguration
     private static void SetupRunningServerState(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         
         #if DEBUG
@@ -84,7 +86,7 @@ public static class WebServerConfiguration
             serverState.IsRunningInDebugMode = false;
         #endif
         
-        serverState.ApplicationName = configuration.GetApplicationSettings().ApplicationName;
+        serverState.ApplicationName = appConfig.Value.ApplicationName;
     }
 
     private static void ValidateDatabaseStructure(this IHost app)

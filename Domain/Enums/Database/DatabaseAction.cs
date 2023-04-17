@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enums.Database;
 
-public enum DatabaseAction
+public enum DatabaseActionType
 {
     Create = 0,
     Update = 1,

@@ -25,6 +25,7 @@ using FluentEmail.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
@@ -46,12 +47,13 @@ public class AppAccountService : IAppAccountService
     private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
 
-    public AppAccountService(IConfiguration configuration, IAppPermissionRepository appPermissionRepository, IAppRoleRepository roleRepository,
+    public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
+    roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState,
         ISerializerService serializer)
     {
-        _appConfig = configuration.GetApplicationSettings();
+        _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
         _roleRepository = roleRepository;
         _userRepository = userRepository;
@@ -534,7 +536,7 @@ public class AppAccountService : IAppAccountService
         var tokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appConfig.Secret!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appConfig.Secret)),
             ValidateIssuer = false,
             ValidateAudience = false,
             RoleClaimType = ClaimTypes.Role,
@@ -553,7 +555,7 @@ public class AppAccountService : IAppAccountService
 
     private SigningCredentials GetSigningCredentials()
     {
-        var secret = Encoding.UTF8.GetBytes(_appConfig.Secret!);
+        var secret = Encoding.UTF8.GetBytes(_appConfig.Secret);
         return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
     }
 }

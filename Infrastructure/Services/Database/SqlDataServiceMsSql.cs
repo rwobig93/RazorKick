@@ -4,25 +4,26 @@ using Application.Database;
 using Application.Database.MsSql;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
+using Application.Settings.AppSettings;
 using Dapper;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Database;
 
 public class SqlDataServiceMsSql : ISqlDataService
 {
-    private readonly IConfiguration _configuration;
+    private readonly DatabaseConfiguration _dbConfig;
     private readonly ILogger _logger;
 
-    public SqlDataServiceMsSql(IConfiguration configuration, ILogger logger)
+    public SqlDataServiceMsSql(IOptions<DatabaseConfiguration> dbConfig, ILogger logger)
     {
-        _configuration = configuration;
+        _dbConfig = dbConfig.Value;
         _logger = logger;
     }
 
     public void EnforceDatabaseStructure(string connectionId)
     {
-        EnforceDatabaseEntities(connectionId);
+        EnforceDatabaseEntities();
     }
 
     public async Task<int> SaveData<TParameters>(
@@ -30,7 +31,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
         return await connection.ExecuteAsync(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -38,7 +39,7 @@ public class SqlDataServiceMsSql : ISqlDataService
     public async Task<Guid> SaveDataReturnId<TParameters>(
         ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection")
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
         return await connection.ExecuteScalarAsync<Guid>(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -48,7 +49,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
         return await connection.QueryAsync<TDataClass>(script.Path, parameters, commandType: CommandType.StoredProcedure);
     }
@@ -59,7 +60,7 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
         return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
     }
@@ -70,12 +71,12 @@ public class SqlDataServiceMsSql : ISqlDataService
         TParameters parameters,
         string connectionId)
     {
-        using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
         return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
     }
 
-    private void EnforceDatabaseEntities(string connectionId)
+    private void EnforceDatabaseEntities()
     {
         // Gather inheriting classes
         var entitiesToBeEnforced = typeof(ISqlEnforcedEntityMsSql).GetImplementingTypes<ISqlEnforcedEntityMsSql>();
@@ -97,14 +98,14 @@ public class SqlDataServiceMsSql : ISqlDataService
         });
 
         foreach (var script in databaseScripts)
-            ExecuteSqlScriptObject(connectionId, script);
+            ExecuteSqlScriptObject(script);
     }
 
-    private void ExecuteSqlScriptObject(string connectionId, ISqlDatabaseScript dbEntity)
+    private void ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
     {
         try
         {
-            using IDbConnection connection = new SqlConnection(_configuration.GetDatabaseSettings().Core);
+            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
             connection.Execute(dbEntity.SqlStatement);
             _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
                 dbEntity.Type, dbEntity.FriendlyName);

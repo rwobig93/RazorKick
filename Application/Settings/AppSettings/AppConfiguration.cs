@@ -1,14 +1,31 @@
-﻿namespace Application.Settings.AppSettings;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Application.Settings.AppSettings;
 
 public class AppConfiguration : IAppSettingsSection
 {
-    internal static string SectionName => "General";
+    public const string SectionName = "General";
+    
     public string ApplicationName { get; set; } = "TestBlazorServer";
-    public string? Secret { get; set; }
-    public string BaseUrl { get; set; } = "https://localhost:9500/";
-    public int PermissionValidationIntervalSeconds { get; set; } = 5;
-    public int TokenExpirationDays { get; set; } = 7;
-    public int SessionIdleTimeoutMinutes { get; set; } = 240;
+
+    [Required]
+    [MinLength(32)]
+    [MaxLength(128)]
+    public string Secret { get; init; } = null!;
+    
+    [Url]
+    public string BaseUrl { get; init; } = "https://localhost:9500/";
+    
+    [Range(0, 2_592_000)]
+    public int PermissionValidationIntervalSeconds { get; init; } = 5;
+    
+    [Range(1, 30)]
+    public int TokenExpirationDays { get; init; } = 7;
+    
+    [Range(0, 86_400)]
+    public int SessionIdleTimeoutMinutes { get; init; } = 240;
+    
     public bool TrustAllCertificates { get; set; }
+    
     public bool EnforceNonSystemAndAdminAccounts { get; set; }
 }

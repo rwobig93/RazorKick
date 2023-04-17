@@ -9,7 +9,7 @@ public class AuditTrailDb
     public Guid RecordId { get; set; }
     public Guid ChangedBy { get; set; }
     public DateTime Timestamp { get; set; }
-    public DatabaseAction Action { get; set; }
+    public DatabaseActionType Action { get; set; }
     public string? Before { get; set; }
     public string After { get; set; } = null!;
 }

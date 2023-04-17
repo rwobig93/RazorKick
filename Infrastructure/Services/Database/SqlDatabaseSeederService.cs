@@ -5,10 +5,12 @@ using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Shared.Enums.Identity;
 
 namespace Infrastructure.Services.Database;
@@ -19,19 +21,19 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IConfiguration _configuration;
+    private readonly AppConfiguration _appConfig;
     private readonly IRunningServerState _serverState;
 
     private AppUserDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IAppPermissionRepository permissionRepository, IConfiguration configuration, IRunningServerState serverState)
+        IAppPermissionRepository permissionRepository, IOptions<AppConfiguration> appConfig, IRunningServerState serverState)
     {
         _logger = logger;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _configuration = configuration;
+        _appConfig = appConfig.Value;
         _serverState = serverState;
     }
 
@@ -80,7 +82,7 @@ public class SqlDatabaseSeederService : IHostedService
         if (adminUser.Success)
             await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
 
-        if (_configuration.GetApplicationSettings().EnforceNonSystemAndAdminAccounts)
+        if (_appConfig.EnforceNonSystemAndAdminAccounts)
         {
             var moderatorUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,

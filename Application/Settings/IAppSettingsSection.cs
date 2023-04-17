@@ -2,5 +2,5 @@
 
 public interface IAppSettingsSection
 {
-    internal static string SectionName { get; } = "Unknown";
+    public const string SectionName = "Unknown";
 }

@@ -12,7 +12,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         throw new NotImplementedException();
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllPaginatedAsync(int offset, int pageSize)
+    public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         throw new NotImplementedException();
     }

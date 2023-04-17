@@ -15,6 +15,7 @@ using Application.Settings.AppSettings;
 using Asp.Versioning;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Repositories.MsSql.Example;
@@ -69,9 +70,23 @@ public static class DependencyInjection
 
     private static void AddSettingsConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        configuration.ConfigureMailSettings(services);
-        configuration.ConfigureApplicationSettings(services);
-        configuration.ConfigureDatabaseSettings(services);
+        services.AddOptions<AppConfiguration>()
+            .Bind(configuration.GetRequiredSection(AppConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<DatabaseConfiguration>()
+            .Bind(configuration.GetRequiredSection(DatabaseConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<MailConfiguration>()
+            .Bind(configuration.GetSection(MailConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        
+        // TODO: Move used configurations to new structure
+        // configuration.ConfigureMailSettings(services);
+        // configuration.ConfigureApplicationSettings(services);
+        // configuration.ConfigureDatabaseSettings(services);
     }
 
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
@@ -179,7 +194,7 @@ public static class DependencyInjection
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
         {
-            case "MsSql":
+            case DatabaseProviderType.MsSql:
                 services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
                 services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
                 services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
@@ -187,6 +202,10 @@ public static class DependencyInjection
                 services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
                 services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
                 break;
+            case DatabaseProviderType.Postgresql:
+                throw new NotImplementedException("Postgres hasn't been implemented yet, please use a supported Database provider");
+            case DatabaseProviderType.MySql:
+                throw new NotImplementedException("MySql hasn't been implemented yet, please use a supported Database provider");
             default:
                 services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
                 services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
@@ -224,10 +243,19 @@ public static class DependencyInjection
     private static void AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
     {
         // TODO: Add more sql support, currently we only support MsSql
-        if (configuration.GetDatabaseSettings().Provider == "MsSql")
-            services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
-        else
-            throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+        var databaseProvider = configuration.GetDatabaseSettings().Provider;
+        switch (databaseProvider)
+        {
+            case DatabaseProviderType.MsSql:
+                services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
+                break;
+            case DatabaseProviderType.Postgresql:
+                throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+            case DatabaseProviderType.MySql:
+                throw new Exception("MySql Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+            default:
+                throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+        }
 
         // Seeds the targeted database using the indicated provider on startup
         services.AddHostedService<SqlDatabaseSeederService>();
