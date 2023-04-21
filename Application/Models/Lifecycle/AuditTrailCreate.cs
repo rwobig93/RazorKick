@@ -5,13 +5,13 @@ namespace Application.Models.Lifecycle;
 
 public class AuditTrailCreate
 {
-    public Guid Id { get; set; }
     public string TableName { get; set; } = null!;
     public Guid RecordId { get; set; }
     public Guid ChangedBy { get; set; } = Guid.Empty;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public DatabaseActionType Action { get; set; }
-    public Dictionary<string, string>? Before { get; set; }
-    public Dictionary<string, string> After { get; set; } = null!;
+    public string Before { get; set; } = "";
+    public string After { get; set; } = "";
 }
 
 public static class AuditTrailCreateExtensions
@@ -20,13 +20,13 @@ public static class AuditTrailCreateExtensions
     {
         return new AuditTrailCreate
         {
-            Id = auditTrailDb.Id,
             TableName = auditTrailDb.TableName,
             RecordId = auditTrailDb.RecordId,
             ChangedBy = auditTrailDb.ChangedBy,
             Action = auditTrailDb.Action,
-            Before = new Dictionary<string, string>(),
-            After = new Dictionary<string, string>()
+            Timestamp = auditTrailDb.Timestamp,
+            Before = auditTrailDb.Before ?? "",
+            After = auditTrailDb.After
         };
     }
 
@@ -34,13 +34,13 @@ public static class AuditTrailCreateExtensions
     {
         return new AuditTrailDb
         {
-            Id = auditTrailCreate.Id,
             TableName = auditTrailCreate.TableName,
             RecordId = auditTrailCreate.RecordId,
             ChangedBy = auditTrailCreate.ChangedBy,
             Action = auditTrailCreate.Action,
-            Before = "",
-            After = ""
+            Timestamp = auditTrailCreate.Timestamp,
+            Before = auditTrailCreate.Before,
+            After = auditTrailCreate.After
         };
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Application.Api.v1.Example;
 using Application.Api.v1.Identity;
+using Application.Api.v1.Lifecycle;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
-using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Services.System;
 using Application.Settings.AppSettings;
@@ -10,7 +10,6 @@ using Hangfire;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -87,6 +86,7 @@ public static class WebServerConfiguration
         #endif
         
         serverState.ApplicationName = appConfig.Value.ApplicationName;
+        serverState.AuditLoginLogout = appConfig.Value.AuditLoginLogout;
     }
 
     private static void ValidateDatabaseStructure(this IHost app)
@@ -159,5 +159,6 @@ public static class WebServerConfiguration
     {
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsHealth();
+        app.MapEndpointsAudit();
     }
 }

@@ -1,6 +1,5 @@
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
-using Newtonsoft.Json;
 
 namespace Domain.Models.Identity;
 

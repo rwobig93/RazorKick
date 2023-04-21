@@ -1,13 +1,13 @@
-﻿using Application.Database.MsSql.Identity;
+﻿using Application.Constants.Database;
 using Application.Database.MsSql.Lifecycle;
 using Application.Database.MsSql.Shared;
-using Application.Models.Identity;
 using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Lifecycle;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -160,6 +160,42 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> GetByChangedByIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();
+
+        try
+        {
+            var foundAuditTrail = (await _database.LoadData<AuditTrailWithUserDb, dynamic>(
+                AuditTrailsMsSql.GetByChangedBy, new {UserId = id}));
+            actionReturn.Succeed(foundAuditTrail);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetByChangedBy.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> GetByRecordIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();
+
+        try
+        {
+            var foundAuditTrail = (await _database.LoadData<AuditTrailWithUserDb, dynamic>(
+                AuditTrailsMsSql.GetByRecordId, new {RecordId = id}));
+            actionReturn.Succeed(foundAuditTrail);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetByRecordId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AuditTrailCreate createObject, bool systemUpdate = false)
     {
         DatabaseActionResult<Guid> actionReturn = new();
@@ -174,12 +210,9 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
                 createObject.ChangedBy = (Guid)currentUserId!;
             }
 
-            var convertedTrail = createObject.ToDb();
-            convertedTrail.Timestamp = _dateTime.NowDatabaseTime;
-            convertedTrail.Before = createObject.Before is not null ? _serializer.Serialize(createObject.Before) : "";
-            convertedTrail.After = _serializer.Serialize(createObject.After);
+            createObject.Timestamp = _dateTime.NowDatabaseTime;
             
-            var createdId = await _database.SaveDataReturnId(AuditTrailsMsSql.Insert, convertedTrail);
+            var createdId = await _database.SaveDataReturnId(AuditTrailsMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -221,6 +254,33 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchWithUser.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> DeleteOld(CleanupTimeframe olderThan)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var cleanupTimestamp = olderThan switch
+            {
+                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(MsSqlConstants.DateStringFormat),
+                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(MsSqlConstants.DateStringFormat),
+                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat),
+                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(MsSqlConstants.DateStringFormat),
+                CleanupTimeframe.Never => _dateTime.NowDatabaseTime.AddYears(-10).ToString(MsSqlConstants.DateStringFormat),
+                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat)
+            };
+
+            var rowsDeleted = await _database.SaveData(AuditTrailsMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AuditTrailsMsSql.DeleteOlderThan.Path, ex.Message);
         }
 
         return actionReturn;

@@ -1,11 +1,15 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
+using Application.Helpers.Lifecycle;
 using Application.Models.Identity;
+using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,14 +23,18 @@ public class AppUserRepositoryMsSql : IAppUserRepository
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ISerializerService _serializer;
 
     public AppUserRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory, IAuditTrailsRepository auditRepository, ISerializerService serializer)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _scopeFactory = scopeFactory;
+        _auditRepository = auditRepository;
+        _serializer = serializer;
         _serverState = serverState;
     }
 
@@ -54,9 +62,22 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             await using var scope = _scopeFactory.CreateAsyncScope();
             var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
             var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+
+            var currentUserState = await GetByIdAsync(updateUser.Id);
+            var auditDiff = AuditHelpers.GetAuditDiff(currentUserState.Result!.ToUpdate(), updateUser);
+            
             updateUser.LastModifiedBy = currentUserId ?? updateUser.LastModifiedBy;
             updateUser.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppUsersMsSql.Table.TableName,
+                RecordId = updateUser.Id,
+                ChangedBy = ((Guid)updateUser.LastModifiedBy!),
+                Action = DatabaseActionType.Update,
+                Before = _serializer.Serialize(auditDiff.Before),
+                After = _serializer.Serialize(auditDiff.After)
+            });
         }
         catch (Exception ex)
         {
@@ -198,6 +219,15 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppUsersMsSql.Insert, createObject);
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppUsersMsSql.Table.TableName,
+                RecordId = createdId,
+                ChangedBy = ((Guid)createObject.CreatedBy!),
+                Action = DatabaseActionType.Create
+            });
+            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)

@@ -1,6 +1,5 @@
 ﻿using Application.Models.Identity;
 using Application.Models.Web;
-using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
 

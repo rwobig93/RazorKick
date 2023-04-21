@@ -57,6 +57,18 @@ public static class ApiRoutes
             public const string DoesRoleHavePermission = "/api/identity/permission/role/has";
         }
     }
+
+    public static class Lifecycle
+    {
+        public static class Audit
+        {
+            public const string GetAll = "/api/lifecycle/audittrails";
+            public const string GetById = "/api/lifecycle/audittrail";
+            public const string GetByChangedBy = "/api/lifecycle/audittrail/changedby";
+            public const string GetByRecordId = "/api/lifecycle/audittrail/record";
+            public const string Delete = "/api/lifecycle/audittrail";
+        }
+    }
 }
 
 public static class ApiRouteExtensions

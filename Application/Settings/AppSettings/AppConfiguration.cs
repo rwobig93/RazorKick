@@ -28,4 +28,6 @@ public class AppConfiguration : IAppSettingsSection
     public bool TrustAllCertificates { get; set; }
     
     public bool EnforceNonSystemAndAdminAccounts { get; set; }
+    
+    public bool AuditLoginLogout { get; set; }
 }

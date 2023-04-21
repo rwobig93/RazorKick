@@ -1,7 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
-using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -9,8 +8,6 @@ using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
-using Application.Settings.AppSettings;
-using Microsoft.Extensions.Configuration;
 using Shared.Requests.Identity.User;
 
 namespace Infrastructure.Services.Identity;

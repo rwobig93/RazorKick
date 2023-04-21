@@ -8,23 +8,23 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Communication;
 using Application.Helpers.Identity;
-using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Models.Identity;
+using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Requests.Identity.User;
@@ -46,12 +46,13 @@ public class AppAccountService : IAppAccountService
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
+    private readonly IAuditTrailService _auditService;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState,
-        ISerializerService serializer)
+        IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
+        IAuditTrailService auditService)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -64,6 +65,7 @@ public class AppAccountService : IAppAccountService
         _dateTime = dateTime;
         _serverState = serverState;
         _serializer = serializer;
+        _auditService = auditService;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -94,6 +96,19 @@ public class AppAccountService : IAppAccountService
         var token = await GenerateJwtAsync(user);
         var response = new UserLoginResponse() { Token = token, RefreshToken = user.RefreshToken,
             RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
+
+        // TODO: Logging in updates the refresh token and timestamp, this is being added to audit logs for user update changes
+        if (_serverState.AuditLoginLogout)
+        {
+            await _auditService.CreateAsync(new AuditTrailCreate
+            {
+                TableName = "AuthState",
+                RecordId = user.Id,
+                ChangedBy = _serverState.SystemUserId,
+                Action = DatabaseActionType.Login
+            });
+        }
+        
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
@@ -120,13 +135,34 @@ public class AppAccountService : IAppAccountService
         }
     }
 
+    private static Guid GetIdFromPrincipal(ClaimsPrincipal principal)
+    {
+        var userIdClaim = principal?.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
+        var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
+        
+        return !isGuid ? Guid.Empty : userId;
+    }
+
     public async Task<IResult> LogoutGuiAsync()
     {
         try
         {
+            if (_serverState.AuditLoginLogout)
+            {
+                var userId = GetIdFromPrincipal(_authProvider.AuthenticationStateUser);
+
+                await _auditService.CreateAsync(new AuditTrailCreate
+                {
+                    TableName = "AuthState",
+                    RecordId = userId,
+                    ChangedBy = _serverState.SystemUserId,
+                    Action = DatabaseActionType.Logout
+                });
+            }
+            
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
-
+            
             _authProvider.DeauthenticateUser();
             _httpClient.DefaultRequestHeaders.Authorization = null;
 

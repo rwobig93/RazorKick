@@ -63,8 +63,8 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
-                @Offset NVARCHAR(256),
-                @PageSize NVARCHAR(256)
+                @Offset INT,
+                @PageSize INT
             AS
             begin
                 SELECT *
@@ -79,8 +79,8 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
         Action = "GetAllPaginatedWithUsers",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginatedWithUsers]
-                @Offset NVARCHAR(256),
-                @PageSize NVARCHAR(256)
+                @Offset INT,
+                @PageSize INT
             AS
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
@@ -118,8 +118,42 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 SELECT TOP 1 a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE Id = @Id
+                WHERE a.Id = @Id
                 ORDER BY Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByChangedBy = new()
+    {
+        Table = Table,
+        Action = "GetByChangedBy",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByChangedBy]
+                @UserId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                FROM dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                WHERE a.ChangedBy = @UserId
+                ORDER BY Timestamp;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByRecordId = new()
+    {
+        Table = Table,
+        Action = "GetByRecordId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByRecordId]
+                @RecordId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                FROM dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                WHERE a.RecordId = @RecordId
+                ORDER BY Timestamp;
             end"
     };
 
@@ -186,6 +220,21 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                     OR Before LIKE '%' + @SearchTerm + '%'
                     OR After LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure DeleteOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                delete
+                from dbo.[{Table.TableName}]
+                where Timestamp < @olderThan;
             end"
     };
 }
