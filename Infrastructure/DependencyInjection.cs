@@ -7,6 +7,7 @@ using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Example;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
@@ -20,6 +21,7 @@ using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Repositories.MsSql.Example;
 using Infrastructure.Repositories.MsSql.Identity;
+using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
@@ -189,30 +191,31 @@ public static class DependencyInjection
         });
     }
 
+    private static void AddMsSqlRepositories(this IServiceCollection services)
+    {
+        services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
+        services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
+        services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
+        services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+        services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+        services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+        services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
+    }
+
     private static void AddRepositories(this IServiceCollection services, IConfiguration configuration)
     {
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
         {
             case DatabaseProviderType.MsSql:
-                services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
-                services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
-                services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
-                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
-                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
-                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                services.AddMsSqlRepositories();
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new NotImplementedException("Postgres hasn't been implemented yet, please use a supported Database provider");
             case DatabaseProviderType.MySql:
                 throw new NotImplementedException("MySql hasn't been implemented yet, please use a supported Database provider");
             default:
-                services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
-                services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
-                services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
-                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
-                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
-                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                services.AddMsSqlRepositories();
                 break;
         }
     }

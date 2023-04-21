@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Database.MsSql.Identity;
+using Application.Helpers.Runtime;
 
 namespace Application.Database.MsSql.Lifecycle;
 
@@ -36,7 +37,22 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[{Table.TableName}]
-                where IsDeleted = 0;
+                ORDER BY Timestamp;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetAllWithUsers = new()
+    {
+        Table = Table,
+        Action = "GetAllWithUsers",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllWithUsers]
+            AS
+            begin
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                from dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                ORDER BY Timestamp;
             end"
     };
 
@@ -44,7 +60,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
     public static readonly MsSqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
-        Action = "GetAll",
+        Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
                 @Offset NVARCHAR(256),
@@ -53,8 +69,123 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                ORDER BY Id OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
-                where IsDeleted = 0;
+                ORDER BY Timestamp OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure GetAllPaginatedWithUsers = new()
+    {
+        Table = Table,
+        Action = "GetAllPaginatedWithUsers",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginatedWithUsers]
+                @Offset NVARCHAR(256),
+                @PageSize NVARCHAR(256)
+            AS
+            begin
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                from dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                ORDER BY Timestamp OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetById = new()
+    {
+        Table = Table,
+        Action = "GetById",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
+                @Id UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                where Id = @Id
+                ORDER BY Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByIdWithUser = new()
+    {
+        Table = Table,
+        Action = "GetByIdWithUser",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdWithUser]
+                @Id UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT TOP 1 a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                FROM dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                WHERE Id = @Id
+                ORDER BY Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure Insert = new()
+    {
+        Table = Table,
+        Action = "Insert",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @TableName NVARCHAR(100),
+                @RecordId UNIQUEIDENTIFIER,
+                @ChangedBy UNIQUEIDENTIFIER,
+                @Timestamp DATETIME2,
+                @Action INT,
+                @Before NVARCHAR(MAX),
+                @After NVARCHAR(MAX)
+            AS
+            begin
+                insert into dbo.[{Table.TableName}] (TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
+                OUTPUT INSERTED.Id
+                values (@TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure Search = new()
+    {
+        Table = Table,
+        Action = "Search",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
+                @SearchTerm NVARCHAR(256)
+            AS
+            begin
+                set nocount on;
+                
+                select *
+                from dbo.[{Table.TableName}]
+                where TableName LIKE '%' + @SearchTerm + '%'
+                    OR RecordId LIKE '%' + @SearchTerm + '%'
+                    OR Action LIKE '%' + @SearchTerm + '%'
+                    OR Before LIKE '%' + @SearchTerm + '%'
+                    OR After LIKE '%' + @SearchTerm + '%'
+                ORDER BY Timestamp;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure SearchWithUser = new()
+    {
+        Table = Table,
+        Action = "SearchWithUser",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchWithUser]
+                @SearchTerm NVARCHAR(256)
+            AS
+            begin
+                set nocount on;
+                
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                FROM dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                WHERE TableName LIKE '%' + @SearchTerm + '%'
+                    OR RecordId LIKE '%' + @SearchTerm + '%'
+                    OR Action LIKE '%' + @SearchTerm + '%'
+                    OR Before LIKE '%' + @SearchTerm + '%'
+                    OR After LIKE '%' + @SearchTerm + '%'
+                ORDER BY Timestamp;
             end"
     };
 }
