@@ -42,7 +42,7 @@ public class AppIdentityRoleService : IAppIdentityRoleService
         role.LastModifiedBy = _serverState.SystemUserId;
         role.LastModifiedOn = _dateTime.NowDatabaseTime;
         
-        var updateRequest = await _roleRepository.UpdateAsync(role.ToUpdateObject());
+        var updateRequest = await _roleRepository.UpdateAsync(role.ToObject());
         return !updateRequest.Success ? 
             IdentityResult.Failed(new IdentityError() {Code = "RoleUpdateFail", Description = updateRequest.ErrorMessage}) : 
             IdentityResult.Success;

@@ -19,7 +19,7 @@ public class AppRoleUpdate
 
 public static class AppRoleUpdateExtensions
 {
-    public static AppRoleUpdate ToUpdateObject(this AppRoleDb appRole)
+    public static AppRoleUpdate ToObject(this AppRoleDb appRole)
     {
         return new AppRoleUpdate
         {

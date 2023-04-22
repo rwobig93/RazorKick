@@ -1,11 +1,15 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
+using Application.Helpers.Lifecycle;
 using Application.Models.Identity;
+using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Domain.Models.Database;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,15 +22,19 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ISerializerService _serializer;
 
     public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory, IAuditTrailsRepository auditRepository, ISerializerService serializer)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _serverState = serverState;
         _scopeFactory = scopeFactory;
+        _auditRepository = auditRepository;
+        _serializer = serializer;
     }
 
     private async Task UpdateAuditing(AppPermissionCreate createPermission, bool systemUpdate = false)
@@ -53,9 +61,25 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             await using var scope = _scopeFactory.CreateAsyncScope();
             var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
             var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-            // TODO: Add auditing trail for modified properties, don't update last modified on/by if there are no changes
+
+            // Get current state for diff comparision
+            var currentPermissionState = await GetByIdAsync(updatePermission.Id);
+            var auditDiff = AuditHelpers.GetAuditDiff(currentPermissionState.Result!.ToUpdate(), updatePermission);
+            
             updatePermission.LastModifiedBy = currentUserId ?? updatePermission.LastModifiedBy;
             updatePermission.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+            // If no changes were detected for before and after we won't create an audit trail
+            if (auditDiff.Before != new Dictionary<string, string>() && auditDiff.After != new Dictionary<string, string>())
+                await _auditRepository.CreateAsync(new AuditTrailCreate
+                {
+                    TableName = AppPermissionsMsSql.Table.TableName,
+                    RecordId = updatePermission.Id,
+                    ChangedBy = ((Guid)updatePermission.LastModifiedBy!),
+                    Action = DatabaseActionType.Update,
+                    Before = _serializer.Serialize(auditDiff.Before),
+                    After = _serializer.Serialize(auditDiff.After)
+                });
         }
         catch (Exception ex)
         {
@@ -303,6 +327,15 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
             await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppPermissionsMsSql.Insert, createObject);
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppPermissionsMsSql.Table.TableName,
+                RecordId = createdId,
+                ChangedBy = (createObject.CreatedBy),
+                Action = DatabaseActionType.Create
+            });
+            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -337,8 +370,19 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            await GetByIdAsync(id);
+            // Update permission w/ a property that is modified so we get the last updated on/by for the deleting user
+            var permissionUpdate = new AppPermissionUpdate() {Id = id};
+            await UpdateAsync(permissionUpdate);
             await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppUsersMsSql.Table.TableName,
+                RecordId = id,
+                ChangedBy = ((Guid)permissionUpdate.LastModifiedBy!),
+                Action = DatabaseActionType.Delete
+            });
+
             actionReturn.Succeed();
         }
         catch (Exception ex)

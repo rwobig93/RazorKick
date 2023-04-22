@@ -14,18 +14,14 @@ public class AppUserService : IAppUserService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
 
     public AppUserService(IAppUserRepository userRepository, IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
-        IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer)
+        ISerializerService serializer)
     {
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _dateTime = dateTime;
-        _serverState = serverState;
         _serializer = serializer;
     }
 

@@ -60,7 +60,6 @@ public static class DependencyInjection
 
         builder.Services.AddApiServices();
         builder.Services.AddAuthServices(builder.Configuration);
- 
         builder.Services.AddDatabaseServices(builder.Configuration);
 
         return builder;
@@ -86,11 +85,6 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(MailConfiguration.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        
-        // TODO: Move used configurations to new structure
-        // configuration.ConfigureMailSettings(services);
-        // configuration.ConfigureApplicationSettings(services);
-        // configuration.ConfigureDatabaseSettings(services);
     }
 
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)

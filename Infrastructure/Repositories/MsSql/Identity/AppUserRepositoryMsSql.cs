@@ -63,21 +63,24 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
             var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
 
+            // Get current state for diff comparision
             var currentUserState = await GetByIdAsync(updateUser.Id);
             var auditDiff = AuditHelpers.GetAuditDiff(currentUserState.Result!.ToUpdate(), updateUser);
             
             updateUser.LastModifiedBy = currentUserId ?? updateUser.LastModifiedBy;
             updateUser.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppUsersMsSql.Table.TableName,
-                RecordId = updateUser.Id,
-                ChangedBy = ((Guid)updateUser.LastModifiedBy!),
-                Action = DatabaseActionType.Update,
-                Before = _serializer.Serialize(auditDiff.Before),
-                After = _serializer.Serialize(auditDiff.After)
-            });
+            // If no changes were detected for before and after we won't create an audit trail
+            if (auditDiff.Before != new Dictionary<string, string>() && auditDiff.After != new Dictionary<string, string>())
+                await _auditRepository.CreateAsync(new AuditTrailCreate
+                {
+                    TableName = AppUsersMsSql.Table.TableName,
+                    RecordId = updateUser.Id,
+                    ChangedBy = ((Guid)updateUser.LastModifiedBy!),
+                    Action = DatabaseActionType.Update,
+                    Before = _serializer.Serialize(auditDiff.Before),
+                    After = _serializer.Serialize(auditDiff.After)
+                });
         }
         catch (Exception ex)
         {
@@ -263,8 +266,18 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            await UpdateAsync(new AppUserUpdate() {Id = userId, IsActive = false});
+            var userUpdate = new AppUserUpdate() {Id = userId};
+            await UpdateAsync(userUpdate);
             await _database.SaveData(AppUsersMsSql.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppUsersMsSql.Table.TableName,
+                RecordId = userId,
+                ChangedBy = ((Guid)userUpdate.LastModifiedBy!),
+                Action = DatabaseActionType.Delete
+            });
+            
             actionReturn.Succeed();
         }
         catch (Exception ex)

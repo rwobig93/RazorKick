@@ -11,7 +11,6 @@ public static class AuditHelpers
         var beforeDict = beforeObj?.GetType().GetProperties()
             .ToDictionary(prop => prop.Name, prop => prop.GetValue(beforeObj)?.ToString());
 
-        // TODO: update object (afterObj) has null for anything we aren't updating, need to find a way to handle this
         var afterDict = afterObj!.GetType().GetProperties()
             .ToDictionary(prop => prop.Name, prop => prop.GetValue(afterObj)?.ToString());
 

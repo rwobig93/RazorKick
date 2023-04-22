@@ -55,7 +55,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 update dbo.[AppUsers]
-                set IsDeleted = 1, DeletedOn = @DeletedOn
+                set IsDeleted = 1, DeletedOn = @DeletedOn, IsActive = 0
                 where Id = @Id;
             end"
     };

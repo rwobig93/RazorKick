@@ -1,4 +1,5 @@
 using Application.Helpers.Identity;
+using Domain.DatabaseEntities.Identity;
 using Shared.Requests.Identity.Permission;
 
 namespace Application.Models.Identity;
@@ -31,6 +32,24 @@ public static class AppPermissionUpdateExtensions
             Description = permissionUpdate.Description,
             Group = permissionUpdate.Group,
             Access = permissionUpdate.Access
+        };
+    }
+
+    public static AppPermissionUpdate ToUpdate(this AppPermissionDb permissionDb)
+    {
+        return new AppPermissionUpdate
+        {
+            Id = permissionDb.Id,
+            RoleId = permissionDb.RoleId,
+            UserId = permissionDb.UserId,
+            ClaimType = permissionDb.ClaimType,
+            ClaimValue = permissionDb.ClaimValue,
+            Name = permissionDb.Name,
+            Group = permissionDb.Group,
+            Access = permissionDb.Access,
+            Description = permissionDb.Description,
+            LastModifiedBy = permissionDb.LastModifiedBy,
+            LastModifiedOn = permissionDb.LastModifiedOn
         };
     }
 }
