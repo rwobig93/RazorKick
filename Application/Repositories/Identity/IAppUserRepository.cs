@@ -2,6 +2,7 @@
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 
 namespace Application.Repositories.Identity;
 
@@ -10,6 +11,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync();
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppUserDb>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id);
     Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username);
     Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername);
     Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email);

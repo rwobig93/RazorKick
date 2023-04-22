@@ -12,6 +12,7 @@ using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
@@ -137,6 +138,24 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id)
+    {
+        DatabaseActionResult<AppUserFullDb> actionReturn = new();
+
+        try
+        {
+            var foundUser = (await _database.LoadData<AppUserFullDb, dynamic>(
+                AppUsersMsSql.GetByIdFull, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundUser!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByIdFull.Path, ex.Message);
         }
 
         return actionReturn;

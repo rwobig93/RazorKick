@@ -20,17 +20,15 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ISerializerService _serializer;
 
     public AuditTrailsRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
-        IServiceScopeFactory scopeFactory, ISerializerService serializer)
+        IServiceScopeFactory scopeFactory)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _serverState = serverState;
         _scopeFactory = scopeFactory;
-        _serializer = serializer;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllAsync()

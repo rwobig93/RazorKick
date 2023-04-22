@@ -1,4 +1,5 @@
 ﻿using Domain.DatabaseEntities.Identity;
+using Domain.Models.Identity;
 using Shared.Enums.Identity;
 using Shared.Responses.Identity;
 
@@ -74,6 +75,30 @@ public static class AppUserFullExtensions
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.Email,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            CreatedBy = appUser.CreatedBy,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            CreatedOn = appUser.CreatedOn,
+            LastModifiedBy = appUser.LastModifiedBy,
+            LastModifiedOn = appUser.LastModifiedOn,
+            IsDeleted = appUser.IsDeleted,
+            DeletedOn = appUser.DeletedOn,
+            IsActive = appUser.IsActive,
+            AccountType = appUser.AccountType,
+            Roles = new List<AppRoleSlim>(),
+            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
+            Permissions = new List<AppPermissionSlim>()
+        };
+    }
+
+    public static AppUserFull ToFull(this AppUserFullDb appUser)
+    {
+        return new AppUserFull
+        {
+            Id = appUser.Id,
+            Username = appUser.Username,
+            EmailAddress = appUser.EmailAddress,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,

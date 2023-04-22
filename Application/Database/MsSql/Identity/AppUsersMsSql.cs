@@ -104,22 +104,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByEmailDeleted = new()
-    {
-        Table = Table,
-        Action = "GetByEmailDeleted",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByEmailDeleted]
-                @Email NVARCHAR(256)
-            AS
-            begin
-                select *
-                from dbo.[AppUsers]
-                where Email = @Email AND IsDeleted = 1
-                ORDER BY Id;
-            end"
-    };
-
     public static readonly MsSqlStoredProcedure GetByNormalizedEmail = new()
     {
         Table = Table,
@@ -152,6 +136,27 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
+    // TODO: Implement and validate repository and service changes for this functionality
+    public static readonly MsSqlStoredProcedure GetByIdFull = new()
+    {
+        Table = Table,
+        Action = "GetByIdFull",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdFull]
+                @Id UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT TOP 1 u.*, r.* as Roles, p.* as Permissions, e.* as ExtendedAttributes
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppPermissionsMsSql.Table.TableName}] p ON p.UserId = u.Id
+                JOIN dbo.[{AppUserExtendedAttributesMsSql.Table.TableName}] e ON e.OwnerId = u.Id
+                WHERE u.Id = @Id AND u.IsDeleted = 0
+                ORDER BY Id;
+            end"
+    };
+
     public static readonly MsSqlStoredProcedure GetByUsername = new()
     {
         Table = Table,
@@ -168,21 +173,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByUsernameDeleted = new()
-    {
-        Table = Table,
-        Action = "GetByUsernameDeleted",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByUsernameDeleted]
-                @Username NVARCHAR(256)
-            AS
-            begin
-                select *
-                from dbo.[AppUsers]
-                where Username = @Username AND IsDeleted = 1
-                ORDER BY Id;
-            end"
-    };
 
     public static readonly MsSqlStoredProcedure GetByNormalizedUsername = new()
     {

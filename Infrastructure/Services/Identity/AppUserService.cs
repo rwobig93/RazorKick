@@ -60,6 +60,29 @@ public class AppUserService : IAppUserService
         return await Result<AppUserFull?>.SuccessAsync(fullUser);
     }
 
+    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb userFullDb)
+    {
+        var fullUser = userFullDb.ToFull();
+        
+        fullUser.Roles = userFullDb.Roles.ToSlims()
+            .OrderBy(x => x.Name)
+            .ToList();
+
+        fullUser.ExtendedAttributes = userFullDb.ExtendedAttributes.ToSlims()
+            .OrderBy(x => x.Type)
+            .ThenBy(x => x.Name)
+            .ThenBy(x => x.Value)
+            .ToList();
+
+        fullUser.Permissions = userFullDb.Permissions.ToSlims()
+            .OrderBy(x => x.Group)
+            .ThenBy(x => x.Name)
+            .ThenBy(x => x.Access)
+            .ToList();
+
+        return await Result<AppUserFull?>.SuccessAsync(fullUser);
+    }
+
     public async Task<IResult<IEnumerable<AppUserSlim>>> GetAllAsync()
     {
         try
@@ -112,7 +135,17 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var foundUser = await _userRepository.GetByIdAsync(userId);
+            // var foundUser = await _userRepository.GetByIdAsync(userId);
+            // if (!foundUser.Success)
+            //     return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
+            //
+            // if (foundUser.Result is null)
+            //     return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
+            //
+            // return await ConvertToFullAsync(foundUser.Result);
+            
+            // TODO: Validate functionality before removing old implementation
+            var foundUser = await _userRepository.GetByIdFullAsync(userId);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 
