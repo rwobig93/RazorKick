@@ -12,16 +12,22 @@ public class AuditTrailService : IAuditTrailService
 {
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
+    private readonly ILogger _logger;
 
-    public AuditTrailService(IAuditTrailsRepository auditRepository, ISerializerService serializer)
+    public AuditTrailService(IAuditTrailsRepository auditRepository, ISerializerService serializer, ILogger logger)
     {
         _auditRepository = auditRepository;
         _serializer = serializer;
+        _logger = logger;
     }
 
     private AuditTrailSlim ConvertToSlim(AuditTrailWithUserDb auditTrailDb)
     {
         var convertedTrail = auditTrailDb.ToSlim();
+
+        if (string.IsNullOrWhiteSpace(auditTrailDb.After))
+            return convertedTrail;
+        
         try
         {
             convertedTrail.Before = string.IsNullOrWhiteSpace(auditTrailDb.Before)
@@ -30,9 +36,10 @@ public class AuditTrailService : IAuditTrailService
                     .Deserialize<Dictionary<string, string>>(auditTrailDb.Before);
             convertedTrail.After = _serializer.Deserialize<Dictionary<string, string>>(auditTrailDb.After);
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: Verify all edge cases, if After is "" or can't be deserialized we need to verify why
+            _logger.Warning(ex, "Failed to deserialize audit trail diff: {AuditTrailBefore} > {AuditTrailAfter}",
+                auditTrailDb.Before, auditTrailDb.After);
             convertedTrail.After = new Dictionary<string, string>();
         }
 

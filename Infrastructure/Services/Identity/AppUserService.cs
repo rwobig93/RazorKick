@@ -25,19 +25,15 @@ public class AppUserService : IAppUserService
         _serializer = serializer;
     }
 
-    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserDb userDb)
+    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb userFullDb)
     {
-        var fullUser = userDb.ToFull();
+        var fullUser = userFullDb.ToFull();
         
-        var userRoles = await _roleRepository.GetRolesForUser(userDb.Id);
-        if (!userRoles.Success)
-            return await Result<AppUserFull?>.FailAsync(userRoles.ErrorMessage);
-
-        fullUser.Roles = (userRoles.Result?.ToSlims() ?? new List<AppRoleSlim>())
+        fullUser.Roles = userFullDb.Roles.ToSlims()
             .OrderBy(x => x.Name)
             .ToList();
 
-        var foundAttributes = await _userRepository.GetAllUserExtendedAttributesAsync(userDb.Id);
+        var foundAttributes = await _userRepository.GetAllUserExtendedAttributesAsync(userFullDb.Id);
         if (!foundAttributes.Success)
             return await Result<AppUserFull?>.FailAsync(foundAttributes.ErrorMessage);
 
@@ -47,34 +43,11 @@ public class AppUserService : IAppUserService
             .ThenBy(x => x.Value)
             .ToList();
 
-        var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userDb.Id);
+        var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userFullDb.Id);
         if (!foundPermissions.Success)
             return await Result<AppUserFull?>.FailAsync(foundPermissions.ErrorMessage);
 
         fullUser.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
-            .OrderBy(x => x.Group)
-            .ThenBy(x => x.Name)
-            .ThenBy(x => x.Access)
-            .ToList();
-
-        return await Result<AppUserFull?>.SuccessAsync(fullUser);
-    }
-
-    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb userFullDb)
-    {
-        var fullUser = userFullDb.ToFull();
-        
-        fullUser.Roles = userFullDb.Roles.ToSlims()
-            .OrderBy(x => x.Name)
-            .ToList();
-
-        fullUser.ExtendedAttributes = userFullDb.ExtendedAttributes.ToSlims()
-            .OrderBy(x => x.Type)
-            .ThenBy(x => x.Name)
-            .ThenBy(x => x.Value)
-            .ToList();
-
-        fullUser.Permissions = userFullDb.Permissions.ToSlims()
             .OrderBy(x => x.Group)
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Access)
@@ -135,16 +108,6 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            // var foundUser = await _userRepository.GetByIdAsync(userId);
-            // if (!foundUser.Success)
-            //     return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
-            //
-            // if (foundUser.Result is null)
-            //     return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
-            //
-            // return await ConvertToFullAsync(foundUser.Result);
-            
-            // TODO: Validate functionality before removing old implementation
             var foundUser = await _userRepository.GetByIdFullAsync(userId);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
@@ -180,7 +143,7 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var foundUser = await _userRepository.GetByUsernameAsync(username);
+            var foundUser = await _userRepository.GetByUsernameFullAsync(username);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 
@@ -215,7 +178,7 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var foundUser = await _userRepository.GetByEmailAsync(email);
+            var foundUser = await _userRepository.GetByEmailFullAsync(email);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 

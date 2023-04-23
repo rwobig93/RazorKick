@@ -90,6 +90,15 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         }
     }
 
+    private static Func<AppUserFullDb, AppRoleDb, AppUserFullDb> UserFullJoinMapping()
+    {
+        return (userFull, role) =>
+        {
+            userFull.Roles.Add(role);
+            return userFull;
+        };
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
     {
         DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
@@ -149,8 +158,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var foundUser = (await _database.LoadData<AppUserFullDb, dynamic>(
-                AppUsersMsSql.GetByIdFull, new {Id = id})).FirstOrDefault();
+            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
+                AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
@@ -174,6 +183,24 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.GetByUsername.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserFullDb>> GetByUsernameFullAsync(string username)
+    {
+        DatabaseActionResult<AppUserFullDb> actionReturn = new();
+
+        try
+        {
+            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
+                AppUsersMsSql.GetByUsernameFull, UserFullJoinMapping(), new {Username = username})).FirstOrDefault();
+            actionReturn.Succeed(foundUser!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByUsernameFull.Path, ex.Message);
         }
 
         return actionReturn;
@@ -210,6 +237,24 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.GetByEmail.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserFullDb>> GetByEmailFullAsync(string email)
+    {
+        DatabaseActionResult<AppUserFullDb> actionReturn = new();
+
+        try
+        {
+            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
+                AppUsersMsSql.GetByEmailFull, UserFullJoinMapping(), new {Email = email})).FirstOrDefault();
+            actionReturn.Succeed(foundUser!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByEmailFull.Path, ex.Message);
         }
 
         return actionReturn;

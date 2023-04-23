@@ -36,7 +36,7 @@ public static class UserConstants
     
         public const string ModeratorUsername = "OldGregg";
         public const string ModeratorFirstName = "Gregg";
-        public const string ModeratorLastName = "Seaman";
+        public const string ModeratorLastName = "Fishman";
         public const string ModeratorEmail = "OldGregg@downstairs.mixup";
         public const string ModeratorPassword = "JF9JWFeK6J6^giNw^E4nm9#9^N^PA2iQxd4yVWVU4Dyk6*iUWKa^H6!";
     

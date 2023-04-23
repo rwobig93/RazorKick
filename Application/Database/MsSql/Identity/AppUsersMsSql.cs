@@ -48,15 +48,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
                 @DeletedOn datetime2
             AS
             begin
-                update dbo.[AppUsers]
-                set IsDeleted = 1, DeletedOn = @DeletedOn, IsActive = 0
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, IsActive = 0
+                WHERE Id = @Id;
             end"
     };
 
@@ -64,13 +64,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllDeleted",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetAllDeleted]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllDeleted]
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where IsDeleted = 1;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 1;
             end"
     };
 
@@ -78,13 +78,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where IsDeleted = 0;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 0;
             end"
     };
 
@@ -92,15 +92,33 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByEmail",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByEmail]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByEmail]
                 @Email NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where Email = @Email AND IsDeleted = 0
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Email = @Email AND IsDeleted = 0
                 ORDER BY Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByEmailFull = new()
+    {
+        Table = Table,
+        Action = "GetByEmailFull",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByEmailFull]
+                @Email NVARCHAR(256)
+            AS
+            begin
+                SELECT u.*, r.*
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                WHERE u.Email = @Email AND u.IsDeleted = 0
+                ORDER BY u.Id;
             end"
     };
 
@@ -108,14 +126,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByNormalizedEmail",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByNormalizedEmail]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedEmail]
                 @NormalizedEmail NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where NormalizedEmail = @NormalizedEmail AND IsDeleted = 0
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE NormalizedEmail = @NormalizedEmail AND IsDeleted = 0
                 ORDER BY Id;
             end"
     };
@@ -124,19 +142,18 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppUsers]
-                where Id = @Id AND IsDeleted = 0
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id AND IsDeleted = 0
                 ORDER BY Id;
             end"
     };
 
-    // TODO: Implement and validate repository and service changes for this functionality
     public static readonly MsSqlStoredProcedure GetByIdFull = new()
     {
         Table = Table,
@@ -146,14 +163,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 u.*, r.* as Roles, p.* as Permissions, e.* as ExtendedAttributes
+                SELECT u.*, r.*
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
-                JOIN dbo.[{AppPermissionsMsSql.Table.TableName}] p ON p.UserId = u.Id
-                JOIN dbo.[{AppUserExtendedAttributesMsSql.Table.TableName}] e ON e.OwnerId = u.Id
                 WHERE u.Id = @Id AND u.IsDeleted = 0
-                ORDER BY Id;
+                ORDER BY u.Id;
             end"
     };
 
@@ -161,15 +176,33 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByUsername",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByUsername]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUsername]
                 @Username NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where Username = @Username AND IsDeleted = 0
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Username = @Username AND IsDeleted = 0
                 ORDER BY Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByUsernameFull = new()
+    {
+        Table = Table,
+        Action = "GetByUsernameFull",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUsernameFull]
+                @Username NVARCHAR(256)
+            AS
+            begin
+                SELECT u.*, r.*
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                WHERE u.Username = @Username AND u.IsDeleted = 0
+                ORDER BY u.Id;
             end"
     };
 
@@ -178,14 +211,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByNormalizedUsername",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_GetByNormalizedUsername]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedUsername]
                 @NormalizedUsername NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppUsers]
-                where NormalizedUsername = @NormalizedUsername AND IsDeleted = 0
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE NormalizedUsername = @NormalizedUsername AND IsDeleted = 0
                 ORDER BY Id;
             end"
     };
@@ -194,8 +227,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Username NVARCHAR(256),
                 @NormalizedUserName NVARCHAR(256),
                 @Email NVARCHAR(256),
@@ -221,12 +254,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @AccountType int
             AS
             begin
-                insert into dbo.[AppUsers] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
+                INSERT into dbo.[{Table.TableName}] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
                                          PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
                                          IsActive, RefreshToken, RefreshTokenExpiryTime, AccountType)
                 OUTPUT INSERTED.Id
-                values (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
+                VALUES (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
                         @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @FirstName, @LastName, @CreatedBy,
                         @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsActive,
                         @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
@@ -237,16 +270,16 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Search",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Search]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
-                set nocount on;
+                SET nocount on;
                 
-                select *
-                from dbo.[AppUsers]
-                where FirstName LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE FirstName LIKE '%' + @SearchTerm + '%'
                     OR LastName LIKE '%' + @SearchTerm + '%'
                     OR Email LIKE '%' + @SearchTerm + '%'
                     OR Id LIKE '%' + @SearchTerm + '%'
@@ -258,8 +291,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Username NVARCHAR(256) = null,
                 @NormalizedUserName NVARCHAR(256) = null,
@@ -284,8 +317,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @AccountType int = null
             AS
             begin
-                update dbo.[AppUsers]
-                set Username = COALESCE(@Username, Username), NormalizedUserName = COALESCE(@NormalizedUserName, NormalizedUserName),
+                UPDATE dbo.[{Table.TableName}]
+                SET Username = COALESCE(@Username, Username), NormalizedUserName = COALESCE(@NormalizedUserName, NormalizedUserName),
                     Email = COALESCE(@Email, Email), NormalizedEmail = COALESCE(@NormalizedEmail, NormalizedEmail),
                     EmailConfirmed = COALESCE(@EmailConfirmed, EmailConfirmed), PasswordHash = COALESCE(@PasswordHash, PasswordHash),
                     PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt), PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
@@ -297,7 +330,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     IsActive = COALESCE(@IsActive, IsActive), RefreshToken = COALESCE(@RefreshToken, RefreshToken),
                     RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     AccountType = COALESCE(@AccountType, AccountType)
-                where Id = COALESCE(@Id, Id);
+                WHERE Id = COALESCE(@Id, Id);
             end"
     };
 
@@ -305,16 +338,16 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "SetUserId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_SetUserId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SetUserId]
                 @CurrentId UNIQUEIDENTIFIER,
                 @NewId UNIQUEIDENTIFIER
             AS
             begin
-                update dbo.[AppUsers]
-                set Id = @NewId
+                UPDATE dbo.[{Table.TableName}]
+                SET Id = @NewId
                 OUTPUT @NewId
-                where Id = @CurrentId;
+                WHERE Id = @CurrentId;
             end"
     };
 
@@ -322,15 +355,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "SetCreatedById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUsers_SetCreatedById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SetCreatedById]
                 @Id UNIQUEIDENTIFIER,
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                update dbo.[AppUsers]
-                set CreatedBy = @CreatedBy
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET CreatedBy = @CreatedBy
+                WHERE Id = @Id;
             end"
     };
 }

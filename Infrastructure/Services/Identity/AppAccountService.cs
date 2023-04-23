@@ -97,7 +97,6 @@ public class AppAccountService : IAppAccountService
         var response = new UserLoginResponse() { Token = token, RefreshToken = user.RefreshToken,
             RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
 
-        // TODO: Logging in updates the refresh token and timestamp, this is being added to audit logs for user update changes
         if (_serverState.AuditLoginLogout)
         {
             await _auditService.CreateAsync(new AuditTrailCreate
