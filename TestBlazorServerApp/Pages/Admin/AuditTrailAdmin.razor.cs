@@ -1,13 +1,13 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
-using Application.Models.Identity;
 using Application.Models.Lifecycle;
-using Application.Services.Identity;
+using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.JSInterop;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -15,6 +15,9 @@ public partial class AuditTrailAdmin
 {
     [Inject] private IAuditTrailService AuditService { get; init; } = null!;
     [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
+    [Inject] private ISerializerService Serializer { get; init; } = null!;
+    [Inject] private IExcelService ExcelService { get; init; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; init; } = null!;
     
     private MudTable<AuditTrailSlim> _table = new();
     private IEnumerable<AuditTrailSlim> _pagedData = new List<AuditTrailSlim>();
@@ -83,5 +86,33 @@ public partial class AuditTrailAdmin
     {
         var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.AuditTrailView, "trailId", trailId.ToString());
         NavManager.NavigateTo(viewUserUri);
+    }
+
+    private async Task ExportToExcel()
+    {
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(_pagedData, dataMapping: new Dictionary<string, Func<AuditTrailSlim, object>>
+        {
+            { "Id", auditTrail => auditTrail.Id },
+            { "Timestamp", auditTrail => auditTrail.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
+            { "RecordId", auditTrail => auditTrail.RecordId.ToString() },
+            { "Action", auditTrail => auditTrail.Action.ToString() },
+            { "Type", auditTrail => auditTrail.TableName },
+            { "ChangedById", auditTrail => auditTrail.ChangedBy.ToString() },
+            { "ChangedByUsername", auditTrail => auditTrail.ChangedByUsername },
+            { "Before", auditTrail => Serializer.Serialize(auditTrail.Before) },
+            { "After", auditTrail => Serializer.Serialize(auditTrail.After) }
+        }, sheetName: "AuditTrails");
+
+        var fileName =
+            $"AuditTrails_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+        
+        await JsRuntime.InvokeVoidAsync("Download", new
+        {
+            ByteArray = convertedExcelWorkbook,
+            FileName = fileName,
+            MimeType = DataConstants.MimeTypes.OpenXml
+        });
+
+        Snackbar.Add("Successfully exported Audit Trails to Excel Workbook For Download", Severity.Success);
     }
 }

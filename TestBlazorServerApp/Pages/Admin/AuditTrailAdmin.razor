@@ -13,6 +13,15 @@
             <MudContainer Class="d-flex flex-wrap gap-4">
                 <MudText Typo="Typo.h6">Audit Trails</MudText>
                 <MudSpacer/>
+                @if (_canExportTrails)
+                {
+                    <MudTooltip Text="Export Current Data To An Excel Workbook">
+                        <MudButton Color="Color.Tertiary" OnClick="@(ExportToExcel)" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Filled.FileDownload"/>
+                        </MudButton>
+                    </MudTooltip>
+                }
+                <MudSpacer/>
                 <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
             </MudContainer>
@@ -33,7 +42,7 @@
                     </MudButton>
                 </MudTooltip>
             </MudTd>
-            <MudTd DataLabel="Timestamp">@context.Timestamp.ConvertToLocal(_localTimeZone).ToString(DisplayConstants.DateDisplayFormat)</MudTd>
+            <MudTd DataLabel="Timestamp">@context.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)</MudTd>
             <MudTd DataLabel="RecordId">@context.RecordId.ToString()</MudTd>
             <MudTd DataLabel="Action">@context.Action.ToString()</MudTd>
             <MudTd DataLabel="TableName">@context.TableName</MudTd>

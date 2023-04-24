@@ -11,6 +11,7 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
+using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
@@ -26,6 +27,7 @@ using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
+using Infrastructure.Services.Integrations;
 using Infrastructure.Services.Lifecycle;
 using Infrastructure.Services.System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -219,6 +221,9 @@ public static class DependencyInjection
     private static void AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
+        services.AddSingleton<IExcelService, ExcelService>();
+        
+        
         services.AddSingleton<IWeatherService, WeatherForecastService>();
     }
 
