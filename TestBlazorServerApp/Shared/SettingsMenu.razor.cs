@@ -62,7 +62,7 @@ public partial class SettingsMenu
 
     private async Task LogoutUser()
     {
-        await AccountService.LogoutGuiAsync();
+        await AccountService.LogoutGuiAsync(UserFull.Id);
         NavManager.NavigateTo(AppRouteConstants.Index, true);
     }
 }

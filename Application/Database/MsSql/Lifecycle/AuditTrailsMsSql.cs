@@ -37,7 +37,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 select *
                 from dbo.[{Table.TableName}]
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
     
@@ -52,11 +52,11 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 from dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
 
-    // TODO: Add pagination procedures to other tables
+    // TODO: Add pagination procedures to other tables, then force pagination for GetAll() methods or large return methods
     public static readonly MsSqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
@@ -69,7 +69,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                ORDER BY Timestamp OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -86,7 +86,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 from dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                ORDER BY Timestamp OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
@@ -136,7 +136,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.ChangedBy = @UserId
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
 
@@ -153,7 +153,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.RecordId = @RecordId
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
 
@@ -196,7 +196,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                     OR Action LIKE '%' + @SearchTerm + '%'
                     OR Before LIKE '%' + @SearchTerm + '%'
                     OR After LIKE '%' + @SearchTerm + '%'
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
 
@@ -219,7 +219,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                     OR Action LIKE '%' + @SearchTerm + '%'
                     OR Before LIKE '%' + @SearchTerm + '%'
                     OR After LIKE '%' + @SearchTerm + '%'
-                ORDER BY Timestamp;
+                ORDER BY Timestamp DESC;
             end"
     };
     

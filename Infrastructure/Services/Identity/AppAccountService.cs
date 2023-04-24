@@ -104,7 +104,9 @@ public class AppAccountService : IAppAccountService
                 TableName = "AuthState",
                 RecordId = user.Id,
                 ChangedBy = _serverState.SystemUserId,
-                Action = DatabaseActionType.Login
+                Action = DatabaseActionType.Login,
+                Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"Email", ""}}),
+                After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", user.Username}, {"Email", user.Email}})
             });
         }
         
@@ -142,20 +144,25 @@ public class AppAccountService : IAppAccountService
         return !isGuid ? Guid.Empty : userId;
     }
 
-    public async Task<IResult> LogoutGuiAsync()
+    public async Task<IResult> LogoutGuiAsync(Guid userId)
     {
         try
         {
             if (_serverState.AuditLoginLogout)
             {
-                var userId = GetIdFromPrincipal(_authProvider.AuthenticationStateUser);
+                if (userId == Guid.Empty)
+                    userId = GetIdFromPrincipal(_authProvider.AuthenticationStateUser);
+                var user = (await _userRepository.GetByIdAsync(userId)).Result ??
+                           new AppUserDb() {Username = "Unknown", Email = "User@Unknown.void"};
 
                 await _auditService.CreateAsync(new AuditTrailCreate
                 {
                     TableName = "AuthState",
                     RecordId = userId,
                     ChangedBy = _serverState.SystemUserId,
-                    Action = DatabaseActionType.Logout
+                    Action = DatabaseActionType.Logout,
+                    Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", user.Username}, {"Email", user.Email}}),
+                    After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"Email", ""}})
                 });
             }
             

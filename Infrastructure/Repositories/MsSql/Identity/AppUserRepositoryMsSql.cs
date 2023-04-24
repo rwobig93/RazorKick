@@ -8,6 +8,7 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Identity;
 using Application.Services.System;
+using Dapper;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
@@ -72,7 +73,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             updateUser.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             // If no changes were detected for before and after we won't create an audit trail
-            if (auditDiff.Before != new Dictionary<string, string>() && auditDiff.After != new Dictionary<string, string>())
+            if (auditDiff.Before.Keys.Count > 0 && auditDiff.After.Count > 0)
                 await _auditRepository.CreateAsync(new AuditTrailCreate
                 {
                     TableName = AppUsersMsSql.Table.TableName,
@@ -160,6 +161,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
                 AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
+            
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)

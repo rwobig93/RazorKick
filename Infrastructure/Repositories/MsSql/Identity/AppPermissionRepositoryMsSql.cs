@@ -70,7 +70,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             updatePermission.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             // If no changes were detected for before and after we won't create an audit trail
-            if (auditDiff.Before != new Dictionary<string, string>() && auditDiff.After != new Dictionary<string, string>())
+            if (auditDiff.Before.Keys.Count > 0 && auditDiff.After.Count > 0)
                 await _auditRepository.CreateAsync(new AuditTrailCreate
                 {
                     TableName = AppPermissionsMsSql.Table.TableName,
@@ -372,12 +372,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         {
             // Update permission w/ a property that is modified so we get the last updated on/by for the deleting user
             var permissionUpdate = new AppPermissionUpdate() {Id = id};
-            await UpdateAsync(permissionUpdate);
+            await UpdateAuditing(permissionUpdate);
             await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
-                TableName = AppUsersMsSql.Table.TableName,
+                TableName = AppPermissionsMsSql.Table.TableName,
                 RecordId = id,
                 ChangedBy = ((Guid)permissionUpdate.LastModifiedBy!),
                 Action = DatabaseActionType.Delete

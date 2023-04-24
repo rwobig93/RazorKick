@@ -50,7 +50,7 @@ public static class AuditTrailSlimExtensions
             ChangedBy = auditTrailSlim.ChangedBy,
             ChangedByUsername = auditTrailSlim.ChangedByUsername,
             Timestamp = auditTrailSlim.Timestamp,
-            Action = nameof(auditTrailSlim.Action),
+            Action = auditTrailSlim.Action.ToString(),
             Before = auditTrailSlim.Before,
             After = auditTrailSlim.After
         };

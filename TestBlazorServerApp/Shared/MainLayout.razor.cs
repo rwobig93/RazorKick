@@ -41,7 +41,7 @@ public partial class MainLayout
         catch
         {
             // User has old saved token so we'll force a local storage clear and deauthenticate then redirect
-            await AccountService.LogoutGuiAsync();
+            await AccountService.LogoutGuiAsync(Guid.Empty);
             NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
         }
     }

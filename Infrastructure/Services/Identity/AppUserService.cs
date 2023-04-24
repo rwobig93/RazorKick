@@ -3,7 +3,6 @@ using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
-using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
 
@@ -12,15 +11,12 @@ namespace Infrastructure.Services.Identity;
 public class AppUserService : IAppUserService
 {
     private readonly IAppUserRepository _userRepository;
-    private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly ISerializerService _serializer;
 
-    public AppUserService(IAppUserRepository userRepository, IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
-        ISerializerService serializer)
+    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, ISerializerService serializer)
     {
         _userRepository = userRepository;
-        _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
         _serializer = serializer;
     }

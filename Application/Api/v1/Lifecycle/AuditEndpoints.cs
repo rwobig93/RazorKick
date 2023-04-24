@@ -1,14 +1,10 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.Web;
-using Application.Models.Identity;
 using Application.Models.Lifecycle;
 using Application.Models.Web;
-using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Requests.Identity.User;
-using Shared.Responses.Identity;
 using Shared.Responses.Lifecycle;
 using Shared.Routes;
 

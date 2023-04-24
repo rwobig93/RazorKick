@@ -10,7 +10,7 @@ public interface IAppAccountService
 {
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
-    Task<IResult> LogoutGuiAsync();
+    Task<IResult> LogoutGuiAsync(Guid userId);
     Task<IResult<bool>> PasswordMeetsRequirements(string password);
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
     Task<IResult<string>> GetEmailConfirmationUrl(Guid userId);

@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Lifecycle;
 using Application.Models.Lifecycle;
-using FluentEmail.Core;
 
 namespace Application.Helpers.Lifecycle;
 
@@ -16,18 +15,17 @@ public static class AuditHelpers
         var afterDict = afterObj!.GetType().GetProperties()
             .ToDictionary(prop => prop.Name, prop => prop.GetValue(afterObj)?.ToString());
 
-        if (beforeDict is null)
+        if (beforeDict is null || beforeDict.Keys.Count < 1)
         {
             auditDiff.Before = new Dictionary<string, string>();
-            auditDiff.After = afterDict!;
+            auditDiff.After = new Dictionary<string, string>();
             return auditDiff;
         }
         
-        // Remove any keys we know we don't want to audit like Refresh token, LastModifiedBy, ect
-        AuditTrailConstants.DiffPropertiesToIgnore.ForEach(key => beforeDict.Remove(key));
-        
         var changedProps = beforeDict.Keys.Intersect(afterDict.Keys)
             .Where(key => 
+                // Remove any keys we know we don't want to audit like Refresh token, LastModifiedBy, ect
+                !AuditTrailConstants.DiffPropertiesToIgnore.Contains(key) &&
                 afterDict[key] is not null &&
                 beforeDict[key] != afterDict[key]
                 ).ToList();
@@ -35,7 +33,7 @@ public static class AuditHelpers
         if (changedProps.Count < 1)
         {
             auditDiff.Before = new Dictionary<string, string>();
-            auditDiff.After = afterDict!;
+            auditDiff.After = new Dictionary<string, string>();
             return auditDiff;
         }
 

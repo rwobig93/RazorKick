@@ -30,7 +30,7 @@ public partial class Index
         catch
         {
             // User has old saved token so we'll force a local storage clear and de-authenticate then redirect due to being unauthorized
-            await AccountService.LogoutGuiAsync();
+            await AccountService.LogoutGuiAsync(Guid.Empty);
             StateHasChanged();
         }
     }

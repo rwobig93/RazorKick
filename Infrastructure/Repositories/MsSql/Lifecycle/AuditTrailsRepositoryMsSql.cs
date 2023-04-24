@@ -30,44 +30,6 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         _serverState = serverState;
         _scopeFactory = scopeFactory;
     }
-
-    // TODO: Audit trails have a few issues currently
-    // TODO:   - "action" is just returning "Action" as the value everytime
-    // TODO:   - Diff isn't working correctly as shown below, after has a bunch of null's w/ before being empty
-    // {
-    //     "id": "6948aa5c-a92a-4cfc-9b82-41020fff29dd",
-    //     "tableName": "AppPermissions",
-    //     "recordId": "34ac7ab4-b4f4-41ca-befd-a293c83e0995",
-    //     "changedBy": "b014f1dd-45df-44f3-aa37-79e22c573568",
-    //     "changedByUsername": "Superperson",
-    //     "timestamp": "2023-04-23T18:53:45.6833333",
-    //     "action": "Action",
-    //     "before": {},
-    //     "after": {
-    //         "Id": "34ac7ab4-b4f4-41ca-befd-a293c83e0995",
-    //         "RoleId": null,
-    //         "UserId": null,
-    //         "ClaimType": null,
-    //         "ClaimValue": null,
-    //         "Name": null,
-    //         "Group": null,
-    //         "Access": null,
-    //         "Description": null,
-    //         "LastModifiedBy": null,
-    //         "LastModifiedOn": null
-    //     }
-    // },
-    // {
-    //     "id": "a759791e-c18a-48be-b7e9-d9357b137d07",
-    //     "tableName": "AppUsers",
-    //     "recordId": "34ac7ab4-b4f4-41ca-befd-a293c83e0995",
-    //     "changedBy": "b014f1dd-45df-44f3-aa37-79e22c573568",
-    //     "changedByUsername": "Superperson",
-    //     "timestamp": "2023-04-23T18:53:45.7066667",
-    //     "action": "Action",
-    //     "before": {},
-    //     "after": {}
-    // }
     
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllAsync()
     {

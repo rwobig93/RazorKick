@@ -70,7 +70,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             updateRole.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             // If no changes were detected for before and after we won't create an audit trail
-            if (auditDiff.Before != new Dictionary<string, string>() && auditDiff.After != new Dictionary<string, string>())
+            if (auditDiff.Before.Keys.Count > 0 && auditDiff.After.Count > 0)
                 await _auditRepository.CreateAsync(new AuditTrailCreate
                 {
                     TableName = AppRolesMsSql.Table.TableName,
@@ -252,7 +252,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
-                TableName = AppUsersMsSql.Table.TableName,
+                TableName = AppRolesMsSql.Table.TableName,
                 RecordId = id,
                 ChangedBy = ((Guid)roleUpdate.LastModifiedBy!),
                 Action = DatabaseActionType.Delete
