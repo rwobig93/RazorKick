@@ -91,7 +91,10 @@ public static class PermissionConstants
             Users.Delete,
             Users.Disable,
             Users.Enable,
-            Users.ResetPassword
+            Users.ResetPassword,
+            Audit.View,
+            Audit.Search,
+            Audit.Export
         };
     }
 

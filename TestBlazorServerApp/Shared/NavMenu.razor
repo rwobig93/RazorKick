@@ -49,5 +49,11 @@
                 Role Admin
             </MudNavLink>
         }
+        @if (_canViewAuditTrails)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.AuditTrails" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FormatListNumbered">
+                Audit Trails
+            </MudNavLink>
+        }
     }
 </MudNavMenu>

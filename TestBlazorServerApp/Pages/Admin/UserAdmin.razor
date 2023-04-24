@@ -1,5 +1,4 @@
-﻿@using Domain.DatabaseEntities.Identity
-@using Application.Constants.Identity
+﻿@using Application.Constants.Identity
 @using Application.Models.Identity
 
 @attribute [Route(AppRouteConstants.Admin.Users)]
@@ -45,10 +44,10 @@
         </ToolBarContent>
         <HeaderContent>
             <MudTh></MudTh>
-            <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserDb">Id (Last 4)</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserDb">Username</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortLabel="Email" T="AppUserDb">Email</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortLabel="IsActive" T="AppUserDb">Enabled</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserSlim">Id (Last 4)</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserSlim">Username</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Email" T="AppUserSlim">Email</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="IsActive" T="AppUserSlim">Enabled</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>

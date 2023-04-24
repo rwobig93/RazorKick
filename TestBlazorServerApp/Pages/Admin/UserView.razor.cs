@@ -23,7 +23,6 @@ public partial class UserView
     private string? _modifiedByUsername = "";
     private DateTime? _createdOn;
     private DateTime? _modifiedOn;
-    private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
 
     private bool _invalidDataProvided;
     private bool _editMode;

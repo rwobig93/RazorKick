@@ -32,7 +32,8 @@ public static class AppRouteConstants
         public const string UserView = "/admin/user/view";
         public const string Roles = "/admin/roles";
         public const string RoleView = "/admin/role/view";
-        public const string Permissions = "/admin/permissions";
+        public const string AuditTrails = "/admin/audittrail";
+        public const string AuditTrailView = "/admin/audittrail/view";
     }
 
     public static class Api
