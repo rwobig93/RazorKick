@@ -35,14 +35,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppPermissions]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -50,14 +50,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteForUser",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_DeleteForUser]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteForUser]
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppPermissions]
-                where UserId = @UserId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId;
             end"
     };
     
@@ -65,14 +65,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteForRole",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_DeleteForRole]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteForRole]
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppPermissions]
-                where RoleId = @RoleId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE RoleId = @RoleId;
             end"
     };
     
@@ -80,12 +80,12 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[AppPermissions];
+                SELECT *
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -93,14 +93,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppPermissions]
-                where Id = @Id
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -109,14 +109,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByName",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByName]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
                 @Name NVARCHAR(256)
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppPermissions]
-                where Name = @Name
+                FROM dbo.[{Table.TableName}]
+                WHERE Name = @Name
                 ORDER BY Id;
             end"
     };
@@ -125,14 +125,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByGroup",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByGroup]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGroup]
                 @Group NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where [Group] = @Group;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE [Group] = @Group;
             end"
     };
     
@@ -140,14 +140,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByAccess",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByAccess]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByAccess]
                 @Access NVARCHAR(256)
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where Access = @Access;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Access = @Access;
             end"
     };
     
@@ -155,14 +155,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByRoleId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByRoleId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByRoleId]
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where RoleId = @RoleId;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE RoleId = @RoleId;
             end"
     };
     
@@ -170,15 +170,15 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByRoleIdAndValue",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByRoleIdAndValue]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByRoleIdAndValue]
                 @RoleId UNIQUEIDENTIFIER,
                 @ClaimValue NVARCHAR(1024)
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where RoleId = @RoleId AND ClaimValue = @ClaimValue;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE RoleId = @RoleId AND ClaimValue = @ClaimValue;
             end"
     };
     
@@ -186,14 +186,14 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByUserId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByUserId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUserId]
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where UserId = @UserId;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId;
             end"
     };
     
@@ -201,15 +201,15 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByUserIdAndValue",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_GetByUserIdAndValue]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUserIdAndValue]
                 @UserId UNIQUEIDENTIFIER,
                 @ClaimValue NVARCHAR(1024)
             AS
             begin
-                select *
-                from dbo.[AppPermissions]
-                where UserId = @UserId AND ClaimValue = @ClaimValue;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId AND ClaimValue = @ClaimValue;
             end"
     };
     
@@ -217,8 +217,8 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @RoleId UNIQUEIDENTIFIER,
                 @UserId UNIQUEIDENTIFIER,
                 @ClaimType NVARCHAR(256),
@@ -233,10 +233,10 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppPermissions] (RoleId, UserId, Name, [Group], Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
+                INSERT into dbo.[{Table.TableName}] (RoleId, UserId, Name, [Group], Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                values (@RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
+                VALUES (@RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
                 @LastModifiedOn);
             end"
     };
@@ -245,16 +245,16 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Search",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Search]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
-                set nocount on;
+                SET nocount on;
                 
-                select *
-                from dbo.[AppPermissions]
-                where Description LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Description LIKE '%' + @SearchTerm + '%'
                     OR RoleId LIKE '%' + @SearchTerm + '%'
                     OR UserId LIKE '%' + @SearchTerm + '%'
                     OR ClaimValue LIKE '%' + @SearchTerm + '%';
@@ -265,8 +265,8 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppPermissions_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER = null,
                 @UserId UNIQUEIDENTIFIER = null,
@@ -282,13 +282,13 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null
             AS
             begin
-                update dbo.[AppPermissions]
-                set RoleId = COALESCE(@RoleId, RoleId), UserID = COALESCE(@UserId, UserId), ClaimType = COALESCE(@ClaimType, ClaimType),
+                UPDATE dbo.[{Table.TableName}]
+                SET RoleId = COALESCE(@RoleId, RoleId), UserID = COALESCE(@UserId, UserId), ClaimType = COALESCE(@ClaimType, ClaimType),
                     ClaimValue = COALESCE(@ClaimValue, ClaimValue), Name = COALESCE(@Name, Name), [Group] = COALESCE(@Group, [Group]),
                     Access = COALESCE(@Access, Access), Description = COALESCE(@Description, Description),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
-                where Id = COALESCE(@Id, Id);
+                WHERE Id = COALESCE(@Id, Id);
             end"
     };
 }

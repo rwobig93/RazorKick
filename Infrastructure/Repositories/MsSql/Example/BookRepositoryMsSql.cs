@@ -76,24 +76,29 @@ public class BookRepositoryMsSql : IBookRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<BookFull?>> GetFullByIdAsync(Guid id)
+    private static Func<BookFullDb, BookGenreDb, BookFullDb> BookFullJoinMapping()
     {
-        DatabaseActionResult<BookFull?> actionReturn = new ();
+        return (bookFull, genre) =>
+        {
+            bookFull.Genres.Add(genre);
+            return bookFull;
+        };
+    }
+
+    public async Task<DatabaseActionResult<BookFullDb?>> GetFullByIdAsync(Guid id)
+    {
+        DatabaseActionResult<BookFullDb?> actionReturn = new ();
         
         try
         {
-            var foundBook = (await GetByIdAsync(id)).Result;
-            var convertedFullBook = foundBook?.ToFullObject();
+            var foundBook = (await _database.LoadDataJoin<BookFullDb, BookGenreDb, dynamic>(
+                BooksMsSql.GetByIdFull, BookFullJoinMapping(), new {Id = id})).FirstOrDefault();
             
             var foundReviews = (await _bookReviewRepository.GetReviewsForBookAsync(foundBook!.Id)).Result ?? new List<BookReviewDb>();
             foreach (var review in foundReviews)
-                convertedFullBook!.Reviews.Add(review);
-
-            var foundGenres = (await _bookGenreRepository.GetGenresForBookAsync(foundBook.Id)).Result ?? new List<BookGenreDb>();
-            foreach (var genre in foundGenres)
-                convertedFullBook!.Genres.Add(genre);
+                foundBook.Reviews.Add(review);
             
-            actionReturn.Succeed(convertedFullBook);
+            actionReturn.Succeed(foundBook);
         }
         catch (Exception ex)
         {

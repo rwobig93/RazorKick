@@ -29,15 +29,15 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserRoleJunctions]
-                where UserId = @UserId AND
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId AND
                       RoleId = @RoleId;
             end"
     };
@@ -46,14 +46,14 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteForUser",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_DeleteForUser]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteForUser]
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserRoleJunctions]
-                where UserId = @UserId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId;
             end"
     };
     
@@ -61,14 +61,14 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteForRole",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_DeleteForRole]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteForRole]
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserRoleJunctions]
-                where RoleId = @RoleId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE RoleId = @RoleId;
             end"
     };
     
@@ -76,12 +76,12 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[AppUserRoleJunctions];
+                SELECT *
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -89,15 +89,15 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByUserRoleId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetByUserRoleId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUserRoleId]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppUserRoleJunctions]
-                where UserId = @UserId AND
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId AND
                       RoleId = @RoleId
                 ORDER BY UserId;
             end"
@@ -107,14 +107,14 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetRolesOfUser",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetRolesOfUser]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetRolesOfUser]
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                select RoleId
-                from dbo.[AppUserRoleJunctions]
-                where UserId = @UserId;
+                SELECT RoleId
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId = @UserId;
             end"
     };
     
@@ -122,14 +122,14 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetUsersOfRole",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_GetUsersOfRole]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetUsersOfRole]
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                select UserId
-                from dbo.[AppUserRoleJunctions]
-                where RoleId = @RoleId;
+                SELECT UserId
+                FROM dbo.[{Table.TableName}]
+                WHERE RoleId = @RoleId;
             end"
     };
     
@@ -137,14 +137,14 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @UserId UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                insert into dbo.[AppUserRoleJunctions] (UserId, RoleId)
-                values (@UserId, @RoleId);
+                INSERT into dbo.[{Table.TableName}] (UserId, RoleId)
+                VALUES (@UserId, @RoleId);
             end"
     };
     
@@ -152,16 +152,16 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Search",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserRoleJunctions_Search]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
                 set nocount on;
                 
-                select *
-                from dbo.[AppUserRoleJunctions]
-                where UserId LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE UserId LIKE '%' + @SearchTerm + '%'
                     OR RoleId LIKE '%' + @SearchTerm + '%';
             end"
     };

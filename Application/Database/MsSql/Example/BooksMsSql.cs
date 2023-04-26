@@ -26,15 +26,14 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
-                delete
-                from dbo.[Books]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -42,14 +41,14 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 Id, Name, Author
-                from dbo.[Books]
-                where Id = @Id
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -58,14 +57,16 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByIdFull",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_GetByIdFull]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdFull]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                select obj.Id, obj.Name, obj.Author from dbo.[Books] obj
-                LEFT JOIN dbo.[BookReviews] attr ON obj.Id = attr.BookId
-                where obj.Id = @Id;
+                SELECT b.*, g.*
+                FROM dbo.[{Table.TableName}] b
+                JOIN dbo.[{BookGenreJunctionsMsSql.Table.TableName}] bg ON b.Id = bg.BookId
+                JOIN dbo.[{BookGenresMsSql.Table.TableName}] g ON g.Id = bg.GenreId
+                WHERE b.Id = @Id;
             end"
     };
     
@@ -73,12 +74,13 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select Id, Name, Author, Pages
-                from dbo.[Books];
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                ORDER BY Id;
             end"
     };
     
@@ -86,16 +88,16 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Name NVARCHAR(256),
                 @Author NVARCHAR(256),
                 @Pages INT
             AS
             begin
-                insert into dbo.[Books] (Name, Author, Pages)
+                INSERT into dbo.[{Table.TableName}] (Name, Author, Pages)
                 OUTPUT INSERTED.id
-                values (@Name, @Author, @Pages);
+                VALUES (@Name, @Author, @Pages);
             end"
     };
     
@@ -103,17 +105,17 @@ public class BooksMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBooks_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Name NVARCHAR(256),
-                @Author NVARCHAR(256),
-                @Pages INT
+                @Name NVARCHAR(256) = null,
+                @Author NVARCHAR(256) = null,
+                @Pages INT = null
             AS
             begin
-                update dbo.[Books]
-                set Name = @Name, Author = @Author, Pages = @Pages
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET Name = COALESCE(@Name, Name), Author = COALESCE(@Author, Author), Pages = COALESCE(@Pages, Pages)
+                WHERE Id = @Id;
             end"
     };
 }

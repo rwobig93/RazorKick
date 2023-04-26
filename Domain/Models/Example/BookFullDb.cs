@@ -3,7 +3,7 @@ using Shared.Responses.Example;
 
 namespace Domain.Models.Example;
 
-public class BookFull
+public class BookFullDb
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
@@ -15,7 +15,7 @@ public class BookFull
 
 public static class ExampleObjectFullExtensions
 {
-    public static BookFullResponse ToFullResponse(this BookFull bookFull)
+    public static BookFullResponse ToFullResponse(this BookFullDb bookFull)
     {
         return new BookFullResponse
         {

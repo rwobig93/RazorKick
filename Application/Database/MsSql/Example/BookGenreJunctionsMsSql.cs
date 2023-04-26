@@ -28,15 +28,15 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @BookId UNIQUEIDENTIFIER,
                 @GenreId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[BookGenreJunctions]
-                where BookId = @BookId AND
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE BookId = @BookId AND
                       GenreId = @GenreId;
             end"
     };
@@ -45,12 +45,12 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select BookId, GenreId
-                from dbo.[BookGenreJunctions];
+                SELECT BookId, GenreId
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -58,14 +58,14 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetGenresForBook",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_GetGenresForBook]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetGenresForBook]
                 @BookId UNIQUEIDENTIFIER
             AS
             begin
-                select GenreId
-                from dbo.[BookGenreJunctions]
-                where BookId = @BookId;
+                SELECT GenreId
+                FROM dbo.[{Table.TableName}]
+                WHERE BookId = @BookId;
             end"
     };
     
@@ -73,14 +73,14 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetBooksForGenre",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_GetBooksForGenre]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetBooksForGenre]
                 @GenreId UNIQUEIDENTIFIER
             AS
             begin
-                select BookId
-                from dbo.[BookGenreJunctions]
-                where GenreId = @GenreId;
+                SELECT BookId
+                FROM dbo.[{Table.TableName}]
+                WHERE GenreId = @GenreId;
             end"
     };
     
@@ -88,14 +88,14 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @BookId UNIQUEIDENTIFIER,
                 @GenreId UNIQUEIDENTIFIER
             AS
             begin
-                insert into dbo.[BookGenreJunctions] (BookId, GenreId)
-                values (@BookId, @GenreId);
+                insert into dbo.[{Table.TableName}] (BookId, GenreId)
+                VALUES (@BookId, @GenreId);
             end"
     };
     
@@ -103,16 +103,16 @@ public class BookGenreJunctionsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Search",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenreJunctions_Search]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
-                set nocount on;
+                SET nocount on;
                 
-                select BookId, GenreId
-                from dbo.[BookGenreJunctions]
-                where BookId LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE BookId LIKE '%' + @SearchTerm + '%'
                     OR GenreId LIKE '%' + @SearchTerm + '%';
             end"
     };

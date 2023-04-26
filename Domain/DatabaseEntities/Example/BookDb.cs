@@ -13,9 +13,9 @@ public class BookDb
 
 public static class BookDbExtensions
 {
-    public static BookFull ToFullObject(this BookDb book)
+    public static BookFullDb ToFullObject(this BookDb book)
     {
-        return new BookFull
+        return new BookFullDb
         {
             Id = book.Id,
             Name = book.Name,

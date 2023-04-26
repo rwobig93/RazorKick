@@ -29,14 +29,14 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserPreferences]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -44,14 +44,14 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteForUser",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_DeleteForUser]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteForUser]
                 @OwnerId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserPreferences]
-                where OwnerId = @OwnerId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId;
             end"
     };
     
@@ -59,12 +59,12 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[AppUserPreferences];
+                SELECT *
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -72,14 +72,14 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppUserPreferences]
-                where Id = @Id
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -88,14 +88,14 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByOwnerId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_GetByOwnerId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByOwnerId]
                 @OwnerId UNIQUEIDENTIFIER
             AS
             begin
-                select *
-                from dbo.[AppUserPreferences]
-                where OwnerId = @OwnerId;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId;
             end"
     };
 
@@ -103,8 +103,8 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @OwnerId UNIQUEIDENTIFIER,
                 @ThemePreference INT,
                 @DrawerDefaultOpen BIT,
@@ -113,9 +113,9 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
                 @CustomThemeThree NVARCHAR(1024)
             AS
             begin
-                insert into dbo.[AppUserPreferences] (OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree)
                 OUTPUT INSERTED.Id
-                values (@OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree);
+                VALUES (@OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree);
             end"
     };
 
@@ -123,8 +123,8 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserPreferences_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER = null,
                 @ThemePreference INT = null,
@@ -134,11 +134,11 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
                 @CustomThemeThree NVARCHAR(1024) = null
             AS
             begin
-                update dbo.[AppUserPreferences]
-                set OwnerId = COALESCE(@OwnerId, OwnerId), ThemePreference = COALESCE(@ThemePreference, ThemePreference),
+                UPDATE dbo.[{Table.TableName}]
+                SET OwnerId = COALESCE(@OwnerId, OwnerId), ThemePreference = COALESCE(@ThemePreference, ThemePreference),
                     DrawerDefaultOpen = COALESCE(@DrawerDefaultOpen, DrawerDefaultOpen), CustomThemeOne = COALESCE(@CustomThemeOne, CustomThemeOne),
                     CustomThemeTwo = COALESCE(@CustomThemeTwo, CustomThemeTwo), CustomThemeThree = COALESCE(@CustomThemeThree, CustomThemeThree)
-                where Id = COALESCE(@Id, Id);
+                WHERE Id = COALESCE(@Id, Id);
             end"
     };
 }

@@ -31,15 +31,14 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-            --     archive instead in production
-                delete
-                from dbo.[AppRoles]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -47,12 +46,12 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[AppRoles];
+                SELECT *
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -60,14 +59,14 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppRoles]
-                where Id = @Id
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -76,14 +75,14 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByName",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetByName]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
                 @Name NVARCHAR(256)
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppRoles]
-                where Name = @Name
+                FROM dbo.[{Table.TableName}]
+                WHERE Name = @Name
                 ORDER BY Id;
             end"
     };
@@ -92,14 +91,14 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByNormalizedName",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_GetByNormalizedName]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedName]
                 @NormalizedName NVARCHAR(256)
             AS
             begin
                 SELECT TOP 1 *
-                from dbo.[AppRoles]
-                where NormalizedName = @NormalizedName
+                FROM dbo.[{Table.TableName}]
+                WHERE NormalizedName = @NormalizedName
                 ORDER BY Id;
             end"
     };
@@ -108,8 +107,8 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Name NVARCHAR(256),
                 @NormalizedName NVARCHAR(256),
                 @ConcurrencyStamp NVARCHAR(256),
@@ -120,9 +119,9 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                insert into dbo.[AppRoles] (Name, NormalizedName, ConcurrencyStamp, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (Name, NormalizedName, ConcurrencyStamp, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                values (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -130,16 +129,16 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Search",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Search]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
                 @SearchTerm NVARCHAR(256)
             AS
             begin
-                set nocount on;
+                SET nocount on;
                 
-                select *
-                from dbo.[AppRoles]
-                where Name LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Name LIKE '%' + @SearchTerm + '%'
                     OR Description LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -148,8 +147,8 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256) = null,
                 @NormalizedName NVARCHAR(256) = null,
@@ -161,12 +160,12 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null
             AS
             begin
-                update dbo.[AppRoles]
-                set Name = COALESCE(@Name, Name), NormalizedName = COALESCE(@NormalizedName, NormalizedName),
+                UPDATE dbo.[{Table.TableName}]
+                SET Name = COALESCE(@Name, Name), NormalizedName = COALESCE(@NormalizedName, NormalizedName),
                     ConcurrencyStamp = COALESCE(@ConcurrencyStamp, ConcurrencyStamp), Description = COALESCE(@Description, Description),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
-                where Id = COALESCE(@Id, Id);
+                WHERE Id = COALESCE(@Id, Id);
             end"
     };
     
@@ -174,15 +173,15 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "SetCreatedById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppRoles_SetCreatedById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SetCreatedById]
                 @Id UNIQUEIDENTIFIER,
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                update dbo.[AppRoles]
-                set CreatedBy = @CreatedBy
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET CreatedBy = @CreatedBy
+                WHERE Id = @Id;
             end"
     };
 }

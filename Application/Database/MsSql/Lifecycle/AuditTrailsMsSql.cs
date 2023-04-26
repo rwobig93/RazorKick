@@ -35,8 +35,8 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select *
-                from dbo.[{Table.TableName}]
+                SELECT *
+                FROM dbo.[{Table.TableName}]
                 ORDER BY Timestamp DESC;
             end"
     };
@@ -50,7 +50,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                from dbo.[{Table.TableName}] a
+                FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC;
             end"
@@ -84,7 +84,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                from dbo.[{Table.TableName}] a
+                FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -101,7 +101,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT TOP 1 *
                 FROM dbo.[{Table.TableName}]
-                where Id = @Id
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -172,9 +172,9 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 @After NVARCHAR(MAX)
             AS
             begin
-                insert into dbo.[{Table.TableName}] (TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
+                INSERT into dbo.[{Table.TableName}] (TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
                 OUTPUT INSERTED.Id
-                values (@TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
+                VALUES (@TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
             end"
     };
 
@@ -189,9 +189,9 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 set nocount on;
                 
-                select *
-                from dbo.[{Table.TableName}]
-                where TableName LIKE '%' + @SearchTerm + '%'
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
                     OR Action LIKE '%' + @SearchTerm + '%'
                     OR Before LIKE '%' + @SearchTerm + '%'
@@ -232,9 +232,9 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 @OlderThan DATETIME2
             AS
             begin
-                delete
-                from dbo.[{Table.TableName}]
-                where Timestamp < @olderThan;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Timestamp < @olderThan;
             end"
     };
 }

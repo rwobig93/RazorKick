@@ -27,14 +27,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                update dbo.[BookReviews]
-                set IsDeleted = 1
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET IsDeleted = 1
+                WHERE Id = @Id;
             end"
     };
     
@@ -42,14 +42,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "UnDelete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_UnDelete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_UnDelete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                update dbo.[BookReviews]
-                set IsDeleted = 0
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET IsDeleted = 0
+                WHERE Id = @Id;
             end"
     };
     
@@ -57,14 +57,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where Id = @Id AND IsDeleted = 0
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id AND IsDeleted = 0
                 ORDER BY Id;
             end"
     };
@@ -73,14 +73,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByBookId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetByBookId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByBookId]
                 @BookId UNIQUEIDENTIFIER
             AS
             begin
-                select Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where BookId = @BookId AND IsDeleted = 0;
+                SELECT b.*
+                FROM dbo.[{Table.TableName}] b
+                WHERE b.BookId = @BookId AND b.IsDeleted = 0;
             end"
     };
     
@@ -88,13 +88,13 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where IsDeleted = 0;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 0;
             end"
     };
     
@@ -102,13 +102,13 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllDeleted",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetAllDeleted]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllDeleted]
             AS
             begin
-                select Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where IsDeleted = 1;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 1;
             end"
     };
     
@@ -116,14 +116,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllFromAuthor",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetAllFromAuthor]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllFromAuthor]
                 @Author NVARCHAR(256)
             AS
             begin
-                select Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where Author = @Author AND IsDeleted = 0;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Author = @Author AND IsDeleted = 0;
             end"
     };
     
@@ -131,14 +131,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllFromAuthorDeleted",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_GetAllFromAuthorDeleted]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllFromAuthorDeleted]
                 @Author NVARCHAR(256)
             AS
             begin
-                select Id, BookId, Author, Content
-                from dbo.[BookReviews]
-                where Author = @Author AND IsDeleted = 1;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Author = @Author AND IsDeleted = 1;
             end"
     };
     
@@ -146,14 +146,14 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @BookId UNIQUEIDENTIFIER,
                 @Author NVARCHAR(256),
                 @Content NVARCHAR(4000)
             AS
             begin
-                insert into dbo.[BookReviews] (BookId, Author, Content)
+                INSERT into dbo.[{Table.TableName}] (BookId, Author, Content)
                 OUTPUT INSERTED.Id
                 values (@BookId, @Author, @Content);
             end"
@@ -163,17 +163,17 @@ public class BookReviewsMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookReviews_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @BookId UNIQUEIDENTIFIER,
-                @Author NVARCHAR(256),
-                @Content NVARCHAR(4000)
+                @BookId UNIQUEIDENTIFIER = null,
+                @Author NVARCHAR(256) = null,
+                @Content NVARCHAR(4000) = null
             AS
             begin
-                update dbo.[BookReviews]
-                set BookId = @BookId, Author = @Author, Content = @Content
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET BookId = COALESCE(@BookId, BookId), Author = COALESCE(@Author, Author), Content = COALESCE(@Content, Content)
+                WHERE Id = @Id;
             end"
     };
 }

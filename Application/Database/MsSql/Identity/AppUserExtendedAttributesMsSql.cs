@@ -27,14 +27,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserExtendedAttributes]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -42,14 +42,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "DeleteAllForOwner",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_DeleteAllForOwner]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteAllForOwner]
                 @OwnerId UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[AppUserExtendedAttributes]
-                where OwnerId = @OwnerId;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId;
             end"
     };
     
@@ -57,14 +57,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
                 SELECT TOP 1 Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where Id = @Id
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id
                 ORDER BY Id;
             end"
     };
@@ -73,14 +73,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByOwnerId",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetByOwnerId]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByOwnerId]
                 @OwnerId UNIQUEIDENTIFIER
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where OwnerId = @OwnerId;
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId;
             end"
     };
     
@@ -88,14 +88,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByName",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetByName]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
                 @Name NVARCHAR(256)
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where Name = @Name;
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}]
+                WHERE Name = @Name;
             end"
     };
     
@@ -103,12 +103,12 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes];
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -116,14 +116,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllOfType",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetAllOfType]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllOfType]
                 @Type int
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where Type = @Type;
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}]
+                WHERE Type = @Type;
             end"
     };
     
@@ -131,15 +131,15 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllOfTypeForOwner",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetAllOfTypeForOwner]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllOfTypeForOwner]
                 @OwnerId UNIQUEIDENTIFIER,
                 @Type int
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where OwnerId = @OwnerId AND Type = @Type;
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId AND Type = @Type;
             end"
     };
     
@@ -147,15 +147,15 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAllOfNameForOwner",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_GetAllOfNameForOwner]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllOfNameForOwner]
                 @OwnerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256)
             AS
             begin
-                select Id, OwnerId, Name, Value, Type
-                from dbo.[AppUserExtendedAttributes]
-                where OwnerId = @OwnerId AND Name = @Name;
+                SELECT Id, OwnerId, Name, Value, Type
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId AND Name = @Name;
             end"
     };
     
@@ -163,15 +163,15 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @OwnerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @Value NVARCHAR(256),
                 @Type int
             AS
             begin
-                insert into dbo.[AppUserExtendedAttributes] (OwnerId, Name, Value, Type)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, Name, Value, Type)
                 OUTPUT INSERTED.Id
                 values (@OwnerId, @Name, @Value, @Type);
             end"
@@ -181,15 +181,15 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spAppUserExtendedAttributes_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Value NVARCHAR(256) = null
             AS
             begin
-                update dbo.[AppUserExtendedAttributes]
-                set Value = COALESCE(@Value, Value)
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET Value = COALESCE(@Value, Value)
+                WHERE Id = @Id;
             end"
     };
 }

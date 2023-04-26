@@ -25,14 +25,14 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Delete",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_Delete]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                delete
-                from dbo.[BookGenres]
-                where Id = @Id;
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -40,14 +40,14 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetById",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_GetById]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 Id, Name, Value
-                from dbo.[BookGenres]
-                where Name = @Id
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                WHERE Name = @Id
                 ORDER BY Id;
             end"
     };
@@ -56,14 +56,14 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByName",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_GetByName]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
                 @Name NVARCHAR(50)
             AS
             begin
-                SELECT TOP 1 Id, Name, Value
-                from dbo.[BookGenres]
-                where Name = @Name
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                WHERE Name = @Name
                 ORDER BY Id;
             end"
     };
@@ -72,14 +72,14 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetByValue",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_GetByValue]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByValue]
                 @Value NVARCHAR(50)
             AS
             begin
-                select Id, Name, Value
-                from dbo.[BookGenres]
-                where Value = @Value;
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE Value = @Value;
             end"
     };
     
@@ -87,12 +87,12 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "GetAll",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_GetAll]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                select Id, Name, Value
-                from dbo.[BookGenres];
+                SELECT *
+                FROM dbo.[{Table.TableName}];
             end"
     };
     
@@ -100,15 +100,15 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Insert",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_Insert]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Name nvarchar(50),
                 @Value nvarchar(50)
             AS
             begin
-                insert into dbo.[BookGenres] (Name, Value)
+                INSERT into dbo.[{Table.TableName}] (Name, Value)
                 OUTPUT INSERTED.Id
-                values (@Name, @Value);
+                VALUES (@Name, @Value);
             end"
     };
     
@@ -116,16 +116,16 @@ public class BookGenresMsSql : ISqlEnforcedEntityMsSql
     {
         Table = Table,
         Action = "Update",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spBookGenres_Update]
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Name nvarchar(50),
-                @Value nvarchar(50)
+                @Name nvarchar(50) = null,
+                @Value nvarchar(50) = null
             AS
             begin
-                update dbo.[BookGenres]
-                set Name = @Name, Value = @Value
-                where Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET Name = COALESCE(@Name, Name), Value = COALESCE(@Value, Value)
+                WHERE Id = @Id;
             end"
     };
 }
