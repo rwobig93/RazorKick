@@ -222,7 +222,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<IExcelService, ExcelService>();
-        
+        services.AddTransient<IMfaService, MfaService>();
         
         services.AddSingleton<IWeatherService, WeatherForecastService>();
     }
