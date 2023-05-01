@@ -65,6 +65,6 @@ public partial class Index
 
     private void CheckTotpCode()
     {
-        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode);
+        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey);
     }
 }
