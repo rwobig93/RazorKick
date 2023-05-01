@@ -223,6 +223,7 @@ public static class DependencyInjection
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IMfaService, MfaService>();
+        services.AddTransient<IQrCodeService, QrCodeService>();
         
         services.AddSingleton<IWeatherService, WeatherForecastService>();
     }

@@ -5,11 +5,28 @@ namespace Infrastructure.Services.Identity;
 
 public class MfaService : IMfaService
 {
-    private Totp _totpProvider;
-    private readonly byte[] _totpKey = Base32Encoding.ToBytes(Base32Encoding.ToString(KeyGeneration.GenerateRandomKey(20)));
+    private readonly Totp _totpProvider;
 
-    public MfaService(Totp totpProvider)
+    public MfaService(Totp totpProvider, byte[]? totpKey = null)
     {
-        _totpProvider = new Totp(_totpKey, mode: OtpHashMode.Sha512, totpSize: 6);
+        totpKey ??= KeyGeneration.GenerateRandomKey(20);
+
+        _totpProvider = new Totp(totpKey, mode: OtpHashMode.Sha512, totpSize: 6);
+    }
+
+    public byte[] GenerateKeyBytes(int keyLength = 20)
+    {
+        return KeyGeneration.GenerateRandomKey(keyLength);
+    }
+
+    public string GenerateKeyString(int keyLength = 20)
+    {
+        return Base32Encoding.ToString(GenerateKeyBytes(keyLength));
+    }
+
+    public bool IsPasscodeCorrect(string passcode)
+    {
+        // TODO: Add configuration for verification window
+        return _totpProvider.VerifyTotp(passcode, out var timeMatched, new VerificationWindow(1, 1));
     }
 }

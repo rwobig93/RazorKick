@@ -11,7 +11,13 @@ public partial class Index
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
+    [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
+    [Inject] private IMfaService MfaService { get; init; } = null!;
     private UserBasicResponse _loggedInUser = new();
+    private string _mfaKey = string.Empty;
+    private string _qrCodeSrc = string.Empty;
+    private string _totpCode = string.Empty;
+    private bool _totpCorrect;
     
     private bool _canViewApi;
     private bool _canViewJobs;
@@ -49,5 +55,16 @@ public partial class Index
             return;
 
         _loggedInUser = user;
+    }
+
+    private void RegisterTotp()
+    {
+        _mfaKey = MfaService.GenerateKeyString();
+        _qrCodeSrc = QrCodeService.GenerateQrCodeSrc(_mfaKey);
+    }
+
+    private void CheckTotpCode()
+    {
+        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode);
     }
 }
