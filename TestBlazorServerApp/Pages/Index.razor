@@ -48,18 +48,20 @@
         </MudButton>
         @if (!string.IsNullOrWhiteSpace(_mfaKey))
         {
-            <MudImage Src="@_qrCodeSrc" />
-            <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
-                Totp Key Raw: @_mfaKey
-            </MudText>
-            <MudTextField T="string" bind-Value="@_totpCode" Placeholder="TOTP Code" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
-            <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
-                TOTP Code Correct?: @_totpCorrect
-            </MudText>
-            <MudButton Color="Color.Tertiary" OnClick="@(CheckTotpCode)" Variant="Variant.Outlined">
-                <MudIcon Icon="@Icons.Material.Filled.Verified"/>
-            </MudButton>
+            <MudItem xs="12" sm="12" md="12" Class="align-center">
+                <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeSrc" Fluid="true" Width="500" />
+                <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
+                    Totp Key Raw: @_mfaKey
+                </MudText>
+                <MudTextField T="string" @bind-Value="_totpCode" Placeholder="TOTP Code" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
+                <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
+                    TOTP Code Correct?: @_totpCorrect
+                </MudText>
+                <MudButton Color="Color.Tertiary" OnClick="@(CheckTotpCode)" Variant="Variant.Outlined">
+                    <MudIcon Icon="@Icons.Material.Filled.Verified"/>
+                </MudButton>
+            </MudItem>
         }
     </MudGrid>
 </MudContainer>

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.WebUtilities;
 using static System.GC;
@@ -66,5 +67,10 @@ public class UrlHelpers : IDisposable
             tokenCount--;
             yield return factory.GenerateToken();
         }
+    }
+
+    public static string SanitizeTextForUrl(string textToSanitize)
+    {
+        return WebUtility.UrlEncode(textToSanitize);
     }
 }

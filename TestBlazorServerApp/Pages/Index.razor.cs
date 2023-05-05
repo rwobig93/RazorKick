@@ -1,5 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Helpers.Web;
+using Application.Models.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
@@ -13,8 +15,9 @@ public partial class Index
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
     [Inject] private IMfaService MfaService { get; init; } = null!;
-    private UserBasicResponse _loggedInUser = new();
-    private string _mfaKey = string.Empty;
+    
+    private AppUserFull _loggedInUser = new();
+    private string _mfaKey = "UCCKF4EXQJC52KEOPGOCOCDMNAH7KUOO";
     private string _qrCodeSrc = string.Empty;
     private string _totpCode = string.Empty;
     private bool _totpCorrect;
@@ -50,7 +53,7 @@ public partial class Index
 
     private async Task UpdateLoggedInUser()
     {
-        var user = await CurrentUserService.GetCurrentUserBasic();
+        var user = await CurrentUserService.GetCurrentUserFull();
         if (user is null)
             return;
 
@@ -59,12 +62,17 @@ public partial class Index
 
     private void RegisterTotp()
     {
-        _mfaKey = MfaService.GenerateKeyString();
-        _qrCodeSrc = QrCodeService.GenerateQrCodeSrc(_mfaKey);
+        // TOTP Syntax: otpauth://totp/Name:email@example.com?secret=<code>&&issuer=Name&algorithm=SHA512&digits=6&period=30
+        // _mfaKey = MfaService.GenerateKeyString();
+        var appName = ServerState.ApplicationName; // UrlHelpers.SanitizeTextForUrl(ServerState.ApplicationName);
+        var qrCodeContent =
+            $"otpauth://totp/{appName}?secret={_mfaKey}&issuer={appName}&algorithm=SHA1&digits=6&period=30";
+        _qrCodeSrc = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
     }
 
     private void CheckTotpCode()
     {
-        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey);
+        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey, out var matchedCount);
+        Snackbar.Add($"Matched Count: {matchedCount}", Severity.Info);
     }
 }

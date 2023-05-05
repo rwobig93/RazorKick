@@ -16,7 +16,7 @@ public class QrCodeService : IQrCodeService
     public string GenerateQrCodeSrc(string textToEncode)
     {
         var qrGenerator = new QRCodeGenerator();
-        var qrCodeData = qrGenerator.CreateQrCode("The text which should be encoded.", QRCodeGenerator.ECCLevel.Q);
+        var qrCodeData = qrGenerator.CreateQrCode(textToEncode, QRCodeGenerator.ECCLevel.Q);
         var qrCode = new BitmapByteQRCode(qrCodeData);
         var qrCodeImage = qrCode.GetGraphic(20);
 
