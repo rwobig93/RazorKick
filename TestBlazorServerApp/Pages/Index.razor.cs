@@ -66,13 +66,13 @@ public partial class Index
         // _mfaKey = MfaService.GenerateKeyString();
         var appName = ServerState.ApplicationName; // UrlHelpers.SanitizeTextForUrl(ServerState.ApplicationName);
         var qrCodeContent =
-            $"otpauth://totp/{appName}?secret={_mfaKey}&issuer={appName}&algorithm=SHA1&digits=6&period=30";
+            $"otpauth://totp/{appName}:{_loggedInUser.EmailAddress}?secret={_mfaKey}&issuer={appName}&algorithm=SHA1&digits=6&period=30";
         _qrCodeSrc = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
     }
 
     private void CheckTotpCode()
     {
-        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey, out var matchedCount);
-        Snackbar.Add($"Matched Count: {matchedCount}", Severity.Info);
+        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey, out var timeStampMatched);
+        Snackbar.Add($"Matched Timestamp: {timeStampMatched}", Severity.Info);
     }
 }
