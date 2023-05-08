@@ -79,7 +79,7 @@ public class AppAccountService : IAppAccountService
             loginRequest.Password, user.PasswordSalt, user.PasswordHash);
         if (!passwordValid)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
-        if (!user.IsActive)
+        if (!user.IsEnabled)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
         if (!user.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
@@ -209,8 +209,6 @@ public class AppAccountService : IAppAccountService
         createUser.RefreshTokenExpiryTime = DateTime.Now;
         createUser.PasswordSalt = salt;
         createUser.PasswordHash = hash;
-        createUser.NormalizedUserName = createUser.Username.NormalizeForDatabase();
-        createUser.NormalizedEmail = createUser.Email.NormalizeForDatabase();
 
         return await _userRepository.CreateAsync(createUser);
     }
@@ -262,7 +260,7 @@ public class AppAccountService : IAppAccountService
                 $"the address provided, please contact the administrator for assistance{caveatMessage}");
         
         return await Result<Guid>.SuccessAsync(newUser.Id, 
-            $"Account {newUser.UserName} successfully registered, please check your email to confirm!{caveatMessage}");
+            $"Account {newUser.Username} successfully registered, please check your email to confirm!{caveatMessage}");
     }
 
     public async Task<IResult<string>> GetEmailConfirmationUrl(Guid userId)
@@ -316,7 +314,7 @@ public class AppAccountService : IAppAccountService
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
         
         foundUser.EmailConfirmed = true;
-        foundUser.IsActive = true;
+        foundUser.IsEnabled = true;
         
         var userUpdate = foundUser.ToUpdate();
         userUpdate.LastModifiedBy = _serverState.SystemUserId;
@@ -506,7 +504,7 @@ public class AppAccountService : IAppAccountService
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
         
-        user.Result!.IsActive = enabled;
+        user.Result!.IsEnabled = enabled;
         user.Result!.LastModifiedBy = _serverState.SystemUserId;
         user.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
 
@@ -527,6 +525,38 @@ public class AppAccountService : IAppAccountService
         // TODO: Invalidate any currently active logins for the account / log them out
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
         return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = user.Result!.Email });
+    }
+
+    public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (!user.Success || user.Result is null)
+            return await Result.FailAsync(user.ErrorMessage);
+
+        var updateUser = user.Result.ToUpdate();
+        updateUser.TwoFactorEnabled = enabled;
+
+        var updateRequest = await _userRepository.UpdateAsync(updateUser);
+        if (!updateRequest.Success)
+            return await Result.FailAsync(updateRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> SetTwoFactorKey(Guid userId, string key)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (!user.Success || user.Result is null)
+            return await Result.FailAsync(user.ErrorMessage);
+
+        var updateUser = user.Result.ToUpdate();
+        updateUser.TwoFactorKey = key;
+
+        var updateRequest = await _userRepository.UpdateAsync(updateUser);
+        if (!updateRequest.Success)
+            return await Result.FailAsync(updateRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
     }
 
     private async Task<string> GenerateJwtAsync(AppUserDb user)

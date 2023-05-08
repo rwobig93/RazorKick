@@ -24,4 +24,6 @@ public interface IAppAccountService
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
     Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled);
     Task<IResult> ForceUserPasswordReset(Guid userId);
+    Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
+    Task<IResult> SetTwoFactorKey(Guid userId, string key);
 }

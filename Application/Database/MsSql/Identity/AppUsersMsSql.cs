@@ -16,15 +16,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 CREATE TABLE [dbo].[AppUsers](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Username] NVARCHAR(256) NOT NULL,
-                    [NormalizedUserName] NVARCHAR(256) NOT NULL,
                     [Email] NVARCHAR(256) NOT NULL,
-                    [NormalizedEmail] NVARCHAR(256) NOT NULL,
                     [EmailConfirmed] BIT NOT NULL,
                     [PasswordHash] NVARCHAR(256) NOT NULL,
                     [PasswordSalt] NVARCHAR(256) NOT NULL,
                     [PhoneNumber] NVARCHAR(50) NULL,
                     [PhoneNumberConfirmed] BIT NOT NULL,
                     [TwoFactorEnabled] BIT NOT NULL,
+                    [TwoFactorKey] NVARCHAR(256) NULL,
                     [FirstName] NVARCHAR(256) NULL,
                     [LastName] NVARCHAR(256) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
@@ -34,13 +33,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [LastModifiedOn] datetime2 NULL,
                     [IsDeleted] BIT NOT NULL,
                     [DeletedOn] datetime2 NULL,
-                    [IsActive] BIT NOT NULL,
+                    [IsEnabled] BIT NOT NULL,
                     [RefreshToken] NVARCHAR(400) NULL,
                     [RefreshTokenExpiryTime] datetime2 NULL,
                     [AccountType] int NOT NULL
                 )
-                CREATE INDEX [IX_User_NormalizedUserName] ON [dbo].[AppUsers] ([NormalizedUserName])
-                CREATE INDEX [IX_User_NormalizedEmail] ON [dbo].[AppUsers] ([NormalizedEmail])
+                CREATE INDEX [IX_User_Id] ON [dbo].[AppUsers] ([Id])
+                CREATE INDEX [IX_User_UserName] ON [dbo].[AppUsers] ([Username])
+                CREATE INDEX [IX_User_Email] ON [dbo].[AppUsers] ([Email])
             end"
     };
     
@@ -55,7 +55,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn, IsActive = 0
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, IsEnabled = 0
                 WHERE Id = @Id;
             end"
     };
@@ -230,15 +230,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Username NVARCHAR(256),
-                @NormalizedUserName NVARCHAR(256),
                 @Email NVARCHAR(256),
-                @NormalizedEmail NVARCHAR(256),
                 @EmailConfirmed BIT,
                 @PasswordHash NVARCHAR(256),
                 @PasswordSalt NVARCHAR(256),
                 @PhoneNumber NVARCHAR(256),
                 @PhoneNumberConfirmed BIT,
                 @TwoFactorEnabled BIT,
+                @TwoFactorKey NVARCHAR(256),
                 @FirstName NVARCHAR(256),
                 @LastName NVARCHAR(256),
                 @CreatedBy UNIQUEIDENTIFIER,
@@ -248,20 +247,20 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2,
                 @IsDeleted BIT,
                 @DeletedOn datetime2,
-                @IsActive BIT,
+                @IsEnabled BIT,
                 @RefreshToken NVARCHAR(400),
                 @RefreshTokenExpiryTime datetime2,
                 @AccountType int
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Username, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, PasswordSalt,
-                                         PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, FirstName, LastName, CreatedBy,
+                INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PasswordHash, PasswordSalt, PhoneNumber,
+                                         PhoneNumberConfirmed, TwoFactorEnabled, TwoFactorKey, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         IsActive, RefreshToken, RefreshTokenExpiryTime, AccountType)
+                                         IsEnabled, RefreshToken, RefreshTokenExpiryTime, AccountType)
                 OUTPUT INSERTED.Id
-                VALUES (@Username, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @PasswordSalt,
-                        @PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @FirstName, @LastName, @CreatedBy,
-                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsActive,
+                VALUES (@Username, @Email, @EmailConfirmed, @PasswordHash, @PasswordSalt, @PhoneNumber,
+                        @PhoneNumberConfirmed, @TwoFactorEnabled, @TwoFactorKey, @FirstName, @LastName, @CreatedBy,
+                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsEnabled,
                         @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
             end"
     };
@@ -295,15 +294,14 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Username NVARCHAR(256) = null,
-                @NormalizedUserName NVARCHAR(256) = null,
                 @Email NVARCHAR(256) = null,
-                @NormalizedEmail NVARCHAR(256) = null,
                 @EmailConfirmed BIT = null,
                 @PasswordHash NVARCHAR(256) = null,
                 @PasswordSalt NVARCHAR(256) = null,
                 @PhoneNumber NVARCHAR(256) = null,
                 @PhoneNumberConfirmed BIT = null,
                 @TwoFactorEnabled BIT = null,
+                @TwoFactorKey NVARCHAR(256) = null,
                 @FirstName NVARCHAR(256) = null,
                 @LastName NVARCHAR(256) = null,
                 @ProfilePictureDataUrl NVARCHAR(400) = null,
@@ -311,23 +309,23 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
                 @DeletedOn datetime2 = null,
-                @IsActive BIT = null,
+                @IsEnabled BIT = null,
                 @RefreshToken NVARCHAR(400) = null,
                 @RefreshTokenExpiryTime datetime2 = null,
                 @AccountType int = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET Username = COALESCE(@Username, Username), NormalizedUserName = COALESCE(@NormalizedUserName, NormalizedUserName),
-                    Email = COALESCE(@Email, Email), NormalizedEmail = COALESCE(@NormalizedEmail, NormalizedEmail),
+                SET Username = COALESCE(@Username, Username), Email = COALESCE(@Email, Email),
                     EmailConfirmed = COALESCE(@EmailConfirmed, EmailConfirmed), PasswordHash = COALESCE(@PasswordHash, PasswordHash),
                     PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt), PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
                     PhoneNumberConfirmed = COALESCE(@PhoneNumberConfirmed, PhoneNumberConfirmed),
-                    TwoFactorEnabled = COALESCE(@TwoFactorEnabled, TwoFactorEnabled), FirstName = COALESCE(@FirstName, FirstName),
+                    TwoFactorEnabled = COALESCE(@TwoFactorEnabled, TwoFactorEnabled),
+                    TwoFactorKey = COALESCE(@TwoFactorKey, TwoFactorKey), FirstName = COALESCE(@FirstName, FirstName),
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    IsActive = COALESCE(@IsActive, IsActive), RefreshToken = COALESCE(@RefreshToken, RefreshToken),
+                    IsEnabled = COALESCE(@IsEnabled, IsEnabled), RefreshToken = COALESCE(@RefreshToken, RefreshToken),
                     RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     AccountType = COALESCE(@AccountType, AccountType)
                 WHERE Id = COALESCE(@Id, Id);

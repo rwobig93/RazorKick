@@ -63,7 +63,7 @@ public static class AppUserSlimExtensions
             LastModifiedOn = appUserDb.LastModifiedOn,
             IsDeleted = appUserDb.IsDeleted,
             DeletedOn = appUserDb.DeletedOn,
-            IsActive = appUserDb.IsActive,
+            IsActive = appUserDb.IsEnabled,
             AccountType = appUserDb.AccountType
         };
     }
@@ -80,7 +80,7 @@ public static class AppUserSlimExtensions
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            IsActive = appUser.IsActive
+            IsEnabled = appUser.IsActive
         };
     }
 

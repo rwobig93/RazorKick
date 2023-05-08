@@ -157,6 +157,7 @@ public partial class UserAdmin
 
     private void ViewUser(Guid userId)
     {
+        // TODO: Viewing the Anonymous User goes to a page not found, either need to troubleshoot or handle this one-off
         var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.UserView, "userId", userId.ToString());
         NavManager.NavigateTo(viewUserUri);
     }

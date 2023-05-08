@@ -15,9 +15,9 @@ public class QrCodeService : IQrCodeService
 
     public string GenerateQrCodeSrc(string textToEncode)
     {
-        var qrGenerator = new QRCodeGenerator();
-        var qrCodeData = qrGenerator.CreateQrCode(textToEncode, QRCodeGenerator.ECCLevel.Q);
+        var qrCodeData = _codeGenerator.CreateQrCode(textToEncode, QRCodeGenerator.ECCLevel.Q);
         var qrCode = new BitmapByteQRCode(qrCodeData);
+        // TODO: Add configured application logo to center of QR Code
         var qrCodeImage = qrCode.GetGraphic(20);
 
         return "data:image/png;base64, " + Convert.ToBase64String(qrCodeImage);

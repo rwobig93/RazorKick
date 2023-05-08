@@ -47,6 +47,7 @@ public partial class AuditTrailAdmin
     
     private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state)
     {
+        // TODO: Move all page loading to paginated methods
         var trailResult = await AuditService.SearchAsync(_searchString);
         if (!trailResult.Succeeded)
         {

@@ -1,4 +1,5 @@
 ﻿using Application.Helpers.Identity;
+using Application.Models.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Shared.Responses.Identity;
@@ -8,8 +9,8 @@ namespace TestBlazorServerApp.Pages.Account;
 public partial class SecuritySettings
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    
-    private Guid CurrentUserId { get; set; }
+
+    private UserBasicResponse CurrentUser { get; set; } = new UserBasicResponse();
     private string CurrentPassword { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
@@ -20,6 +21,7 @@ public partial class SecuritySettings
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
     private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
+    
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -33,11 +35,11 @@ public partial class SecuritySettings
 
     private async Task GetCurrentUser()
     {
-        var userId = await CurrentUserService.GetCurrentUserId();
-        if (userId is null)
+        var foundUser = await CurrentUserService.GetCurrentUserBasic();
+        if (foundUser is null)
             return;
 
-        CurrentUserId = (Guid)userId;
+        CurrentUser = foundUser;
     }
 
     private async Task UpdatePassword()
@@ -45,7 +47,7 @@ public partial class SecuritySettings
         if (!(await IsRequiredInformationPresent()))
             return;
 
-        await AccountService.SetUserPassword(CurrentUserId, DesiredPassword);
+        await AccountService.SetUserPassword(CurrentUser!.Id, DesiredPassword);
 
         Snackbar.Add("Password successfully changed!");
         StateHasChanged();
@@ -102,7 +104,7 @@ public partial class SecuritySettings
             Snackbar.Add("Confirm Password field is empty", Severity.Error); informationValid = false; }
         if (DesiredPassword != ConfirmPassword) {
             Snackbar.Add("Passwords provided don't match", Severity.Error); informationValid = false; }
-        if (!(await AccountService.IsPasswordCorrect(CurrentUserId, CurrentPassword)).Data) {
+        if (!(await AccountService.IsPasswordCorrect(CurrentUser.Id, CurrentPassword)).Data) {
             Snackbar.Add("Current password provided is incorrect", Severity.Error); informationValid = false; }
         if (!(await AccountService.PasswordMeetsRequirements(DesiredPassword)).Data) {
             Snackbar.Add("Desired password doesn't meet the password requirements", Severity.Error); informationValid = false; }

@@ -51,7 +51,7 @@ public class AppIdentityService : IAppIdentityService
         {
             Id = user.Id,
             Username = newUserName,
-            NormalizedUserName = newUserName.NormalizeForDatabase(),
+            // NormalizedUserName = newUserName.NormalizeForDatabase(),
             LastModifiedBy = _serverState.SystemUserId,
             LastModifiedOn = _dateTime.NowDatabaseTime
         };
@@ -61,14 +61,16 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task<string> GetNormalizedUserNameAsync(AppUserDb user, CancellationToken cancellationToken)
     {
-        return await Task.FromResult(user.NormalizedUserName);
+        return await Task.FromResult(user.Username);
+        // return await Task.FromResult(user.NormalizedUserName);
     }
 
     public async Task SetNormalizedUserNameAsync(AppUserDb user, string normalizedName, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate
         {
-            Id = user.Id, NormalizedUserName = normalizedName,
+            // Id = user.Id, NormalizedUserName = normalizedName,
+            Id = user.Id, Username = normalizedName,
             LastModifiedBy = _serverState.SystemUserId,
             LastModifiedOn = _dateTime.NowDatabaseTime
         };
@@ -176,14 +178,16 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task<string> GetNormalizedEmailAsync(AppUserDb user, CancellationToken cancellationToken)
     {
-        return await Task.FromResult(user.NormalizedEmail);
+        return await Task.FromResult(user.Email);
+        // return await Task.FromResult(user.NormalizedEmail);
     }
 
-    public async Task SetNormalizedEmailAsync(AppUserDb user, string normalizedEmail, CancellationToken cancellationToken)
+    public async Task SetNormalizedEmailAsync(AppUserDb user, string email, CancellationToken cancellationToken)
     {
         var updateObject = new AppUserUpdate
         {
-            Id = user.Id, NormalizedEmail = normalizedEmail,
+            // Id = user.Id, NormalizedEmail = normalizedEmail,
+            Id = user.Id, Email = email,
             LastModifiedBy = _serverState.SystemUserId,
             LastModifiedOn = _dateTime.NowDatabaseTime
         };
@@ -381,7 +385,7 @@ public class AppIdentityService : IAppIdentityService
         {
             var userUpdate = new AppUserUpdate
             {
-                Id = requestedUser.Id, IsActive = activeRequest.IsActive,
+                Id = requestedUser.Id, IsEnabled = activeRequest.IsActive,
                 LastModifiedBy = _serverState.SystemUserId,
                 LastModifiedOn = _dateTime.NowDatabaseTime
             };

@@ -173,15 +173,14 @@ public class SqlDatabaseSeederService : IHostedService
         var createdUser = await _userRepository.CreateAsync(new AppUserCreate
         {
             Username = userName,
-            NormalizedUserName = userName.NormalizeForDatabase(),
             Email = email,
-            NormalizedEmail = email.NormalizeForDatabase(),
             EmailConfirmed = true,
             PasswordHash = hash,
             PasswordSalt = salt,
             PhoneNumber = "",
             PhoneNumberConfirmed = false,
             TwoFactorEnabled = false,
+            TwoFactorKey = null,
             FirstName = firstName,
             LastName = lastName,
             ProfilePictureDataUrl = null,
@@ -191,7 +190,7 @@ public class SqlDatabaseSeederService : IHostedService
             LastModifiedOn = null,
             IsDeleted = false,
             DeletedOn = null,
-            IsActive = true,
+            IsEnabled = true,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
             AccountType = AccountType.User

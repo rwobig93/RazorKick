@@ -5,12 +5,19 @@ using Shared.Responses.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
-public class AppUserDb : IdentityUser<Guid>, IAuditableEntity<Guid>
+public class AppUserDb : IAuditableEntity<Guid>
 {
     // TODO: Add bad password attempt count, locked out state, force reauthenticate, force token regen
-    public override Guid Id { get; set; }
+    public Guid Id { get; set; }
     public string Username { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public bool EmailConfirmed { get; set; }
+    public string PasswordHash { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;
+    public string PhoneNumber { get; set; } = null!;
+    public bool PhoneNumberConfirmed { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+    public string? TwoFactorKey { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }
@@ -21,7 +28,7 @@ public class AppUserDb : IdentityUser<Guid>, IAuditableEntity<Guid>
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     // TODO: Change to IsEnabled
-    public bool IsActive { get; set; }
+    public bool IsEnabled { get; set; }
     public string? RefreshToken { get; set; }
     // TODO: Change to FullLoginRequiredTime
     public DateTime RefreshTokenExpiryTime { get; set; }
@@ -37,7 +44,7 @@ public static class AppUserDbExtensions
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            IsActive = appUser.IsActive
+            IsEnabled = appUser.IsEnabled
         };
     }
 

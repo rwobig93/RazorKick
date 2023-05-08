@@ -84,7 +84,7 @@ public static class AppUserFullExtensions
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            IsActive = appUser.IsActive,
+            IsActive = appUser.IsEnabled,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
