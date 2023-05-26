@@ -42,9 +42,44 @@
             </MudItem>
         </MudPaper>
         <MudPaper Width="98%" Class="pa-4 mb-3">
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
-                
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Multi-Factor Authentication (MFA)</MudText>
             </MudItem>
+            <MudProgressLinear Indeterminate="@_qrCodeGenerating" Rounded="true"/>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap justify-center pa-2 gap-4">
+                <MudButton Color="Color.Primary" OnClick="@(InvokeTotpAction)" Variant="Variant.Outlined">
+                    @_mfaButtonText
+                </MudButton>
+                @if (!string.IsNullOrWhiteSpace(CurrentUser.TwoFactorKey))
+                {
+                    <MudButton Color="Color.Secondary" OnClick="@(RegisterTotp)" Variant="Variant.Outlined">
+                        Re-register MFA TOTP Token
+                    </MudButton>
+                }
+            </MudItem>
+            @if (!string.IsNullOrWhiteSpace(_mfaRegisterCode))
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
+                    <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                        Please scan the QR code or enter the TOTP key in your MFA app to register
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
+                    <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeImageSource" Fluid="true" Width="500"/>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
+                    <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
+                        TOTP Key: @(_mfaRegisterCode)
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
+                    <MudTextField T="string" @bind-Value="_totpCode" Placeholder="TOTP Code" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
+                    <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.Verified"/>
+                    </MudButton>
+                </MudItem>
+            }
         </MudPaper>
     </MudGrid>
 </MudContainer>

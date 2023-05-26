@@ -10,6 +10,8 @@ public class AppUserSlim
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string? EmailAddress { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+    public string? TwoFactorKey { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }
@@ -33,6 +35,8 @@ public static class AppUserSlimExtensions
             Id = appUserFull.Id,
             Username = appUserFull.Username,
             EmailAddress = appUserFull.EmailAddress,
+            TwoFactorEnabled = appUserFull.TwoFactorEnabled,
+            TwoFactorKey = appUserFull.TwoFactorKey,
             FirstName = appUserFull.FirstName,
             LastName = appUserFull.LastName,
             CreatedBy = appUserFull.CreatedBy,
@@ -54,6 +58,8 @@ public static class AppUserSlimExtensions
             Id = appUserDb.Id,
             Username = appUserDb.Username,
             EmailAddress = appUserDb.Email,
+            TwoFactorEnabled = appUserDb.TwoFactorEnabled,
+            TwoFactorKey = appUserDb.TwoFactorKey,
             FirstName = appUserDb.FirstName,
             LastName = appUserDb.LastName,
             CreatedBy = appUserDb.CreatedBy,

@@ -10,6 +10,8 @@ public class AppUserFull
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string? EmailAddress { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+    public string? TwoFactorKey { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public Guid CreatedBy { get; set; }
@@ -51,6 +53,8 @@ public static class AppUserFullExtensions
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.EmailAddress,
+            TwoFactorEnabled = appUser.TwoFactorEnabled,
+            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -75,6 +79,8 @@ public static class AppUserFullExtensions
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.Email,
+            TwoFactorEnabled = appUser.TwoFactorEnabled,
+            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -98,7 +104,9 @@ public static class AppUserFullExtensions
         {
             Id = appUser.Id,
             Username = appUser.Username,
-            EmailAddress = appUser.EmailAddress,
+            EmailAddress = appUser.Email,
+            TwoFactorEnabled = appUser.TwoFactorEnabled,
+            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -108,7 +116,7 @@ public static class AppUserFullExtensions
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            IsActive = appUser.IsActive,
+            IsActive = appUser.IsEnabled,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),

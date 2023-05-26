@@ -89,7 +89,7 @@ public static class BookEndpoints
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-
+    
     private static async Task<IResult> UpdateBook(BookUpdateRequest updateRequest, IBookRepository repository)
     {
         try

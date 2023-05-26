@@ -13,14 +13,8 @@ public partial class Index
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
-    [Inject] private IMfaService MfaService { get; init; } = null!;
     
     private AppUserFull _loggedInUser = new();
-    private string _mfaKey = "UCCKF4EXQJC52KEOPGOCOCDMNAH7KUOO";
-    private string _qrCodeSrc = string.Empty;
-    private string _totpCode = string.Empty;
-    private bool _totpCorrect;
     
     private bool _canViewApi;
     private bool _canViewJobs;
@@ -58,21 +52,5 @@ public partial class Index
             return;
 
         _loggedInUser = user;
-    }
-
-    private void RegisterTotp()
-    {
-        // TOTP Syntax: otpauth://totp/Name:email@example.com?secret=<code>&&issuer=Name&algorithm=SHA512&digits=6&period=30
-        // _mfaKey = MfaService.GenerateKeyString();
-        var appName = ServerState.ApplicationName; // UrlHelpers.SanitizeTextForUrl(ServerState.ApplicationName);
-        var qrCodeContent =
-            $"otpauth://totp/{appName}:{_loggedInUser.EmailAddress}?secret={_mfaKey}&issuer={appName}&algorithm=SHA1&digits=6&period=30";
-        _qrCodeSrc = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
-    }
-
-    private void CheckTotpCode()
-    {
-        _totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaKey, out var timeStampMatched);
-        Snackbar.Add($"Matched Timestamp: {timeStampMatched}", Severity.Info);
     }
 }

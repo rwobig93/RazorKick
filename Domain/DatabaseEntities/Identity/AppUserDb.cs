@@ -27,7 +27,6 @@ public class AppUserDb : IAuditableEntity<Guid>
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
-    // TODO: Change to IsEnabled
     public bool IsEnabled { get; set; }
     public string? RefreshToken { get; set; }
     // TODO: Change to FullLoginRequiredTime
