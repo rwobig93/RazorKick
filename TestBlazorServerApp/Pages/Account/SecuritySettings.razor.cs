@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Identity;
+﻿using Application.Constants.Web;
+using Application.Helpers.Identity;
 using Application.Models.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
@@ -33,9 +34,9 @@ public partial class SecuritySettings
     private string _mfaRegisterCode = "";
     private string _qrCodeImageSource = "";
     private string _totpCode = "";
-    private bool _qrCodeGenerating;
-
+    private bool QrCodeGenerating { get; set; }
     
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -163,7 +164,7 @@ public partial class SecuritySettings
         // If the account doesn't have a MFA key we want to allow registering
         if (string.IsNullOrWhiteSpace(CurrentUser.TwoFactorKey))
         {
-            RegisterTotp();
+            await RegisterTotp();
             return;
         }
 
@@ -171,23 +172,27 @@ public partial class SecuritySettings
         await ToggleMfaEnablement(!CurrentUser.TwoFactorEnabled);
     }
     
-    private void RegisterTotp()
+    private async Task RegisterTotp()
     {
+        QrCodeGenerating = true;
+        await Task.Yield();
+        
         try
         {
-            _qrCodeGenerating = true;
             _mfaRegisterCode = MfaService.GenerateKeyString();
             var appName = ServerState.ApplicationName;
             var qrCodeContent =
                 MfaService.GenerateOtpAuthString(appName, CurrentUser.EmailAddress!, _mfaRegisterCode);
             _qrCodeImageSource = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
-            _qrCodeGenerating = false;
+            
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Failed to generate TOTP Registration: {ex.Message}", Severity.Error);
-            _qrCodeGenerating = false;
         }
+        
+        QrCodeGenerating = false;
+        await Task.CompletedTask;
     }
 
     private async Task ToggleMfaEnablement(bool enabled)
@@ -200,12 +205,15 @@ public partial class SecuritySettings
         }
         
         await GetCurrentUser();
+        StateHasChanged();
         var mfaEnablement = CurrentUser.TwoFactorEnabled ? "Enabled" : "Disabled";
         Snackbar.Add($"Successfully toggled MFA to {mfaEnablement}");
+        UpdatePageElementStates();
     }
 
     private async Task ValidateTotpCode()
     {
+        // 56172502 | 3.11.28 AM CT, Saturday May 27th
         var totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaRegisterCode, out var timeStampMatched);
         if (!totpCorrect)
         {
@@ -222,5 +230,6 @@ public partial class SecuritySettings
         _mfaRegisterCode = "";
         _qrCodeImageSource = "";
         await AccountService.SetTwoFactorEnabled(CurrentUser.Id, true);
+        NavManager.NavigateTo(AppRouteConstants.Account.Security, true);
     }
 }

@@ -45,7 +45,11 @@
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Multi-Factor Authentication (MFA)</MudText>
             </MudItem>
-            <MudProgressLinear Indeterminate="@_qrCodeGenerating" Rounded="true"/>
+            @if (QrCodeGenerating)
+            {
+                <MudProgressLinear Color="Color.Info" Indeterminate="true" Rounded="true"/>
+                <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Generating QR Code...</MudText>
+            }
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap justify-center pa-2 gap-4">
                 <MudButton Color="Color.Primary" OnClick="@(InvokeTotpAction)" Variant="Variant.Outlined">
                     @_mfaButtonText
@@ -65,7 +69,7 @@
                     </MudText>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-                    <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeImageSource" Fluid="true" Width="500"/>
+                    <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeImageSource" Fluid="true" Width="300"/>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
                     <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
@@ -75,8 +79,9 @@
                 <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
                     <MudTextField T="string" @bind-Value="_totpCode" Placeholder="TOTP Code" Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
-                    <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Variant="Variant.Outlined">
-                        <MudIcon Icon="@Icons.Material.Filled.Verified"/>
+                    <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Size="Size.Medium" Variant="Variant.Outlined"
+                               StartIcon="@Icons.Material.Filled.Verified">
+                        Verify Code
                     </MudButton>
                 </MudItem>
             }
