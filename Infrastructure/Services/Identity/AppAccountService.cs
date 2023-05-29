@@ -138,7 +138,7 @@ public class AppAccountService : IAppAccountService
 
     private static Guid GetIdFromPrincipal(ClaimsPrincipal principal)
     {
-        var userIdClaim = principal?.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
+        var userIdClaim = principal.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
         var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
         
         return !isGuid ? Guid.Empty : userId;

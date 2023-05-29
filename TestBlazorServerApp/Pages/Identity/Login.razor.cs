@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Repositories.Identity;
@@ -22,6 +23,7 @@ public partial class Login
 {
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; set; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -32,12 +34,14 @@ public partial class Login
     private List<string> AuthResults { get; set; } = new();
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private bool _mfaVerified;
 
     private async Task LoginAsync()
     {
         try
         {
-            if (!IsRequiredInformationPresent()) return;
+            var loginReady = await IsLoginInfoAndMfaValid();
+            if (!loginReady) return;
             
             var authResponse = await AccountService.LoginGuiAsync(new UserLoginRequest
             {
@@ -128,5 +132,41 @@ public partial class Login
     {
         Username = UserConstants.DefaultUsers.BasicUsername;
         Password = UserConstants.DefaultUsers.BasicPassword;
+    }
+
+    private async Task<bool> IsLoginInfoAndMfaValid()
+    {
+        if (!IsRequiredInformationPresent()) return false;
+
+        var foundUser = await UserService.GetByUsernameAsync(Username);
+        if (!foundUser.Succeeded || foundUser.Data is null)
+        {
+            Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);
+            return false;
+        }
+
+        var passwordCorrect = await AccountService.IsPasswordCorrect(foundUser.Data.Id, Password);
+        if (!passwordCorrect.Succeeded || !passwordCorrect.Data)
+        {
+            Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);
+            return false;
+        }
+
+        if (foundUser.Data.TwoFactorEnabled)
+        {
+            var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+            var dialogParameters = new DialogParameters()
+            {
+                ["VerifyCodeMessage"]="Please enter your MFA code to login",
+                ["MfaKey"]=foundUser.Data.TwoFactorKey
+            };
+
+            var mfaResponse = DialogService.Show<MfaTokenValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
+            var mfaTokenValid = await mfaResponse.Result;
+            if (mfaTokenValid.Cancelled)
+                return false;
+        }
+
+        return true;
     }
 }

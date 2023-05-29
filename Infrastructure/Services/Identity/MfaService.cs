@@ -23,7 +23,6 @@ public class MfaService : IMfaService
     {
         _totpProvider ??= new Totp(Base32Encoding.ToBytes(totpKey), step: 30, mode: OtpHashMode.Sha1, totpSize: 6);
         
-        // TODO: Add configuration for verification window and maybe TOTP size / step count
         return _totpProvider.VerifyTotp(passcode, out timeStampMatched, VerificationWindow.RfcSpecifiedNetworkDelay);
     }
 
