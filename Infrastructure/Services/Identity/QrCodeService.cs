@@ -1,4 +1,3 @@
-using System.Drawing;
 using Application.Services.Identity;
 using QRCoder;
 

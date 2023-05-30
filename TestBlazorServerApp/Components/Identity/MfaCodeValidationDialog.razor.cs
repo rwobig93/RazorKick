@@ -1,13 +1,10 @@
-using Application.Constants.Communication;
-using Application.Helpers.Identity;
 using Application.Services.Identity;
-using Application.Services.System;
 using Microsoft.AspNetCore.Components;
-using Shared.Requests.Identity.User;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace TestBlazorServerApp.Components.Identity;
 
-public partial class MfaTokenValidationDialog
+public partial class MfaCodeValidationDialog
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string MfaKey { get; set; } = "";
@@ -30,7 +27,20 @@ public partial class MfaTokenValidationDialog
         
         MudDialog.Close(DialogResult.Ok(true));
     }
-
+    
+    private void MfaCodeTextfieldKeyDown(KeyboardEventArgs keyDown)
+    {
+        switch (keyDown.Key)
+        {
+            case "Enter":
+                VerifyMfaCode();
+                break;
+            case "Escape":
+                Cancel();
+                break;
+        }
+    }
+    
     private void Cancel()
     {
         MudDialog.Close(DialogResult.Cancel());

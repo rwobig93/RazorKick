@@ -161,7 +161,7 @@ public partial class Login
                 ["MfaKey"]=foundUser.Data.TwoFactorKey
             };
 
-            var mfaResponse = DialogService.Show<MfaTokenValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
+            var mfaResponse = DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
             var mfaTokenValid = await mfaResponse.Result;
             if (mfaTokenValid.Cancelled)
                 return false;

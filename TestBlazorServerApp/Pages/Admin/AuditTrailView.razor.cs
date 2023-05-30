@@ -1,17 +1,9 @@
-using System.Security.Claims;
-using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Helpers.Runtime;
-using Application.Helpers.Web;
-using Application.Models.Identity;
 using Application.Models.Lifecycle;
-using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
-using FluentEmail.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 

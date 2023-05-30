@@ -9,7 +9,8 @@
             </MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-            <MudTextField T="string" @bind-Value="_mfaCode" Placeholder="TOTP Code" IconSize="Size.Medium" Class="mt-0"/>
+            <MudTextField T="string" @bind-Value="_mfaCode" Placeholder="TOTP Code" OnKeyDown="MfaCodeTextfieldKeyDown"
+                          IconSize="Size.Medium" Class="mt-0"/>
         </MudItem>
     </DialogContent>
     <DialogActions>

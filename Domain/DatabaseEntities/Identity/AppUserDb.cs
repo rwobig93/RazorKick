@@ -1,5 +1,4 @@
 ﻿using Domain.Contracts;
-using Microsoft.AspNetCore.Identity;
 using Shared.Enums.Identity;
 using Shared.Responses.Identity;
 
