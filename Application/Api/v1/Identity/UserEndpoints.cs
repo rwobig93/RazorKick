@@ -1,8 +1,10 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Services.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.User;
 using Shared.Responses.Identity;
@@ -56,6 +58,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<List<UserBasicResponse>>> GetAllUsers(IAppUserService userService)
     {
         try
@@ -72,6 +75,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserById([FromQuery]Guid userId, IAppUserService userService)
     {
         try
@@ -91,6 +95,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserById([FromQuery]Guid userId, IAppUserService userService)
     {
         try
@@ -110,6 +115,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByEmail([FromQuery]string email, IAppUserService userService)
     {
         try
@@ -129,6 +135,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByEmail([FromQuery]string email, IAppUserService userService)
     {
         try
@@ -148,6 +155,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByUsername([FromQuery]string username, IAppUserService userService)
     {
         try
@@ -167,6 +175,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByUsername([FromQuery]string username, IAppUserService userService)
     {
         try
@@ -186,6 +195,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.Create)]
     private static async Task<IResult<Guid>> CreateUser(UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
     accountService, ICurrentUserService currentUserService)
     {
@@ -201,6 +211,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.Edit)]
     private static async Task<IResult> UpdateUser(UserUpdateRequest userRequest, IAppUserService userService, ICurrentUserService currentUserService)
     {
         try
@@ -215,6 +226,7 @@ public static class UserEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Users.Delete)]
     private static async Task<IResult> DeleteUser(Guid userId, IAppUserService userService)
     {
         try

@@ -1,8 +1,10 @@
 using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.Web;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Services.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Requests.Identity.Role;
 using Shared.Responses.Identity;
@@ -28,6 +30,7 @@ public static class RoleEndpoints
         app.MapPost(ApiRoutes.Identity.Role.RemoveUserFromRole, RemoveUserFromRole).ApiVersionOne();
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<List<RoleResponse>>> GetAllRoles(IAppRoleService roleService)
     {
         try
@@ -44,6 +47,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<RoleResponse>> GetById([FromQuery]Guid roleId, IAppRoleService roleService)
     {
         try
@@ -63,6 +67,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.Create)]
     private static async Task<IResult<Guid>> CreateRole(CreateRoleRequest roleRequest, IAppRoleService roleService)
     {
         try
@@ -77,6 +82,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.Edit)]
     private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleService roleService)
     {
         try
@@ -91,6 +97,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.Delete)]
     private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleService roleService)
     {
         try
@@ -105,6 +112,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<bool>> IsUserInRole([FromQuery]Guid userId, [FromQuery]Guid roleId, IAppRoleService roleService)
     {
         try
@@ -117,6 +125,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.Add)]
     private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleService roleService)
     {
         try
@@ -132,6 +141,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.Remove)]
     private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleService roleService)
     {
         try
@@ -147,6 +157,7 @@ public static class RoleEndpoints
         }
     }
 
+    [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<List<RoleResponse>>> GetRolesForUser([FromQuery]Guid userId, IAppRoleService roleService)
     {
         try

@@ -26,7 +26,6 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    // TODO: Move other stored procedures to string interpolation with table name injection
     public static readonly MsSqlStoredProcedure GetAll = new()
     {
         Table = Table,

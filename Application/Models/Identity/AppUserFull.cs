@@ -44,8 +44,6 @@ public static class AppUserFullExtensions
         };
     }
 
-    // TODO: Move all extension methods for all classes to consistent standard: All extensions go to the object they are on
-    //       Example: Only ToFull() methods should be here, not ToSlim() or ToDB()
     public static AppUserFull ToFull(this AppUserSlim appUser)
     {
         return new AppUserFull
