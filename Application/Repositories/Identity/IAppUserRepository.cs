@@ -24,7 +24,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId);
     Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById);
     Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText);
-    Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
+    Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
     Task<DatabaseActionResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);

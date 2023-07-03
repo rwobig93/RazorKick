@@ -19,7 +19,7 @@ public interface IAppUserService
     Task<IResult> DeleteAsync(Guid userId);
     Task<IResult<IEnumerable<AppUserSlim>>> SearchAsync(string searchText);
     Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
-    Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute);
+    Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<IResult> RemoveExtendedAttributeAsync(Guid attributeId);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);

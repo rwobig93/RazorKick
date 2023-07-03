@@ -283,7 +283,7 @@ public class AppAccountService : IAppAccountService
         // No currently pending account registration exists so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri
         var confirmationCode = UrlHelpers.GenerateToken();
-        var newExtendedAttribute = new AppUserExtendedAttributeAdd()
+        var newExtendedAttribute = new AppUserExtendedAttributeCreate()
         {
             OwnerId = userId,
             Name = "AccountEmailConfirmation",
@@ -396,7 +396,7 @@ public class AppAccountService : IAppAccountService
             // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
             //   and return the generated reset uri
             var confirmationCode = UrlHelpers.GenerateToken();
-            var newExtendedAttribute = new AppUserExtendedAttributeAdd()
+            var newExtendedAttribute = new AppUserExtendedAttributeCreate()
             {
                 OwnerId = foundUser.Id,
                 Name = "ForgotPasswordReset",

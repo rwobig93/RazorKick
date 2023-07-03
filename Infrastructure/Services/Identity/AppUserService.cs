@@ -257,7 +257,7 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeAdd addAttribute)
+    public async Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute)
     {
         try
         {
