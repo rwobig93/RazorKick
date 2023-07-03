@@ -8,4 +8,6 @@ public class AppUserSecurityAttributeSlim
     public Guid OwnerId { get; set; }
     public bool TwoFactorEnabled { get; set; }
     public AuthState AuthState { get; set; }
+    public int BadPasswordAttempts { get; set; }
+    public DateTime LastBadPassword { get; set; }
 }
