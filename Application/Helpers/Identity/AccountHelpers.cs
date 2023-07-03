@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using Application.Constants.Identity;
+using Application.Responses.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
-using Shared.Responses.Identity;
 using Bcrypt = BCrypt.Net.BCrypt;
 
 namespace Application.Helpers.Identity;

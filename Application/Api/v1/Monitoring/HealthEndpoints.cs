@@ -1,7 +1,7 @@
 ﻿using Application.Helpers.Web;
 using Application.Models.Web;
+using Application.Responses.Monitoring;
 using Microsoft.Extensions.Configuration;
-using Shared.Responses.Monitoring;
 
 namespace Application.Api.v1.Monitoring;
 

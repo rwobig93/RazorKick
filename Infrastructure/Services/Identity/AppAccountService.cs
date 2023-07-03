@@ -9,10 +9,13 @@ using Application.Constants.Web;
 using Application.Helpers.Communication;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
+using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Requests.Identity.User;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
@@ -27,8 +30,6 @@ using FluentEmail.Core;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Shared.Requests.Identity.User;
-using Shared.Responses.Identity;
 using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
@@ -79,10 +80,12 @@ public class AppAccountService : IAppAccountService
             loginRequest.Password, user.PasswordSalt, user.PasswordHash);
         if (!passwordValid)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
-        if (!user.IsEnabled)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
         if (!user.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
+        if (user.AuthState == AuthState.Disabled)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
+        if (user.AuthState == AuthState.LockedOut)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
 
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
@@ -314,7 +317,7 @@ public class AppAccountService : IAppAccountService
                 $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
         
         foundUser.EmailConfirmed = true;
-        foundUser.IsEnabled = true;
+        foundUser.AuthState = AuthState.Enabled;
         
         var userUpdate = foundUser.ToUpdate();
         userUpdate.LastModifiedBy = _serverState.SystemUserId;
@@ -504,7 +507,7 @@ public class AppAccountService : IAppAccountService
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
         
-        user.Result!.IsEnabled = enabled;
+        user.Result!.AuthState = AuthState.Enabled;
         user.Result!.LastModifiedBy = _serverState.SystemUserId;
         user.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
 
@@ -575,7 +578,7 @@ public class AppAccountService : IAppAccountService
         var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Email, user.Email ?? "NA"),
+                new(ClaimTypes.Email, user.Email),
                 new(ClaimTypes.Name, user.Username)
             }
         .Union(allUserAndRolePermissions)

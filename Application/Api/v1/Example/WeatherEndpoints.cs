@@ -1,9 +1,9 @@
 ﻿using Application.Helpers.Web;
 using Application.Models.Web;
+using Application.Requests.Example;
+using Application.Responses.Example;
 using Application.Services.Example;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Requests.Example;
-using Shared.Responses.Example;
 
 namespace Application.Api.v1.Example;
 

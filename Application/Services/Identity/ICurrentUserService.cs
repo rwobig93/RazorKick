@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Models.Identity;
+using Application.Responses.Identity;
 using Domain.DatabaseEntities.Identity;
-using Shared.Responses.Identity;
 
 namespace Application.Services.Identity;
 

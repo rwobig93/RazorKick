@@ -1,6 +1,6 @@
+using Application.Requests.Example;
+using Application.Responses.Example;
 using Application.Services.Example;
-using Shared.Requests.Example;
-using Shared.Responses.Example;
 
 namespace Infrastructure.Services.Example;
 

@@ -60,7 +60,7 @@
             <MudTd DataLabel="Id">@context.Id.ToString()[(context.Id.ToString().Length - 4)..]</MudTd>
             <MudTd DataLabel="Username">@context.Username</MudTd>
             <MudTd DataLabel="Email">@context.EmailAddress</MudTd>
-            <MudTd DataLabel="Enabled">@context.IsActive</MudTd>
+            <MudTd DataLabel="Enabled">@context.AuthState</MudTd>
         </RowTemplate>
         <NoRecordsContent>
             <MudText>No matching records found</MudText>

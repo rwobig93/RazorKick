@@ -1,11 +1,12 @@
 ﻿using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Http;
-using Shared.Responses.Identity;
 
 namespace Infrastructure.Services.Identity;
 

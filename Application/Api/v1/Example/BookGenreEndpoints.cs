@@ -1,11 +1,10 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.Web;
-using Application.Models.Example;
+using Application.Mappers.Example;
 using Application.Models.Web;
 using Application.Repositories.Example;
-using Domain.DatabaseEntities.Example;
-using Shared.Requests.Example;
-using Shared.Responses.Example;
+using Application.Requests.Example;
+using Application.Responses.Example;
 
 namespace Application.Api.v1.Example;
 

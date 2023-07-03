@@ -1,6 +1,6 @@
-﻿using Application.Services.Identity;
+﻿using Application.Responses.Identity;
+using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
-using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Components.Account;
 

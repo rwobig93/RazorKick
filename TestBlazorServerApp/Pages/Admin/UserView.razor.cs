@@ -2,8 +2,10 @@ using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
+using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Services.Identity;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
@@ -116,8 +118,8 @@ public partial class UserView
     {
         if (!_canDisableUsers && !_canEnableUsers) return false;
         if (_canDisableUsers && _canEnableUsers) return true;
-        if (_canDisableUsers && _viewingUser.IsActive) return true;
-        if (_canEnableUsers && !_viewingUser.IsActive) return true;
+        if (_canDisableUsers && _viewingUser.AuthState == AuthState.Enabled) return true;
+        if (_canEnableUsers && _viewingUser.AuthState == AuthState.Disabled) return true;
 
         return false;
     }

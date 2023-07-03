@@ -1,10 +1,10 @@
 ﻿using Application.Constants.Web;
 using Application.Helpers.Identity;
 using Application.Models.Identity;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
-using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages.Account;
 

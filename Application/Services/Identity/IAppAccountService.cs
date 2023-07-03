@@ -1,8 +1,8 @@
 ﻿using Application.Models.Identity;
 using Application.Models.Web;
+using Application.Requests.Identity.User;
+using Application.Responses.Identity;
 using Domain.Models.Identity;
-using Shared.Requests.Identity.User;
-using Shared.Responses.Identity;
 
 namespace Application.Services.Identity;
 

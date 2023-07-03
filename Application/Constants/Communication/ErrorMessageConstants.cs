@@ -8,6 +8,8 @@ public static class ErrorMessageConstants
     
     // User Errors
     public const string AccountDisabledError = "Your account is disabled, please contact the administrator";
+    public const string AccountLockedOutError =
+        "Your account is locked out due to bad password attempts, please contact the administrator or wait for the lockout expiration to end";
     public const string EmailNotConfirmedError = "Your email has not been confirmed, please confirm your email";
     public const string UserNotFoundError = "Was unable to find a user with the provided information";
     

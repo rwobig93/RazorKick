@@ -1,6 +1,5 @@
 ﻿using Domain.Contracts;
-using Shared.Enums.Identity;
-using Shared.Responses.Identity;
+using Domain.Enums.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
@@ -26,28 +25,9 @@ public class AppUserDb : IAuditableEntity<Guid>
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
-    public bool IsEnabled { get; set; }
+    public AuthState AuthState { get; set; }
+    public DateTime AuthStateTimestamp { get; set; }
     public string? RefreshToken { get; set; }
-    // TODO: Change to FullLoginRequiredTime
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
-}
-
-public static class AppUserDbExtensions
-{
-    public static UserBasicResponse ToBasicResponse(this AppUserDb appUser)
-    {
-        return new UserBasicResponse()
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn,
-            IsEnabled = appUser.IsEnabled
-        };
-    }
-
-    public static List<UserBasicResponse> ToBasicResponses(this IEnumerable<AppUserDb> appUsers)
-    {
-        return appUsers.Select(x => x.ToBasicResponse()).ToList();
-    }
 }

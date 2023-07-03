@@ -1,12 +1,12 @@
 using Application.Constants.Communication;
+using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.Identity;
+using Application.Mappers.Identity;
 using Application.Models.Web;
+using Application.Requests.Identity.Permission;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Requests.Identity.Permission;
-using Shared.Responses.Identity;
-using Shared.Routes;
 
 namespace Application.Api.v1.Identity;
 
@@ -15,21 +15,21 @@ public static class PermissionEndpoints
     public static void MapEndpointsPermissions(this IEndpointRouteBuilder app)
     {
         // Permissions
-        app.MapGet(ApiRoutes.Identity.Permission.GetAll, GetAllPermissions).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.Permission.GetById, GetPermission).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.GetAll, GetAllPermissions).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.GetById, GetPermission).ApiVersionOne();
         
         // Users
-        app.MapGet(ApiRoutes.Identity.Permission.GetDirectPermissionsForUser, GetDirectPermissionsForUser).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.Permission.GetAllPermissionsForUser, GetAllPermissionsForUser).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Permission.AddPermissionToUser, AddPermissionToUser).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Permission.RemovePermissionFromUser, RemovePermissionFromUser).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.Permission.DoesUserHavePermission, DoesUserHavePermission).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.GetDirectPermissionsForUser, GetDirectPermissionsForUser).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.GetAllPermissionsForUser, GetAllPermissionsForUser).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Permission.AddPermissionToUser, AddPermissionToUser).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Permission.RemovePermissionFromUser, RemovePermissionFromUser).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.DoesUserHavePermission, DoesUserHavePermission).ApiVersionOne();
         
         // Roles
-        app.MapGet(ApiRoutes.Identity.Permission.GetAllPermissionsForRole, GetAllPermissionsForRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Permission.AddPermissionToRole, AddPermissionToRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Permission.RemovePermissionFromRole, RemovePermissionFromRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Permission.DoesRoleHavePermission, DoesRoleHavePermission).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Permission.GetAllPermissionsForRole, GetAllPermissionsForRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Permission.AddPermissionToRole, AddPermissionToRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Permission.RemovePermissionFromRole, RemovePermissionFromRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Permission.DoesRoleHavePermission, DoesRoleHavePermission).ApiVersionOne();
     }
 
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionService permissionService)

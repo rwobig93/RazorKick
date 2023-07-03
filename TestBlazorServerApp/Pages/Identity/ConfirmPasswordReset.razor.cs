@@ -1,8 +1,8 @@
 ﻿using Application.Helpers.Identity;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using Shared.Responses.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
 

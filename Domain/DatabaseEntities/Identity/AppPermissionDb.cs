@@ -1,6 +1,5 @@
 ﻿using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
-using Shared.Responses.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
@@ -16,25 +15,4 @@ public class AppPermissionDb : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-}
-
-public static class AppPermissionDbExtensions
-{
-    public static PermissionResponse ToResponse(this AppPermissionDb permission)
-    {
-        return new PermissionResponse
-        {
-            Id = permission.Id,
-            UserId = permission.UserId,
-            RoleId = permission.RoleId,
-            Name = permission.Name,
-            Description = permission.Description,
-            Group = permission.Group
-        };
-    }
-
-    public static List<PermissionResponse> ToResponses(this IEnumerable<AppPermissionDb> permissions)
-    {
-        return permissions.Select(x => x.ToResponse()).ToList();
-    }
 }

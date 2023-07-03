@@ -1,14 +1,14 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.Identity;
+using Application.Mappers.Identity;
 using Application.Models.Web;
+using Application.Requests.Identity.User;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Requests.Identity.User;
-using Shared.Responses.Identity;
-using Shared.Routes;
 
 namespace Application.Api.v1.Identity;
 
@@ -16,18 +16,18 @@ public static class UserEndpoints
 {
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiRoutes.Identity.User.GetAll, GetAllUsers).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetById, GetUserById).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetFullById, GetFullUserById).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetByEmail, GetUserByEmail).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetFullByEmail, GetFullUserByEmail).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
-        app.MapDelete(ApiRoutes.Identity.User.Delete, DeleteUser).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.User.Create, CreateUser).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.User.Register, Register).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.User.Login, Login).ApiVersionOne();
-        app.MapPut(ApiRoutes.Identity.User.Update, UpdateUser).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetAll, GetAllUsers).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetById, GetUserById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetFullById, GetFullUserById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetByEmail, GetUserByEmail).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetFullByEmail, GetFullUserByEmail).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.Register, Register).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.Login, Login).ApiVersionOne();
+        app.MapPut(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
     }

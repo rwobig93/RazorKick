@@ -1,14 +1,14 @@
 using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.Identity;
+using Application.Mappers.Identity;
 using Application.Models.Web;
+using Application.Requests.Identity.Role;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Requests.Identity.Role;
-using Shared.Responses.Identity;
-using Shared.Routes;
 
 namespace Application.Api.v1.Identity;
 
@@ -17,17 +17,17 @@ public static class RoleEndpoints
     public static void MapEndpointsRoles(this IEndpointRouteBuilder app)
     {
         // Roles
-        app.MapGet(ApiRoutes.Identity.Role.GetAll, GetAllRoles).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.Role.GetById, GetById).ApiVersionOne();
-        app.MapDelete(ApiRoutes.Identity.Role.Delete, DeleteRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Role.Create, CreateRole).ApiVersionOne();
-        app.MapPut(ApiRoutes.Identity.Role.Update, UpdateRole).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Role.GetAll, GetAllRoles).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Role.GetById, GetById).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.Identity.Role.Delete, DeleteRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Role.Create, CreateRole).ApiVersionOne();
+        app.MapPut(ApiRouteConstants.Identity.Role.Update, UpdateRole).ApiVersionOne();
         
         // Users
-        app.MapGet(ApiRoutes.Identity.Role.GetRolesForUser, GetRolesForUser).ApiVersionOne();
-        app.MapGet(ApiRoutes.Identity.Role.IsUserInRole, IsUserInRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Role.AddUserToRole, AddUserToRole).ApiVersionOne();
-        app.MapPost(ApiRoutes.Identity.Role.RemoveUserFromRole, RemoveUserFromRole).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Role.GetRolesForUser, GetRolesForUser).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Identity.Role.IsUserInRole, IsUserInRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Role.AddUserToRole, AddUserToRole).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.Role.RemoveUserFromRole, RemoveUserFromRole).ApiVersionOne();
     }
 
     [Authorize(Policy = PermissionConstants.Roles.View)]

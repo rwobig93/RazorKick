@@ -1,12 +1,12 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.Lifecycle;
+using Application.Mappers.Lifecycle;
 using Application.Models.Web;
+using Application.Responses.Lifecycle;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Responses.Lifecycle;
-using Shared.Routes;
 
 namespace Application.Api.v1.Lifecycle;
 
@@ -14,11 +14,11 @@ public static class AuditEndpoints
 {
     public static void MapEndpointsAudit(this IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiRoutes.Lifecycle.Audit.GetAll, GetAllTrails).ApiVersionOne();
-        app.MapGet(ApiRoutes.Lifecycle.Audit.GetById, GetAuditTrailById).ApiVersionOne();
-        app.MapGet(ApiRoutes.Lifecycle.Audit.GetByChangedBy, GetAuditTrailsByChangedBy).ApiVersionOne();
-        app.MapGet(ApiRoutes.Lifecycle.Audit.GetByRecordId, GetAuditTrailsByRecordId).ApiVersionOne();
-        app.MapDelete(ApiRoutes.Lifecycle.Audit.Delete, Delete).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetAll, GetAllTrails).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetById, GetAuditTrailById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetByChangedBy, GetAuditTrailsByChangedBy).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetByRecordId, GetAuditTrailsByRecordId).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.Lifecycle.Audit.Delete, Delete).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
     }

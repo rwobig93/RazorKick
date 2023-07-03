@@ -1,6 +1,4 @@
-﻿using Domain.DatabaseEntities.Identity;
-using Shared.Enums.Identity;
-using Shared.Requests.Identity.User;
+﻿using Domain.Enums.Identity;
 
 namespace Application.Models.Identity;
 
@@ -21,90 +19,8 @@ public class AppUserUpdate
     public string? ProfilePictureDataUrl { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public bool? IsEnabled { get; set; }
+    public AuthState? AuthState { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
-}
-
-public static class AppUserUpdateExtensions
-{
-    public static AppUserUpdate ToUpdate(this AppUserDb appUser)
-    {
-        return new AppUserUpdate
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            Email = appUser.Email,
-            EmailConfirmed = appUser.EmailConfirmed,
-            PasswordHash = appUser.PasswordHash,
-            PasswordSalt = appUser.PasswordSalt,
-            PhoneNumber = appUser.PhoneNumber,
-            PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
-            TwoFactorKey = appUser.TwoFactorKey,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            LastModifiedBy = appUser.LastModifiedBy,
-            LastModifiedOn = appUser.LastModifiedOn,
-            IsEnabled = appUser.IsEnabled,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
-            AccountType = appUser.AccountType
-        };
-    }
-    
-    public static AppUserUpdate ToUpdate(this UserUpdateRequest appUser)
-    {
-        return new AppUserUpdate
-        {
-            Id = appUser.Id,
-            Username = null,
-            Email = null,
-            EmailConfirmed = null,
-            PasswordHash = null,
-            PasswordSalt = null,
-            PhoneNumber = null,
-            PhoneNumberConfirmed = null,
-            TwoFactorEnabled = null,
-            TwoFactorKey = null,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            LastModifiedBy = null,
-            LastModifiedOn = null,
-            IsEnabled = null,
-            RefreshToken = null,
-            RefreshTokenExpiryTime = null,
-            AccountType = AccountType.User,
-
-        };
-    }
-
-    public static AppUserUpdate ToUpdate(this AppUserFull appUser)
-    {
-        return new AppUserUpdate
-        {
-            Id = appUser.Id,
-            Username = null,
-            Email = null,
-            EmailConfirmed = null,
-            PasswordHash = null,
-            PasswordSalt = null,
-            PhoneNumber = null,
-            PhoneNumberConfirmed = null,
-            TwoFactorEnabled = null,
-            TwoFactorKey = null,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            LastModifiedBy = appUser.LastModifiedBy,
-            LastModifiedOn = null,
-            IsEnabled = appUser.IsActive,
-            RefreshToken = null,
-            RefreshTokenExpiryTime = null,
-            AccountType = AccountType.User
-        };
-    }
 }

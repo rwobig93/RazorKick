@@ -1,5 +1,5 @@
 using Domain.DatabaseEntities.Identity;
-using Shared.Enums.Identity;
+using Domain.Enums.Identity;
 
 namespace Domain.Models.Identity;
 
@@ -25,7 +25,7 @@ public class AppUserFullDb
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
-    public bool IsEnabled { get; set; }
+    public AuthState AuthState { get; set; }
     public string? RefreshToken { get; set; }
     // TODO: Change to FullLoginRequiredTime
     public DateTime RefreshTokenExpiryTime { get; set; }

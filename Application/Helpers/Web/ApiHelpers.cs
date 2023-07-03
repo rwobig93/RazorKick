@@ -1,7 +1,7 @@
 ﻿using Application.Constants.Web;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Domain.Exceptions;
-using Shared.Responses.Identity;
 
 namespace Application.Helpers.Web;
 

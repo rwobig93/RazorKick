@@ -1,5 +1,5 @@
-﻿using Shared.Requests.Example;
-using Shared.Responses.Example;
+﻿using Application.Requests.Example;
+using Application.Responses.Example;
 
 namespace Application.Services.Example;
 

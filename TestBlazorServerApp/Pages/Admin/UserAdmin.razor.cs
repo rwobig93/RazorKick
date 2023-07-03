@@ -85,7 +85,7 @@ public partial class UserAdmin
                 data = data.OrderByDirection(state.SortDirection, o => o.EmailAddress);
                 break;
             case "IsActive":
-                data = data.OrderByDirection(state.SortDirection, o => o.IsActive);
+                data = data.OrderByDirection(state.SortDirection, o => o.AuthState);
                 break;
         }
 

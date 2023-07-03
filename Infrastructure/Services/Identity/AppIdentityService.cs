@@ -1,13 +1,15 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Identity;
-using Shared.Requests.Identity.User;
 
 namespace Infrastructure.Services.Identity;
 
@@ -367,7 +369,7 @@ public class AppIdentityService : IAppIdentityService
         return await Result<List<IdentityResult>>.SuccessAsync(resultList);
     }
 
-    public async Task<IResult> ToggleUserStatusAsync(ChangeUserActiveStateRequest activeRequest)
+    public async Task<IResult> ToggleUserStatusAsync(ChangeUserEnabledStateRequest activeRequest)
     {
         var requestedUser = (await _userRepository.GetByIdAsync(activeRequest.UserId)).Result;
         if (requestedUser is null)
@@ -384,13 +386,13 @@ public class AppIdentityService : IAppIdentityService
         {
             var userUpdate = new AppUserUpdate
             {
-                Id = requestedUser.Id, IsEnabled = activeRequest.IsActive,
+                Id = requestedUser.Id, AuthState = activeRequest.IsEnabled ? AuthState.Enabled : AuthState.Disabled,
                 LastModifiedBy = _serverState.SystemUserId,
                 LastModifiedOn = _dateTime.NowDatabaseTime
             };
             
             await _userRepository.UpdateAsync(userUpdate);
-            return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsActive}");
+            return await Result.SuccessAsync($"{requestedUser.Username} active status set to: {activeRequest.IsEnabled}");
         }
         catch (Exception ex)
         {

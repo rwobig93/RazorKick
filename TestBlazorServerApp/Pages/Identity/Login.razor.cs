@@ -4,6 +4,7 @@ using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Repositories.Identity;
+using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
 using Blazored.LocalStorage;
@@ -14,7 +15,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Shared.Requests.Identity.User;
 using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;

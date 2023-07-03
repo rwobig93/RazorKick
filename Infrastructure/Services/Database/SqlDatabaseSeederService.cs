@@ -1,15 +1,16 @@
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
+using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Shared.Enums.Identity;
 
 namespace Infrastructure.Services.Database;
 
@@ -190,7 +191,7 @@ public class SqlDatabaseSeederService : IHostedService
             LastModifiedOn = null,
             IsDeleted = false,
             DeletedOn = null,
-            IsEnabled = true,
+            AuthState = AuthState.Enabled,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
             AccountType = AccountType.User

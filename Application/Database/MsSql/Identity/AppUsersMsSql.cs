@@ -33,7 +33,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [LastModifiedOn] datetime2 NULL,
                     [IsDeleted] BIT NOT NULL,
                     [DeletedOn] datetime2 NULL,
-                    [IsEnabled] BIT NOT NULL,
+                    [AuthState] int NOT NULL,
+                    [AuthStateTimestamp] datetime2 NULL,
                     [RefreshToken] NVARCHAR(400) NULL,
                     [RefreshTokenExpiryTime] datetime2 NULL,
                     [AccountType] int NOT NULL
@@ -55,7 +56,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn, IsEnabled = 0
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, AuthState = 1
                 WHERE Id = @Id;
             end"
     };
@@ -247,7 +248,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2,
                 @IsDeleted BIT,
                 @DeletedOn datetime2,
-                @IsEnabled BIT,
+                @AuthState int,
+                @AuthStateTimestamp datetime2,
                 @RefreshToken NVARCHAR(400),
                 @RefreshTokenExpiryTime datetime2,
                 @AccountType int
@@ -256,12 +258,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PasswordHash, PasswordSalt, PhoneNumber,
                                          PhoneNumberConfirmed, TwoFactorEnabled, TwoFactorKey, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         IsEnabled, RefreshToken, RefreshTokenExpiryTime, AccountType)
+                                         AuthState, AuthStateTimestamp, RefreshToken, RefreshTokenExpiryTime, AccountType)
                 OUTPUT INSERTED.Id
                 VALUES (@Username, @Email, @EmailConfirmed, @PasswordHash, @PasswordSalt, @PhoneNumber,
                         @PhoneNumberConfirmed, @TwoFactorEnabled, @TwoFactorKey, @FirstName, @LastName, @CreatedBy,
-                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @IsEnabled,
-                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
+                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AuthState,
+                        @AuthStateTimestamp, @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
             end"
     };
 
@@ -309,7 +311,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
                 @DeletedOn datetime2 = null,
-                @IsEnabled BIT = null,
+                @AuthState int = null,
+                @AuthStateTimestamp datetime2 = null,
                 @RefreshToken NVARCHAR(400) = null,
                 @RefreshTokenExpiryTime datetime2 = null,
                 @AccountType int = null
@@ -325,7 +328,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    IsEnabled = COALESCE(@IsEnabled, IsEnabled), RefreshToken = COALESCE(@RefreshToken, RefreshToken),
+                    AuthState = COALESCE(@AuthState, AuthState), AuthStateTimestamp = COALESCE(@AuthStateTimestamp, AuthStateTimestamp),
+                    RefreshToken = COALESCE(@RefreshToken, RefreshToken),
                     RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     AccountType = COALESCE(@AccountType, AccountType)
                 WHERE Id = COALESCE(@Id, Id);

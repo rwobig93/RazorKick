@@ -8,6 +8,7 @@ using Application.Models.Web;
 using Application.Repositories.Example;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
+using Application.Services.Authorization;
 using Application.Services.Database;
 using Application.Services.Example;
 using Application.Services.Identity;
