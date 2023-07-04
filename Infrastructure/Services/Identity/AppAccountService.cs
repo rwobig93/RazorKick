@@ -90,7 +90,7 @@ public class AppAccountService : IAppAccountService
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
         user.RefreshToken = GenerateRefreshToken();
-        user.RefreshTokenExpiryTime = DateTime.Now.AddDays(_appConfig.TokenExpirationDays);
+        user.RefreshTokenExpiryTime = _dateTime.NowDatabaseTime.AddMinutes(_appConfig.TokenExpirationMinutes);
         
         var update = await _userRepository.UpdateAsync(user.ToUpdate());
         if (!update.Success)
@@ -599,7 +599,7 @@ public class AppAccountService : IAppAccountService
     {
         var token = new JwtSecurityToken(
            claims: claims,
-           expires: DateTime.UtcNow.AddDays(2),
+           expires: _dateTime.NowDatabaseTime.AddMinutes(_appConfig.TokenExpirationMinutes),
            signingCredentials: signingCredentials);
         var tokenHandler = new JwtSecurityTokenHandler();
         var encryptedToken = tokenHandler.WriteToken(token);

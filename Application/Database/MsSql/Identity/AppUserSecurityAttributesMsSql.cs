@@ -123,7 +123,7 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                 @LastBadPassword datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, TwoFactorEnabled, TwoFactorKey, AuthState
+                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, TwoFactorEnabled, TwoFactorKey, AuthState,
                                          AuthStateTimestamp, RefreshToken, RefreshTokenExpiryTime, BadPasswordAttempts, LastBadPassword)
                 OUTPUT INSERTED.Id
                 values (@OwnerId, @PasswordHash, @PasswordSalt, @TwoFactorEnabled, @TwoFactorKey, @AuthState, @AuthStateTimestamp, @RefreshToken,
@@ -146,8 +146,8 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                 @AuthStateTimestamp datetime2 = null,
                 @RefreshToken NVARCHAR(400) = null,
                 @RefreshTokenExpiryTime datetime2 = null,
-                @BadPasswordAttempts = null,
-                @LastBadPassword = null
+                @BadPasswordAttempts int = null,
+                @LastBadPassword datetime2 = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]

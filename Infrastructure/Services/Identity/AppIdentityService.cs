@@ -135,7 +135,7 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task<AppUserDb> FindByNameAsync(string normalizedUsername, CancellationToken cancellationToken)
     {
-        return (await _userRepository.GetByNormalizedUsernameAsync(normalizedUsername)).Result!;
+        return (await _userRepository.GetByUsernameAsync(normalizedUsername)).Result!;
     }
 
     public async Task SetEmailAsync(AppUserDb user, string email, CancellationToken cancellationToken)
@@ -174,7 +174,7 @@ public class AppIdentityService : IAppIdentityService
 
     public async Task<AppUserDb> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
-        return (await _userRepository.GetByNormalizedEmailAsync(normalizedEmail)).Result!;
+        return (await _userRepository.GetByEmailAsync(normalizedEmail)).Result!;
     }
 
     public async Task<string> GetNormalizedEmailAsync(AppUserDb user, CancellationToken cancellationToken)

@@ -27,7 +27,6 @@ public class AppUserDb : IAuditableEntity<Guid>
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public AuthState AuthState { get; set; }
-    public DateTime AuthStateTimestamp { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime RefreshTokenExpiryTime { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;

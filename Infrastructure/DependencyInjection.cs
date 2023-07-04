@@ -286,13 +286,15 @@ public static class DependencyInjection
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    // TODO: Token isn't expiring / requiring to be renewed
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
                     RoleClaimType = ClaimTypes.Role,
                     NameClaimType = ClaimTypes.Name,
-                    ClockSkew = TimeSpan.FromMinutes(1)
+                    ClockSkew = TimeSpan.FromSeconds(5)
                 };
 
                 bearer.Events = new JwtBearerEvents

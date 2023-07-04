@@ -34,7 +34,6 @@ public partial class Login
     private List<string> AuthResults { get; set; } = new();
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private bool _mfaVerified;
 
     private async Task LoginAsync()
     {
@@ -152,21 +151,17 @@ public partial class Login
             return false;
         }
 
-        if (foundUser.Data.TwoFactorEnabled)
+        if (!foundUser.Data.TwoFactorEnabled) return true;
+        
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters()
         {
-            var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-            var dialogParameters = new DialogParameters()
-            {
-                ["VerifyCodeMessage"]="Please enter your MFA code to login",
-                ["MfaKey"]=foundUser.Data.TwoFactorKey
-            };
+            ["VerifyCodeMessage"]="Please enter your MFA code to login",
+            ["MfaKey"]=foundUser.Data.TwoFactorKey
+        };
 
-            var mfaResponse = DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
-            var mfaTokenValid = await mfaResponse.Result;
-            if (mfaTokenValid.Cancelled)
-                return false;
-        }
-
-        return true;
+        var mfaResponse = DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
+        var mfaTokenValid = await mfaResponse.Result;
+        return !mfaTokenValid.Cancelled;
     }
 }

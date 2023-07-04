@@ -221,15 +221,17 @@ public partial class SecuritySettings
             return;
         }
         
-        Snackbar.Add("TOTP code provided is correct!", Severity.Success);
-        // TODO: Remove when done testing / verifying matching timestamp for TOTP used validation
-        Snackbar.Add($"Matched Timestamp for {CurrentUser.Username}: {timeStampMatched}", Severity.Info);
-        Logger.Information("Matched Timestamp for {Username}: {MfaTimestampMatched}", CurrentUser.Username, timeStampMatched);
         await AccountService.SetTwoFactorKey(CurrentUser.Id, _mfaRegisterCode);
 
         _mfaRegisterCode = "";
         _qrCodeImageSource = "";
         await AccountService.SetTwoFactorEnabled(CurrentUser.Id, true);
+        Snackbar.Add("TOTP code provided is correct!", Severity.Success);
+        
+        // Wait for the snackbar message to be read then we reload the page to force page elements to update
+        //  would love to find a better solution for this but as of now StateHasChanged or force updating doesn't work
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        
         NavManager.NavigateTo(AppRouteConstants.Account.Security, true);
     }
 }

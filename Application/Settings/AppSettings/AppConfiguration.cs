@@ -19,8 +19,8 @@ public class AppConfiguration : IAppSettingsSection
     [Range(0, 2_592_000)]
     public int PermissionValidationIntervalSeconds { get; init; } = 5;
     
-    [Range(1, 30)]
-    public int TokenExpirationDays { get; init; } = 7;
+    [Range(1, 5_184_000)]
+    public int TokenExpirationMinutes { get; init; } = 15;
     
     [Range(0, 86_400)]
     public int SessionIdleTimeoutMinutes { get; init; } = 240;

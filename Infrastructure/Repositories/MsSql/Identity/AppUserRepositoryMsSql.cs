@@ -208,24 +208,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername)
-    {
-        DatabaseActionResult<AppUserDb> actionReturn = new();
-
-        try
-        {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsersMsSql.GetByNormalizedUsername, new {NormalizedUsername = normalizedUsername})).FirstOrDefault();
-            actionReturn.Succeed(foundUser!);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, AppUsersMsSql.GetByNormalizedUsername.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email)
     {
         DatabaseActionResult<AppUserDb> actionReturn = new();
@@ -262,24 +244,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserDb>> GetByNormalizedEmailAsync(string normalizedEmail)
-    {
-        DatabaseActionResult<AppUserDb> actionReturn = new();
-
-        try
-        {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
-                AppUsersMsSql.GetByNormalizedEmail, new {NormalizedEmail = normalizedEmail})).FirstOrDefault();
-            actionReturn.Succeed(foundUser!);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, AppUsersMsSql.GetByNormalizedEmail.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false)
     {
         DatabaseActionResult<Guid> actionReturn = new();
@@ -289,13 +253,15 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppUsersMsSql.Insert, createObject);
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
+            var auditTrail = new AuditTrailCreate
             {
                 TableName = AppUsersMsSql.Table.TableName,
                 RecordId = createdId,
-                ChangedBy = ((Guid)createObject.CreatedBy!),
+                ChangedBy = ((Guid) createObject.CreatedBy!),
                 Action = DatabaseActionType.Create
-            });
+            };
+
+            await _auditRepository.CreateAsync(auditTrail);
             
             actionReturn.Succeed(createdId);
         }

@@ -14,10 +14,8 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id);
     Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username);
     Task<DatabaseActionResult<AppUserFullDb>> GetByUsernameFullAsync(string username);
-    Task<DatabaseActionResult<AppUserDb>> GetByNormalizedUsernameAsync(string normalizedUsername);
     Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email);
     Task<DatabaseActionResult<AppUserFullDb>> GetByEmailFullAsync(string email);
-    Task<DatabaseActionResult<AppUserDb>> GetByNormalizedEmailAsync(string normalizedEmail);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
     Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
     Task<DatabaseActionResult> DeleteAsync(Guid id);

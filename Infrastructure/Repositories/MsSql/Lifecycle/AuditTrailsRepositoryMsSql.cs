@@ -269,7 +269,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
                 CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(MsSqlConstants.DateStringFormat),
                 CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat),
                 CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(MsSqlConstants.DateStringFormat),
-                CleanupTimeframe.Never => _dateTime.NowDatabaseTime.AddYears(-10).ToString(MsSqlConstants.DateStringFormat),
+                CleanupTimeframe.Never => _dateTime.NowDatabaseTime.AddYears(-100).ToString(MsSqlConstants.DateStringFormat),
                 _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat)
             };
 

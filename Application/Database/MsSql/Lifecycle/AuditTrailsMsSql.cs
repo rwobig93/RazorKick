@@ -20,7 +20,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                     [ChangedBy] UNIQUEIDENTIFIER NOT NULL,
                     [Timestamp] DATETIME2 NOT NULL,
                     [Action] INT NOT NULL,
-                    [Before] NVARCHAR(MAX) NULL,
+                    [Before] NVARCHAR(MAX) NOT NULL,
                     [After] NVARCHAR(MAX) NOT NULL
                 )
             end"

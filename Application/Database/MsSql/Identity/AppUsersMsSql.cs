@@ -34,7 +34,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [IsDeleted] BIT NOT NULL,
                     [DeletedOn] datetime2 NULL,
                     [AuthState] int NOT NULL,
-                    [AuthStateTimestamp] datetime2 NULL,
                     [RefreshToken] NVARCHAR(400) NULL,
                     [RefreshTokenExpiryTime] datetime2 NULL,
                     [AccountType] int NOT NULL
@@ -123,22 +122,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByNormalizedEmail = new()
-    {
-        Table = Table,
-        Action = "GetByNormalizedEmail",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedEmail]
-                @NormalizedEmail NVARCHAR(256)
-            AS
-            begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE NormalizedEmail = @NormalizedEmail AND IsDeleted = 0
-                ORDER BY Id;
-            end"
-    };
-
     public static readonly MsSqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -207,23 +190,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-
-    public static readonly MsSqlStoredProcedure GetByNormalizedUsername = new()
-    {
-        Table = Table,
-        Action = "GetByNormalizedUsername",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedUsername]
-                @NormalizedUsername NVARCHAR(256)
-            AS
-            begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE NormalizedUsername = @NormalizedUsername AND IsDeleted = 0
-                ORDER BY Id;
-            end"
-    };
-
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -249,7 +215,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @IsDeleted BIT,
                 @DeletedOn datetime2,
                 @AuthState int,
-                @AuthStateTimestamp datetime2,
                 @RefreshToken NVARCHAR(400),
                 @RefreshTokenExpiryTime datetime2,
                 @AccountType int
@@ -258,12 +223,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PasswordHash, PasswordSalt, PhoneNumber,
                                          PhoneNumberConfirmed, TwoFactorEnabled, TwoFactorKey, FirstName, LastName, CreatedBy,
                                          ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         AuthState, AuthStateTimestamp, RefreshToken, RefreshTokenExpiryTime, AccountType)
+                                         AuthState, RefreshToken, RefreshTokenExpiryTime, AccountType)
                 OUTPUT INSERTED.Id
                 VALUES (@Username, @Email, @EmailConfirmed, @PasswordHash, @PasswordSalt, @PhoneNumber,
                         @PhoneNumberConfirmed, @TwoFactorEnabled, @TwoFactorKey, @FirstName, @LastName, @CreatedBy,
                         @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AuthState,
-                        @AuthStateTimestamp, @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
+                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
             end"
     };
 
@@ -312,7 +277,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @IsDeleted BIT = null,
                 @DeletedOn datetime2 = null,
                 @AuthState int = null,
-                @AuthStateTimestamp datetime2 = null,
                 @RefreshToken NVARCHAR(400) = null,
                 @RefreshTokenExpiryTime datetime2 = null,
                 @AccountType int = null
@@ -328,7 +292,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    AuthState = COALESCE(@AuthState, AuthState), AuthStateTimestamp = COALESCE(@AuthStateTimestamp, AuthStateTimestamp),
+                    AuthState = COALESCE(@AuthState, AuthState),
                     RefreshToken = COALESCE(@RefreshToken, RefreshToken),
                     RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     AccountType = COALESCE(@AccountType, AccountType)
