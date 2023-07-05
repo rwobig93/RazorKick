@@ -18,7 +18,7 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
         if (!policyName.StartsWith(ApplicationClaimTypes.Permission, StringComparison.OrdinalIgnoreCase))
-            return FallbackPolicyProvider.GetPolicyAsync(policyName)!;
+            return FallbackPolicyProvider.GetPolicyAsync(policyName);
         var policy = new AuthorizationPolicyBuilder();
         policy.AddRequirements(new PermissionRequirement(policyName));
         return Task.FromResult(policy.Build())!;

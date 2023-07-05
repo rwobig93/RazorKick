@@ -1,11 +1,9 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Auth;
 using Application.Helpers.Communication;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
@@ -27,9 +25,10 @@ using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
+using Infrastructure.Services.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
@@ -48,12 +47,13 @@ public class AppAccountService : IAppAccountService
     private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
     private readonly IAuditTrailService _auditService;
+    private readonly IHttpContextAccessor _contextAccessor;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
-        IAuditTrailService auditService)
+        IAuditTrailService auditService, IHttpContextAccessor contextAccessor)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -67,6 +67,7 @@ public class AppAccountService : IAppAccountService
         _serverState = serverState;
         _serializer = serializer;
         _auditService = auditService;
+        _contextAccessor = contextAccessor;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -89,8 +90,8 @@ public class AppAccountService : IAppAccountService
 
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
-        user.RefreshToken = GenerateRefreshToken();
-        user.RefreshTokenExpiryTime = _dateTime.NowDatabaseTime.AddMinutes(_appConfig.TokenExpirationMinutes);
+        user.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
+        user.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
         
         var update = await _userRepository.UpdateAsync(user.ToUpdate());
         if (!update.Success)
@@ -124,18 +125,33 @@ public class AppAccountService : IAppAccountService
             if (!loginResponse.Succeeded)
                 return loginResponse;
             
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Token);
-
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Data.Token);
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.Data.RefreshToken);
-
-            await _authProvider.GetAuthenticationStateAsync(loginResponse.Data.Token);
+            var result = await CacheAuthTokens(loginResponse);
+            if (!result.Succeeded)
+                return await Result<UserLoginResponse>.FailAsync(result.Messages.FirstOrDefault()!);
 
             return await Result<UserLoginResponse>.SuccessAsync(loginResponse.Data);
         }
         catch (Exception ex)
         {
             return await Result<UserLoginResponse>.FailAsync($"Failure occurred attempting to login: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse)
+    {
+        try
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Token);
+
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Data.Token);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.Data.RefreshToken);
+
+            await _authProvider.GetAuthenticationStateAsync(loginResponse.Data.Token);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
         }
     }
 
@@ -444,23 +460,33 @@ public class AppAccountService : IAppAccountService
         return await Result.SuccessAsync("Password reset was successful, please log back in with your fresh new password!");
     }
 
-    public async Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
+    public async Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
     {
         if (refreshRequest is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
-        var userPrincipal = GetPrincipalFromExpiredToken(refreshRequest.Token!);
-        var userEmail = userPrincipal.FindFirstValue(ClaimTypes.Email);
+        var tokenUserId = JwtHelpers.GetJwtUserId(refreshRequest.Token);
+        var refreshTokenUserId = JwtHelpers.GetJwtUserId(refreshRequest.RefreshToken);
         
-        var user = (await _userRepository.GetByEmailAsync(userEmail)).Result;
+        // Validate provided token and refresh token user ID's match, otherwise the request is suspicious
+        if (tokenUserId != refreshTokenUserId)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
         if (user == null)
-            return await Result<UserLoginResponse>.FailAsync("User Not Found.");
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
-        if (user.RefreshToken != refreshRequest.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
-            return await Result<UserLoginResponse>.FailAsync("Invalid Client Token.");
+        // Validate the refresh token provided matches the current refresh token on the account
+        if (user.RefreshToken != refreshRequest.RefreshToken)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
-        var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
-        user.RefreshToken = GenerateRefreshToken();
+        if (!JwtHelpers.IsJwtValid(refreshRequest.RefreshToken, _appConfig))
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
+        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _appConfig);
+        user.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
+        user.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
         
@@ -564,7 +590,7 @@ public class AppAccountService : IAppAccountService
 
     private async Task<string> GenerateJwtAsync(AppUserDb user)
     {
-        var token = GenerateEncryptedToken(GetSigningCredentials(), await GetClaimsAsync(user));
+        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _appConfig);
         return token;
     }
 
@@ -587,50 +613,62 @@ public class AppAccountService : IAppAccountService
         return claims;
     }
 
-    private string GenerateRefreshToken()
+    public async Task<bool> IsCurrentSessionValid()
     {
-        var randomNumber = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
-    }
-
-    private string GenerateEncryptedToken(SigningCredentials signingCredentials, IEnumerable<Claim> claims)
-    {
-        var token = new JwtSecurityToken(
-           claims: claims,
-           expires: _dateTime.NowDatabaseTime.AddMinutes(_appConfig.TokenExpirationMinutes),
-           signingCredentials: signingCredentials);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var encryptedToken = tokenHandler.WriteToken(token);
-        return encryptedToken;
-    }
-
-    private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-    {
-        var tokenValidationParameters = new TokenValidationParameters
+        try
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appConfig.Secret)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            RoleClaimType = ClaimTypes.Role,
-            ClockSkew = TimeSpan.Zero
-        };
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-        if (securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-            StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new SecurityTokenException("Invalid token");
+            var authToken = await GetAuthTokenFromSession();
+
+            return JwtHelpers.IsJwtValid(authToken, _appConfig);
         }
-
-        return principal;
+        catch (Exception)
+        {
+            // Token isn't valid and has likely expired
+            return false;
+        }
     }
 
-    private SigningCredentials GetSigningCredentials()
+    private async Task<string> GetAuthTokenFromSession()
     {
-        var secret = Encoding.UTF8.GetBytes(_appConfig.Secret);
-        return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
+        var authToken = GetTokenFromHttpSession();
+        if (!string.IsNullOrWhiteSpace(authToken))
+            return authToken;
+            
+        if (string.IsNullOrWhiteSpace(authToken))
+        {
+            authToken = await GetTokenFromLocalStorage();
+            return authToken;
+        }
+            
+        if (string.IsNullOrWhiteSpace(authToken))
+            authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+
+        return authToken;
+    }
+
+    private string GetTokenFromHttpSession()
+    {
+        try
+        {
+            return _contextAccessor.HttpContext!.Session.GetString(LocalStorageConstants.AuthToken)!;
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private async Task<string> GetTokenFromLocalStorage()
+    {
+        try
+        {
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+        }
+        catch
+        {
+            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            //   we have to do this to keep our sanity, would love to find a working solution to this at some point
+            return "";
+        }
     }
 }

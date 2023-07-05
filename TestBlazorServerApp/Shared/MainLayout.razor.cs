@@ -1,12 +1,18 @@
 ﻿using System.Security.Claims;
 using System.Security.Principal;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
+using Blazored.LocalStorage;
+using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.IdentityModel.Tokens;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
@@ -15,6 +21,7 @@ public partial class MainLayout
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     [Inject] private IRunningServerState ServerState { get; set; } = null!;
+    [Inject] private ILocalStorageService LocalStorage { get; set; } = null!;
     public AppUserPreferenceFull _userPreferences = new();
     public ClaimsPrincipal CurrentUser { get; set; } = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
@@ -39,12 +46,54 @@ public partial class MainLayout
             CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
             UserFull = await CurrentUserService.GetCurrentUserFull() ?? new AppUserFull();
         }
+        catch (SecurityTokenException)
+        {
+            // Gather current tokens if they exist to attempt a re-authentication
+            var tokenRequest = await GetRefreshTokenRequest();
+
+            var response = await AccountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
+            if (!response.Succeeded)
+            {
+                // Using refresh token failed, user must do a fresh login
+                await LogoutAndClearCache();
+                return;
+            }
+
+            // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
+            await AccountService.CacheAuthTokens(response);
+        }
+        catch (Exception)
+        {
+            // User has invalid or old saved token so we'll force a local storage clear and deauthenticate then redirect
+            await LogoutAndClearCache();
+        }
+    }
+
+    private async Task LogoutAndClearCache()
+    {
+        await AccountService.LogoutGuiAsync(Guid.Empty);
+        var loginUriFull = QueryHelpers.AddQueryString(
+            AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
+        
+        NavManager.NavigateTo(loginUriFull, true);
+    }
+
+    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
+    {
+        var tokenRequest = new RefreshTokenRequest();
+        
+        try
+        {
+            tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
+        }
         catch
         {
-            // User has old saved token so we'll force a local storage clear and deauthenticate then redirect
-            await AccountService.LogoutGuiAsync(Guid.Empty);
-            NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
+            tokenRequest.Token = "";
+            tokenRequest.RefreshToken = "";
         }
+
+        return tokenRequest;
     }
 
     private static bool IsUserAuthenticated(IPrincipal? principal)

@@ -1,11 +1,11 @@
 ﻿using System.Security.Claims;
-using Application.Constants.Identity;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Repositories.Identity;
 using Application.Responses.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
+using Infrastructure.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Services.Identity;
@@ -25,10 +25,6 @@ public class CurrentUserService : ICurrentUserService
 
     public async Task<ClaimsPrincipal?> GetCurrentUserPrincipal()
     {
-        var userFromContext = _contextAccessor.HttpContext?.User;
-        if (userFromContext?.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
-            return userFromContext;
-        
         return await _authProvider.GetAuthenticationStateProviderUserAsync();
     }
 

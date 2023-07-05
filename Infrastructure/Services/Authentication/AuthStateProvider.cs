@@ -2,30 +2,31 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Models.Identity;
-using Application.Services.System;
+using Application.Helpers.Auth;
+using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
-namespace Infrastructure.Services.Identity;
+namespace Infrastructure.Services.Authentication;
 
 public class AuthStateProvider : AuthenticationStateProvider
 {
     private readonly HttpClient _httpClient;
-    private readonly ISerializerService _serializer;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly ILocalStorageService _localStorage;
     private readonly ILogger _logger;
+    private readonly AppConfiguration _appConfig;
 
-    public AuthStateProvider(HttpClient httpClient, ISerializerService serializer,
-        IHttpContextAccessor contextAccessor, ILocalStorageService localStorage, ILogger logger)
+    public AuthStateProvider(HttpClient httpClient, IHttpContextAccessor contextAccessor, ILocalStorageService localStorage, ILogger logger,
+        IOptions<AppConfiguration> appConfig)
     {
-        _serializer = serializer;
         _contextAccessor = contextAccessor;
         _localStorage = localStorage;
         _logger = logger;
+        _appConfig = appConfig.Value;
         _httpClient = httpClient;
     }
 
@@ -35,13 +36,14 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            var currentPrincipal = GetPrincipalFromHttpContext();
+            await GetAuthTokenFromSession();
+
+            var currentPrincipal = JwtHelpers.GetClaimsPrincipalFromToken(_authToken, _appConfig);
+            if (currentPrincipal is null)
+                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
+
             if (currentPrincipal.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
                 return new AuthenticationState(currentPrincipal);
-
-            await GetSavedAuthToken();
-            if (string.IsNullOrWhiteSpace(_authToken))
-                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
             
             return GenerateNewAuthenticationState(_authToken);
         }
@@ -61,7 +63,7 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
         
-        var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(GetClaimsFromJwt(savedToken), JwtBearerDefaults
+        var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(JwtHelpers.GetJwtDecoded(savedToken).Claims, JwtBearerDefaults
             .AuthenticationScheme));
         _contextAccessor.HttpContext!.User = authorizedPrincipal;
         
@@ -70,27 +72,20 @@ public class AuthStateProvider : AuthenticationStateProvider
         return state;
     }
 
-    private async Task GetSavedAuthToken()
+    private async Task GetAuthTokenFromSession()
     {
         _authToken = GetTokenFromHttpSession();
+        if (!string.IsNullOrWhiteSpace(_authToken))
+            return;
             
         if (string.IsNullOrWhiteSpace(_authToken))
+        {
             _authToken = await GetTokenFromLocalStorage();
+            return;
+        }
             
         if (string.IsNullOrWhiteSpace(_authToken))
             _authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
-    }
-
-    private ClaimsPrincipal GetPrincipalFromHttpContext()
-    {
-        try
-        {
-            return _contextAccessor.HttpContext?.User!;
-        }
-        catch
-        {
-            return UserConstants.UnauthenticatedPrincipal;
-        }
     }
 
     private string GetTokenFromHttpSession()
@@ -134,15 +129,6 @@ public class AuthStateProvider : AuthenticationStateProvider
         // NotifyAuthenticationStateChanged(authState);
     }
 
-    public void IndicateUserAuthenticationSuccess(AuthenticationState authState)
-    {
-        Task.FromResult(authState);
-        _contextAccessor.HttpContext!.User = new ClaimsPrincipal(authState.User.Identities);
-        AuthenticationStateUser = authState.User;
-
-        // NotifyAuthenticationStateChanged(taskAuthState);
-    }
-
     public void DeauthenticateUser()
     {
         try
@@ -162,62 +148,5 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         var state = await GetAuthenticationStateAsync();
         return state.User;
-    }
-
-    public IEnumerable<Claim> GetClaimsFromJwt(string jwt)
-    {
-        var claims = new List<Claim>();
-        var payload = jwt.Split('.')[1];
-        var jsonBytes = ParseBase64WithoutPadding(payload);
-        var keyValuePairs = _serializer.Deserialize<Dictionary<string, object>>(jsonBytes);
-
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (keyValuePairs is null) return claims;
-        keyValuePairs.TryGetValue(ClaimTypes.Role, out var roles);
-
-        if (roles != null)
-        {
-            if (roles.ToString()!.Trim().StartsWith("["))
-            {
-                var parsedRoles = _serializer.Deserialize<string[]>(roles.ToString()!);
-
-                claims.AddRange(parsedRoles.Select(role => new Claim(ClaimTypes.Role, role)));
-            }
-            else
-            {
-                claims.Add(new Claim(ClaimTypes.Role, roles.ToString()!));
-            }
-
-            keyValuePairs.Remove(ClaimTypes.Role);
-        }
-
-        keyValuePairs.TryGetValue(ApplicationClaimTypes.Permission, out var permissions);
-        if (permissions != null)
-        {
-            if (permissions.ToString()!.Trim().StartsWith("["))
-            {
-                var parsedPermissions = _serializer.Deserialize<string[]>(permissions.ToString()!);
-                claims.AddRange(parsedPermissions.Select(permission => new Claim(ApplicationClaimTypes.Permission, permission)));
-            }
-            else
-            {
-                claims.Add(new Claim(ApplicationClaimTypes.Permission, permissions.ToString()!));
-            }
-            keyValuePairs.Remove(ApplicationClaimTypes.Permission);
-        }
-
-        claims.AddRange(keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString()!)));
-        return claims;
-    }
-
-    private byte[] ParseBase64WithoutPadding(string base64)
-    {
-        switch (base64.Length % 4)
-        {
-            case 2: base64 += "=="; break;
-            case 3: base64 += "="; break;
-        }
-
-        return Convert.FromBase64String(base64);
     }
 }

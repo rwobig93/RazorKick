@@ -37,8 +37,8 @@ public static class RoleMappers
     {
         return new AppRoleCreate
         {
-            Name = createRole.Name!,
-            NormalizedName = createRole.Name!.NormalizeForDatabase(),
+            Name = createRole.Name,
+            NormalizedName = createRole.Name.NormalizeForDatabase(),
             ConcurrencyStamp = null,
             Description = createRole.Description,
             CreatedBy = default,

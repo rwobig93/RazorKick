@@ -10,6 +10,7 @@ public interface IAppAccountService
 {
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
+    Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse);
     Task<IResult> LogoutGuiAsync(Guid userId);
     Task<IResult<bool>> PasswordMeetsRequirements(string password);
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
@@ -19,11 +20,12 @@ public interface IAppAccountService
     Task<IResult<bool>> IsPasswordCorrect(Guid userId, string password);
     Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest);
     Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword);
-    Task<IResult<UserLoginResponse>> GetRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
+    Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
     Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled);
     Task<IResult> ForceUserPasswordReset(Guid userId);
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
+    Task<bool> IsCurrentSessionValid();
 }

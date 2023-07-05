@@ -1,7 +1,6 @@
 ﻿using System.Net;
-using System.Security.Claims;
-using System.Text;
 using Application.Constants.Identity;
+using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Models.Web;
@@ -24,6 +23,7 @@ using Hangfire.Dashboard.Dark.Core;
 using Infrastructure.Repositories.MsSql.Example;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
+using Infrastructure.Services.Authentication;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
@@ -271,9 +271,8 @@ public static class DependencyInjection
         services.AddHostedService<SqlDatabaseSeederService>();
     }
     
-    private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration config)
+    private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration appConfig)
     {
-        var key = Encoding.ASCII.GetBytes(config.Secret!);
         services
             .AddAuthentication(authentication =>
             {
@@ -284,18 +283,7 @@ public static class DependencyInjection
             {
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
-                bearer.TokenValidationParameters = new TokenValidationParameters
-                {
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    // TODO: Token isn't expiring / requiring to be renewed
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    RoleClaimType = ClaimTypes.Role,
-                    NameClaimType = ClaimTypes.Name,
-                    ClockSkew = TimeSpan.FromSeconds(5)
-                };
+                bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(appConfig);
 
                 bearer.Events = new JwtBearerEvents
                 {

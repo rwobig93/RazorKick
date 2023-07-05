@@ -3,6 +3,7 @@ using System.Text.Json;
 using Application.Models.Web;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Middleware;
 
@@ -37,6 +38,8 @@ public class ErrorHandlerMiddleware
                     (int) HttpStatusCode.BadRequest,
                 KeyNotFoundException =>
                     (int) HttpStatusCode.NotFound,
+                SecurityTokenException =>
+                    (int) HttpStatusCode.BadRequest,
                 _ => (int) HttpStatusCode.InternalServerError
             };
             var result = JsonSerializer.Serialize(responseModel);

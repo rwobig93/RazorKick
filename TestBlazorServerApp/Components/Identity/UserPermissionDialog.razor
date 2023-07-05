@@ -36,8 +36,6 @@
                         <HeaderContent>
                             @* TODO: Convert items to ServerData function to allow sort label functionality *@
                             <MudTh></MudTh>
-                            <MudTh><MudTableSortLabel SortLabel="Group" T="AppPermissionSlim">Group</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortLabel="Name" T="AppPermissionSlim">Name</MudTableSortLabel></MudTh>
                             <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionSlim">Access</MudTableSortLabel></MudTh>
                             <MudTh>Description</MudTh>
                         </HeaderContent>
@@ -46,8 +44,6 @@
                         </GroupHeaderTemplate>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
-                            <MudTd DataLabel="Group">@context.Group</MudTd>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
                             <MudTd DataLabel="Access">@context.Access</MudTd>
                             <MudTd DataLabel="Description">@context.Description</MudTd>
                         </RowTemplate>
@@ -83,8 +79,6 @@
                         </ColGroup>
                         <HeaderContent>
                             <MudTh></MudTh>
-                            <MudTh><MudTableSortLabel SortLabel="Group" T="AppPermissionCreate">Group</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortLabel="Name" T="AppPermissionCreate">Category</MudTableSortLabel></MudTh>
                             <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionCreate">Access</MudTableSortLabel></MudTh>
                             <MudTh>Description</MudTh>
                         </HeaderContent>
@@ -93,8 +87,6 @@
                         </GroupHeaderTemplate>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
-                            <MudTd DataLabel="Group">@context.Group</MudTd>
-                            <MudTd DataLabel="Name">@context.Name</MudTd>
                             <MudTd DataLabel="Access">@context.Access</MudTd>
                             <MudTd DataLabel="Description">@context.Description</MudTd>
                         </RowTemplate>

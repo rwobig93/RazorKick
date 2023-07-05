@@ -9,18 +9,22 @@ using Application.Services.Identity;
 using Application.Services.System;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Infrastructure.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class Login
 {
+    [Parameter] public string RedirectReason { get; set; } = "";
+    
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; set; } = null!;
@@ -34,6 +38,47 @@ public partial class Login
     private List<string> AuthResults { get; set; } = new();
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ParseParametersFromUri();
+            HandleRedirectReasons();
+            StateHasChanged();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private void ParseParametersFromUri()
+    {
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+        
+        if (queryParameters.TryGetValue(LoginRedirectConstants.RedirectParameter, out var redirectReason))
+            RedirectReason = redirectReason!;
+    }
+
+    private void HandleRedirectReasons()
+    {
+        if (string.IsNullOrWhiteSpace(RedirectReason))
+            return;
+
+        switch (RedirectReason)
+        {
+            case nameof(LoginRedirectReason.SessionExpired):
+                Snackbar.Add(LoginRedirectConstants.SessionExpired, Severity.Error);
+                break;
+            case nameof(LoginRedirectReason.ReAuthenticationForce):
+                Snackbar.Add(LoginRedirectConstants.ReAuthenticationForce, Severity.Error);
+                break;
+            default:
+                Snackbar.Add(LoginRedirectConstants.Unknown, Severity.Error);
+                break;
+        }
+    }
 
     private async Task LoginAsync()
     {

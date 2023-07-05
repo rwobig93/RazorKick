@@ -81,7 +81,8 @@ public partial class RoleView
         if (_viewingRole.LastModifiedBy is not null)
         {
             _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
-            _modifiedOn = ((DateTime) _viewingRole.LastModifiedOn!).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+            if (_viewingRole.LastModifiedOn is not null)
+                _modifiedOn = ((DateTime) _viewingRole.LastModifiedOn).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
         }
     }
 
