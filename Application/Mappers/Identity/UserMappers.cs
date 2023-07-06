@@ -22,8 +22,6 @@ public static class UserMappers
             Id = appUserFull.Id,
             Username = appUserFull.Username,
             EmailAddress = appUserFull.EmailAddress,
-            TwoFactorEnabled = appUserFull.TwoFactorEnabled,
-            TwoFactorKey = appUserFull.TwoFactorKey,
             FirstName = appUserFull.FirstName,
             LastName = appUserFull.LastName,
             CreatedBy = appUserFull.CreatedBy,
@@ -33,7 +31,6 @@ public static class UserMappers
             LastModifiedOn = appUserFull.LastModifiedOn,
             IsDeleted = appUserFull.IsDeleted,
             DeletedOn = appUserFull.DeletedOn,
-            AuthState = appUserFull.AuthState,
             AccountType = appUserFull.AccountType
         };
     }
@@ -45,8 +42,6 @@ public static class UserMappers
             Id = appUserDb.Id,
             Username = appUserDb.Username,
             EmailAddress = appUserDb.Email,
-            TwoFactorEnabled = appUserDb.TwoFactorEnabled,
-            TwoFactorKey = appUserDb.TwoFactorKey,
             FirstName = appUserDb.FirstName,
             LastName = appUserDb.LastName,
             CreatedBy = appUserDb.CreatedBy,
@@ -56,7 +51,6 @@ public static class UserMappers
             LastModifiedOn = appUserDb.LastModifiedOn,
             IsDeleted = appUserDb.IsDeleted,
             DeletedOn = appUserDb.DeletedOn,
-            AuthState = appUserDb.AuthState,
             AccountType = appUserDb.AccountType
         };
     }
@@ -72,8 +66,7 @@ public static class UserMappers
         {
             Id = appUser.Id,
             Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState
+            CreatedOn = appUser.CreatedOn
         };
     }
 
@@ -89,7 +82,6 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
@@ -103,8 +95,6 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.EmailAddress,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
-            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -114,7 +104,6 @@ public static class UserMappers
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
@@ -129,8 +118,6 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.Email,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
-            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -140,7 +127,6 @@ public static class UserMappers
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
@@ -155,8 +141,6 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             EmailAddress = appUser.Email,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
-            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             CreatedBy = appUser.CreatedBy,
@@ -166,7 +150,6 @@ public static class UserMappers
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
@@ -181,7 +164,6 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
@@ -199,8 +181,7 @@ public static class UserMappers
         {
             Id = appUser.Id,
             Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState
+            CreatedOn = appUser.CreatedOn
         };
     }
 
@@ -216,11 +197,8 @@ public static class UserMappers
             Username = appUser.Username,
             Email = appUser.Email,
             EmailConfirmed = appUser.EmailConfirmed,
-            PasswordHash = appUser.PasswordHash,
-            PasswordSalt = appUser.PasswordSalt,
             PhoneNumber = appUser.PhoneNumber,
             PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
@@ -229,9 +207,6 @@ public static class UserMappers
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            AuthState = appUser.AuthState,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             AccountType = appUser.AccountType
         };
     }
@@ -245,12 +220,8 @@ public static class UserMappers
             Username = appUser.Username,
             Email = appUser.Email,
             EmailConfirmed = appUser.EmailConfirmed,
-            PasswordHash = hash,
-            PasswordSalt = salt,
             PhoneNumber = appUser.PhoneNumber,
             PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
-            TwoFactorEnabled = false,
-            TwoFactorKey = null,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = string.Empty,
@@ -260,9 +231,6 @@ public static class UserMappers
             LastModifiedOn = DateTime.Now,
             IsDeleted = false,
             DeletedOn = null,
-            AuthState = appUser.AuthState,
-            RefreshToken = string.Empty,
-            RefreshTokenExpiryTime = DateTime.Now,
             AccountType = appUser.AccountType
         };
     }
@@ -300,6 +268,7 @@ public static class UserMappers
     {
         return attributes.Select(x => x.ToResponse()).ToList();
     }
+    
     public static AppUserUpdate ToUpdate(this AppUserDb appUser)
     {
         return new AppUserUpdate
@@ -308,20 +277,13 @@ public static class UserMappers
             Username = appUser.Username,
             Email = appUser.Email,
             EmailConfirmed = appUser.EmailConfirmed,
-            PasswordHash = appUser.PasswordHash,
-            PasswordSalt = appUser.PasswordSalt,
             PhoneNumber = appUser.PhoneNumber,
             PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
-            TwoFactorEnabled = appUser.TwoFactorEnabled,
-            TwoFactorKey = appUser.TwoFactorKey,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
-            AuthState = appUser.AuthState,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             AccountType = appUser.AccountType
         };
     }
@@ -334,20 +296,13 @@ public static class UserMappers
             Username = null,
             Email = null,
             EmailConfirmed = null,
-            PasswordHash = null,
-            PasswordSalt = null,
             PhoneNumber = null,
             PhoneNumberConfirmed = null,
-            TwoFactorEnabled = null,
-            TwoFactorKey = null,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = null,
             LastModifiedOn = null,
-            AuthState = null,
-            RefreshToken = null,
-            RefreshTokenExpiryTime = null,
             AccountType = AccountType.User,
 
         };
@@ -361,20 +316,13 @@ public static class UserMappers
             Username = null,
             Email = null,
             EmailConfirmed = null,
-            PasswordHash = null,
-            PasswordSalt = null,
             PhoneNumber = null,
             PhoneNumberConfirmed = null,
-            TwoFactorEnabled = null,
-            TwoFactorKey = null,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = null,
-            AuthState = appUser.AuthState,
-            RefreshToken = null,
-            RefreshTokenExpiryTime = null,
             AccountType = AccountType.User
         };
     }
@@ -531,6 +479,134 @@ public static class UserMappers
             RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
             LastBadPassword = securityDb.LastBadPassword
+        };
+    }
+
+    public static AppUserSecurityFull ToFull(this AppUserSecurityDb securityDb)
+    {
+        return new AppUserSecurityFull
+        {
+            Id = securityDb.Id,
+            Username = securityDb.Username,
+            Email = securityDb.Email,
+            EmailConfirmed = securityDb.EmailConfirmed,
+            PhoneNumber = securityDb.PhoneNumber,
+            PhoneNumberConfirmed = securityDb.PhoneNumberConfirmed,
+            FirstName = securityDb.FirstName,
+            LastName = securityDb.LastName,
+            CreatedBy = securityDb.CreatedBy,
+            ProfilePictureDataUrl = securityDb.ProfilePictureDataUrl,
+            CreatedOn = securityDb.CreatedOn,
+            LastModifiedBy = securityDb.LastModifiedBy,
+            LastModifiedOn = securityDb.LastModifiedOn,
+            IsDeleted = securityDb.IsDeleted,
+            DeletedOn = securityDb.DeletedOn,
+            AccountType = securityDb.AccountType,
+            PasswordHash = securityDb.PasswordHash,
+            PasswordSalt = securityDb.PasswordSalt,
+            AuthState = securityDb.AuthState,
+            AuthStateTimestamp = securityDb.AuthStateTimestamp,
+            RefreshToken = securityDb.RefreshToken,
+            RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
+            BadPasswordAttempts = securityDb.BadPasswordAttempts,
+            LastBadPassword = securityDb.LastBadPassword,
+            TwoFactorEnabled = securityDb.TwoFactorEnabled,
+            TwoFactorKey = securityDb.TwoFactorKey
+        };
+    }
+    
+    public static AppUserUpdate ToUserUpdate(this AppUserSecurityDb appUser)
+    {
+        return new AppUserUpdate
+        {
+            Id = appUser.Id,
+            Username = appUser.Username,
+            Email = appUser.Email,
+            EmailConfirmed = appUser.EmailConfirmed,
+            PhoneNumber = appUser.PhoneNumber,
+            PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            LastModifiedBy = appUser.LastModifiedBy,
+            LastModifiedOn = appUser.LastModifiedOn,
+            AccountType = appUser.AccountType
+        };
+    }
+    
+    public static AppUserSecurityAttributeUpdate ToSecurityUpdate(this AppUserSecurityDb appUser)
+    {
+        return new AppUserSecurityAttributeUpdate
+        {
+            Id = appUser.Id,
+            PasswordHash = appUser.PasswordHash,
+            PasswordSalt = appUser.PasswordSalt,
+            TwoFactorEnabled = appUser.TwoFactorEnabled,
+            TwoFactorKey = appUser.TwoFactorKey,
+            AuthState = appUser.AuthState,
+            RefreshToken = appUser.RefreshToken,
+            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
+            BadPasswordAttempts = appUser.BadPasswordAttempts,
+            LastBadPassword = appUser.LastBadPassword
+        };
+    }
+    
+    public static AppUserUpdate ToUserUpdate(this AppUserSecurityFull appUser)
+    {
+        return new AppUserUpdate
+        {
+            Id = appUser.Id,
+            Username = appUser.Username,
+            Email = appUser.Email,
+            EmailConfirmed = appUser.EmailConfirmed,
+            PhoneNumber = appUser.PhoneNumber,
+            PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            LastModifiedBy = appUser.LastModifiedBy,
+            LastModifiedOn = appUser.LastModifiedOn,
+            AccountType = appUser.AccountType
+        };
+    }
+    
+    public static AppUserSecurityAttributeUpdate ToSecurityUpdate(this AppUserSecurityFull appUser)
+    {
+        return new AppUserSecurityAttributeUpdate
+        {
+            Id = appUser.Id,
+            PasswordHash = appUser.PasswordHash,
+            PasswordSalt = appUser.PasswordSalt,
+            TwoFactorEnabled = appUser.TwoFactorEnabled,
+            TwoFactorKey = appUser.TwoFactorKey,
+            AuthState = appUser.AuthState,
+            RefreshToken = appUser.RefreshToken,
+            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
+            BadPasswordAttempts = appUser.BadPasswordAttempts,
+            LastBadPassword = appUser.LastBadPassword
+        };
+    }
+
+    public static AppUserDb ToUserDb(this AppUserSecurityDb securityDb)
+    {
+        return new AppUserDb
+        {
+            Id = securityDb.Id,
+            Username = securityDb.Username,
+            Email = securityDb.Email,
+            EmailConfirmed = securityDb.EmailConfirmed,
+            PhoneNumber = securityDb.PhoneNumber,
+            PhoneNumberConfirmed = securityDb.PhoneNumberConfirmed,
+            FirstName = securityDb.FirstName,
+            LastName = securityDb.LastName,
+            CreatedBy = securityDb.CreatedBy,
+            ProfilePictureDataUrl = securityDb.ProfilePictureDataUrl,
+            CreatedOn = securityDb.CreatedOn,
+            LastModifiedBy = securityDb.LastModifiedBy,
+            LastModifiedOn = securityDb.LastModifiedOn,
+            IsDeleted = securityDb.IsDeleted,
+            DeletedOn = securityDb.DeletedOn,
+            AccountType = securityDb.AccountType
         };
     }
 }

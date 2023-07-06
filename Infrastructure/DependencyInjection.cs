@@ -163,19 +163,6 @@ public static class DependencyInjection
 
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-
-        // TODO: Remove MS identity implementation as it is no longer needed w/ our custom implementation
-        // services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>()
-        //     .AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-            // .AddIdentity<AppUserDb, AppRoleDb>(options =>
-            // {
-            //     options.Password = UserConstants.PasswordRequirements;
-            //     options.User = UserConstants.UserRequirements;
-            // })
-            // .AddUserStore<AppIdentityService>()
-            // .AddRoleStore<AppIdentityRoleService>()
-            // .AddUserManager<UserManagerService>()
-            // .AddDefaultTokenProviders();
         
         services.AddJwtAuthentication(appSettings);
         services.AddAuthorization(options =>

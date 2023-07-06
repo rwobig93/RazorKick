@@ -5,6 +5,7 @@ using Application.Mappers.Identity;
 using Application.Models.Identity;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Repositories.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
@@ -49,6 +50,10 @@ public class SqlDatabaseSeederService : IHostedService
 
     private async Task SeedSystemUser()
     {
+        // TODO: Figure out why these database failures are occurring, the first one has been occuring for awhile on the 1st run only
+        //  07/05/2023 23:53:34 -05:00 [Error] DB Action Fail: ["spAuditTrails_Insert"]: "Nullable object must have a value."
+        //  07/05/2023 23:53:34 -05:00 [Error] DB Action Fail: ["spAppUserSecurityAttributes_Insert"]: "SqlDateTime overflow. Must be between 1/1/1753 12:00:00 AM and 12/31/9999 11:59:59 PM."
+        //  07/05/2023 23:53:34 -05:00 [Information] Created missing "System" user with id: 8dda00fa-4a2d-4974-afc2-3761f7a4bb23
         var systemUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.SystemUsername, UserConstants.DefaultUsers.SystemFirstName, UserConstants.DefaultUsers.SystemLastName,
             UserConstants.DefaultUsers.SystemEmail, UrlHelpers.GenerateToken(64));
@@ -165,25 +170,20 @@ public class SqlDatabaseSeederService : IHostedService
     {
         var existingUser = await _userRepository.GetByUsernameAsync(userName);
         if (!existingUser.Success)
+        {
             _logger.Error("Failed to seed user in database: {UserName} => {ErrorMessage}", userName, existingUser.ErrorMessage);
-        if (!existingUser.Success)
             return existingUser;
+        }
         if (existingUser.Result is not null)
             return existingUser;
-        
-        AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
         
         var createdUser = await _userRepository.CreateAsync(new AppUserCreate
         {
             Username = userName,
             Email = email,
             EmailConfirmed = true,
-            PasswordHash = hash,
-            PasswordSalt = salt,
             PhoneNumber = "",
             PhoneNumberConfirmed = false,
-            TwoFactorEnabled = false,
-            TwoFactorKey = null,
             FirstName = firstName,
             LastName = lastName,
             ProfilePictureDataUrl = null,
@@ -193,11 +193,24 @@ public class SqlDatabaseSeederService : IHostedService
             LastModifiedOn = null,
             IsDeleted = false,
             DeletedOn = null,
-            AuthState = AuthState.Enabled,
+            AccountType = AccountType.User
+        }, true);
+        
+        AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
+        await _userRepository.CreateSecurityAsync(new AppUserSecurityAttributeCreate
+        {
+            OwnerId = createdUser.Result,
+            PasswordHash = hash,
+            PasswordSalt = salt,
+            TwoFactorEnabled = false,
+            TwoFactorKey = null,
+            AuthState = AuthState.Disabled,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
-            AccountType = AccountType.User
+            BadPasswordAttempts = 0,
+            LastBadPassword = null
         });
+        
         _logger.Information("Created missing {UserName} user with id: {UserId}", userName, createdUser.Result);
 
         return await _userRepository.GetByIdAsync(createdUser.Result);

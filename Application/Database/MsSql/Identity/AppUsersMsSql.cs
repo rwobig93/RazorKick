@@ -18,12 +18,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [Username] NVARCHAR(256) NOT NULL,
                     [Email] NVARCHAR(256) NOT NULL,
                     [EmailConfirmed] BIT NOT NULL,
-                    [PasswordHash] NVARCHAR(256) NOT NULL,
-                    [PasswordSalt] NVARCHAR(256) NOT NULL,
                     [PhoneNumber] NVARCHAR(50) NULL,
                     [PhoneNumberConfirmed] BIT NOT NULL,
-                    [TwoFactorEnabled] BIT NOT NULL,
-                    [TwoFactorKey] NVARCHAR(256) NULL,
                     [FirstName] NVARCHAR(256) NULL,
                     [LastName] NVARCHAR(256) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
@@ -33,9 +29,6 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [LastModifiedOn] datetime2 NULL,
                     [IsDeleted] BIT NOT NULL,
                     [DeletedOn] datetime2 NULL,
-                    [AuthState] int NOT NULL,
-                    [RefreshToken] NVARCHAR(400) NULL,
-                    [RefreshTokenExpiryTime] datetime2 NULL,
                     [AccountType] int NOT NULL
                 )
                 CREATE INDEX [IX_User_Id] ON [dbo].[AppUsers] ([Id])
@@ -55,7 +48,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn, AuthState = 1
+                SET IsDeleted = 1, DeletedOn = @DeletedOn
                 WHERE Id = @Id;
             end"
     };
@@ -82,8 +75,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
+                SELECT u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE IsDeleted = 0;
             end"
     };
@@ -97,10 +91,11 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Email NVARCHAR(256)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
+                SELECT u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE Email = @Email AND IsDeleted = 0
-                ORDER BY Id;
+                ORDER BY u.Id;
             end"
     };
 
@@ -113,10 +108,11 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Email NVARCHAR(256)
             AS
             begin
-                SELECT u.*, r.*
+                SELECT u.*, r.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Email = @Email AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
@@ -131,10 +127,28 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 *
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id AND IsDeleted = 0
-                ORDER BY Id;
+                SELECT TOP 1 u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.Id = @Id AND IsDeleted = 0
+                ORDER BY u.Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByIdSecurity = new()
+    {
+        Table = Table,
+        Action = "GetByIdSecurity",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdSecurity]
+                @Id UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT u.*, s.*
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                WHERE u.Id = @Id AND u.IsDeleted = 0
+                ORDER BY u.Id;
             end"
     };
 
@@ -147,10 +161,11 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT u.*, r.*
+                SELECT u.*, r.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
@@ -165,10 +180,11 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Username NVARCHAR(256)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
+                SELECT u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE Username = @Username AND IsDeleted = 0
-                ORDER BY Id;
+                ORDER BY u.Id;
             end"
     };
 
@@ -181,10 +197,28 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Username NVARCHAR(256)
             AS
             begin
-                SELECT u.*, r.*
+                SELECT u.*, r.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.Username = @Username AND u.IsDeleted = 0
+                ORDER BY u.Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetByUsernameSecurity = new()
+    {
+        Table = Table,
+        Action = "GetByUsernameSecurity",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByUsernameSecurity]
+                @Username NVARCHAR(256)
+            AS
+            begin
+                SELECT u.*, s.*
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Username = @Username AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
@@ -199,12 +233,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Username NVARCHAR(256),
                 @Email NVARCHAR(256),
                 @EmailConfirmed BIT,
-                @PasswordHash NVARCHAR(256),
-                @PasswordSalt NVARCHAR(256),
                 @PhoneNumber NVARCHAR(256),
                 @PhoneNumberConfirmed BIT,
-                @TwoFactorEnabled BIT,
-                @TwoFactorKey NVARCHAR(256),
                 @FirstName NVARCHAR(256),
                 @LastName NVARCHAR(256),
                 @CreatedBy UNIQUEIDENTIFIER,
@@ -214,21 +244,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2,
                 @IsDeleted BIT,
                 @DeletedOn datetime2,
-                @AuthState int,
-                @RefreshToken NVARCHAR(400),
-                @RefreshTokenExpiryTime datetime2,
                 @AccountType int
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PasswordHash, PasswordSalt, PhoneNumber,
-                                         PhoneNumberConfirmed, TwoFactorEnabled, TwoFactorKey, FirstName, LastName, CreatedBy,
-                                         ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         AuthState, RefreshToken, RefreshTokenExpiryTime, AccountType)
+                INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, FirstName, LastName,
+                                         CreatedBy, ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
+                                         AccountType)
                 OUTPUT INSERTED.Id
-                VALUES (@Username, @Email, @EmailConfirmed, @PasswordHash, @PasswordSalt, @PhoneNumber,
-                        @PhoneNumberConfirmed, @TwoFactorEnabled, @TwoFactorKey, @FirstName, @LastName, @CreatedBy,
-                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AuthState,
-                        @RefreshToken, @RefreshTokenExpiryTime, @AccountType);
+                VALUES (@Username, @Email, @EmailConfirmed, @PhoneNumber, @PhoneNumberConfirmed, @FirstName, @LastName, @CreatedBy,
+                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType);
             end"
     };
 
@@ -243,13 +267,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SET nocount on;
                 
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE FirstName LIKE '%' + @SearchTerm + '%'
-                    OR LastName LIKE '%' + @SearchTerm + '%'
-                    OR Email LIKE '%' + @SearchTerm + '%'
-                    OR Id LIKE '%' + @SearchTerm + '%'
-                AND IsDeleted = 0;
+                SELECT u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.FirstName LIKE '%' + @SearchTerm + '%'
+                    OR u.LastName LIKE '%' + @SearchTerm + '%'
+                    OR u.Email LIKE '%' + @SearchTerm + '%'
+                    OR u.Id LIKE '%' + @SearchTerm + '%'
+                AND IsDeleted = 0
+                ORDER BY u.Id;
             end"
     };
 
@@ -263,12 +289,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Username NVARCHAR(256) = null,
                 @Email NVARCHAR(256) = null,
                 @EmailConfirmed BIT = null,
-                @PasswordHash NVARCHAR(256) = null,
-                @PasswordSalt NVARCHAR(256) = null,
                 @PhoneNumber NVARCHAR(256) = null,
                 @PhoneNumberConfirmed BIT = null,
-                @TwoFactorEnabled BIT = null,
-                @TwoFactorKey NVARCHAR(256) = null,
                 @FirstName NVARCHAR(256) = null,
                 @LastName NVARCHAR(256) = null,
                 @ProfilePictureDataUrl NVARCHAR(400) = null,
@@ -276,25 +298,16 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
                 @DeletedOn datetime2 = null,
-                @AuthState int = null,
-                @RefreshToken NVARCHAR(400) = null,
-                @RefreshTokenExpiryTime datetime2 = null,
                 @AccountType int = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET Username = COALESCE(@Username, Username), Email = COALESCE(@Email, Email),
-                    EmailConfirmed = COALESCE(@EmailConfirmed, EmailConfirmed), PasswordHash = COALESCE(@PasswordHash, PasswordHash),
-                    PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt), PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
-                    PhoneNumberConfirmed = COALESCE(@PhoneNumberConfirmed, PhoneNumberConfirmed),
-                    TwoFactorEnabled = COALESCE(@TwoFactorEnabled, TwoFactorEnabled),
-                    TwoFactorKey = COALESCE(@TwoFactorKey, TwoFactorKey), FirstName = COALESCE(@FirstName, FirstName),
+                    EmailConfirmed = COALESCE(@EmailConfirmed, EmailConfirmed), PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
+                    PhoneNumberConfirmed = COALESCE(@PhoneNumberConfirmed, PhoneNumberConfirmed), FirstName = COALESCE(@FirstName, FirstName),
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    AuthState = COALESCE(@AuthState, AuthState),
-                    RefreshToken = COALESCE(@RefreshToken, RefreshToken),
-                    RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     AccountType = COALESCE(@AccountType, AccountType)
                 WHERE Id = COALESCE(@Id, Id);
             end"

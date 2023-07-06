@@ -13,8 +13,10 @@ public interface IAppUserService
     Task<IResult<int>> GetCountAsync();
     Task<IResult<AppUserSlim?>> GetByIdAsync(Guid userId);
     Task<IResult<AppUserFull?>> GetByIdFullAsync(Guid userId);
+    Task<IResult<AppUserSecurityFull?>> GetByIdSecurityFullAsync(Guid userId);
     Task<IResult<AppUserSlim?>> GetByUsernameAsync(string username);
     Task<IResult<AppUserFull?>> GetByUsernameFullAsync(string username);
+    Task<IResult<AppUserSecurityFull?>> GetByUsernameSecurityFullAsync(string username);
     Task<IResult<AppUserSlim?>> GetByEmailAsync(string email);
     Task<IResult<AppUserFull?>> GetByEmailFullAsync(string email);
     Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
@@ -33,4 +35,5 @@ public interface IAppUserService
     Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type);
     Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesByNameAsync(string name);
     Task<IResult<IEnumerable<AppUserExtendedAttributeSlim>>> GetAllExtendedAttributesAsync();
+    Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId);
 }

@@ -69,6 +69,16 @@ public class CurrentUserService : ICurrentUserService
         return !foundUser.Success ? null : foundUser.Result!.ToFull();
     }
 
+    public async Task<AppUserSecurityFull?> GetCurrentUserSecurityFull()
+    {
+        var userId = await GetCurrentUserId();
+        
+        if (userId is null) return null;
+
+        var foundUser = await _userRepository.GetByIdSecurityAsync((Guid)userId);
+        return !foundUser.Success ? null : foundUser.Result!.ToFull();
+    }
+
     public async Task<AppUserDb?> GetCurrentUserDb()
     {
         var userId = await GetCurrentUserId();

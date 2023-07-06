@@ -75,52 +75,48 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
         // TODO: Add bad password lockout on configurable attempt count, reset sets to 0, successful login sets to 0
-        var user = (await _userRepository.GetByUsernameAsync(loginRequest.Username)).Result;
-        if (user is null)
+        var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(loginRequest.Username)).Result;
+        if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
-        var passwordValid = await IsPasswordCorrect(user.Id, loginRequest.Password);
+        var passwordValid = await IsPasswordCorrect(userSecurity.Id, loginRequest.Password);
         if (!passwordValid.Data)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
-        if (!user.EmailConfirmed)
+        if (!userSecurity.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
-        if (user.AuthState == AuthState.Disabled)
+        if (userSecurity.AuthState == AuthState.Disabled)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
-        if (user.AuthState == AuthState.LockedOut)
+        if (userSecurity.AuthState == AuthState.LockedOut)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
 
-        user.LastModifiedBy = _serverState.SystemUserId;
-        user.LastModifiedOn = _dateTime.NowDatabaseTime;
-
-        var userSecurity = await _userRepository.GetSecurityAsync(user.Id);
-        if (!userSecurity.Success)
-            return await Result<UserLoginResponse>.FailAsync(userSecurity.ErrorMessage);
+        userSecurity.LastModifiedBy = _serverState.SystemUserId;
+        userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
         
-        userSecurity.Result!.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
-        userSecurity.Result!.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+        userSecurity.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, userSecurity.Id);
+        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
         
-        var updateUser = await _userRepository.UpdateAsync(user.ToUpdate());
+        var updateUser = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
         if (!updateUser.Success)
             return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
         
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(user.Id, userSecurity.Result.ToUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Id, userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
 
-        var token = await GenerateJwtAsync(user);
-        var response = new UserLoginResponse() { Token = token, RefreshToken = userSecurity.Result.RefreshToken,
-            RefreshTokenExpiryTime = userSecurity.Result.RefreshTokenExpiryTime };
+        var token = await GenerateJwtAsync(userSecurity.ToUserDb());
+        var response = new UserLoginResponse() { Token = token, RefreshToken = userSecurity.RefreshToken,
+            RefreshTokenExpiryTime = userSecurity.RefreshTokenExpiryTime };
 
         if (_serverState.AuditLoginLogout)
         {
             await _auditService.CreateAsync(new AuditTrailCreate
             {
                 TableName = "AuthState",
-                RecordId = user.Id,
+                RecordId = userSecurity.Id,
                 ChangedBy = _serverState.SystemUserId,
                 Action = DatabaseActionType.Login,
                 Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"Email", ""}}),
-                After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", user.Username}, {"Email", user.Email}})
+                After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", userSecurity.Username}, {"Email", userSecurity.Email}})
             });
         }
         
@@ -238,7 +234,7 @@ public class AppAccountService : IAppAccountService
 
         var userSecurity = new AppUserSecurityAttributeCreate
         {
-            RefreshTokenExpiryTime = DateTime.Now,
+            RefreshTokenExpiryTime = _dateTime.NowDatabaseTime,
             PasswordSalt = salt,
             PasswordHash = hash
         };
@@ -331,36 +327,38 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode)
     {
-        var foundUser = (await _userRepository.GetByIdAsync(userId)).Result;
-        if (foundUser is null)
+        var userSecurity = (await _userRepository.GetByIdSecurityAsync(userId)).Result;
+        if (userSecurity is null)
             return await Result<string>.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         var previousConfirmations =
-            (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
+            (await _userRepository.GetUserExtendedAttributesByTypeAsync(userSecurity.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
         var previousConfirmation = previousConfirmations?.FirstOrDefault();
 
         // TODO: Add admin logging w/ attempt and failure details so an admin can troubleshoot
         if (previousConfirmation is null)
             return await Result<string>.FailAsync(
-                $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
+                $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         if (previousConfirmation.Value != confirmationCode)
             return await Result<string>.FailAsync(
-                $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
+                $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         
-        foundUser.EmailConfirmed = true;
-        foundUser.AuthState = AuthState.Enabled;
-        
-        var userUpdate = foundUser.ToUpdate();
-        userUpdate.LastModifiedBy = _serverState.SystemUserId;
-        userUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-        
-        var confirmEmail = await _userRepository.UpdateAsync(userUpdate);
+        userSecurity.AuthState = AuthState.Enabled;
+        userSecurity.EmailConfirmed = true;
+        userSecurity.LastModifiedBy = _serverState.SystemUserId;
+        userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Id, userSecurity.ToSecurityUpdate());
+        if (!updateSecurity.Success)
+            return await Result<string>.FailAsync(updateSecurity.ErrorMessage);
+
+        var confirmEmail = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
         if (!confirmEmail.Success)
             return await Result<string>.FailAsync(
-                $"An error occurred attempting to confirm account: {foundUser.Id}, please contact the administrator");
+                $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         await _userRepository.RemoveExtendedAttributeAsync(previousConfirmation.Id);
         
-        return await Result<string>.SuccessAsync(foundUser.Id.ToString(), $"Account Confirmed for {foundUser.Username}.");
+        return await Result<string>.SuccessAsync(userSecurity.Id.ToString(), $"Account Confirmed for {userSecurity.Username}.");
     }
 
     public async Task<IResult> SetUserPassword(Guid userId, string newPassword)
@@ -560,24 +558,20 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (!user.Success)
-            return await Result.FailAsync(user.ErrorMessage);
-
-        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
         if (!userSecurity.Success)
             return await Result.FailAsync(userSecurity.ErrorMessage);
         
         userSecurity.Result!.AuthState = enabled ? AuthState.Enabled : AuthState.Disabled;
 
-        var securityUpdate = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        var securityUpdate = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToSecurityUpdate());
         if (!securityUpdate.Success)
             return await Result.FailAsync(securityUpdate.ErrorMessage);
         
-        user.Result!.LastModifiedBy = _serverState.SystemUserId;
-        user.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
+        userSecurity.Result!.LastModifiedBy = _serverState.SystemUserId;
+        userSecurity.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var updateRequest = await _userRepository.UpdateAsync(user.Result.ToUpdate());
+        var updateRequest = await _userRepository.UpdateAsync(userSecurity.Result.ToUserUpdate());
         if (!updateRequest.Success)
             return await Result.FailAsync(updateRequest.ErrorMessage);
 
@@ -586,21 +580,17 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> ForceUserPasswordReset(Guid userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (!user.Success)
-            return await Result.FailAsync(user.ErrorMessage);
-
-        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
         if (!userSecurity.Success)
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result!.AuthState = AuthState.LoginRequired;
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
         
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
-        return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = user.Result!.Email });
+        return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = userSecurity.Result!.Email });
     }
 
     public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
@@ -730,22 +720,6 @@ public class AppAccountService : IAppAccountService
         catch (Exception)
         {
             return false;
-        }
-    }
-
-    public async Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId)
-    {
-        try
-        {
-            var foundSecurity = await _userRepository.GetSecurityAsync(userId);
-            if (!foundSecurity.Success)
-                return await Result<AppUserSecurityAttributeInfo?>.FailAsync(foundSecurity.ErrorMessage);
-
-            return await Result<AppUserSecurityAttributeInfo?>.SuccessAsync(foundSecurity.Result?.ToInfo());
-        }
-        catch (Exception ex)
-        {
-            return await Result<AppUserSecurityAttributeInfo?>.FailAsync(ex.Message);
         }
     }
 }

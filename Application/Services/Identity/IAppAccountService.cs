@@ -30,5 +30,4 @@ public interface IAppAccountService
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<bool> IsCurrentSessionValid();
     Task<bool> IsUserRequiredToReAuthenticate(Guid userId);
-    Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId);
 }

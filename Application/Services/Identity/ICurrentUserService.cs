@@ -13,5 +13,6 @@ public interface ICurrentUserService
     Guid GetIdFromPrincipal(ClaimsPrincipal principal);
     public Task<UserBasicResponse?> GetCurrentUserBasic();
     public Task<AppUserFull?> GetCurrentUserFull();
+    public Task<AppUserSecurityFull?> GetCurrentUserSecurityFull();
     public Task<AppUserDb?> GetCurrentUserDb();
 }

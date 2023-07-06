@@ -182,7 +182,7 @@ public partial class Login
     {
         if (!IsRequiredInformationPresent()) return false;
 
-        var foundUser = await UserService.GetByUsernameAsync(Username);
+        var foundUser = await UserService.GetByUsernameSecurityFullAsync(Username);
         if (!foundUser.Succeeded || foundUser.Data is null)
         {
             Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);

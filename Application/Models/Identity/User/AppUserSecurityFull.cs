@@ -1,9 +1,8 @@
-using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Identity;
+﻿using Domain.Enums.Identity;
 
-namespace Domain.Models.Identity;
+namespace Application.Models.Identity.User;
 
-public class AppUserFullDb
+public class AppUserSecurityFull
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
@@ -21,7 +20,15 @@ public class AppUserFullDb
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
-    public List<AppRoleDb> Roles { get; set; } = new();
-    public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
-    public List<AppPermissionDb> Permissions { get; set; } = new();
+    // Security Attributes
+    public string PasswordHash { get; set; } = null!;
+    public string PasswordSalt { get; set; } = null!;
+    public bool TwoFactorEnabled { get; set; }
+    public string? TwoFactorKey { get; set; }
+    public AuthState AuthState { get; set; }
+    public DateTime AuthStateTimestamp { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime RefreshTokenExpiryTime { get; set; }
+    public int BadPasswordAttempts { get; set; }
+    public DateTime LastBadPassword { get; set; }
 }

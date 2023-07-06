@@ -16,7 +16,7 @@ public partial class SecuritySettings
     [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
     [Inject] private IMfaService MfaService { get; init; } = null!;
 
-    private AppUserFull CurrentUser { get; set; } = new();
+    private AppUserSecurityFull CurrentUser { get; set; } = new();
 
     // User Password Change
     private string CurrentPassword { get; set; } = "";
@@ -50,7 +50,7 @@ public partial class SecuritySettings
 
     private async Task GetCurrentUser()
     {
-        var foundUser = await CurrentUserService.GetCurrentUserFull();
+        var foundUser = await CurrentUserService.GetCurrentUserSecurityFull();
         if (foundUser is null)
             return;
 
@@ -183,7 +183,7 @@ public partial class SecuritySettings
             _mfaRegisterCode = MfaService.GenerateKeyString();
             var appName = ServerState.ApplicationName;
             var qrCodeContent =
-                MfaService.GenerateOtpAuthString(appName, CurrentUser.EmailAddress!, _mfaRegisterCode);
+                MfaService.GenerateOtpAuthString(appName, CurrentUser.Email!, _mfaRegisterCode);
             _qrCodeImageSource = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
             
         }

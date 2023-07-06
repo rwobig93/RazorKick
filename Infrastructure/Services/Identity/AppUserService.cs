@@ -123,6 +123,22 @@ public class AppUserService : IAppUserService
         }
     }
 
+    public async Task<IResult<AppUserSecurityFull?>> GetByIdSecurityFullAsync(Guid userId)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByIdSecurityAsync(userId);
+            if (!foundUser.Success || foundUser.Result is null)
+                return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
+
+            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToFull());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSecurityFull?>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<AppUserSlim?>> GetByUsernameAsync(string username)
     {
         try
@@ -155,6 +171,22 @@ public class AppUserService : IAppUserService
         catch (Exception ex)
         {
             return await Result<AppUserFull?>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserSecurityFull?>> GetByUsernameSecurityFullAsync(string username)
+    {
+        try
+        {
+            var foundUser = await _userRepository.GetByUsernameSecurityAsync(username);
+            if (!foundUser.Success || foundUser.Result is null)
+                return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
+
+            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToFull());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSecurityFull?>.FailAsync(ex.Message);
         }
     }
 
@@ -469,6 +501,22 @@ public class AppUserService : IAppUserService
         catch (Exception ex)
         {
             return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId)
+    {
+        try
+        {
+            var foundSecurity = await _userRepository.GetSecurityAsync(userId);
+            if (!foundSecurity.Success)
+                return await Result<AppUserSecurityAttributeInfo?>.FailAsync(foundSecurity.ErrorMessage);
+
+            return await Result<AppUserSecurityAttributeInfo?>.SuccessAsync(foundSecurity.Result?.ToInfo());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSecurityAttributeInfo?>.FailAsync(ex.Message);
         }
     }
 }

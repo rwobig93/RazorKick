@@ -174,6 +174,25 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdSecurityAsync(Guid id)
+    {
+        DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
+
+        try
+        {
+            var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetByIdSecurity, new {Id = id})).FirstOrDefault();
+            
+            actionReturn.Succeed(foundUser!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByIdSecurity.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username)
     {
         DatabaseActionResult<AppUserDb> actionReturn = new();
@@ -205,6 +224,25 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.GetByUsernameFull.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameSecurityAsync(string username)
+    {
+        DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
+
+        try
+        {
+            var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetByUsernameSecurity, new {Username = username})).FirstOrDefault();
+            
+            actionReturn.Succeed(foundUser!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetByUsernameSecurity.Path, ex.Message);
         }
 
         return actionReturn;
