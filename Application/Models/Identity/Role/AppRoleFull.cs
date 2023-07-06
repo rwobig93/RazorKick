@@ -1,4 +1,7 @@
-﻿namespace Application.Models.Identity;
+﻿using Application.Models.Identity.Permission;
+using Application.Models.Identity.User;
+
+namespace Application.Models.Identity.Role;
 
 public class AppRoleFull
 {

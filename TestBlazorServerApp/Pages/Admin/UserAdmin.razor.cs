@@ -2,6 +2,7 @@
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;

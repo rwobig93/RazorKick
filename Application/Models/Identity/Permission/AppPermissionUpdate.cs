@@ -1,4 +1,4 @@
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.Permission;
 
 public class AppPermissionUpdate
 {

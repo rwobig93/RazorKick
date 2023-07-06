@@ -3,6 +3,8 @@ using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.Role;
+using Application.Models.Identity.User;
 using Application.Repositories.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;

@@ -3,6 +3,8 @@ using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
@@ -653,6 +655,69 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateSecurityAsync(AppUserSecurityAttributeCreate securityCreate)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            Guid securityId;
+            
+            var existingSecurity = (await _database.LoadData<AppUserSecurityAttributeDb, dynamic>(
+                AppUserSecurityAttributesMsSql.GetByOwnerId, new {OwnerId = securityCreate.OwnerId})).FirstOrDefault();
+
+            if (existingSecurity is null)
+                securityId = await _database.SaveDataReturnId(AppUserSecurityAttributesMsSql.Insert, securityCreate);
+            else
+                securityId = existingSecurity.Id;
+            
+            actionReturn.Succeed(securityId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserSecurityAttributesMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<AppUserSecurityAttributeDb>> GetSecurityAsync(Guid userId)
+    {
+        DatabaseActionResult<AppUserSecurityAttributeDb> actionReturn = new();
+
+        try
+        {
+            var userSecurity = (await _database.LoadData<AppUserSecurityAttributeDb, dynamic>(
+                AppUserSecurityAttributesMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
+            
+            actionReturn.Succeed(userSecurity!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserSecurityAttributesMsSql.GetByOwnerId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> UpdateSecurityAsync(Guid userId, AppUserSecurityAttributeUpdate securityUpdate)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(AppUserSecurityAttributesMsSql.Update, securityUpdate);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserSecurityAttributesMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;

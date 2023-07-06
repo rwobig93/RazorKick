@@ -1,4 +1,5 @@
 ﻿using Application.Models.Identity;
+using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
 using Application.Requests.Identity.User;
 using Application.Responses.Identity;
@@ -28,4 +29,6 @@ public interface IAppAccountService
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<bool> IsCurrentSessionValid();
+    Task<bool> IsUserRequiredToReAuthenticate(Guid userId);
+    Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId);
 }

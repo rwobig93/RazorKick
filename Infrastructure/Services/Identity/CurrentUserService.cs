@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
 using Application.Repositories.Identity;
 using Application.Responses.Identity;
 using Application.Services.Identity;

@@ -3,6 +3,7 @@ using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.Permission;
 using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;

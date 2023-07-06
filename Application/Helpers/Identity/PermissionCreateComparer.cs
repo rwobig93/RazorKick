@@ -1,4 +1,5 @@
 ﻿using Application.Models.Identity;
+using Application.Models.Identity.Permission;
 
 namespace Application.Helpers.Identity;
 

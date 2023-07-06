@@ -1,5 +1,8 @@
 ﻿using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.Permission;
+using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;

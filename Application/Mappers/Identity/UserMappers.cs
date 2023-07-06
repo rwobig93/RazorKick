@@ -1,5 +1,9 @@
 ﻿using Application.Helpers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.Permission;
+using Application.Models.Identity.Role;
+using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Requests.Identity.User;
 using Application.Responses.Identity;
 using Domain.DatabaseEntities.Identity;
@@ -497,6 +501,36 @@ public static class UserMappers
             CustomThemeOne = JsonConvert.SerializeObject(preferenceDb.CustomThemeOne),
             CustomThemeTwo = JsonConvert.SerializeObject(preferenceDb.CustomThemeTwo),
             CustomThemeThree = JsonConvert.SerializeObject(preferenceDb.CustomThemeThree)
+        };
+    }
+
+    public static AppUserSecurityAttributeInfo ToInfo(this AppUserSecurityAttributeDb securityDb)
+    {
+        return new AppUserSecurityAttributeInfo
+        {
+            Id = securityDb.Id,
+            OwnerId = securityDb.OwnerId,
+            TwoFactorEnabled = securityDb.TwoFactorEnabled,
+            AuthState = securityDb.AuthState,
+            BadPasswordAttempts = securityDb.BadPasswordAttempts,
+            LastBadPassword = securityDb.LastBadPassword
+        };
+    }
+
+    public static AppUserSecurityAttributeUpdate ToUpdate(this AppUserSecurityAttributeDb securityDb)
+    {
+        return new AppUserSecurityAttributeUpdate
+        {
+            Id = securityDb.Id,
+            PasswordHash = securityDb.PasswordHash,
+            PasswordSalt = securityDb.PasswordSalt,
+            TwoFactorEnabled = securityDb.TwoFactorEnabled,
+            TwoFactorKey = securityDb.TwoFactorKey,
+            AuthState = securityDb.AuthState,
+            RefreshToken = securityDb.RefreshToken,
+            RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
+            BadPasswordAttempts = securityDb.BadPasswordAttempts,
+            LastBadPassword = securityDb.LastBadPassword
         };
     }
 }

@@ -1,7 +1,9 @@
-﻿using Application.Constants.Identity;
+﻿using System.Security.Claims;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
 using Application.Models.Identity;
+using Application.Models.Identity.Permission;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
@@ -32,6 +34,16 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
+        // Validate if user is required to do a full re-authentication
+        var userId = context.User.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).First().Value;
+        var userIdParsed = Guid.Parse(userId);
+        if (await _accountService.IsUserRequiredToReAuthenticate(userIdParsed))
+        {
+            context.Fail();
+            await Task.CompletedTask;
+            return;
+        }
+        
         // Validate or re-authenticate active session based on current state
         if (!await _accountService.IsCurrentSessionValid())
         {

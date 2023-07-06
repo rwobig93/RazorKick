@@ -2,7 +2,7 @@ using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Newtonsoft.Json;
 
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.UserExtensions;
 
 public class AppUserPreferenceCreate
 {

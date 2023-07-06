@@ -1,6 +1,6 @@
 ﻿using Domain.Enums.Identity;
 
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.User;
 
 public class AppUserCreate
 {

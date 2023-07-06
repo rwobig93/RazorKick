@@ -3,6 +3,7 @@ using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.Identity;
+using Application.Models.Identity.Permission;
 using Application.Models.Web;
 using Application.Repositories.Example;
 using Application.Repositories.Identity;

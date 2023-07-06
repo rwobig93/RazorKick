@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Constants.Web;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
 using Application.Services.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;

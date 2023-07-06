@@ -1,9 +1,10 @@
-namespace Application.Models.Identity;
+﻿namespace Application.Models.Identity.Permission;
 
-public class AppPermissionCreate
+public class AppPermissionSlim
 {
-    public Guid RoleId { get; set; }
+    public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public Guid RoleId { get; set; }
     public string ClaimType { get; set; } = "";
     public string ClaimValue { get; set; } = "";
     public string Name { get; set; } = "";
@@ -11,7 +12,7 @@ public class AppPermissionCreate
     public string Access { get; set; } = "";
     public string Description { get; set; } = "";
     public Guid CreatedBy { get; set; }
-    public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
 }

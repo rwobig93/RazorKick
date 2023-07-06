@@ -1,4 +1,4 @@
-﻿namespace Application.Models.Identity;
+﻿namespace Application.Models.Identity.Role;
 
 public class AppRoleCreate
 {

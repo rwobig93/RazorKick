@@ -1,10 +1,9 @@
-﻿using Domain.Enums.Identity;
+using Domain.Enums.Identity;
 
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.UserExtensions;
 
-public class AppUserExtendedAttributeSlim
+public class AppUserExtendedAttributeCreate
 {
-    public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
     public string Name { get; set; } = "";
     public string Value { get; set; } = "";

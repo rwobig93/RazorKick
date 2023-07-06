@@ -1,4 +1,6 @@
 ﻿using Application.Models.Identity;
+using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
@@ -34,4 +36,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByNameAsync(string name);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync();
+    Task<DatabaseActionResult<Guid>> CreateSecurityAsync(AppUserSecurityAttributeCreate securityCreate);
+    Task<DatabaseActionResult<AppUserSecurityAttributeDb>> GetSecurityAsync(Guid userId);
+    Task<DatabaseActionResult> UpdateSecurityAsync(Guid userId, AppUserSecurityAttributeUpdate securityUpdate);
 }

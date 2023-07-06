@@ -2,6 +2,7 @@
 using Application.Constants.Identity;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Requests.Identity.User;

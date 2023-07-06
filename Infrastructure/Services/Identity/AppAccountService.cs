@@ -9,6 +9,8 @@ using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity;
+using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -77,9 +79,8 @@ public class AppAccountService : IAppAccountService
         if (user is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
-        var passwordValid = AccountHelpers.IsPasswordCorrect(
-            loginRequest.Password, user.PasswordSalt, user.PasswordHash);
-        if (!passwordValid)
+        var passwordValid = await IsPasswordCorrect(user.Id, loginRequest.Password);
+        if (!passwordValid.Data)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         if (!user.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
@@ -90,16 +91,25 @@ public class AppAccountService : IAppAccountService
 
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
-        user.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
-        user.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+
+        var userSecurity = await _userRepository.GetSecurityAsync(user.Id);
+        if (!userSecurity.Success)
+            return await Result<UserLoginResponse>.FailAsync(userSecurity.ErrorMessage);
         
-        var update = await _userRepository.UpdateAsync(user.ToUpdate());
-        if (!update.Success)
-            return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
+        userSecurity.Result!.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
+        userSecurity.Result!.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+        
+        var updateUser = await _userRepository.UpdateAsync(user.ToUpdate());
+        if (!updateUser.Success)
+            return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
+        
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(user.Id, userSecurity.Result.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
 
         var token = await GenerateJwtAsync(user);
-        var response = new UserLoginResponse() { Token = token, RefreshToken = user.RefreshToken,
-            RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
+        var response = new UserLoginResponse() { Token = token, RefreshToken = userSecurity.Result.RefreshToken,
+            RefreshTokenExpiryTime = userSecurity.Result.RefreshTokenExpiryTime };
 
         if (_serverState.AuditLoginLogout)
         {
@@ -225,9 +235,14 @@ public class AppAccountService : IAppAccountService
         AccountHelpers.GenerateHashAndSalt(password, out var salt, out var hash);
         createUser.CreatedOn = _dateTime.NowDatabaseTime;
         createUser.CreatedBy = _serverState.SystemUserId;
-        createUser.RefreshTokenExpiryTime = DateTime.Now;
-        createUser.PasswordSalt = salt;
-        createUser.PasswordHash = hash;
+
+        var userSecurity = new AppUserSecurityAttributeCreate
+        {
+            RefreshTokenExpiryTime = DateTime.Now,
+            PasswordSalt = salt,
+            PasswordHash = hash
+        };
+        await _userRepository.CreateSecurityAsync(userSecurity);
 
         return await _userRepository.CreateAsync(createUser);
     }
@@ -352,17 +367,25 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            var updateObject = new AppUserUpdate() { Id = userId };
-        
             AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
-            updateObject.PasswordSalt = salt;
-            updateObject.PasswordHash = hash;
-            updateObject.LastModifiedBy = _serverState.SystemUserId;
-            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
-        
-            var result = await _userRepository.UpdateAsync(updateObject);
-            if (!result.Success)
-                return await Result.FailAsync(result.ErrorMessage);
+            var securityUpdate = new AppUserSecurityAttributeUpdate
+            {
+                PasswordSalt = salt,
+                PasswordHash = hash
+            };
+            var securityResult = await _userRepository.UpdateSecurityAsync(userId, securityUpdate);
+            if (!securityResult.Success)
+                return await Result.FailAsync(securityResult.ErrorMessage);
+
+            var updateUser = new AppUserUpdate
+            {
+                Id = userId,
+                LastModifiedBy = _serverState.SystemUserId,
+                LastModifiedOn = _dateTime.NowDatabaseTime
+            };
+            var userResult = await _userRepository.UpdateAsync(updateUser);
+            if (!userResult.Success)
+                return await Result.FailAsync(userResult.ErrorMessage);
             
             return await Result.SuccessAsync();
         }
@@ -376,8 +399,8 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            var matchingUser = (await _userRepository.GetByIdAsync(userId)).Result;
-            var passwordCorrect = AccountHelpers.IsPasswordCorrect(password, matchingUser!.PasswordSalt, matchingUser.PasswordHash);
+            var matchingSecurity = (await _userRepository.GetSecurityAsync(userId)).Result;
+            var passwordCorrect = AccountHelpers.IsPasswordCorrect(password, matchingSecurity!.PasswordSalt, matchingSecurity.PasswordHash);
             return await Result<bool>.SuccessAsync(passwordCorrect);
         }
         catch (Exception ex)
@@ -472,31 +495,39 @@ public class AppAccountService : IAppAccountService
         if (tokenUserId != refreshTokenUserId)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
-        var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
-        if (user == null)
+        var userSecurity = (await _userRepository.GetSecurityAsync(refreshTokenUserId)).Result;
+        if (userSecurity == null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         // Validate the refresh token provided matches the current refresh token on the account
-        if (user.RefreshToken != refreshRequest.RefreshToken)
+        if (userSecurity.RefreshToken != refreshRequest.RefreshToken)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         if (!JwtHelpers.IsJwtValid(refreshRequest.RefreshToken, _appConfig))
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
+        var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
+        if (user == null)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
         // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
         var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _appConfig);
-        user.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, user.Id);
-        user.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+        userSecurity.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, userSecurity.Id);
+        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(user.Id, userSecurity.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
         
-        var update = await _userRepository.UpdateAsync(user.ToUpdate());
-        if (!update.Success)
-            return await Result<UserLoginResponse>.FailAsync(update.ErrorMessage);
+        var updateUser = await _userRepository.UpdateAsync(user.ToUpdate());
+        if (!updateUser.Success)
+            return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
 
         // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
-        var response = new UserLoginResponse { Token = token, RefreshToken = user.RefreshToken,
-            RefreshTokenExpiryTime = user.RefreshTokenExpiryTime };
+        var response = new UserLoginResponse { Token = token, RefreshToken = userSecurity.RefreshToken,
+            RefreshTokenExpiryTime = userSecurity.RefreshTokenExpiryTime };
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
@@ -532,8 +563,17 @@ public class AppAccountService : IAppAccountService
         var user = await _userRepository.GetByIdAsync(userId);
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
+
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (!userSecurity.Success)
+            return await Result.FailAsync(userSecurity.ErrorMessage);
         
-        user.Result!.AuthState = AuthState.Enabled;
+        userSecurity.Result!.AuthState = enabled ? AuthState.Enabled : AuthState.Disabled;
+
+        var securityUpdate = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        if (!securityUpdate.Success)
+            return await Result.FailAsync(securityUpdate.ErrorMessage);
+        
         user.Result!.LastModifiedBy = _serverState.SystemUserId;
         user.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
 
@@ -541,8 +581,7 @@ public class AppAccountService : IAppAccountService
         if (!updateRequest.Success)
             return await Result.FailAsync(updateRequest.ErrorMessage);
 
-        var action = enabled ? "Enabled" : "Disabled";
-        return await Result.SuccessAsync($"User account successfully {action}");
+        return await Result.SuccessAsync($"User account successfully {nameof(userSecurity.Result.AuthState)}");
     }
 
     public async Task<IResult> ForceUserPasswordReset(Guid userId)
@@ -551,39 +590,45 @@ public class AppAccountService : IAppAccountService
         if (!user.Success)
             return await Result.FailAsync(user.ErrorMessage);
 
-        // TODO: Invalidate any currently active logins for the account / log them out
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (!userSecurity.Success)
+            return await Result.FailAsync(userSecurity.ErrorMessage);
+
+        userSecurity.Result!.AuthState = AuthState.LoginRequired;
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result.FailAsync(updateSecurity.ErrorMessage);
+        
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
         return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = user.Result!.Email });
     }
 
     public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (!user.Success || user.Result is null)
-            return await Result.FailAsync(user.ErrorMessage);
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (!userSecurity.Success || userSecurity.Result is null)
+            return await Result.FailAsync(userSecurity.ErrorMessage);
 
-        var updateUser = user.Result.ToUpdate();
-        updateUser.TwoFactorEnabled = enabled;
+        userSecurity.Result.TwoFactorEnabled = enabled;
 
-        var updateRequest = await _userRepository.UpdateAsync(updateUser);
-        if (!updateRequest.Success)
-            return await Result.FailAsync(updateRequest.ErrorMessage);
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync();
     }
 
     public async Task<IResult> SetTwoFactorKey(Guid userId, string key)
     {
-        var user = await _userRepository.GetByIdAsync(userId);
-        if (!user.Success || user.Result is null)
-            return await Result.FailAsync(user.ErrorMessage);
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (!userSecurity.Success || userSecurity.Result is null)
+            return await Result.FailAsync(userSecurity.ErrorMessage);
 
-        var updateUser = user.Result.ToUpdate();
-        updateUser.TwoFactorKey = key;
+        userSecurity.Result.TwoFactorKey = key;
 
-        var updateRequest = await _userRepository.UpdateAsync(updateUser);
-        if (!updateRequest.Success)
-            return await Result.FailAsync(updateRequest.ErrorMessage);
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync();
     }
@@ -611,21 +656,6 @@ public class AppAccountService : IAppAccountService
         .Union(allRoles);
 
         return claims;
-    }
-
-    public async Task<bool> IsCurrentSessionValid()
-    {
-        try
-        {
-            var authToken = await GetAuthTokenFromSession();
-
-            return JwtHelpers.IsJwtValid(authToken, _appConfig);
-        }
-        catch (Exception)
-        {
-            // Token isn't valid and has likely expired
-            return false;
-        }
     }
 
     private async Task<string> GetAuthTokenFromSession()
@@ -669,6 +699,53 @@ public class AppAccountService : IAppAccountService
             // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
             return "";
+        }
+    }
+
+    public async Task<bool> IsCurrentSessionValid()
+    {
+        try
+        {
+            var authToken = await GetAuthTokenFromSession();
+
+            return JwtHelpers.IsJwtValid(authToken, _appConfig);
+        }
+        catch (Exception)
+        {
+            // Token isn't valid and has likely expired
+            return false;
+        }
+    }
+
+    public async Task<bool> IsUserRequiredToReAuthenticate(Guid userId)
+    {
+        try
+        {
+            var userSecurity = await _userRepository.GetSecurityAsync(userId);
+            if (userSecurity.Result!.AuthState == AuthState.LoginRequired)
+                return true;
+
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<IResult<AppUserSecurityAttributeInfo?>> GetSecurityInfoAsync(Guid userId)
+    {
+        try
+        {
+            var foundSecurity = await _userRepository.GetSecurityAsync(userId);
+            if (!foundSecurity.Success)
+                return await Result<AppUserSecurityAttributeInfo?>.FailAsync(foundSecurity.ErrorMessage);
+
+            return await Result<AppUserSecurityAttributeInfo?>.SuccessAsync(foundSecurity.Result?.ToInfo());
+        }
+        catch (Exception ex)
+        {
+            return await Result<AppUserSecurityAttributeInfo?>.FailAsync(ex.Message);
         }
     }
 }

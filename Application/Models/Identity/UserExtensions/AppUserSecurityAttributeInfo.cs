@@ -1,8 +1,8 @@
 ﻿using Domain.Enums.Identity;
 
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.UserExtensions;
 
-public class AppUserSecurityAttributeSlim
+public class AppUserSecurityAttributeInfo
 {
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }

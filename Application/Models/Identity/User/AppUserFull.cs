@@ -1,10 +1,12 @@
-﻿using Domain.Enums.Identity;
+﻿using Application.Models.Identity.Permission;
+using Application.Models.Identity.Role;
+using Application.Models.Identity.UserExtensions;
+using Domain.Enums.Identity;
 
-namespace Application.Models.Identity;
+namespace Application.Models.Identity.User;
 
-public class AppUserSlim
+public class AppUserFull
 {
-    // TODO: Add bad password attempt count, locked out state, force reauthenticate, force token regen
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string? EmailAddress { get; set; }
@@ -21,4 +23,7 @@ public class AppUserSlim
     public DateTime? DeletedOn { get; set; }
     public AuthState AuthState { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
+    public List<AppRoleSlim> Roles { get; set; } = new();
+    public List<AppUserExtendedAttributeSlim> ExtendedAttributes { get; set; } = new();
+    public List<AppPermissionSlim> Permissions { get; set; } = new();
 }

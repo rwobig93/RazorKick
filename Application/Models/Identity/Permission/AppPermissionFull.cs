@@ -1,6 +1,9 @@
-﻿namespace Application.Models.Identity;
+﻿using Application.Models.Identity.Role;
+using Application.Models.Identity.User;
 
-public class AppPermissionSlim
+namespace Application.Models.Identity.Permission;
+
+public class AppPermissionFull
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
@@ -15,4 +18,6 @@ public class AppPermissionSlim
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
+    public List<AppUserSlim> Users { get; set; } = new();
+    public List<AppRoleSlim> Roles { get; set; } = new();
 }
