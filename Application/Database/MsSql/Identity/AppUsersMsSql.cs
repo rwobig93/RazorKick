@@ -144,7 +144,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT u.*, s.*
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Id = @Id AND u.IsDeleted = 0
@@ -216,7 +217,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Username NVARCHAR(256)
             AS
             begin
-                SELECT u.*, s.*
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Username = @Username AND u.IsDeleted = 0
@@ -265,11 +267,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @SearchTerm NVARCHAR(256)
             AS
             begin
-                SET nocount on;
-                
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.FirstName LIKE '%' + @SearchTerm + '%'
                     OR u.LastName LIKE '%' + @SearchTerm + '%'
                     OR u.Email LIKE '%' + @SearchTerm + '%'

@@ -40,5 +40,5 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesAsync();
     Task<DatabaseActionResult<Guid>> CreateSecurityAsync(AppUserSecurityAttributeCreate securityCreate);
     Task<DatabaseActionResult<AppUserSecurityAttributeDb>> GetSecurityAsync(Guid userId);
-    Task<DatabaseActionResult> UpdateSecurityAsync(Guid userId, AppUserSecurityAttributeUpdate securityUpdate);
+    Task<DatabaseActionResult> UpdateSecurityAsync(AppUserSecurityAttributeUpdate securityUpdate);
 }

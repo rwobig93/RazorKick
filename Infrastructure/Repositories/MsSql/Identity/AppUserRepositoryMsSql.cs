@@ -292,7 +292,22 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppUsersMsSql.Insert, createObject);
-
+            // All user get database calls also pull from the security attribute AuthState so we at least need one to exist
+            await CreateSecurityAsync(new AppUserSecurityAttributeCreate
+            {
+                OwnerId = createdId,
+                PasswordHash = "null",
+                PasswordSalt = "null",
+                TwoFactorEnabled = false,
+                TwoFactorKey = null,
+                AuthState = AuthState.Disabled,
+                AuthStateTimestamp = null,
+                RefreshToken = null,
+                RefreshTokenExpiryTime = null,
+                BadPasswordAttempts = 0,
+                LastBadPassword = null
+            });
+            
             var auditTrail = new AuditTrailCreate
             {
                 TableName = AppUsersMsSql.Table.TableName,
@@ -367,6 +382,10 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             var updatedId = await _database.SaveDataReturnId(AppUsersMsSql.SetUserId, new { CurrentId = currentId, NewId = newId });
+            var ownerId = await _database.SaveDataReturnId(AppUserSecurityAttributesMsSql.SetOwnerId, new { CurrentId = currentId, NewId = newId });
+            if (updatedId != ownerId)
+                throw new Exception("SetUserID failed, updated User ID doesn't equal security owner ID");
+            
             actionReturn.Succeed(updatedId);
         }
         catch (Exception ex)
@@ -712,7 +731,10 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             if (existingSecurity is null)
                 securityId = await _database.SaveDataReturnId(AppUserSecurityAttributesMsSql.Insert, securityCreate);
             else
+            {
                 securityId = existingSecurity.Id;
+                await UpdateSecurityAsync(existingSecurity.ToUpdate());
+            }
             
             actionReturn.Succeed(securityId);
         }
@@ -743,7 +765,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateSecurityAsync(Guid userId, AppUserSecurityAttributeUpdate securityUpdate)
+    public async Task<DatabaseActionResult> UpdateSecurityAsync(AppUserSecurityAttributeUpdate securityUpdate)
     {
         DatabaseActionResult actionReturn = new();
 

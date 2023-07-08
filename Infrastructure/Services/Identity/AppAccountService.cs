@@ -99,13 +99,13 @@ public class AppAccountService : IAppAccountService
         if (!updateUser.Success)
             return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
         
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Id, userSecurity.ToSecurityUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var response = new UserLoginResponse() { Token = token, RefreshToken = userSecurity.RefreshToken,
-            RefreshTokenExpiryTime = userSecurity.RefreshTokenExpiryTime };
+            RefreshTokenExpiryTime = (DateTime)userSecurity.RefreshTokenExpiryTime };
 
         if (_serverState.AuditLoginLogout)
         {
@@ -348,7 +348,7 @@ public class AppAccountService : IAppAccountService
         userSecurity.LastModifiedBy = _serverState.SystemUserId;
         userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Id, userSecurity.ToSecurityUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result<string>.FailAsync(updateSecurity.ErrorMessage);
 
@@ -371,7 +371,7 @@ public class AppAccountService : IAppAccountService
                 PasswordSalt = salt,
                 PasswordHash = hash
             };
-            var securityResult = await _userRepository.UpdateSecurityAsync(userId, securityUpdate);
+            var securityResult = await _userRepository.UpdateSecurityAsync(securityUpdate);
             if (!securityResult.Success)
                 return await Result.FailAsync(securityResult.ErrorMessage);
 
@@ -515,7 +515,7 @@ public class AppAccountService : IAppAccountService
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(user.Id, userSecurity.ToUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToUpdate());
         if (!updateSecurity.Success)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
         
@@ -525,7 +525,7 @@ public class AppAccountService : IAppAccountService
 
         // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
         var response = new UserLoginResponse { Token = token, RefreshToken = userSecurity.RefreshToken,
-            RefreshTokenExpiryTime = userSecurity.RefreshTokenExpiryTime };
+            RefreshTokenExpiryTime = (DateTime)userSecurity.RefreshTokenExpiryTime };
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
@@ -564,7 +564,7 @@ public class AppAccountService : IAppAccountService
         
         userSecurity.Result!.AuthState = enabled ? AuthState.Enabled : AuthState.Disabled;
 
-        var securityUpdate = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToSecurityUpdate());
+        var securityUpdate = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
         if (!securityUpdate.Success)
             return await Result.FailAsync(securityUpdate.ErrorMessage);
         
@@ -585,7 +585,7 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result!.AuthState = AuthState.LoginRequired;
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToSecurityUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
         
@@ -601,7 +601,7 @@ public class AppAccountService : IAppAccountService
 
         userSecurity.Result.TwoFactorEnabled = enabled;
 
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
         if (!updateSecurity.Success)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 
@@ -616,7 +616,7 @@ public class AppAccountService : IAppAccountService
 
         userSecurity.Result.TwoFactorKey = key;
 
-        var updateSecurity = await _userRepository.UpdateSecurityAsync(userId, userSecurity.Result.ToUpdate());
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
         if (!updateSecurity.Success)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 

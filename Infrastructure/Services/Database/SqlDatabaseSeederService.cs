@@ -194,17 +194,18 @@ public class SqlDatabaseSeederService : IHostedService
             IsDeleted = false,
             DeletedOn = null,
             AccountType = AccountType.User
-        }, true);
+        });
         
         AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
-        await _userRepository.CreateSecurityAsync(new AppUserSecurityAttributeCreate
+        await _userRepository.UpdateSecurityAsync(new AppUserSecurityAttributeUpdate
         {
             OwnerId = createdUser.Result,
             PasswordHash = hash,
             PasswordSalt = salt,
             TwoFactorEnabled = false,
             TwoFactorKey = null,
-            AuthState = AuthState.Disabled,
+            AuthState = AuthState.Enabled,
+            AuthStateTimestamp = null,
             RefreshToken = null,
             RefreshTokenExpiryTime = null,
             BadPasswordAttempts = 0,
@@ -248,6 +249,6 @@ public class SqlDatabaseSeederService : IHostedService
             return;
         }
         
-        _logger.Information("Anon user ID was validated and is correct: {UserId}", anonUserValidation.Result!.Id);
+        _logger.Information("Anon user ID was updated and validated correct: {UserId}", anonUserValidation.Result!.Id);
     }
 }

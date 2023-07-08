@@ -137,7 +137,7 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
         Action = "Update",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
-                @Id UNIQUEIDENTIFIER,
+                @OwnerId UNIQUEIDENTIFIER,
                 @PasswordHash NVARCHAR(256) = null,
                 @PasswordSalt NVARCHAR(256) = null,
                 @TwoFactorEnabled BIT = null,
@@ -158,7 +158,24 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                     RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     BadPasswordAttempts = COALESCE(@BadPasswordAttempts, BadPasswordAttempts),
                     LastBadPassword = COALESCE(@LastBadPassword, LastBadPassword)
-                WHERE Id = COALESCE(@Id, Id);
+                WHERE OwnerId = @OwnerId;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure SetOwnerId = new()
+    {
+        Table = Table,
+        Action = "SetOwnerId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SetOwnerId]
+                @CurrentId UNIQUEIDENTIFIER,
+                @NewId UNIQUEIDENTIFIER
+            AS
+            begin
+                UPDATE dbo.[{Table.TableName}]
+                SET OwnerId = @NewId
+                OUTPUT @NewId
+                WHERE OwnerId = @CurrentId;
             end"
     };
 }

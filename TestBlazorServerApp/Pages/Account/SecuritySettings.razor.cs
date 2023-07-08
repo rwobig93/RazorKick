@@ -6,6 +6,7 @@ using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace TestBlazorServerApp.Pages.Account;
 
@@ -231,8 +232,14 @@ public partial class SecuritySettings
         
         // Wait for the snackbar message to be read then we reload the page to force page elements to update
         //  would love to find a better solution for this but as of now StateHasChanged or force updating doesn't work
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        await Task.Delay(TimeSpan.FromSeconds(3));
         
         NavManager.NavigateTo(AppRouteConstants.Account.Security, true);
+    }
+
+    private async Task TotpSubmitCheck(KeyboardEventArgs arg)
+    {
+        if (arg.Key == "Enter")
+            await ValidateTotpCode();
     }
 }

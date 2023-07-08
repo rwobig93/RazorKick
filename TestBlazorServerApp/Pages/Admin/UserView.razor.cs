@@ -26,6 +26,8 @@ public partial class UserView
     private string? _modifiedByUsername = "";
     private DateTime? _createdOn;
     private DateTime? _modifiedOn;
+    // TODO: AuthState not being pulled properly here or on admin view for users
+    private bool _userEnabled;
 
     private bool _invalidDataProvided;
     private bool _editMode;
@@ -79,6 +81,7 @@ public partial class UserView
         _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
         // TODO: Add timezone id gather from local system/client
         _createdOn = _viewingUser.CreatedOn.ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+        _userEnabled = _viewingUser.AuthState == AuthState.Enabled;
         
         if (_viewingUser.LastModifiedBy is not null)
         {
@@ -164,5 +167,27 @@ public partial class UserView
             await GetViewingUser();
             StateHasChanged();
         }
+    }
+
+    private void ToggleEnabled()
+    {
+        _viewingUser.AuthState = _viewingUser.AuthState == AuthState.Enabled ? AuthState.Disabled : AuthState.Enabled;
+        _userEnabled = _viewingUser.AuthState == AuthState.Enabled;
+    }
+}
+
+public class AuthStateConverter : BoolConverter<AuthState>
+{
+    public AuthStateConverter()
+    {
+        SetFunc = OnSet;
+        GetFunc = OnGet;
+    }
+    
+    private AuthState OnGet(bool? value) => value == true ? AuthState.Enabled : AuthState.Disabled;
+
+    private bool? OnSet(AuthState state)
+    {
+        return state == AuthState.Enabled;
     }
 }

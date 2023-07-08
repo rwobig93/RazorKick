@@ -205,7 +205,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
                 await using var scope = _scopeFactory.CreateAsyncScope();
                 var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
                 var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-                createObject.ChangedBy = (Guid)currentUserId!;
+                createObject.ChangedBy = currentUserId ?? Guid.Empty;
             }
 
             createObject.Timestamp = _dateTime.NowDatabaseTime;

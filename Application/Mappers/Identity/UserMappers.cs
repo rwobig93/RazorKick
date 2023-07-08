@@ -469,7 +469,7 @@ public static class UserMappers
     {
         return new AppUserSecurityAttributeUpdate
         {
-            Id = securityDb.Id,
+            OwnerId = securityDb.OwnerId,
             PasswordHash = securityDb.PasswordHash,
             PasswordSalt = securityDb.PasswordSalt,
             TwoFactorEnabled = securityDb.TwoFactorEnabled,
@@ -538,7 +538,7 @@ public static class UserMappers
     {
         return new AppUserSecurityAttributeUpdate
         {
-            Id = appUser.Id,
+            OwnerId = appUser.Id,
             PasswordHash = appUser.PasswordHash,
             PasswordSalt = appUser.PasswordSalt,
             TwoFactorEnabled = appUser.TwoFactorEnabled,
@@ -574,7 +574,7 @@ public static class UserMappers
     {
         return new AppUserSecurityAttributeUpdate
         {
-            Id = appUser.Id,
+            OwnerId = appUser.Id,
             PasswordHash = appUser.PasswordHash,
             PasswordSalt = appUser.PasswordSalt,
             TwoFactorEnabled = appUser.TwoFactorEnabled,
