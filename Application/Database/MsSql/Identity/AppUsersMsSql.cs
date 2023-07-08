@@ -162,11 +162,10 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT u.*, r.*, s.AuthState as AuthState
+                SELECT u.*, r.*
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"

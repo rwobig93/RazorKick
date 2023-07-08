@@ -8,7 +8,6 @@ using Application.Helpers.Communication;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
@@ -178,7 +177,7 @@ public class AppAccountService : IAppAccountService
                 if (userId == Guid.Empty)
                     userId = GetIdFromPrincipal(_authProvider.AuthenticationStateUser);
                 var user = (await _userRepository.GetByIdAsync(userId)).Result ??
-                           new AppUserDb() {Username = "Unknown", Email = "User@Unknown.void"};
+                           new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
 
                 await _auditService.CreateAsync(new AuditTrailCreate
                 {
@@ -509,7 +508,7 @@ public class AppAccountService : IAppAccountService
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
-        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _appConfig);
+        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _appConfig);
         userSecurity.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, userSecurity.Id);
         userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
         user.LastModifiedBy = _serverState.SystemUserId;
@@ -721,5 +720,20 @@ public class AppAccountService : IAppAccountService
         {
             return false;
         }
+    }
+
+    public async Task<IResult> SetAuthState(Guid userId, AuthState authState)
+    {
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (!userSecurity.Success || userSecurity.Result is null)
+            return await Result.FailAsync(userSecurity.ErrorMessage);
+
+        userSecurity.Result.AuthState = authState;
+
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
+        if (!updateSecurity.Success)
+            return await Result.FailAsync(updateSecurity.ErrorMessage);
+
+        return await Result.SuccessAsync($"User account successfully set: {userSecurity.Result.AuthState.ToString()}");
     }
 }

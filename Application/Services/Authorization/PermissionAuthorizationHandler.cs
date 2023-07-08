@@ -2,7 +2,6 @@
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
-using Application.Models.Identity;
 using Application.Models.Identity.Permission;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;

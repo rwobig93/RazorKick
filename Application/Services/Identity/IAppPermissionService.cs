@@ -1,5 +1,4 @@
-﻿using Application.Models.Identity;
-using Application.Models.Identity.Permission;
+﻿using Application.Models.Identity.Permission;
 using Application.Models.Web;
 
 namespace Application.Services.Identity;

@@ -1,5 +1,4 @@
 ﻿using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -131,7 +130,7 @@ public class AppUserService : IAppUserService
             if (!foundUser.Success || foundUser.Result is null)
                 return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
 
-            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToFull());
+            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToUserSecurityFull());
         }
         catch (Exception ex)
         {
@@ -182,7 +181,7 @@ public class AppUserService : IAppUserService
             if (!foundUser.Success || foundUser.Result is null)
                 return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
 
-            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToFull());
+            return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToUserSecurityFull());
         }
         catch (Exception ex)
         {

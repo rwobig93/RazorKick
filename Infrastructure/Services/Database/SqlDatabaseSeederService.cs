@@ -2,7 +2,6 @@ using Application.Constants.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -12,6 +11,7 @@ using Application.Settings.AppSettings;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -26,7 +26,7 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly AppConfiguration _appConfig;
     private readonly IRunningServerState _serverState;
 
-    private AppUserDb _systemUser = new() { Id = Guid.Empty };
+    private AppUserSecurityDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
         IAppPermissionRepository permissionRepository, IOptions<AppConfiguration> appConfig, IRunningServerState serverState)
@@ -165,7 +165,7 @@ public class SqlDatabaseSeederService : IHostedService
         }
     }
 
-    private async Task<DatabaseActionResult<AppUserDb>> CreateOrGetSeedUser(string userName, string firstName, string lastName, string email,
+    private async Task<DatabaseActionResult<AppUserSecurityDb>> CreateOrGetSeedUser(string userName, string firstName, string lastName, string email,
         string userPassword)
     {
         var existingUser = await _userRepository.GetByUsernameAsync(userName);

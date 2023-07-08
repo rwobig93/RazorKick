@@ -3,7 +3,6 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
 using Domain.Enums.Identity;
@@ -17,6 +16,7 @@ public partial class UserView
 {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IAppAccountService AccountService { get; init; } = null!;
     
     [Parameter] public Guid UserId { get; set; }
 
@@ -112,6 +112,13 @@ public partial class UserView
             return;
         }
         
+        var updateSecurityResult = await AccountService.SetAuthState(_viewingUser.Id, _viewingUser.AuthState);
+        if (!updateSecurityResult.Succeeded)
+        {
+            updateSecurityResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
         ToggleEditMode();
         await GetViewingUser();
         Snackbar.Add("User successfully updated!", Severity.Success);
@@ -173,21 +180,5 @@ public partial class UserView
     {
         _viewingUser.AuthState = _viewingUser.AuthState == AuthState.Enabled ? AuthState.Disabled : AuthState.Enabled;
         _userEnabled = _viewingUser.AuthState == AuthState.Enabled;
-    }
-}
-
-public class AuthStateConverter : BoolConverter<AuthState>
-{
-    public AuthStateConverter()
-    {
-        SetFunc = OnSet;
-        GetFunc = OnGet;
-    }
-    
-    private AuthState OnGet(bool? value) => value == true ? AuthState.Enabled : AuthState.Disabled;
-
-    private bool? OnSet(AuthState state)
-    {
-        return state == AuthState.Enabled;
     }
 }

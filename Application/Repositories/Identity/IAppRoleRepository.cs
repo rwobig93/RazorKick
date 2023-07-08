@@ -1,5 +1,4 @@
-﻿using Application.Models.Identity;
-using Application.Models.Identity.Role;
+﻿using Application.Models.Identity.Role;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 

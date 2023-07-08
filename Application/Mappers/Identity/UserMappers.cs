@@ -1,5 +1,4 @@
 ﻿using Application.Helpers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
@@ -31,7 +30,8 @@ public static class UserMappers
             LastModifiedOn = appUserFull.LastModifiedOn,
             IsDeleted = appUserFull.IsDeleted,
             DeletedOn = appUserFull.DeletedOn,
-            AccountType = appUserFull.AccountType
+            AccountType = appUserFull.AccountType,
+            AuthState = appUserFull.AuthState
         };
     }
 
@@ -82,6 +82,7 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
+            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
@@ -107,30 +108,8 @@ public static class UserMappers
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>()
-        };
-    }
-
-    public static AppUserFull ToFull(this AppUserDb appUser)
-    {
-        return new AppUserFull
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            EmailAddress = appUser.Email,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            CreatedBy = appUser.CreatedBy,
-            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
-            CreatedOn = appUser.CreatedOn,
-            LastModifiedBy = appUser.LastModifiedBy,
-            LastModifiedOn = appUser.LastModifiedOn,
-            IsDeleted = appUser.IsDeleted,
-            DeletedOn = appUser.DeletedOn,
-            AccountType = appUser.AccountType,
-            Roles = new List<AppRoleSlim>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>()
+            Permissions = new List<AppPermissionSlim>(),
+            AuthState = appUser.AuthState
         };
     }
 
@@ -153,7 +132,8 @@ public static class UserMappers
             AccountType = appUser.AccountType,
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>()
+            Permissions = new List<AppPermissionSlim>(),
+            AuthState = appUser.AuthState
         };
     }
     
@@ -164,6 +144,7 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
+            AuthState = appUser.AuthState,
             AccountType = appUser.AccountType,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
@@ -482,7 +463,7 @@ public static class UserMappers
         };
     }
 
-    public static AppUserSecurityFull ToFull(this AppUserSecurityDb securityDb)
+    public static AppUserSecurityFull ToUserSecurityFull(this AppUserSecurityDb securityDb)
     {
         return new AppUserSecurityFull
         {
@@ -607,6 +588,87 @@ public static class UserMappers
             IsDeleted = securityDb.IsDeleted,
             DeletedOn = securityDb.DeletedOn,
             AccountType = securityDb.AccountType
+        };
+    }
+
+    public static AppUserUpdate ToUpdate(this AppUserSecurityDb userDb)
+    {
+        return new AppUserUpdate
+        {
+            Id = userDb.Id,
+            Username = userDb.Username,
+            Email = userDb.Email,
+            EmailConfirmed = userDb.EmailConfirmed,
+            PhoneNumber = userDb.PhoneNumber,
+            PhoneNumberConfirmed = userDb.PhoneNumberConfirmed,
+            FirstName = userDb.FirstName,
+            LastName = userDb.LastName,
+            ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
+            LastModifiedBy = userDb.LastModifiedBy,
+            LastModifiedOn = userDb.LastModifiedOn,
+            AccountType = userDb.AccountType
+        };
+    }
+
+    public static AppUserSlim ToSlim(this AppUserSecurityDb userDb)
+    {
+        return new AppUserSlim
+        {
+            Id = userDb.Id,
+            Username = userDb.Username,
+            EmailAddress = userDb.Email,
+            FirstName = userDb.FirstName,
+            LastName = userDb.FirstName,
+            CreatedBy = userDb.CreatedBy,
+            ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
+            CreatedOn = userDb.CreatedOn,
+            LastModifiedBy = userDb.LastModifiedBy,
+            LastModifiedOn = userDb.LastModifiedOn,
+            IsDeleted = userDb.IsDeleted,
+            DeletedOn = userDb.DeletedOn,
+            AccountType = userDb.AccountType,
+            AuthState = userDb.AuthState
+        };
+    }
+
+    public static IEnumerable<AppUserSlim> ToSlims(this IEnumerable<AppUserSecurityDb> userDbs)
+    {
+        return userDbs.Select(x => x.ToSlim()).ToList();
+    }
+
+    public static UserBasicResponse ToBasicResponse(this AppUserSecurityDb userDb)
+    {
+        return new UserBasicResponse
+        {
+            Id = userDb.Id,
+            Username = userDb.Username,
+            CreatedOn = userDb.CreatedOn,
+            AuthState = userDb.AuthState,
+            AccountType = userDb.AccountType
+        };
+    }
+
+    public static AppUserFull ToUserFull(this AppUserSecurityDb userDb)
+    {
+        return new AppUserFull
+        {
+            Id = userDb.Id,
+            Username = userDb.Username,
+            EmailAddress = userDb.Email,
+            FirstName = userDb.FirstName,
+            LastName = userDb.LastName,
+            CreatedBy = userDb.CreatedBy,
+            ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
+            CreatedOn = userDb.CreatedOn,
+            LastModifiedBy = userDb.LastModifiedBy,
+            LastModifiedOn = userDb.LastModifiedOn,
+            IsDeleted = userDb.IsDeleted,
+            DeletedOn = userDb.DeletedOn,
+            AccountType = userDb.AccountType,
+            Roles = new List<AppRoleSlim>(),
+            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
+            Permissions = new List<AppPermissionSlim>(),
+            AuthState = userDb.AuthState
         };
     }
 }

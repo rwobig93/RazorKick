@@ -2,7 +2,6 @@
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
@@ -102,13 +101,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         };
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync()
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync()
     {
-        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
 
         try
         {
-            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.GetAll, new { });
+            var allUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(AppUsersMsSql.GetAll, new { });
             actionReturn.Succeed(allUsers);
         }
         catch (Exception ex)
@@ -137,13 +136,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserDb>> GetByIdAsync(Guid userId)
+    public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid userId)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new();
+        DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
 
         try
         {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                 AppUsersMsSql.GetById, new {Id = userId})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
@@ -163,6 +162,9 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
                 AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
+
+            var foundSecurity = (await GetSecurityAsync(foundUser!.Id)).Result;
+            foundUser.AuthState = foundSecurity!.AuthState;
             
             actionReturn.Succeed(foundUser!);
         }
@@ -193,13 +195,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username)
+    public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameAsync(string username)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new();
+        DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
 
         try
         {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                 AppUsersMsSql.GetByUsername, new {Username = username})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
@@ -248,13 +250,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email)
+    public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByEmailAsync(string email)
     {
-        DatabaseActionResult<AppUserDb> actionReturn = new();
+        DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
 
         try
         {
-            var foundUser = (await _database.LoadData<AppUserDb, dynamic>(
+            var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                 AppUsersMsSql.GetByEmail, new {Email = email})).FirstOrDefault();
             actionReturn.Succeed(foundUser!);
         }
@@ -413,15 +415,14 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    // TODO: Need to change AppUserDb to AppUserSecurityDb so we can get AuthState returned or update AppUserDb to include AuthState
-    public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText)
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText)
     {
-        DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
 
         try
         {
             var searchResults =
-                await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.Search, new { SearchTerm = searchText });
+                await _database.LoadData<AppUserSecurityDb, dynamic>(AppUsersMsSql.Search, new { SearchTerm = searchText });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
@@ -727,7 +728,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             Guid securityId;
             
             var existingSecurity = (await _database.LoadData<AppUserSecurityAttributeDb, dynamic>(
-                AppUserSecurityAttributesMsSql.GetByOwnerId, new {OwnerId = securityCreate.OwnerId})).FirstOrDefault();
+                AppUserSecurityAttributesMsSql.GetByOwnerId, new {securityCreate.OwnerId})).FirstOrDefault();
 
             if (existingSecurity is null)
                 securityId = await _database.SaveDataReturnId(AppUserSecurityAttributesMsSql.Insert, securityCreate);

@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Repositories.Identity;
 using Application.Responses.Identity;
@@ -66,7 +65,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToFull();
+        return !foundUser.Success ? null : foundUser.Result!.ToUserFull();
     }
 
     public async Task<AppUserSecurityFull?> GetCurrentUserSecurityFull()
@@ -76,7 +75,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdSecurityAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToFull();
+        return !foundUser.Success ? null : foundUser.Result!.ToUserSecurityFull();
     }
 
     public async Task<AppUserDb?> GetCurrentUserDb()
@@ -86,6 +85,6 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!;
+        return !foundUser.Success ? null : foundUser.Result!.ToUserDb();
     }
 }

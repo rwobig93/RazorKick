@@ -24,4 +24,6 @@ public class AppUserFullDb
     public List<AppRoleDb> Roles { get; set; } = new();
     public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
     public List<AppPermissionDb> Permissions { get; set; } = new();
+    // Security Attributes
+    public AuthState AuthState { get; set; }
 }

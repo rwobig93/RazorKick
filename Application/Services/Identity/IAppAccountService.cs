@@ -1,8 +1,8 @@
-﻿using Application.Models.Identity;
-using Application.Models.Identity.UserExtensions;
+﻿using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
 using Application.Requests.Identity.User;
 using Application.Responses.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Identity;
 
 namespace Application.Services.Identity;
@@ -24,10 +24,10 @@ public interface IAppAccountService
     Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
-    Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled);
     Task<IResult> ForceUserPasswordReset(Guid userId);
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<bool> IsCurrentSessionValid();
     Task<bool> IsUserRequiredToReAuthenticate(Guid userId);
+    Task<IResult> SetAuthState(Guid userId, AuthState authState);
 }

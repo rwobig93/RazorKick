@@ -1,5 +1,4 @@
-﻿using Application.Models.Identity;
-using Application.Models.Identity.User;
+﻿using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
@@ -10,22 +9,22 @@ namespace Application.Repositories.Identity;
 
 public interface IAppUserRepository
 {
-    Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetAllAsync();
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync();
     Task<DatabaseActionResult<int>> GetCountAsync();
-    Task<DatabaseActionResult<AppUserDb>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id);
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdSecurityAsync(Guid id);
-    Task<DatabaseActionResult<AppUserDb>> GetByUsernameAsync(string username);
+    Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameAsync(string username);
     Task<DatabaseActionResult<AppUserFullDb>> GetByUsernameFullAsync(string username);
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameSecurityAsync(string username);
-    Task<DatabaseActionResult<AppUserDb>> GetByEmailAsync(string email);
+    Task<DatabaseActionResult<AppUserSecurityDb>> GetByEmailAsync(string email);
     Task<DatabaseActionResult<AppUserFullDb>> GetByEmailFullAsync(string email);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
     Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
     Task<DatabaseActionResult> DeleteAsync(Guid id);
     Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId);
     Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById);
-    Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);

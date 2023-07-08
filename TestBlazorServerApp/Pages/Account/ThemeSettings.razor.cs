@@ -1,5 +1,4 @@
 ﻿using Application.Mappers.Identity;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
 using Domain.Enums.Identity;

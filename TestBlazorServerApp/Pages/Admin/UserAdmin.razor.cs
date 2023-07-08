@@ -1,9 +1,9 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
-using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -99,6 +99,8 @@ public partial class UserAdmin
     {
         _searchString = text;
         _table.ReloadServerData();
+        _selectedItems = new HashSet<AppUserSlim>();
+        StateHasChanged();
     }
 
     private async Task EnableAccounts()
@@ -111,11 +113,14 @@ public partial class UserAdmin
 
         foreach (var account in _selectedItems)
         {
-            var result = await AccountService.ChangeUserEnabledState(account.Id, true);
+            var result = await AccountService.SetAuthState(account.Id, AuthState.Enabled);
             if (!result.Succeeded)
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             else
+            {
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
+                OnSearch(_searchString);
+            }
         }
     }
 
@@ -129,13 +134,15 @@ public partial class UserAdmin
 
         foreach (var account in _selectedItems)
         {
-            var result = await AccountService.ChangeUserEnabledState(account.Id, false);
+            var result = await AccountService.SetAuthState(account.Id, AuthState.Disabled);
             if (!result.Succeeded)
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             else
+            {
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
+                OnSearch(_searchString);
+            }
         }
-        
     }
 
     private async Task ForcePasswordResets()
