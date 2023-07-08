@@ -413,6 +413,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    // TODO: Need to change AppUserDb to AppUserSecurityDb so we can get AuthState returned or update AppUserDb to include AuthState
     public async Task<DatabaseActionResult<IEnumerable<AppUserDb>>> SearchAsync(string searchText)
     {
         DatabaseActionResult<IEnumerable<AppUserDb>> actionReturn = new();
