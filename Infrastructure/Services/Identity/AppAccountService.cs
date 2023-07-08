@@ -73,21 +73,37 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
-        // TODO: Add bad password lockout on configurable attempt count, reset sets to 0, successful login sets to 0
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(loginRequest.Username)).Result;
         if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
         var passwordValid = await IsPasswordCorrect(userSecurity.Id, loginRequest.Password);
-        if (!passwordValid.Data)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         if (!userSecurity.EmailConfirmed)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
-        if (userSecurity.AuthState == AuthState.Disabled)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
-        if (userSecurity.AuthState == AuthState.LockedOut)
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (userSecurity.AuthState)
+        {
+            case AuthState.Disabled:
+                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
+            case AuthState.LockedOut:
+                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
+        }
+        if (!passwordValid.Data)
+        {
+            // TODO: Add auto-unlock after application configured timeout threshold
+            userSecurity.BadPasswordAttempts += 1;
+            
+            // Account isn't locked out yet but a bad password was entered
+            if (userSecurity.BadPasswordAttempts < _appConfig.MaxBadPasswordAttempts)
+                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+            
+            // Account is now locked out due to bad password attempts
+            userSecurity.AuthState = AuthState.LockedOut;
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
+        }
 
+        // Entered password is correct so we reset previous bad password attempts
+        userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastModifiedBy = _serverState.SystemUserId;
         userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
         
@@ -711,10 +727,7 @@ public class AppAccountService : IAppAccountService
         try
         {
             var userSecurity = await _userRepository.GetSecurityAsync(userId);
-            if (userSecurity.Result!.AuthState == AuthState.LoginRequired)
-                return true;
-
-            return false;
+            return userSecurity.Result!.AuthState == AuthState.LoginRequired;
         }
         catch (Exception)
         {
@@ -729,6 +742,9 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result.AuthState = authState;
+        // If we are enabling the account we'll reset bad password attempts
+        if (authState == AuthState.Enabled)
+            userSecurity.Result.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
         if (!updateSecurity.Success)

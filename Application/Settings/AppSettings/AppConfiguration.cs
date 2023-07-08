@@ -25,6 +25,9 @@ public class AppConfiguration : IAppSettingsSection
     [Range(0, 86_400)]
     public int SessionIdleTimeoutMinutes { get; init; } = 240;
     
+    [Range(1, 100)]
+    public int MaxBadPasswordAttempts { get; init; } = 3;
+    
     public bool TrustAllCertificates { get; set; }
     
     public bool EnforceNonSystemAndAdminAccounts { get; set; }
