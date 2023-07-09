@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
@@ -13,7 +12,9 @@ using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Requests.Api;
 using Application.Requests.Identity.User;
+using Application.Responses.Api;
 using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.Lifecycle;
@@ -49,12 +50,13 @@ public class AppAccountService : IAppAccountService
     private readonly ISerializerService _serializer;
     private readonly IAuditTrailService _auditService;
     private readonly IHttpContextAccessor _contextAccessor;
+    private readonly SecurityConfiguration _securityConfig;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
-        IAuditTrailService auditService, IHttpContextAccessor contextAccessor)
+        IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -69,6 +71,7 @@ public class AppAccountService : IAppAccountService
         _serializer = serializer;
         _auditService = auditService;
         _contextAccessor = contextAccessor;
+        _securityConfig = securityConfig.Value;
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -96,7 +99,7 @@ public class AppAccountService : IAppAccountService
             await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
             
             // Account isn't locked out yet but a bad password was entered
-            if (userSecurity.BadPasswordAttempts < _appConfig.MaxBadPasswordAttempts)
+            if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
                 return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
             
             // Account is now locked out due to bad password attempts
@@ -111,8 +114,8 @@ public class AppAccountService : IAppAccountService
         userSecurity.LastModifiedBy = _serverState.SystemUserId;
         userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
         
-        userSecurity.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, userSecurity.Id);
-        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+        userSecurity.RefreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
+        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtExpirationTime(userSecurity.RefreshToken);
         
         var updateUser = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
         if (!updateUser.Success)
@@ -162,12 +165,64 @@ public class AppAccountService : IAppAccountService
         }
     }
 
+    public async Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest)
+    {
+        var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(tokenRequest.Username)).Result;
+        if (userSecurity is null)
+            return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+        
+        // TODO: Validate account type is service & add a way to generate service accounts
+        
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (userSecurity.AuthState)
+        {
+            case AuthState.Disabled:
+                return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
+            case AuthState.LockedOut:
+                return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
+        }
+        
+        var passwordValid = await IsPasswordCorrect(userSecurity.Id, tokenRequest.Password);
+        if (!passwordValid.Data)
+        {
+            userSecurity.BadPasswordAttempts += 1;
+            userSecurity.LastBadPassword = _dateTime.NowDatabaseTime;
+            await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+            
+            // Account isn't locked out yet but a bad password was entered
+            if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
+                return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+            
+            // Account is now locked out due to bad password attempts
+            userSecurity.AuthState = AuthState.LockedOut;
+            userSecurity.AuthStateTimestamp = _dateTime.NowDatabaseTime;
+            await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+            return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
+        }
+
+        // Entered password is correct so we reset previous bad password attempts
+        userSecurity.BadPasswordAttempts = 0;
+        userSecurity.LastModifiedBy = _serverState.SystemUserId;
+        userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
+        
+        var updateUser = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
+        if (!updateUser.Success)
+            return await Result<ApiTokenResponse>.FailAsync(updateUser.ErrorMessage);
+        
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+        if (!updateSecurity.Success)
+            return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
+
+        var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
+        var response = new ApiTokenResponse() { Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token) };
+        
+        return await Result<ApiTokenResponse>.SuccessAsync(response);
+    }
+
     public async Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse)
     {
         try
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Token);
-
             await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Data.Token);
             await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.Data.RefreshToken);
 
@@ -362,8 +417,8 @@ public class AppAccountService : IAppAccountService
                 ChangedBy = _serverState.SystemUserId,
                 Timestamp = _dateTime.NowDatabaseTime,
                 Action = DatabaseActionType.Troubleshooting,
-                Before = _serializer.Serialize(new Dictionary<string, string>() { }),
-                After = _serializer.Serialize(new Dictionary<string, string>()
+                Before = _serializer.Serialize(new Dictionary<string, string>()),
+                After = _serializer.Serialize(new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
@@ -383,8 +438,8 @@ public class AppAccountService : IAppAccountService
                 ChangedBy = _serverState.SystemUserId,
                 Timestamp = _dateTime.NowDatabaseTime,
                 Action = DatabaseActionType.Troubleshooting,
-                Before = _serializer.Serialize(new Dictionary<string, string>() { }),
-                After = _serializer.Serialize(new Dictionary<string, string>()
+                Before = _serializer.Serialize(new Dictionary<string, string>()),
+                After = _serializer.Serialize(new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
@@ -556,7 +611,7 @@ public class AppAccountService : IAppAccountService
         if (userSecurity.RefreshToken != refreshRequest.RefreshToken)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
-        if (!JwtHelpers.IsJwtValid(refreshRequest.RefreshToken, _appConfig))
+        if (!JwtHelpers.IsJwtValid(refreshRequest.RefreshToken, _securityConfig, _appConfig))
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
@@ -564,9 +619,9 @@ public class AppAccountService : IAppAccountService
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
-        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _appConfig);
-        userSecurity.RefreshToken = JwtHelpers.GenerateJwtRefreshToken(_dateTime, _appConfig, userSecurity.Id);
-        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _appConfig);
+        var token = JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _securityConfig, _appConfig);
+        userSecurity.RefreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
+        userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtRefreshTokenExpirationTime(_dateTime, _securityConfig);
         user.LastModifiedBy = _serverState.SystemUserId;
         user.LastModifiedOn = _dateTime.NowDatabaseTime;
 
@@ -677,10 +732,13 @@ public class AppAccountService : IAppAccountService
         return await Result.SuccessAsync();
     }
 
-    private async Task<string> GenerateJwtAsync(AppUserDb user)
+    // TODO: Once service account types are implemented collapse this down by checking the account type instead of this boolean
+    private async Task<string> GenerateJwtAsync(AppUserDb user, bool isApiToken = false)
     {
-        var token = JwtHelpers.GenerateJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _appConfig);
-        return token;
+        if (isApiToken)
+            return JwtHelpers.GenerateApiJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig);
+        
+        return JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig);
     }
 
     private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUserDb user)
@@ -704,27 +762,25 @@ public class AppAccountService : IAppAccountService
 
     private async Task<string> GetAuthTokenFromSession()
     {
-        var authToken = GetTokenFromHttpSession();
+        var authToken = GetTokenFromHttpAuthorizationHeader();
         if (!string.IsNullOrWhiteSpace(authToken))
             return authToken;
-            
-        if (string.IsNullOrWhiteSpace(authToken))
-        {
-            authToken = await GetTokenFromLocalStorage();
-            return authToken;
-        }
-            
-        if (string.IsNullOrWhiteSpace(authToken))
-            authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+        
+        authToken = await GetTokenFromLocalStorage();
 
         return authToken;
     }
 
-    private string GetTokenFromHttpSession()
+    private string GetTokenFromHttpAuthorizationHeader()
     {
         try
         {
-            return _contextAccessor.HttpContext!.Session.GetString(LocalStorageConstants.AuthToken)!;
+            var headerHasValue = _contextAccessor.HttpContext!.Request.Headers.TryGetValue("Authorization", out var bearer);
+            if (!headerHasValue)
+                return "";
+            
+            // Authorization header should always be: <scheme> <token>, which in our case is: Bearer JWT
+            return bearer.ToString().Split(' ')[1];
         }
         catch
         {
@@ -752,7 +808,7 @@ public class AppAccountService : IAppAccountService
         {
             var authToken = await GetAuthTokenFromSession();
 
-            return JwtHelpers.IsJwtValid(authToken, _appConfig);
+            return JwtHelpers.IsJwtValid(authToken, _securityConfig, _appConfig);
         }
         catch (Exception)
         {

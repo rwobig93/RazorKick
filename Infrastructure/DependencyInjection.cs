@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using System.Text.Json.Serialization;
 using Application.Constants.Identity;
+using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
@@ -20,8 +22,6 @@ using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
-using Hangfire.MySql;
-using Hangfire.PostgreSql;
 using Infrastructure.Repositories.MsSql.Example;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
@@ -41,9 +41,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Infrastructure;
 
@@ -89,6 +91,14 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(MailConfiguration.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.AddOptions<LifecycleConfiguration>()
+            .Bind(configuration.GetSection(LifecycleConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<SecurityConfiguration>()
+            .Bind(configuration.GetSection(SecurityConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
@@ -131,9 +141,10 @@ public static class DependencyInjection
         services.AddScoped<IWebClientService, WebClientService>();
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Local
     private static IHttpClientBuilder ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
     {
-        if (!configuration.GetApplicationSettings().TrustAllCertificates)
+        if (!configuration.GetSecuritySettings().TrustAllCertificates)
             return httpClientBuilder;
         
         return httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
@@ -147,12 +158,13 @@ public static class DependencyInjection
 
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var securitySettings = configuration.GetSecuritySettings();
         var appSettings = configuration.GetApplicationSettings();
 
         services.AddHttpContextAccessor();
         services.AddSession(options =>
         {
-            options.IdleTimeout = TimeSpan.FromMinutes(appSettings.SessionIdleTimeoutMinutes);
+            options.IdleTimeout = TimeSpan.FromMinutes(securitySettings.SessionIdleTimeoutMinutes);
             options.Cookie.HttpOnly = true;
             options.Cookie.IsEssential = true;
         });
@@ -168,7 +180,7 @@ public static class DependencyInjection
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
         
-        services.AddJwtAuthentication(appSettings);
+        services.AddJwtAuthentication(securitySettings, appSettings);
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
@@ -180,7 +192,7 @@ public static class DependencyInjection
         });
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
-            options.ValidationInterval = TimeSpan.FromSeconds(appSettings.PermissionValidationIntervalSeconds);
+            options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.PermissionValidationIntervalSeconds);
         });
     }
 
@@ -227,9 +239,40 @@ public static class DependencyInjection
 
     private static void AddApiServices(this IServiceCollection services)
     {
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwaggerGen(x =>
+        {
+            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JSON Web Token Header Authorization Using Bearer Scheme",
+            });
+            x.AddSecurityRequirement(new OpenApiSecurityRequirement()
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+            x.UseInlineDefinitionsForEnums();
+            x.SchemaFilter<EnumSchemaFilter>();
+        });
         services.AddApiVersioning(c =>
         {
             c.AssumeDefaultVersionWhenUnspecified = true;
@@ -264,19 +307,20 @@ public static class DependencyInjection
         services.AddHostedService<SqlDatabaseSeederService>();
     }
     
-    private static void AddJwtAuthentication(this IServiceCollection services, AppConfiguration appConfig)
+    private static void AddJwtAuthentication(this IServiceCollection services, SecurityConfiguration securityConfig, AppConfiguration appConfig)
     {
         services
             .AddAuthentication(authentication =>
             {
                 authentication.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 authentication.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                authentication.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(bearer =>
             {
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
-                bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(appConfig);
+                bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
 
                 bearer.Events = new JwtBearerEvents
                 {

@@ -62,11 +62,13 @@ public static class UserMappers
     
     public static UserBasicResponse ToResponse(this AppUserSlim appUser)
     {
-        return new UserBasicResponse()
+        return new UserBasicResponse
         {
             Id = appUser.Id,
             Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn
+            CreatedOn = appUser.CreatedOn,
+            AuthState = appUser.AuthState.ToString(),
+            AccountType = appUser.AccountType.ToString()
         };
     }
 
@@ -82,8 +84,8 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState,
-            AccountType = appUser.AccountType,
+            AuthState = appUser.AuthState.ToString(),
+            AccountType = appUser.AccountType.ToString(),
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
         };
@@ -144,8 +146,8 @@ public static class UserMappers
             Id = appUser.Id,
             Username = appUser.Username,
             CreatedOn = appUser.CreatedOn,
-            AuthState = appUser.AuthState,
-            AccountType = appUser.AccountType,
+            AuthState = appUser.AuthState.ToString(),
+            AccountType = appUser.AccountType.ToString(),
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
         };
@@ -154,21 +156,6 @@ public static class UserMappers
     public static List<UserFullResponse> ToResponses(this IEnumerable<AppUserFull> appUsers)
     {
         return appUsers.Select(x => x.ToResponse()).ToList();
-    }
-    
-    public static UserBasicResponse ToBasicResponse(this AppUserDb appUser)
-    {
-        return new UserBasicResponse()
-        {
-            Id = appUser.Id,
-            Username = appUser.Username,
-            CreatedOn = appUser.CreatedOn
-        };
-    }
-
-    public static List<UserBasicResponse> ToBasicResponses(this IEnumerable<AppUserDb> appUsers)
-    {
-        return appUsers.Select(x => x.ToBasicResponse()).ToList();
     }
     
     public static AppUserCreate ToCreateObject(this AppUserDb appUser)
@@ -211,8 +198,7 @@ public static class UserMappers
             LastModifiedBy = Guid.Empty,
             LastModifiedOn = DateTime.Now,
             IsDeleted = false,
-            DeletedOn = null,
-            AccountType = appUser.AccountType
+            DeletedOn = null
         };
     }
     
@@ -241,7 +227,7 @@ public static class UserMappers
             OwnerId = attribute.OwnerId,
             Name = attribute.Name,
             Value = attribute.Value,
-            Type = attribute.Type
+            Type = attribute.Type.ToString()
         };
     }
 
@@ -316,7 +302,7 @@ public static class UserMappers
             OwnerId = attribute.OwnerId,
             Name = attribute.Name,
             Value = attribute.Value,
-            Type = attribute.Type
+            Type = attribute.Type.ToString()
         };
     }
 
@@ -647,8 +633,8 @@ public static class UserMappers
             Id = userDb.Id,
             Username = userDb.Username,
             CreatedOn = userDb.CreatedOn,
-            AuthState = userDb.AuthState,
-            AccountType = userDb.AccountType
+            AuthState = userDb.AuthState.ToString(),
+            AccountType = userDb.AccountType.ToString()
         };
     }
 

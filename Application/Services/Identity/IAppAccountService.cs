@@ -1,6 +1,8 @@
 ﻿using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
+using Application.Requests.Api;
 using Application.Requests.Identity.User;
+using Application.Responses.Api;
 using Application.Responses.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
@@ -11,6 +13,7 @@ public interface IAppAccountService
 {
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
+    Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest);
     Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse);
     Task<IResult> LogoutGuiAsync(Guid userId);
     Task<IResult<bool>> PasswordMeetsRequirements(string password);

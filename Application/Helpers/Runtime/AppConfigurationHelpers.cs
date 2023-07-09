@@ -25,4 +25,14 @@ public static class AppConfigurationHelpers
     {
         return configuration.GetSection(DatabaseConfiguration.SectionName).Get<DatabaseConfiguration>();
     }
+
+    public static LifecycleConfiguration GetLifecycleSettings(this IConfiguration configuration)
+    {
+        return configuration.GetSection(LifecycleConfiguration.SectionName).Get<LifecycleConfiguration>();
+    }
+
+    public static SecurityConfiguration GetSecuritySettings(this IConfiguration configuration)
+    {
+        return configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>();
+    }
 }

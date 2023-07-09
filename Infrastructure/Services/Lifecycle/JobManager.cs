@@ -14,16 +14,16 @@ public class JobManager : IJobManager
     private readonly IAppUserRepository _userRepository;
     private readonly IAppAccountService _accountService;
     private readonly IDateTimeService _dateTime;
-    private readonly AppConfiguration _appConfig;
+    private readonly SecurityConfiguration _securityConfig;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
-        IOptions<AppConfiguration> appConfig)
+        IOptions<SecurityConfiguration> securityConfig)
     {
         _logger = logger;
         _userRepository = userRepository;
         _accountService = accountService;
         _dateTime = dateTime;
-        _appConfig = appConfig.Value;
+        _securityConfig = securityConfig.Value;
     }
 
     public async Task UserHousekeeping()
@@ -41,7 +41,7 @@ public class JobManager : IJobManager
     private async Task HandleLockedOutUsers()
     {
         // If account lockout threshold is 0 minutes then accounts are locked until unlocked by an administrator
-        if (_appConfig.AccountLockoutMinutes == 0)
+        if (_securityConfig.AccountLockoutMinutes == 0)
             return;
 
         var allLockedOutUsers = await _userRepository.GetAllLockedOutAsync();
@@ -62,7 +62,7 @@ public class JobManager : IJobManager
             try
             {
                 // Account hasn't reached lockout threshold, skipping for now
-                if (user.AuthStateTimestamp!.Value.AddMinutes(_appConfig.AccountLockoutMinutes) < _dateTime.NowDatabaseTime)
+                if (user.AuthStateTimestamp!.Value.AddMinutes(_securityConfig.AccountLockoutMinutes) < _dateTime.NowDatabaseTime)
                     continue;
                 
                 // Account has passed locked threshold so it's ready to be unlocked

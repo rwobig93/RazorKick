@@ -7,7 +7,6 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.JSInterop;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -23,7 +22,6 @@ public partial class AuditTrailAdmin
     private IEnumerable<AuditTrailSlim> _pagedData = new List<AuditTrailSlim>();
     private string _searchString = "";
     private int _totalTrails;
-    // TODO: Gather local client timezone to inject
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _canSearchTrails;
@@ -34,6 +32,7 @@ public partial class AuditTrailAdmin
         if (firstRender)
         {
             await GetPermissions();
+            await GetClientTimezone();
             StateHasChanged();
         }
     }

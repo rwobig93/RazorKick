@@ -33,6 +33,14 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
+        // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
+        if (!context.User.Claims.Any())
+        {
+            // throw new AuthenticationException("You are currently not authenticated, please authenticate before trying again");
+            context.Fail();
+            return;
+        }
+        
         // Validate if user is required to do a full re-authentication
         var userId = context.User.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).First().Value;
         var userIdParsed = Guid.Parse(userId);
@@ -74,6 +82,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     {
         // Gather current tokens if they exist to attempt a re-authentication
         var tokenRequest = await GetRefreshTokenRequest();
+        if (string.IsNullOrWhiteSpace(tokenRequest.Token) || string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
+            return false;
 
         var response = await _accountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
         if (!response.Succeeded)

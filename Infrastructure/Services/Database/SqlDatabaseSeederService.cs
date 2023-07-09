@@ -23,19 +23,19 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly AppConfiguration _appConfig;
+    private readonly LifecycleConfiguration _lifecycleConfig;
     private readonly IRunningServerState _serverState;
 
     private AppUserSecurityDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IAppPermissionRepository permissionRepository, IOptions<AppConfiguration> appConfig, IRunningServerState serverState)
+        IAppPermissionRepository permissionRepository, IOptions<LifecycleConfiguration> lifecycleConfig, IRunningServerState serverState)
     {
         _logger = logger;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _appConfig = appConfig.Value;
+        _lifecycleConfig = lifecycleConfig.Value;
         _serverState = serverState;
     }
 
@@ -84,7 +84,7 @@ public class SqlDatabaseSeederService : IHostedService
         if (adminUser.Success)
             await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
 
-        if (_appConfig.EnforceNonSystemAndAdminAccounts)
+        if (_lifecycleConfig.EnforceNonSystemAndAdminAccounts)
         {
             var moderatorUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,

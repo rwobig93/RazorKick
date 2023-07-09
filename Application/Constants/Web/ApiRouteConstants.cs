@@ -2,6 +2,11 @@ namespace Application.Constants.Web;
 
 public static class ApiRouteConstants
 {
+    public static class Api
+    {
+        public const string GetToken = "/api/token";
+    }
+    
     public static class Identity
     {
         public static class User
@@ -18,9 +23,6 @@ public static class ApiRouteConstants
             public const string Register = "/api/identity/user/register";
             public const string Login = "/api/identity/user/login";
             public const string Update = "/api/identity/user";
-    
-            // TODO: Implement API Endpoints for these
-            public const string ConfirmEmail = "/api/identity/confirm-email";
             public const string ResetPassword = "/api/identity/reset-password";
         }
 

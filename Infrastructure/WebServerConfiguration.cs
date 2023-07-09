@@ -1,4 +1,5 @@
-﻿using Application.Api.v1.Example;
+﻿using Application.Api.v1.Api;
+using Application.Api.v1.Example;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
 using Application.Api.v1.Monitoring;
@@ -81,6 +82,7 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
+        var lifecycleConfig = scope.ServiceProvider.GetRequiredService<IOptions<LifecycleConfiguration>>();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         
         #if DEBUG
@@ -90,7 +92,7 @@ public static class WebServerConfiguration
         #endif
         
         serverState.ApplicationName = appConfig.Value.ApplicationName;
-        serverState.AuditLoginLogout = appConfig.Value.AuditLoginLogout;
+        serverState.AuditLoginLogout = lifecycleConfig.Value.AuditLoginLogout;
     }
 
     private static void ValidateDatabaseStructure(this IHost app)
@@ -119,13 +121,19 @@ public static class WebServerConfiguration
 
     private static void ConfigureApiServices(this WebApplication app)
     {
+        using var scope = app.Services.CreateAsyncScope();
+        var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
+        
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "TestBlazorServer v1");
             options.RoutePrefix = "api";
-            options.DisplayRequestDuration();
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", $"{serverState.ApplicationName} v1");
             options.InjectStylesheet("/css/swagger-dark.css");
+            options.DisplayRequestDuration();
+            options.EnableFilter();
+            options.EnablePersistAuthorization();
+            options.EnableTryItOutByDefault();
         });
         app.MapControllers();
         app.ConfigureApiVersions();
@@ -150,6 +158,7 @@ public static class WebServerConfiguration
         app.MapEndpointsUsers();
         app.MapEndpointsRoles();
         app.MapEndpointsPermissions();
+        app.MapEndpointsApi();
     }
 
     private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)

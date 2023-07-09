@@ -19,13 +19,15 @@ public class AuthStateProvider : AuthenticationStateProvider
     private readonly ILocalStorageService _localStorage;
     private readonly ILogger _logger;
     private readonly AppConfiguration _appConfig;
+    private readonly SecurityConfiguration _securityConfig;
 
     public AuthStateProvider(HttpClient httpClient, IHttpContextAccessor contextAccessor, ILocalStorageService localStorage, ILogger logger,
-        IOptions<AppConfiguration> appConfig)
+        IOptions<AppConfiguration> appConfig, IOptions<SecurityConfiguration> securityConfig)
     {
         _contextAccessor = contextAccessor;
         _localStorage = localStorage;
         _logger = logger;
+        _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
         _httpClient = httpClient;
     }
@@ -38,7 +40,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         {
             await GetAuthTokenFromSession();
 
-            var currentPrincipal = JwtHelpers.GetClaimsPrincipalFromToken(_authToken, _appConfig);
+            var currentPrincipal = JwtHelpers.GetClaimsPrincipalFromToken(_authToken, _securityConfig, _appConfig);
             if (currentPrincipal is null)
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
 
@@ -114,7 +116,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         }
     }
 
-    public ClaimsPrincipal AuthenticationStateUser { get; set; } = null!;
+    public ClaimsPrincipal AuthenticationStateUser { get; private set; } = null!;
 
     public void IndicateUserAuthenticationSuccess(string userName)
     {

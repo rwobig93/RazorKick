@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Constants.Web;
@@ -19,7 +18,6 @@ public partial class UserView
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
 
     [Parameter] public Guid UserId { get; set; }
@@ -83,12 +81,7 @@ public partial class UserView
     {
         _viewingUser = (await UserService.GetByIdFullAsync(UserId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
-        // TODO: Add timezone id gather from local system/client
         _createdOn = _viewingUser.CreatedOn.ConvertToLocal(_localTimeZone);
-
-        Snackbar.Add($"Timestamp Original: {DateTimeService.NowDatabaseTime.ToString(CultureInfo.CurrentCulture)}", Severity.Info);
-        Snackbar.Add($"Timestamp Modified: {DateTimeService.NowDatabaseTime
-            .ConvertToLocal(_localTimeZone).ToString(CultureInfo.CurrentCulture)}", Severity.Info);
         
         if (_viewingUser.LastModifiedBy is not null)
         {

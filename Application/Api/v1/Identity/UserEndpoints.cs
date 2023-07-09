@@ -16,6 +16,7 @@ public static class UserEndpoints
 {
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
+        // TODO: Add user enable/disable endpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetAll, GetAllUsers).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetById, GetUserById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullById, GetFullUserById).ApiVersionOne();
@@ -23,11 +24,15 @@ public static class UserEndpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByEmail, GetFullUserByEmail).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
+        
+        app.MapPut(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
+
         app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Register, Register).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.Identity.User.Login, Login).ApiVersionOne();
-        app.MapPut(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
+        // app.MapPost(ApiRouteConstants.Identity.User.Login, Login).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.ResetPassword, ResetPassword).ApiVersionOne();
+        
+        app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
         
         // TODO: Add swagger endpoint viewer enrichment
     }
@@ -196,7 +201,7 @@ public static class UserEndpoints
     }
 
     [Authorize(Policy = PermissionConstants.Users.Create)]
-    private static async Task<IResult<Guid>> CreateUser(UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
+    private static async Task<IResult<Guid>> CreateUser([FromBody]UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
     accountService, ICurrentUserService currentUserService)
     {
         try
@@ -234,6 +239,21 @@ public static class UserEndpoints
             var deleteRequest = await userService.DeleteAsync(userId);
             if (!deleteRequest.Succeeded) return deleteRequest;
             return await Result.SuccessAsync("Successfully deleted user!");
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+
+    [Authorize(Policy = PermissionConstants.Users.ResetPassword)]
+    private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService)
+    {
+        try
+        {
+            var resetRequest = await accountService.ForceUserPasswordReset(userId);
+            if (!resetRequest.Succeeded) return resetRequest;
+            return await Result.SuccessAsync("Successfully reset password, email has been sent to the user to finish the reset");
         }
         catch (Exception ex)
         {

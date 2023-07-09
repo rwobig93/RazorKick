@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Security.Authentication;
 using System.Text.Json;
 using Application.Models.Web;
 using Domain.Exceptions;
@@ -39,7 +40,9 @@ public class ErrorHandlerMiddleware
                 KeyNotFoundException =>
                     (int) HttpStatusCode.NotFound,
                 SecurityTokenException =>
-                    (int) HttpStatusCode.BadRequest,
+                    (int) HttpStatusCode.Forbidden,
+                AuthenticationException =>
+                    (int) HttpStatusCode.Forbidden,
                 _ => (int) HttpStatusCode.InternalServerError
             };
             var result = JsonSerializer.Serialize(responseModel);

@@ -12,6 +12,7 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
@@ -325,7 +326,23 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         {
             if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
+            if (createObject.UserId != Guid.Empty && createObject.RoleId != Guid.Empty)
+                throw new Exception("Each permission assignment request can only be made for a User or Role, not both at the same time");
 
+            if (createObject.UserId != Guid.Empty)
+            {
+                var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
+                    AppUsersMsSql.GetById, new {Id = createObject.UserId})).FirstOrDefault();
+                if (foundUser is null) throw new Exception("UserId provided is invalid");
+            }
+            
+            if (createObject.RoleId != Guid.Empty)
+            {
+                var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
+                    AppRolesMsSql.GetById, new {Id = createObject.RoleId})).FirstOrDefault();
+                if (foundRole is null) throw new Exception("RoleId provided is invalid");
+            }
+            
             await UpdateAuditing(createObject, systemUpdate);
             var createdId = await _database.SaveDataReturnId(AppPermissionsMsSql.Insert, createObject);
 

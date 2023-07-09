@@ -12,6 +12,4 @@ public class UserCreateRequest
     public bool EmailConfirmed {get;set;}
     public string PhoneNumber { get; set; } = null!;
     public bool PhoneNumberConfirmed {get;set;}
-    public AuthState AuthState {get;set;}
-    public AccountType AccountType {get;set;} = AccountType.User;
 }
