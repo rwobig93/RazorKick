@@ -89,6 +89,16 @@ public class Result<T> : Result, IResult<T>
         return new Result<T> { Succeeded = false, Data = data };
     }
 
+    public static Result<T> Fail(T data, string message)
+    {
+        return new Result<T> { Succeeded = false, Data = data, Messages = new List<string> { message }};
+    }
+
+    public static Result<T> Fail(T data, List<string> messages)
+    {
+        return new Result<T> { Succeeded = false, Data = data, Messages = messages};
+    }
+
     public new static Task<Result<T>> FailAsync()
     {
         return Task.FromResult(Fail());
@@ -107,6 +117,16 @@ public class Result<T> : Result, IResult<T>
     public static Task<Result<T>> FailAsync(T data)
     {
         return Task.FromResult(Fail(data));
+    }
+
+    public static Task<Result<T>> FailAsync(T data, string message)
+    {
+        return Task.FromResult(Fail(data, message));
+    }
+
+    public static Task<Result<T>> FailAsync(T data, List<string> messages)
+    {
+        return Task.FromResult(Fail(data, messages));
     }
 
     public new static Result<T> Success()

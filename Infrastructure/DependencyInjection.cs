@@ -128,6 +128,7 @@ public static class DependencyInjection
         services.AddSingleton<IRunningServerState, RunningServerState>();
         services.AddSingleton<ISerializerService, JsonSerializerService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
+        services.AddScoped<IWebClientService, WebClientService>();
     }
 
     private static IHttpClientBuilder ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)

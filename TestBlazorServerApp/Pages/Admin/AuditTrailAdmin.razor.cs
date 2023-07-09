@@ -17,14 +17,14 @@ public partial class AuditTrailAdmin
     [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
-    [Inject] private IJSRuntime JsRuntime { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
     
     private MudTable<AuditTrailSlim> _table = new();
     private IEnumerable<AuditTrailSlim> _pagedData = new List<AuditTrailSlim>();
     private string _searchString = "";
     private int _totalTrails;
     // TODO: Gather local client timezone to inject
-    private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _canSearchTrails;
     private bool _canExportTrails;
@@ -91,7 +91,8 @@ public partial class AuditTrailAdmin
 
     private async Task ExportToExcel()
     {
-        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(_pagedData, dataMapping: new Dictionary<string, Func<AuditTrailSlim, object>>
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
+            _pagedData, dataMapping: new Dictionary<string, Func<AuditTrailSlim, object>>
         {
             { "Id", auditTrail => auditTrail.Id },
             { "Timestamp", auditTrail => auditTrail.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
@@ -106,14 +107,18 @@ public partial class AuditTrailAdmin
 
         var fileName =
             $"AuditTrails_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
-        
-        await JsRuntime.InvokeVoidAsync("Download", new
-        {
-            ByteArray = convertedExcelWorkbook,
-            FileName = fileName,
-            MimeType = DataConstants.MimeTypes.OpenXml
-        });
+
+        await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
 
         Snackbar.Add("Successfully exported Audit Trails to Excel Workbook For Download", Severity.Success);
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 }

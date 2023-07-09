@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Constants.Web;
@@ -5,6 +6,7 @@ using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
+using Application.Services.System;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -17,7 +19,9 @@ public partial class UserView
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    
+    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+
     [Parameter] public Guid UserId { get; set; }
 
     private ClaimsPrincipal _currentUser = new();
@@ -26,8 +30,6 @@ public partial class UserView
     private string? _modifiedByUsername = "";
     private DateTime? _createdOn;
     private DateTime? _modifiedOn;
-    // TODO: AuthState not being pulled properly here or on admin view for users
-    private bool _userEnabled;
 
     private bool _invalidDataProvided;
     private bool _editMode;
@@ -41,6 +43,7 @@ public partial class UserView
     private bool _canRemovePermissions;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,6 +52,7 @@ public partial class UserView
             if (firstRender)
             {
                 ParseParametersFromUri();
+                await GetClientTimezone();
                 await GetViewingUser();
                 await GetPermissions();
                 StateHasChanged();
@@ -80,13 +84,16 @@ public partial class UserView
         _viewingUser = (await UserService.GetByIdFullAsync(UserId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
         // TODO: Add timezone id gather from local system/client
-        _createdOn = _viewingUser.CreatedOn.ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
-        _userEnabled = _viewingUser.AuthState == AuthState.Enabled;
+        _createdOn = _viewingUser.CreatedOn.ConvertToLocal(_localTimeZone);
+
+        Snackbar.Add($"Timestamp Original: {DateTimeService.NowDatabaseTime.ToString(CultureInfo.CurrentCulture)}", Severity.Info);
+        Snackbar.Add($"Timestamp Modified: {DateTimeService.NowDatabaseTime
+            .ConvertToLocal(_localTimeZone).ToString(CultureInfo.CurrentCulture)}", Severity.Info);
         
         if (_viewingUser.LastModifiedBy is not null)
         {
             _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Data?.Username;
-            _modifiedOn = ((DateTime) _viewingUser.LastModifiedOn!).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+            _modifiedOn = ((DateTime) _viewingUser.LastModifiedOn!).ConvertToLocal(_localTimeZone);
         }
     }
 
@@ -102,7 +109,7 @@ public partial class UserView
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
     }
-
+    
     private async Task Save()
     {
         var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate());
@@ -176,9 +183,12 @@ public partial class UserView
         }
     }
 
-    private void ToggleEnabled()
+    private async Task GetClientTimezone()
     {
-        _viewingUser.AuthState = _viewingUser.AuthState == AuthState.Enabled ? AuthState.Disabled : AuthState.Enabled;
-        _userEnabled = _viewingUser.AuthState == AuthState.Enabled;
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 }
