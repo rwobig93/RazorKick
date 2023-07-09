@@ -50,10 +50,6 @@ public class SqlDatabaseSeederService : IHostedService
 
     private async Task SeedSystemUser()
     {
-        // TODO: Figure out why these database failures are occurring, the first one has been occuring for awhile on the 1st run only
-        //  07/05/2023 23:53:34 -05:00 [Error] DB Action Fail: ["spAuditTrails_Insert"]: "Nullable object must have a value."
-        //  07/05/2023 23:53:34 -05:00 [Error] DB Action Fail: ["spAppUserSecurityAttributes_Insert"]: "SqlDateTime overflow. Must be between 1/1/1753 12:00:00 AM and 12/31/9999 11:59:59 PM."
-        //  07/05/2023 23:53:34 -05:00 [Information] Created missing "System" user with id: 8dda00fa-4a2d-4974-afc2-3761f7a4bb23
         var systemUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.SystemUsername, UserConstants.DefaultUsers.SystemFirstName, UserConstants.DefaultUsers.SystemLastName,
             UserConstants.DefaultUsers.SystemEmail, UrlHelpers.GenerateToken(64));

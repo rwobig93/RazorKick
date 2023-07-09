@@ -4,7 +4,6 @@ namespace Application.Models.Identity.User;
 
 public class AppUserSlim
 {
-    // TODO: Add bad password attempt count, locked out state, force reauthenticate, force token regen
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string? EmailAddress { get; set; }

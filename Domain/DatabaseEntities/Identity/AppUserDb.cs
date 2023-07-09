@@ -5,8 +5,6 @@ namespace Domain.DatabaseEntities.Identity;
 
 public class AppUserDb : IAuditableEntity<Guid>
 {
-    // TODO: Add bad password attempt count, locked out state, force reauthenticate, force token regen
-    // TODO: Remove properties matching AppUserSecurityAttribute and update methods to combine these entities
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
     public string Email { get; set; } = null!;

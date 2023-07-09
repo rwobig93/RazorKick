@@ -264,13 +264,13 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult> RegisterAsync(UserRegisterRequest registerRequest)
     {
-        // TODO: Add handling for a deleted account that still exists in the database, reactivate account or reach out to admin for enablement?
         if (!AccountHelpers.IsValidEmailAddress(registerRequest.Email))
             return await Result.FailAsync($"The email address {registerRequest.Email} provided isn't a valid email, please try again");
         
         var matchingEmail = (await _userRepository.GetByEmailAsync(registerRequest.Email)).Result;
         if (matchingEmail is not null)
-            return await Result.FailAsync($"The email address {registerRequest.Email} is already in use, please try again");
+            return await Result.FailAsync(
+                $"The email address {registerRequest.Email} is already in use, are you sure you don't have an account already?");
         
         var matchingUserName = (await _userRepository.GetByUsernameAsync(registerRequest.Username)).Result;
         if (matchingUserName != null)
@@ -340,7 +340,6 @@ public class AppAccountService : IAppAccountService
         if (!addAttributeRequest.Success)
             return await Result<string>.FailAsync(addAttributeRequest.ErrorMessage);
         
-        // TODO: Split confirmation code and URI return for API endpoints to register a user programmatically
         return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode));
     }
 
@@ -354,13 +353,50 @@ public class AppAccountService : IAppAccountService
             (await _userRepository.GetUserExtendedAttributesByTypeAsync(userSecurity.Id, ExtendedAttributeType.EmailConfirmationToken)).Result;
         var previousConfirmation = previousConfirmations?.FirstOrDefault();
 
-        // TODO: Add admin logging w/ attempt and failure details so an admin can troubleshoot
         if (previousConfirmation is null)
+        {
+            await _auditService.CreateAsync(new AuditTrailCreate
+            {
+                TableName = "EmailConfirmation",
+                RecordId = userId,
+                ChangedBy = _serverState.SystemUserId,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Action = DatabaseActionType.Troubleshooting,
+                Before = _serializer.Serialize(new Dictionary<string, string>() { }),
+                After = _serializer.Serialize(new Dictionary<string, string>()
+                {
+                    {"UserId", userSecurity.Id.ToString()},
+                    {"Username", userSecurity.Username},
+                    {"Email", userSecurity.Email},
+                    {"Details", "Email confirmation was attempted when an email confirmation isn't currently pending"}
+                })
+            });
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
+        }
         if (previousConfirmation.Value != confirmationCode)
+        {
+            await _auditService.CreateAsync(new AuditTrailCreate
+            {
+                TableName = "EmailConfirmation",
+                RecordId = userId,
+                ChangedBy = _serverState.SystemUserId,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Action = DatabaseActionType.Troubleshooting,
+                Before = _serializer.Serialize(new Dictionary<string, string>() { }),
+                After = _serializer.Serialize(new Dictionary<string, string>()
+                {
+                    {"UserId", userSecurity.Id.ToString()},
+                    {"Username", userSecurity.Username},
+                    {"Email", userSecurity.Email},
+                    {"Details", "Email confirmation was attempted with an invalid confirmation code"},
+                    {"Correct Code ", previousConfirmation.Value},
+                    {"Provided Code", confirmationCode}
+                })
+            });
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
+        }
         
         userSecurity.AuthState = AuthState.Enabled;
         userSecurity.EmailConfirmed = true;
@@ -542,7 +578,6 @@ public class AppAccountService : IAppAccountService
         if (!updateUser.Success)
             return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
 
-        // TODO: Auth token is failing for users that aren't admin, returning indicating token has been deleted
         var response = new UserLoginResponse { Token = token, RefreshToken = userSecurity.RefreshToken,
             RefreshTokenExpiryTime = (DateTime)userSecurity.RefreshTokenExpiryTime };
         return await Result<UserLoginResponse>.SuccessAsync(response);

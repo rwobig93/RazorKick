@@ -67,7 +67,6 @@ public static class JwtHelpers
             IssuerSigningKey = new SymmetricSecurityKey(jwtSecretKey),
             ValidateIssuer = true,
             ValidateAudience = true,
-            // TODO: Token isn't expiring / requiring to be renewed
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             RoleClaimType = ClaimTypes.Role,

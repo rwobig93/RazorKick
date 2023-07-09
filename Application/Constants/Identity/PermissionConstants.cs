@@ -4,6 +4,8 @@ namespace Application.Constants.Identity;
 
 public static class PermissionConstants
 {
+    // NOTE: Use IAuthorizationPolicyProvider to add policies during runtime, each permission must have a policy
+    //  The below permissions are registered at runtime but any dynamic permissions will require policies to be created dynamically
     public static class Users
     {
         public const string View = "Permissions.Identity.Users.View";

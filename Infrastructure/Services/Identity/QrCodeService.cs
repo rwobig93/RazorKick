@@ -1,3 +1,4 @@
+using System.Drawing;
 using Application.Services.Identity;
 using QRCoder;
 
@@ -16,20 +17,10 @@ public class QrCodeService : IQrCodeService
     {
         var qrCodeData = _codeGenerator.CreateQrCode(textToEncode, QRCodeGenerator.ECCLevel.Q);
         var qrCode = new BitmapByteQRCode(qrCodeData);
-        // TODO: Add configured application logo to center of QR Code
+        // NOTE: There is an ability to add an encoded image to the center of the QRCode, haven't spent time adding this though
         var qrCodeImage = qrCode.GetGraphic(20);
 
         return "data:image/png;base64, " + Convert.ToBase64String(qrCodeImage);
-        // //Set color by using Color-class types
-        // Bitmap qrCodeImage = qrCode.GetGraphic(20, Color.DarkRed, Color.PaleGreen, true);
-        //
-        // //Set color by using HTML hex color notation
-        // Bitmap qrCodeImage = qrCode.GetGraphic(20, "#000ff0", "#0ff000");
-
-        // // Add logo to the center of the QR Code
-        // Bitmap qrCodeImage = qrCode.GetGraphic(20, Color.Black, Color.White, (Bitmap)Bitmap.FromFile("C:\\myimage.png"));
-
-        // var encodedData = _codeGenerator.CreateQrCode(textToEncode, QRCodeGenerator.ECCLevel.Q);
 
     }
 }

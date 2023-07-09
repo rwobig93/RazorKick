@@ -13,6 +13,7 @@ using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.JSInterop;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
@@ -22,12 +23,15 @@ public partial class MainLayout
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     [Inject] private IRunningServerState ServerState { get; set; } = null!;
     [Inject] private ILocalStorageService LocalStorage { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; init; } = null!;
+    
     public AppUserPreferenceFull _userPreferences = new();
     public ClaimsPrincipal CurrentUser { get; set; } = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
     private AppUserFull UserFull { get; set; } = new();
     private bool _settingsDrawerOpen;
+    private string _clientTimeZone = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -35,6 +39,7 @@ public partial class MainLayout
         {
             await GetCurrentUser();
             await GetPreferences();
+            await GetClientTimezone();
             StateHasChanged();
         }
     }
@@ -185,5 +190,13 @@ public partial class MainLayout
                 DrawerIcon = preferenceTheme.ColorPrimary
             };
         }
+    }
+
+    private async Task GetClientTimezone()
+    {
+        // TODO: Implement timezone extraction cascade for correct time display per client 
+        var clientTimeZone = await JsRuntime.InvokeAsync<string>("getClientTimeZone");
+        _clientTimeZone = clientTimeZone;
+        Logger.Debug("Extracted client timezone: {Timezone}", _clientTimeZone);
     }
 }

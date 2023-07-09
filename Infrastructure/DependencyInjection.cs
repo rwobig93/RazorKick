@@ -20,6 +20,8 @@ using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
+using Hangfire.MySql;
+using Hangfire.PostgreSql;
 using Infrastructure.Repositories.MsSql.Example;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
@@ -93,8 +95,10 @@ public static class DependencyInjection
     {
         services.AddHangfire(x =>
         {
-            // TODO: Validate database provider options for hangfire, would determine route for supported DB providers
             x.UseSqlServerStorage(configuration.GetDatabaseSettings().Core);
+            // TODO: Add more sql support, currently we only support MsSql
+            // x.UsePostgreSqlStorage(configuration.GetDatabaseSettings().Core);
+            // x.UseStorage(new MySqlStorage(configuration.GetDatabaseSettings().Core));
             x.UseDarkDashboard();
         });
         services.AddHangfireServer();
@@ -169,7 +173,6 @@ public static class DependencyInjection
             // Enumerate permissions and create claim policies for them
             foreach (var permission in PermissionConstants.GetAllPermissions())
             {
-                // TODO: Use IAuthorizationPolicyProvider to add policies during runtime
                 options.AddPolicy(permission, policy => policy.RequireClaim(
                     ApplicationClaimTypes.Permission, permission));
             }
