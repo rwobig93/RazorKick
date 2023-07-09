@@ -441,6 +441,7 @@ public static class UserMappers
             OwnerId = securityDb.OwnerId,
             TwoFactorEnabled = securityDb.TwoFactorEnabled,
             AuthState = securityDb.AuthState,
+            AuthStateTimestamp = securityDb.AuthStateTimestamp,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
             LastBadPassword = securityDb.LastBadPassword
         };
@@ -456,6 +457,7 @@ public static class UserMappers
             TwoFactorEnabled = securityDb.TwoFactorEnabled,
             TwoFactorKey = securityDb.TwoFactorKey,
             AuthState = securityDb.AuthState,
+            AuthStateTimestamp = securityDb.AuthStateTimestamp,
             RefreshToken = securityDb.RefreshToken,
             RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
@@ -525,6 +527,7 @@ public static class UserMappers
             TwoFactorEnabled = appUser.TwoFactorEnabled,
             TwoFactorKey = appUser.TwoFactorKey,
             AuthState = appUser.AuthState,
+            AuthStateTimestamp = appUser.AuthStateTimestamp,
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,
@@ -561,6 +564,7 @@ public static class UserMappers
             TwoFactorEnabled = appUser.TwoFactorEnabled,
             TwoFactorKey = appUser.TwoFactorKey,
             AuthState = appUser.AuthState,
+            AuthStateTimestamp = appUser.AuthStateTimestamp,
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,

@@ -40,4 +40,5 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<Guid>> CreateSecurityAsync(AppUserSecurityAttributeCreate securityCreate);
     Task<DatabaseActionResult<AppUserSecurityAttributeDb>> GetSecurityAsync(Guid userId);
     Task<DatabaseActionResult> UpdateSecurityAsync(AppUserSecurityAttributeUpdate securityUpdate);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllLockedOutAsync();
 }

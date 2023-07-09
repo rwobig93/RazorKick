@@ -189,13 +189,6 @@ public partial class Login
             return false;
         }
 
-        var passwordCorrect = await AccountService.IsPasswordCorrect(foundUser.Data.Id, Password);
-        if (!passwordCorrect.Succeeded || !passwordCorrect.Data)
-        {
-            Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);
-            return false;
-        }
-
         if (!foundUser.Data.TwoFactorEnabled) return true;
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };

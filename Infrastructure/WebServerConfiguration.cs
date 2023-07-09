@@ -3,7 +3,9 @@ using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
 using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Services.Database;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Hangfire;
@@ -35,6 +37,8 @@ public static class WebServerConfiguration
         
         app.MapExampleApiEndpoints();
         app.MapApplicationApiEndpoints();
+        
+        app.AddScheduledJobs();
     }
 
     private static void ConfigureForEnvironment(this WebApplication app)
@@ -161,5 +165,15 @@ public static class WebServerConfiguration
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsHealth();
         app.MapEndpointsAudit();
+    }
+
+    private static void AddScheduledJobs(this IHost app)
+    {
+        using var scope = app.Services.CreateAsyncScope();
+        var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+        var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
+        
+        hangfireJobs.AddOrUpdate("UserHousekeeping", () =>
+            jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely, TimeZoneInfo.Utc);
     }
 }

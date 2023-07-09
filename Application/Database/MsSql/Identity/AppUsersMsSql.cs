@@ -53,6 +53,22 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
+    public static readonly MsSqlStoredProcedure GetAll = new()
+    {
+        Table = Table,
+        Action = "GetAll",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE IsDeleted = 0;
+            end"
+    };
+
     public static readonly MsSqlStoredProcedure GetAllDeleted = new()
     {
         Table = Table,
@@ -67,18 +83,19 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly MsSqlStoredProcedure GetAllLockedOut = new()
     {
         Table = Table,
-        Action = "GetAll",
+        Action = "GetAllLockedOut",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllLockedOut]
             AS
             begin
-                SELECT u.*, s.AuthState as AuthState
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE IsDeleted = 0;
+                WHERE u.IsDeleted = 0 AND s.AuthState = 3;
             end"
     };
 

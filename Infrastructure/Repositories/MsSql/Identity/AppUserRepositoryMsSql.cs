@@ -784,4 +784,22 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         return actionReturn;
     }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllLockedOutAsync()
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var allUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetAllLockedOut, new { });
+            actionReturn.Succeed(allUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllLockedOut.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
 }

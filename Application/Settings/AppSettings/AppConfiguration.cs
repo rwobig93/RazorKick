@@ -28,6 +28,9 @@ public class AppConfiguration : IAppSettingsSection
     [Range(1, 100)]
     public int MaxBadPasswordAttempts { get; init; } = 3;
     
+    [Range(0, 86_400)]
+    public int AccountLockoutMinutes { get; init; } = 15;
+    
     public bool TrustAllCertificates { get; set; }
     
     public bool EnforceNonSystemAndAdminAccounts { get; set; }
