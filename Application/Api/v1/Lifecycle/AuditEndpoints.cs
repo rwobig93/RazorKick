@@ -19,8 +19,6 @@ public static class AuditEndpoints
         app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetByChangedBy, GetAuditTrailsByChangedBy).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetByRecordId, GetAuditTrailsByRecordId).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.Lifecycle.Audit.Delete, Delete).ApiVersionOne();
-        
-        // TODO: Add swagger endpoint viewer enrichment
     }
 
     private static async Task<IResult<List<AuditTrailResponse>>> GetAllTrails(IAuditTrailService auditService)

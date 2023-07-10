@@ -6,7 +6,6 @@ using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Models.Web;
-using Application.Repositories.Example;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Authorization;
@@ -22,7 +21,7 @@ using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.Dashboard.Dark.Core;
-using Infrastructure.Repositories.MsSql.Example;
+using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Authentication;
@@ -45,7 +44,6 @@ using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Infrastructure;
 
@@ -106,9 +104,6 @@ public static class DependencyInjection
         services.AddHangfire(x =>
         {
             x.UseSqlServerStorage(configuration.GetDatabaseSettings().Core);
-            // TODO: Add more sql support, currently we only support MsSql
-            // x.UsePostgreSqlStorage(configuration.GetDatabaseSettings().Core);
-            // x.UseStorage(new MySqlStorage(configuration.GetDatabaseSettings().Core));
             x.UseDarkDashboard();
         });
         services.AddHangfireServer();
@@ -131,7 +126,6 @@ public static class DependencyInjection
         }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();
-
         services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
             .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
         
@@ -162,12 +156,6 @@ public static class DependencyInjection
         var appSettings = configuration.GetApplicationSettings();
 
         services.AddHttpContextAccessor();
-        services.AddSession(options =>
-        {
-            options.IdleTimeout = TimeSpan.FromMinutes(securitySettings.SessionIdleTimeoutMinutes);
-            options.Cookie.HttpOnly = true;
-            options.Cookie.IsEssential = true;
-        });
         services.AddSingleton<IAppUserService, AppUserService>();
         services.AddSingleton<IAppRoleService, AppRoleService>();
         services.AddSingleton<IAppPermissionService, AppPermissionService>();
@@ -198,9 +186,6 @@ public static class DependencyInjection
 
     private static void AddMsSqlRepositories(this IServiceCollection services)
     {
-        services.AddSingleton<IBookRepository, BookRepositoryMsSql>();
-        services.AddSingleton<IBookGenreRepository, BookGenreRepositoryMsSql>();
-        services.AddSingleton<IBookReviewRepository, BookReviewRepositoryMsSql>();
         services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
         services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
         services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
@@ -284,11 +269,15 @@ public static class DependencyInjection
                 new MediaTypeApiVersionReader("ver"),
                 new UrlSegmentApiVersionReader());
         });
+        
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("Database");
     }
 
     private static void AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // TODO: Add more sql support, currently we only support MsSql
+        // At some point we should add more sql support, currently we only support MsSql
+        //  the framework is in place, just need to write the database classes in Application.Database
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
         {

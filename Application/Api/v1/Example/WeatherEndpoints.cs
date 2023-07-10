@@ -1,8 +1,9 @@
-﻿using Application.Helpers.Web;
+﻿using Application.Constants.Web;
+using Application.Helpers.Web;
 using Application.Models.Web;
-using Application.Requests.Example;
 using Application.Responses.Example;
 using Application.Services.Example;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Example;
@@ -11,17 +12,19 @@ public static class WeatherEndpoints
 {
     public static void MapEndpointsWeather(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/example/weather", GetForecastAsync).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Example.Weather, GetForecastAsync).ApiVersionOne();
     }
 
-    private static async Task<IResult<WeatherDataResponse[]>> GetForecastAsync([FromQuery]WeatherForecastRequest? weatherRequest, IWeatherService 
-    weatherForecast)
+    [AllowAnonymous]
+    private static async Task<IResult<WeatherDataResponse[]>> GetForecastAsync([FromQuery]DateOnly? startDate, [FromQuery]int? weatherCount,
+        IWeatherService  weatherForecast)
     {
         try
         {
-            weatherRequest ??= new WeatherForecastRequest() {StartDate = DateOnly.FromDateTime(DateTime.Now)};
+            var startDateConverted = startDate ?? DateOnly.FromDateTime(DateTime.Now);
+            var weatherCountConverted = weatherCount ?? 10;
 
-            var weatherForecastData = await weatherForecast.GetForecastAsync(weatherRequest);
+            var weatherForecastData = await weatherForecast.GetForecastAsync(startDateConverted, weatherCountConverted);
             
             return await Result<WeatherDataResponse[]>.SuccessAsync(weatherForecastData);
         }

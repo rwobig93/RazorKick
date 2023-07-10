@@ -1,5 +1,3 @@
-using Domain.Enums.Identity;
-
 namespace Application.Responses.Identity;
 
 public class ExtendedAttributeResponse

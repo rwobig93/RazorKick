@@ -26,54 +26,48 @@ public class SqlDataServiceMsSql : ISqlDataService
         EnforceDatabaseEntities();
     }
 
-    public async Task<int> SaveData<TParameters>(
-        ISqlDatabaseScript script,
-        TParameters parameters,
-        string connectionId)
+    public async Task<int> SaveData<TParameters>(ISqlDatabaseScript script, TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
-        return await connection.ExecuteAsync(script.Path, parameters, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteAsync(script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
     public async Task<Guid> SaveDataReturnId<TParameters>(
-        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection")
+        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection", int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
-        return await connection.ExecuteScalarAsync<Guid>(script.Path, parameters, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<Guid>(
+            script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
-    public async Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(
-        ISqlDatabaseScript script,
-        TParameters parameters,
-        string connectionId)
+    public async Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
+        string connectionId, int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
-        return await connection.QueryAsync<TDataClass>(script.Path, parameters, commandType: CommandType.StoredProcedure);
+        return await connection.QueryAsync<TDataClass>(
+            script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
     
-    public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(
-        ISqlDatabaseScript script,
-        Func<TDataClass, TDataClassJoin, TDataClass> joinMapping,
-        TParameters parameters,
-        string connectionId)
+    public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,
+        Func<TDataClass, TDataClassJoin, TDataClass> joinMapping, TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
-        return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
+        return await connection.QueryAsync(
+            script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TParameters>(
-        ISqlDatabaseScript script,
-        Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
-        TParameters parameters,
-        string connectionId)
+        ISqlDatabaseScript script,  Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
+        TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(_dbConfig.Core);
 
-        return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure);
+        return await connection.QueryAsync(
+            script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
     private void EnforceDatabaseEntities()

@@ -2,7 +2,6 @@
 using Application.Api.v1.Example;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
-using Application.Api.v1.Monitoring;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
@@ -10,8 +9,10 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Hangfire;
+using HealthChecks.UI.Client;
 using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -115,7 +116,6 @@ public static class WebServerConfiguration
     {
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseSession();
         ((IEndpointRouteBuilder) app).MapIdentityApiEndpoints();
     }
 
@@ -124,17 +124,23 @@ public static class WebServerConfiguration
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         
+        app.MapHealthChecks("/_health", new HealthCheckOptions()
+        {
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+        
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            options.RoutePrefix = "api";
             options.SwaggerEndpoint("/swagger/v1/swagger.json", $"{serverState.ApplicationName} v1");
+            options.RoutePrefix = "api";
             options.InjectStylesheet("/css/swagger-dark.css");
             options.DisplayRequestDuration();
             options.EnableFilter();
-            options.EnablePersistAuthorization();
+            // options.EnablePersistAuthorization();  // Had to disable, was causing cookie / cache corruption for the swagger service
             options.EnableTryItOutByDefault();
         });
+        
         app.MapControllers();
         app.ConfigureApiVersions();
     }
@@ -164,15 +170,12 @@ public static class WebServerConfiguration
     private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
     {
         // Map all example API endpoints
-        app.MapEndpointsBooks();
-        app.MapEndpointsBookGenres();
         app.MapEndpointsWeather();
     }
 
     private static void MapApplicationApiEndpoints(this IEndpointRouteBuilder app)
     {
         // Map all other endpoints for the application (not identity and not examples)
-        app.MapEndpointsHealth();
         app.MapEndpointsAudit();
     }
 

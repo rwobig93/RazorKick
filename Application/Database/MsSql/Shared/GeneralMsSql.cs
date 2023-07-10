@@ -22,4 +22,16 @@ public class GeneralMsSql : ISqlEnforcedEntityMsSql
                 GROUP BY OBJECT_NAME(object_id);
             end"
     };
+    
+    public static readonly MsSqlStoredProcedure VerifyConnectivity = new()
+    {
+        Table = new MsSqlTable() { TableName = "General" },
+        Action = "VerifyConnectivity",
+        SqlStatement = @"
+            CREATE OR ALTER PROCEDURE [dbo].[spGeneral_VerifyConnectivity]
+            AS
+            begin
+                SELECT 1;
+            end"
+    };
 }

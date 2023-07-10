@@ -6,6 +6,11 @@ public static class ApiRouteConstants
     {
         public const string GetToken = "/api/token";
     }
+
+    public static class Monitoring
+    {
+        public const string Health = "/_health";
+    }
     
     public static class Identity
     {
@@ -70,6 +75,11 @@ public static class ApiRouteConstants
             public const string GetByRecordId = "/api/lifecycle/audittrail/record";
             public const string Delete = "/api/lifecycle/audittrail";
         }
+    }
+
+    public static class Example
+    {
+        public const string Weather = "/api/example/weather";
     }
 }
 

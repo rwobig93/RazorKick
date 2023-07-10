@@ -34,14 +34,6 @@ public static class PermissionConstants
         public const string Add = "Permissions.Identity.Permissions.Add";
         public const string Remove = "Permissions.Identity.Permissions.Remove";
     }
-
-    public static class Books
-    {
-        public const string View = "Permissions.Example.Books.View";
-        public const string Create = "Permissions.Example.Books.Create";
-        public const string Edit = "Permissions.Example.Books.Edit";
-        public const string Delete = "Permissions.Example.Books.Delete";
-    }
     
     public static class Preferences
     {

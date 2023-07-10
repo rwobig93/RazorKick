@@ -1,6 +1,4 @@
-﻿using Domain.Enums.Identity;
-
-namespace Application.Requests.Identity.User;
+﻿namespace Application.Requests.Identity.User;
 
 public class UserCreateRequest
 {

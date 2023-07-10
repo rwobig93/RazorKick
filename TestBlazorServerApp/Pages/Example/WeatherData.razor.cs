@@ -1,5 +1,4 @@
-﻿using Application.Requests.Example;
-using Application.Responses.Example;
+﻿using Application.Responses.Example;
 
 namespace TestBlazorServerApp.Pages.Example;
 
@@ -31,6 +30,6 @@ public partial class WeatherData
 
     private async Task RefreshWeatherData()
     {
-        _forecasts = await WeatherForecast.GetForecastAsync(new WeatherForecastRequest());
+        _forecasts = await WeatherForecast.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now), 25);
     }
 }
