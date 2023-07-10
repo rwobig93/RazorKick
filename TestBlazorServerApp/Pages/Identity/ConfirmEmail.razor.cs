@@ -16,7 +16,6 @@ public partial class ConfirmEmail
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // TODO: Update placeholder images on the razor page
         if (firstRender)
         {
             ParseParametersFromUri();

@@ -29,7 +29,6 @@ public partial class ConfirmPasswordReset
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // TODO: Update placeholder images on the razor page
         if (firstRender)
         {
             ParseParametersFromUri();

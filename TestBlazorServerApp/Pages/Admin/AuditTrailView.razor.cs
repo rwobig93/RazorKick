@@ -12,12 +12,12 @@ public partial class AuditTrailView
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAuditTrailService AuditService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
     
     [Parameter] public Guid TrailId { get; set; }
 
     private AuditTrailSlim _viewingTrail = new();
-    // TODO: Gather local client timezone to inject
-    private readonly TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _invalidDataProvided;
     
@@ -28,6 +28,7 @@ public partial class AuditTrailView
             if (firstRender)
             {
                 ParseParametersFromUri();
+                await GetClientTimezone();
                 await GetViewingAuditTrail();
                 StateHasChanged();
             }
@@ -56,6 +57,15 @@ public partial class AuditTrailView
     private async Task GetViewingAuditTrail()
     {
         _viewingTrail = (await AuditService.GetByIdAsync(TrailId)).Data!;
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 
     private void GoBack()

@@ -5,13 +5,11 @@
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
                 <Authorizing>
-                    @* TODO: Add more official authorizing page *@
                     @* <p>Authorizing...</p> *@
                 </Authorizing>
                 <NotAuthorized>
                     @if (!_firstRender)
                     {
-                        // TODO: Add skeleton page or intermediary page to display on slow loading clients
                         @* <p>Redirecting...</p> *@
                     }
                     else if (context.User.Identity!.IsAuthenticated)

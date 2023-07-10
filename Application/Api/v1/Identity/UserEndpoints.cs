@@ -33,8 +33,6 @@ public static class UserEndpoints
         app.MapPost(ApiRouteConstants.Identity.User.ResetPassword, ResetPassword).ApiVersionOne();
         
         app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
-        
-        // TODO: Add swagger endpoint viewer enrichment
     }
 
     private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppAccountService accountService)

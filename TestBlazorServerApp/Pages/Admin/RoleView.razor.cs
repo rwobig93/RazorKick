@@ -5,6 +5,7 @@ using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Role;
 using Application.Services.Identity;
+using Application.Services.System;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
@@ -16,6 +17,7 @@ public partial class RoleView
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
     
     [Parameter] public Guid RoleId { get; set; }
 
@@ -26,6 +28,7 @@ public partial class RoleView
     private DateTime? _createdOn;
     private DateTime? _modifiedOn;
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _invalidDataProvided;
     private bool _editMode;
@@ -75,14 +78,13 @@ public partial class RoleView
     {
         _viewingRole = (await RoleService.GetByIdFullAsync(RoleId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingRole.CreatedBy)).Data?.Username;
-        // TODO: Add timezone id gather from local system/client
-        _createdOn = _viewingRole.CreatedOn.ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+        _createdOn = _viewingRole.CreatedOn.ConvertToLocal(_localTimeZone);
         
         if (_viewingRole.LastModifiedBy is not null)
         {
             _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
             if (_viewingRole.LastModifiedOn is not null)
-                _modifiedOn = ((DateTime) _viewingRole.LastModifiedOn).ConvertToLocal(TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+                _modifiedOn = ((DateTime) _viewingRole.LastModifiedOn).ConvertToLocal(_localTimeZone);
         }
     }
 
@@ -151,5 +153,14 @@ public partial class RoleView
             await GetViewingRole();
             StateHasChanged();
         }
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 }
