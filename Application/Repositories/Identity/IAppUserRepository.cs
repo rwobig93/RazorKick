@@ -10,6 +10,7 @@ namespace Application.Repositories.Identity;
 public interface IAppUserRepository
 {
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync();
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id);
@@ -25,6 +26,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId);
     Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById);
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);

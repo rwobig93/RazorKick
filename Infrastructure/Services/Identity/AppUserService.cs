@@ -1,4 +1,5 @@
-﻿using Application.Mappers.Identity;
+﻿using Application.Helpers.Runtime;
+using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -60,6 +61,22 @@ public class AppUserService : IAppUserService
         try
         {
             var users = await _userRepository.GetAllAsync();
+            if (!users.Success)
+                return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
+
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(users.Result!.ToSlims());
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppUserSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        try
+        {
+            var users = await _userRepository.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!users.Success)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
 
@@ -261,6 +278,25 @@ public class AppUserService : IAppUserService
         try
         {
             var searchResult = await _userRepository.SearchAsync(searchText);
+            if (!searchResult.Success)
+                return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
+
+            var results = (searchResult.Result?.ToSlims() ?? new List<AppUserSlim>())
+                .OrderBy(x => x.Username);
+
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(results);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        try
+        {
+            var searchResult = await _userRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
             if (!searchResult.Success)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 

@@ -41,11 +41,53 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
+    public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        try
+        {
+            var permissionsRequest = await _permissionRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!permissionsRequest.Success)
+                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(permissionsRequest.ErrorMessage);
+
+            var permissions = (permissionsRequest.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access);
+
+            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<IEnumerable<AppPermissionSlim>>> SearchAsync(string searchTerm)
     {
         try
         {
             var searchResult = await _permissionRepository.SearchAsync(searchTerm);
+            if (!searchResult.Success)
+                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(searchResult.ErrorMessage);
+
+            var permissions = (searchResult.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access);
+
+            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    {
+        try
+        {
+            var searchResult = await _permissionRepository.SearchPaginatedAsync(searchTerm, pageNumber, pageSize);
             if (!searchResult.Success)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(searchResult.ErrorMessage);
 

@@ -9,6 +9,7 @@ namespace Application.Services.Identity;
 public interface IAppUserService
 {
     Task<IResult<IEnumerable<AppUserSlim>>> GetAllAsync();
+    Task<IResult<IEnumerable<AppUserSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<AppUserSlim?>> GetByIdAsync(Guid userId);
     Task<IResult<AppUserFull?>> GetByIdFullAsync(Guid userId);
@@ -21,6 +22,7 @@ public interface IAppUserService
     Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
     Task<IResult> DeleteAsync(Guid userId);
     Task<IResult<IEnumerable<AppUserSlim>>> SearchAsync(string searchText);
+    Task<IResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
     Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);

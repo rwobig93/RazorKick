@@ -29,6 +29,8 @@ public static class ApiRouteConstants
             public const string Login = "/api/identity/user/login";
             public const string Update = "/api/identity/user";
             public const string ResetPassword = "/api/identity/reset-password";
+            public const string Enable = "/api/identity/user/enable";
+            public const string Disable = "/api/identity/user/disable";
         }
 
         public static class Role

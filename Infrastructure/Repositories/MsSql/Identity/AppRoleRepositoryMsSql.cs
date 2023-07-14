@@ -1,6 +1,7 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Role;
 using Application.Models.Lifecycle;
@@ -106,6 +107,25 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(
+                AppRolesMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allRoles);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppRolesMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
         DatabaseActionResult<int> actionReturn = new();
@@ -190,6 +210,25 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppRolesMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<AppRoleDb, dynamic>(
+                AppRolesMsSql.SearchPaginated, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppRolesMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

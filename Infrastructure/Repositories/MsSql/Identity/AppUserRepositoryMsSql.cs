@@ -1,6 +1,7 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -118,6 +119,25 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
         DatabaseActionResult<int> actionReturn = new();
@@ -166,7 +186,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             var foundSecurity = (await GetSecurityAsync(foundUser!.Id)).Result;
             foundUser.AuthState = foundSecurity!.AuthState;
             
-            actionReturn.Succeed(foundUser!);
+            actionReturn.Succeed(foundUser);
         }
         catch (Exception ex)
         {
@@ -428,6 +448,44 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.SearchPaginated, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.Search, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

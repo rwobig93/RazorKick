@@ -47,9 +47,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @DeletedOn datetime2
             AS
             begin
-                UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
-                WHERE Id = @Id;
+                UPDATE dbo.[{Table.TableName}] u
+                SET u.IsDeleted = 1, u.DeletedOn = @DeletedOn
+                WHERE u.Id = @Id;
             end"
     };
 
@@ -65,7 +65,26 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                         s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE IsDeleted = 0;
+                WHERE u.IsDeleted = 0;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.IsDeleted = 0
+                ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
@@ -77,9 +96,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllDeleted]
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE IsDeleted = 1;
+                SELECT u.*
+                FROM dbo.[{Table.TableName}] u
+                WHERE u.IsDeleted = 1;
             end"
     };
 
@@ -111,7 +130,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE Email = @Email AND IsDeleted = 0
+                WHERE u.Email = @Email AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
@@ -147,7 +166,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT TOP 1 u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE u.Id = @Id AND IsDeleted = 0
+                WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
@@ -200,7 +219,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE Username = @Username AND IsDeleted = 0
+                WHERE u.Username = @Username AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
@@ -290,8 +309,31 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     OR u.LastName LIKE '%' + @SearchTerm + '%'
                     OR u.Email LIKE '%' + @SearchTerm + '%'
                     OR u.Id LIKE '%' + @SearchTerm + '%'
-                AND IsDeleted = 0
+                AND u.IsDeleted = 0
                 ORDER BY u.Id;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    {
+        Table = Table,
+        Action = "SearchPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT u.*, s.AuthState as AuthState
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                WHERE u.FirstName LIKE '%' + @SearchTerm + '%'
+                    OR u.LastName LIKE '%' + @SearchTerm + '%'
+                    OR u.Email LIKE '%' + @SearchTerm + '%'
+                    OR u.Id LIKE '%' + @SearchTerm + '%'
+                AND u.IsDeleted = 0
+                ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
@@ -339,10 +381,10 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @NewId UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}]
-                SET Id = @NewId
+                UPDATE dbo.[{Table.TableName}] u
+                SET u.Id = @NewId
                 OUTPUT @NewId
-                WHERE Id = @CurrentId;
+                WHERE u.Id = @CurrentId;
             end"
     };
 
@@ -356,9 +398,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}]
-                SET CreatedBy = @CreatedBy
-                WHERE Id = @Id;
+                UPDATE dbo.[{Table.TableName}] u
+                SET u.CreatedBy = @CreatedBy
+                WHERE u.Id = @Id;
             end"
     };
 }

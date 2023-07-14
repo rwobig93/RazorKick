@@ -7,6 +7,7 @@ using Application.Models.Web;
 using Application.Requests.Identity.User;
 using Application.Responses.Identity;
 using Application.Services.Identity;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,6 @@ public static class UserEndpoints
 {
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
-        // TODO: Add user enable/disable endpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetAll, GetAllUsers).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetById, GetUserById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullById, GetFullUserById).ApiVersionOne();
@@ -29,8 +29,9 @@ public static class UserEndpoints
 
         app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Register, Register).ApiVersionOne();
-        // app.MapPost(ApiRouteConstants.Identity.User.Login, Login).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.ResetPassword, ResetPassword).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.Enable, EnableUser).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.Identity.User.Disable, DisableUser).ApiVersionOne();
         
         app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
     }
@@ -46,18 +47,6 @@ public static class UserEndpoints
         catch (Exception ex)
         {
             return await Result.FailAsync(ex.Message);
-        }
-    }
-
-    private static async Task<IResult<UserLoginResponse>> Login(UserLoginRequest loginRequest, IAppAccountService accountService)
-    {
-        try
-        {
-            return await accountService.LoginAsync(loginRequest);
-        }
-        catch (Exception ex)
-        {
-            return await Result<UserLoginResponse>.FailAsync(ex.Message);
         }
     }
 
@@ -252,6 +241,36 @@ public static class UserEndpoints
             var resetRequest = await accountService.ForceUserPasswordReset(userId);
             if (!resetRequest.Succeeded) return resetRequest;
             return await Result.SuccessAsync("Successfully reset password, email has been sent to the user to finish the reset");
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+
+    [Authorize(Policy = PermissionConstants.Users.Enable)]
+    private static async Task<IResult> EnableUser([FromQuery]Guid userId, IAppAccountService accountService)
+    {
+        try
+        {
+            var enableRequest = await accountService.SetAuthState(userId, AuthState.Enabled);
+            if (!enableRequest.Succeeded) return enableRequest;
+            return await Result.SuccessAsync("Successfully enabled the specified user account");
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+
+    [Authorize(Policy = PermissionConstants.Users.Disable)]
+    private static async Task<IResult> DisableUser([FromQuery]Guid userId, IAppAccountService accountService)
+    {
+        try
+        {
+            var disableRequest = await accountService.SetAuthState(userId, AuthState.Disabled);
+            if (!disableRequest.Succeeded) return disableRequest;
+            return await Result.SuccessAsync("Successfully disabled the specified user account");
         }
         catch (Exception ex)
         {

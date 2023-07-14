@@ -7,7 +7,9 @@ namespace Application.Repositories.Identity;
 public interface IAppPermissionRepository
 {
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync();
+    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchAsync(string searchTerm);
+    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppPermissionDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppPermissionDb>> GetByUserIdAndValueAsync(Guid userId, string claimValue);

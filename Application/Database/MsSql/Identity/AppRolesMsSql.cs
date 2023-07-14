@@ -37,8 +37,8 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id;
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Id = @Id;
             end"
     };
     
@@ -50,8 +50,24 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}];
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] r;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] r
+                ORDER BY r.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -64,10 +80,10 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 *
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id
-                ORDER BY Id;
+                SELECT TOP 1 r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Id = @Id
+                ORDER BY r.Id;
             end"
     };
     
@@ -80,10 +96,10 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(256)
             AS
             begin
-                SELECT TOP 1 *
-                FROM dbo.[{Table.TableName}]
-                WHERE Name = @Name
-                ORDER BY Id;
+                SELECT TOP 1 r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Name = @Name
+                ORDER BY r.Id;
             end"
     };
     
@@ -96,10 +112,10 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @NormalizedName NVARCHAR(256)
             AS
             begin
-                SELECT TOP 1 *
-                FROM dbo.[{Table.TableName}]
-                WHERE NormalizedName = @NormalizedName
-                ORDER BY Id;
+                SELECT TOP 1 r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.NormalizedName = @NormalizedName
+                ORDER BY r.Id;
             end"
     };
     
@@ -136,10 +152,31 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             begin
                 SET nocount on;
                 
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE Name LIKE '%' + @SearchTerm + '%'
-                    OR Description LIKE '%' + @SearchTerm + '%';
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Name LIKE '%' + @SearchTerm + '%'
+                    OR r.Description LIKE '%' + @SearchTerm + '%';
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    {
+        Table = Table,
+        Action = "SearchPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SET nocount on;
+                
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Name LIKE '%' + @SearchTerm + '%'
+                    OR r.Description LIKE '%' + @SearchTerm + '%'
+                ORDER BY r.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -179,9 +216,9 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}]
-                SET CreatedBy = @CreatedBy
-                WHERE Id = @Id;
+                UPDATE dbo.[{Table.TableName}] r
+                SET r.CreatedBy = @CreatedBy
+                WHERE r.Id = @Id;
             end"
     };
 }

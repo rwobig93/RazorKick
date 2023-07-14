@@ -33,8 +33,8 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id;
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Id = @Id;
             end"
     };
     
@@ -48,8 +48,8 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}]
-                WHERE OwnerId = @OwnerId;
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.OwnerId = @OwnerId;
             end"
     };
     
@@ -62,10 +62,10 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id
-                ORDER BY Id;
+                SELECT TOP 1 e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Id = @Id
+                ORDER BY e.Id;
             end"
     };
     
@@ -78,9 +78,9 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @OwnerId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE OwnerId = @OwnerId;
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.OwnerId = @OwnerId;
             end"
     };
     
@@ -93,9 +93,9 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(256)
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE Name = @Name;
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Name = @Name;
             end"
     };
     
@@ -107,8 +107,24 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}];
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT e.*
+                FROM dbo.[{Table.TableName}]
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -121,9 +137,26 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @Type int
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE Type = @Type;
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Type = @Type;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllOfTypePaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllOfTypePaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllOfTypePaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Type = @Type
+                ORDER BY e.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -137,9 +170,9 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @Type int
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE OwnerId = @OwnerId AND Type = @Type;
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.OwnerId = @OwnerId AND e.Type = @Type;
             end"
     };
     
@@ -153,9 +186,9 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 @Name NVARCHAR(256)
             AS
             begin
-                SELECT Id, OwnerId, Name, Value, Type
-                FROM dbo.[{Table.TableName}]
-                WHERE OwnerId = @OwnerId AND Name = @Name;
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.OwnerId = @OwnerId AND e.Name = @Name;
             end"
     };
     

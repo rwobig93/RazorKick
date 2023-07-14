@@ -7,12 +7,14 @@ namespace Application.Services.Identity;
 public interface IAppRoleService
 {
     Task<IResult<IEnumerable<AppRoleSlim>>> GetAllAsync();
+    Task<IResult<IEnumerable<AppRoleSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<AppRoleSlim?>> GetByIdAsync(Guid roleId);
     Task<IResult<AppRoleFull?>> GetByIdFullAsync(Guid roleId);
     Task<IResult<AppRoleSlim?>> GetByNameAsync(string roleName);
     Task<IResult<AppRoleFull?>> GetByNameFullAsync(string roleName);
     Task<IResult<IEnumerable<AppRoleSlim>>> SearchAsync(string searchText);
+    Task<IResult<IEnumerable<AppRoleSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false);
     Task<IResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false);
     Task<IResult> DeleteAsync(Guid id);

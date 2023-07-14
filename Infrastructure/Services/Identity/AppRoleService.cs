@@ -68,6 +68,22 @@ public class AppRoleService : IAppRoleService
         }
     }
 
+    public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        try
+        {
+            var roles = await _roleRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!roles.Success)
+                return await Result<IEnumerable<AppRoleSlim>>.FailAsync(roles.ErrorMessage);
+
+            return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(roles.Result?.ToSlims() ?? new List<AppRoleSlim>());
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<int>> GetCountAsync()
     {
         try
@@ -162,6 +178,25 @@ public class AppRoleService : IAppRoleService
         try
         {
             var searchResult = await _roleRepository.SearchAsync(searchText);
+            if (!searchResult.Success)
+                return await Result<IEnumerable<AppRoleSlim>>.FailAsync(searchResult.ErrorMessage);
+
+            var results = (searchResult.Result?.ToSlims() ?? new List<AppRoleSlim>())
+                .OrderBy(x => x.Name);
+
+            return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(results);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppRoleSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        try
+        {
+            var searchResult = await _roleRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
             if (!searchResult.Success)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(searchResult.ErrorMessage);
 

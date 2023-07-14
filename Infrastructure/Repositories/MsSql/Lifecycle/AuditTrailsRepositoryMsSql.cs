@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Database;
 using Application.Database.MsSql.Lifecycle;
 using Application.Database.MsSql.Shared;
+using Application.Helpers.Runtime;
 using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
@@ -72,7 +73,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
 
         try
         {
-            var offset = (pageNumber - 1) * pageSize;
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var allAuditTrails = await _database.LoadData<AuditTrailDb, dynamic>(
                 AuditTrailsMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
             actionReturn.Succeed(allAuditTrails);

@@ -1,6 +1,7 @@
 ﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Lifecycle;
@@ -107,6 +108,25 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allPermissions);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchAsync(string searchTerm)
     {
         DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
@@ -120,6 +140,25 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppPermissionsMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsMsSql.SearchPaginated, new {SearchTerm = searchTerm, Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

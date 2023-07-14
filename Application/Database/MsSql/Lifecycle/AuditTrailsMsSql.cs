@@ -55,7 +55,6 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    // TODO: Add pagination procedures to other tables, then force pagination for GetAll() methods or large return methods
     public static readonly MsSqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,

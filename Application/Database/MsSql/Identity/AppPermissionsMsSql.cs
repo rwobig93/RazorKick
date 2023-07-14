@@ -41,8 +41,8 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id;
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Id = @Id;
             end"
     };
     
@@ -84,8 +84,24 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}];
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                ORDER BY p.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -130,9 +146,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @Group NVARCHAR(256)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE [Group] = @Group;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.[Group] = @Group;
             end"
     };
     
@@ -145,9 +161,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @Access NVARCHAR(256)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE Access = @Access;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Access = @Access;
             end"
     };
     
@@ -160,9 +176,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE RoleId = @RoleId;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.RoleId = @RoleId;
             end"
     };
     
@@ -176,9 +192,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @ClaimValue NVARCHAR(1024)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE RoleId = @RoleId AND ClaimValue = @ClaimValue;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.RoleId = @RoleId AND p.ClaimValue = @ClaimValue;
             end"
     };
     
@@ -191,9 +207,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE UserId = @UserId;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.UserId = @UserId;
             end"
     };
     
@@ -207,9 +223,9 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
                 @ClaimValue NVARCHAR(1024)
             AS
             begin
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE UserId = @UserId AND ClaimValue = @ClaimValue;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.UserId = @UserId AND p.ClaimValue = @ClaimValue;
             end"
     };
     
@@ -252,12 +268,35 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SET nocount on;
                 
-                SELECT *
-                FROM dbo.[{Table.TableName}]
-                WHERE Description LIKE '%' + @SearchTerm + '%'
-                    OR RoleId LIKE '%' + @SearchTerm + '%'
-                    OR UserId LIKE '%' + @SearchTerm + '%'
-                    OR ClaimValue LIKE '%' + @SearchTerm + '%';
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Description LIKE '%' + @SearchTerm + '%'
+                    OR p.RoleId LIKE '%' + @SearchTerm + '%'
+                    OR p.UserId LIKE '%' + @SearchTerm + '%'
+                    OR p.ClaimValue LIKE '%' + @SearchTerm + '%';
+            end"
+    };
+    
+    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    {
+        Table = Table,
+        Action = "SearchPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SET nocount on;
+                
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Description LIKE '%' + @SearchTerm + '%'
+                    OR p.RoleId LIKE '%' + @SearchTerm + '%'
+                    OR p.UserId LIKE '%' + @SearchTerm + '%'
+                    OR p.ClaimValue LIKE '%' + @SearchTerm + '%'
+                ORDER BY p.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
