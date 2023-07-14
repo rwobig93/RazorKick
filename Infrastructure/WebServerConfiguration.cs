@@ -124,11 +124,6 @@ public static class WebServerConfiguration
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         
-        app.MapHealthChecks("/_health", new HealthCheckOptions()
-        {
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-        });
-        
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
@@ -143,6 +138,11 @@ public static class WebServerConfiguration
         
         app.MapControllers();
         app.ConfigureApiVersions();
+        
+        app.MapHealthChecks("/_health", new HealthCheckOptions()
+        {
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
     }
 
     private static void ConfigureApiVersions(this IEndpointRouteBuilder app)

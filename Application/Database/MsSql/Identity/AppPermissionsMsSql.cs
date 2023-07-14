@@ -41,8 +41,8 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] p
-                WHERE p.Id = @Id;
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     

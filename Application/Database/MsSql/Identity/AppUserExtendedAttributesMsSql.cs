@@ -33,8 +33,8 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] e
-                WHERE e.Id = @Id;
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -48,8 +48,8 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] e
-                WHERE e.OwnerId = @OwnerId;
+                FROM dbo.[{Table.TableName}]
+                WHERE OwnerId = @OwnerId;
             end"
     };
     
@@ -111,22 +111,6 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 FROM dbo.[{Table.TableName}] e;
             end"
     };
-
-    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
-    {
-        Table = Table,
-        Action = "GetAllPaginated",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT e.*
-                FROM dbo.[{Table.TableName}]
-                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
-    };
     
     public static readonly MsSqlStoredProcedure GetAllOfType = new()
     {
@@ -140,23 +124,6 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                 SELECT e.*
                 FROM dbo.[{Table.TableName}] e
                 WHERE e.Type = @Type;
-            end"
-    };
-
-    public static readonly MsSqlStoredProcedure GetAllOfTypePaginated = new()
-    {
-        Table = Table,
-        Action = "GetAllOfTypePaginated",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllOfTypePaginated]
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT e.*
-                FROM dbo.[{Table.TableName}] e
-                WHERE e.Type = @Type
-                ORDER BY e.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

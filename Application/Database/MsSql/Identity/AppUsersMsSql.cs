@@ -47,9 +47,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @DeletedOn datetime2
             AS
             begin
-                UPDATE dbo.[{Table.TableName}] u
-                SET u.IsDeleted = 1, u.DeletedOn = @DeletedOn
-                WHERE u.Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                WHERE Id = @Id;
             end"
     };
 
@@ -381,10 +381,10 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @NewId UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}] u
-                SET u.Id = @NewId
+                UPDATE dbo.[{Table.TableName}]
+                SET Id = @NewId
                 OUTPUT @NewId
-                WHERE u.Id = @CurrentId;
+                WHERE Id = @CurrentId;
             end"
     };
 
@@ -398,9 +398,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}] u
-                SET u.CreatedBy = @CreatedBy
-                WHERE u.Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET CreatedBy = @CreatedBy
+                WHERE Id = @Id;
             end"
     };
 }

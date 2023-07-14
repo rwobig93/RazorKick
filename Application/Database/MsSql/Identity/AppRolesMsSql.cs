@@ -37,8 +37,8 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] r
-                WHERE r.Id = @Id;
+                FROM dbo.[{Table.TableName}]
+                WHERE Id = @Id;
             end"
     };
     
@@ -216,9 +216,9 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @CreatedBy UNIQUEIDENTIFIER
             AS
             begin
-                UPDATE dbo.[{Table.TableName}] r
-                SET r.CreatedBy = @CreatedBy
-                WHERE r.Id = @Id;
+                UPDATE dbo.[{Table.TableName}]
+                SET CreatedBy = @CreatedBy
+                WHERE Id = @Id;
             end"
     };
 }
