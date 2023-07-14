@@ -201,12 +201,11 @@ public static class DependencyInjection
                 services.AddMsSqlRepositories();
                 break;
             case DatabaseProviderType.Postgresql:
-                throw new NotImplementedException("Postgres hasn't been implemented yet, please use a supported Database provider");
+                throw new NotSupportedException("Postgres hasn't been implemented yet, please use a supported Database provider");
             case DatabaseProviderType.MySql:
-                throw new NotImplementedException("MySql hasn't been implemented yet, please use a supported Database provider");
+                throw new NotSupportedException("MySql hasn't been implemented yet, please use a supported Database provider");
             default:
-                services.AddMsSqlRepositories();
-                break;
+                throw new NotSupportedException("You entered an unsupported database provider, please enter a supported one");
         }
     }
 
