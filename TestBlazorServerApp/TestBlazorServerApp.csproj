@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
+        <RootNamespace>TestBlazorServerApp</RootNamespace>
+        <AssemblyName>TestBlazorServerApp</AssemblyName>
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>TestBlazorServerApp.xml</DocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

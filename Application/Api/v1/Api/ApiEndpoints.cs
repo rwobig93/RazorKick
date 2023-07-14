@@ -8,8 +8,15 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Application.Api.v1.Api;
 
+/// <summary>
+/// Endpoints dealing with overall API integration functionality
+/// </summary>
 public static class ApiEndpoints
 {
+    /// <summary>
+    /// Registers the API endpoints
+    /// </summary>
+    /// <param name="app">Running application</param>
     public static void MapEndpointsApi(this IEndpointRouteBuilder app)
     {
         // TODO: See https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/openapi?view=aspnetcore-7.0&source=recommendations
@@ -20,9 +27,9 @@ public static class ApiEndpoints
     /// Gets a service account Json Web Token (JWT) for use in API calls
     /// </summary>
     /// <param name="tokenRequest">Credentials to authenticate</param>
+    /// <param name="accountService"></param>
     /// <returns>JWT with an expiration datetime in GMT/UTC</returns>
-    [AllowAnonymous]
-    private static async Task<IResult<ApiTokenResponse>> GetToken(ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
+    public static async Task<IResult<ApiTokenResponse>> GetToken(ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
     {
         try
         {

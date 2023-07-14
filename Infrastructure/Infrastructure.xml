@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="M:Infrastructure.Services.Identity.MfaService.GenerateOtpAuthString(System.String,System.String,System.String,Domain.Enums.Integration.TotpAlgorithm,System.Int32,System.Int32)">
+            <summary>
+            Generate TOTP authentication string for use in authenticator apps like Google Authenticator and Authy
+            </summary>
+            <param name="appName">Application / Issuer Name</param>
+            <param name="accountIdentifier">Account identifier like Username or Email Address</param>
+            <param name="totpSecret">Secret Key used to seed TOTP key generation</param>
+            <param name="algorithm">TOTP algorithm to use | NOTE: Most providers only support SHA1</param>
+            <param name="digits">TOTP code size in numbers to generate | NOTE: Some providers only support 6</param>
+            <param name="secondsAlive">Time in seconds for the TOTP code generated to be valid | NOTE: Some providers only support 30</param>
+            <returns>Generated TOTP authentication string primarily used to generate a QR Code for registering a TOTP generator</returns>
+        </member>
+    </members>
+</doc>

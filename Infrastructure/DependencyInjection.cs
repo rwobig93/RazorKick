@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Application.Constants.Identity;
 using Application.Filters;
@@ -231,6 +232,20 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(x =>
         {
+            // include all project's xml comments
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.IsDynamic) continue;
+            
+                var xmlFile = $"{assembly.GetName().Name}.xml";
+                var xmlPath = Path.Combine(baseDirectory, xmlFile);
+                if (File.Exists(xmlPath))
+                {
+                    x.IncludeXmlComments(xmlPath);
+                }
+            }
+            
             x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
             {
                 Name = "Authorization",
