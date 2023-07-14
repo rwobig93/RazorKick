@@ -26,10 +26,10 @@ public static class AppThemes
         Id = AppThemeId.Dark,
         FriendlyName = "Dark",
         Description = "Easy on the eyes and awesome, don't forget awesome",
-        Icon = Icons.Filled.DarkMode,
+        Icon = Icons.Material.Filled.DarkMode,
         Theme = new MudTheme()
         {
-            Palette = new Palette()
+            Palette = new PaletteDark()
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
@@ -60,10 +60,10 @@ public static class AppThemes
         Id = AppThemeId.Darker,
         FriendlyName = "Darker",
         Description = "I get it, you wanna go darker, I don't blame you",
-        Icon = Icons.Outlined.Lightbulb,
+        Icon = Icons.Material.Outlined.Lightbulb,
         Theme = new MudTheme()
         {
-            Palette = new Palette()
+            Palette = new PaletteDark()
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
@@ -94,10 +94,10 @@ public static class AppThemes
         Id = AppThemeId.Hacker,
         FriendlyName = "Hackerman",
         Description = "I'm not normal and I never will be, no matter what world I'm in",
-        Icon = Icons.Filled.Code,
+        Icon = Icons.Material.Filled.Code,
         Theme = new MudTheme()
         {
-            Palette = new Palette()
+            Palette = new PaletteDark()
             {
                 Primary = "#00bf00",
                 Secondary = "#800080",
@@ -128,10 +128,10 @@ public static class AppThemes
         Id = AppThemeId.Bright,
         FriendlyName = "Bright",
         Description = "I mean if you're into that sort of thing, we still gave you that option",
-        Icon = Icons.Filled.WbSunny,
+        Icon = Icons.Material.Filled.WbSunny,
         Theme = new MudTheme()
         {
-            Palette = new Palette()
+            Palette = new PaletteLight()
             {
                 Primary = "#1E88E5",
                 AppbarBackground = "#1E88E5",
@@ -150,7 +150,7 @@ public static class AppThemes
         Id = AppThemeId.CustomOne,
         FriendlyName = "Custom 1",
         Description = "First custom theme",
-        Icon = Icons.Filled.LooksOne,
+        Icon = Icons.Material.Filled.LooksOne,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -163,7 +163,7 @@ public static class AppThemes
         Id = AppThemeId.CustomTwo,
         FriendlyName = "Custom 2",
         Description = "Second custom theme",
-        Icon = Icons.Filled.LooksTwo,
+        Icon = Icons.Material.Filled.LooksTwo,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -176,7 +176,7 @@ public static class AppThemes
         Id = AppThemeId.CustomThree,
         FriendlyName = "Custom 3",
         Description = "Third custom theme",
-        Icon = Icons.Filled.Looks3,
+        Icon = Icons.Material.Filled.Looks3,
         Theme = new MudTheme()
         {
             Typography = AppTypographies.DefaultTypography,
@@ -206,6 +206,7 @@ public static class AppThemes
 
     public static AppThemeCustom GetPreferenceCustomThemeFromId(AppUserPreferenceFull userPreference, AppThemeId themeId)
     {
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         return themeId switch
         {
             AppThemeId.CustomOne => userPreference.CustomThemeOne,

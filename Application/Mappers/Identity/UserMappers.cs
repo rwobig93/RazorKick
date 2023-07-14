@@ -1,5 +1,4 @@
-﻿using Application.Helpers.Identity;
-using Application.Models.Identity.Permission;
+﻿using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -181,8 +180,6 @@ public static class UserMappers
     
     public static AppUserCreate ToCreateObject(this UserCreateRequest appUser)
     {
-        AccountHelpers.GenerateHashAndSalt(appUser.Password, out var salt, out var hash);
-        
         return new AppUserCreate
         {
             Username = appUser.Username,
@@ -192,7 +189,7 @@ public static class UserMappers
             PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
-            ProfilePictureDataUrl = string.Empty,
+            ProfilePictureDataUrl = "",
             CreatedBy = Guid.Empty,
             CreatedOn = DateTime.Now,
             LastModifiedBy = Guid.Empty,
@@ -333,9 +330,9 @@ public static class UserMappers
             OwnerId = preferenceFull.OwnerId,
             ThemePreference = preferenceFull.ThemePreference,
             DrawerDefaultOpen = preferenceFull.DrawerDefaultOpen,
-            CustomThemeOne = string.Empty,
-            CustomThemeTwo = string.Empty,
-            CustomThemeThree = string.Empty
+            CustomThemeOne = "",
+            CustomThemeTwo = "",
+            CustomThemeThree = ""
         };
     }
     
@@ -659,6 +656,33 @@ public static class UserMappers
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
             Permissions = new List<AppPermissionSlim>(),
             AuthState = userDb.AuthState
+        };
+    }
+
+    public static AppUserFullDb ToUserFullDb(this AppUserDb userDb)
+    {
+        return new AppUserFullDb
+        {
+            Id = userDb.Id,
+            Username = userDb.Username,
+            Email = userDb.Email,
+            EmailConfirmed = userDb.EmailConfirmed,
+            PhoneNumber = userDb.PhoneNumber,
+            PhoneNumberConfirmed = userDb.PhoneNumberConfirmed,
+            FirstName = userDb.FirstName,
+            LastName = userDb.LastName,
+            CreatedBy = userDb.CreatedBy,
+            ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
+            CreatedOn = userDb.CreatedOn,
+            LastModifiedBy = userDb.LastModifiedBy,
+            LastModifiedOn = userDb.LastModifiedOn,
+            IsDeleted = userDb.IsDeleted,
+            DeletedOn = userDb.DeletedOn,
+            AccountType = userDb.AccountType,
+            Roles = new List<AppRoleDb>(),
+            ExtendedAttributes = new List<AppUserExtendedAttributeDb>(),
+            Permissions = new List<AppPermissionDb>(),
+            AuthState = AuthState.Unknown
         };
     }
 }

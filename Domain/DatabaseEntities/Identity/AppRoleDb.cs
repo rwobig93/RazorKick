@@ -14,6 +14,6 @@ public class AppRoleDb : IdentityRole<Guid>, IAuditableEntity<Guid>
 
     public override string ToString()
     {
-        return Name;
+        return Name ?? "";
     }
 }

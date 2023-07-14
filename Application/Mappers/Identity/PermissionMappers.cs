@@ -1,4 +1,5 @@
 ﻿using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Requests.Identity.Permission;
 using Application.Responses.Identity;
@@ -32,8 +33,8 @@ public static class PermissionMappers
         {
             RoleId = permissionDb.RoleId,
             UserId = permissionDb.UserId,
-            ClaimType = permissionDb.ClaimType,
-            ClaimValue = permissionDb.ClaimValue,
+            ClaimType = permissionDb.ClaimType ?? "",
+            ClaimValue = permissionDb.ClaimValue ?? "",
             Name = permissionDb.Name,
             Group = permissionDb.Group,
             Access = permissionDb.Access,
@@ -56,7 +57,7 @@ public static class PermissionMappers
         {
             RoleId = permissionSlim.RoleId,
             UserId = permissionSlim.UserId,
-            ClaimType = permissionSlim.ClaimType,
+            ClaimType = permissionSlim.ClaimType ?? "",
             ClaimValue = permissionSlim.ClaimValue,
             Name = permissionSlim.Name,
             Group = permissionSlim.Group,
@@ -133,8 +134,8 @@ public static class PermissionMappers
         
         return new AppPermissionCreate
         {
-            RoleId = default,
-            UserId = default,
+            RoleId = GuidHelpers.GetMax(),
+            UserId = GuidHelpers.GetMax(),
             ClaimType = ApplicationClaimTypes.Permission,
             ClaimValue = permissionValue,
             Name = permissionName,
@@ -160,7 +161,7 @@ public static class PermissionMappers
             UserId = appPermissionDb.UserId,
             RoleId = appPermissionDb.RoleId,
             ClaimType = appPermissionDb.ClaimType,
-            ClaimValue = appPermissionDb.ClaimValue,
+            ClaimValue = appPermissionDb.ClaimValue ?? "",
             Name = appPermissionDb.Name,
             Group = appPermissionDb.Group,
             Access = appPermissionDb.Access,

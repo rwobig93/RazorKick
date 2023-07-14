@@ -5,20 +5,19 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>10</LangVersion>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.0.123" />
-      <PackageReference Include="Hangfire" Version="1.7.30" />
-      <PackageReference Include="Hangfire.Core" Version="1.7.30" />
+      <PackageReference Include="Dapper" Version="2.0.143" />
+      <PackageReference Include="Hangfire" Version="1.8.3" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
       <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="5.1.1" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
       <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
     </ItemGroup>
 

@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Lifecycle;
@@ -6,12 +7,20 @@ using Application.Models.Web;
 using Application.Responses.Lifecycle;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Lifecycle;
 
+/// <summary>
+/// API endpoints for application audit trails
+/// </summary>
 public static class AuditEndpoints
 {
+    /// <summary>
+    /// Register API endpoints for audit
+    /// </summary>
+    /// <param name="app"></param>
     public static void MapEndpointsAudit(this IEndpointRouteBuilder app)
     {
         app.MapGet(ApiRouteConstants.Lifecycle.Audit.GetAll, GetAllTrails).ApiVersionOne();
@@ -21,6 +30,12 @@ public static class AuditEndpoints
         app.MapDelete(ApiRouteConstants.Lifecycle.Audit.Delete, Delete).ApiVersionOne();
     }
 
+    /// <summary>
+    /// Get all audit trails
+    /// </summary>
+    /// <param name="auditService"></param>
+    /// <returns>List of all audit trails</returns>
+    [Authorize(PermissionConstants.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAllTrails(IAuditTrailService auditService)
     {
         try
@@ -37,6 +52,13 @@ public static class AuditEndpoints
         }
     }
 
+    /// <summary>
+    /// Get the specified audit trail
+    /// </summary>
+    /// <param name="id">GUID ID of the audit trail</param>
+    /// <param name="auditService"></param>
+    /// <returns>Detail regarding the specified audit trail</returns>
+    [Authorize(PermissionConstants.Audit.View)]
     private static async Task<IResult<AuditTrailResponse>> GetAuditTrailById([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -56,6 +78,13 @@ public static class AuditEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all audit trails where an entity was modified by a specific user
+    /// </summary>
+    /// <param name="id">GUID ID of the user modifying entities</param>
+    /// <param name="auditService"></param>
+    /// <returns>List of all audit trails where an entity was modified by the specified user</returns>
+    [Authorize(PermissionConstants.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAuditTrailsByChangedBy([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -72,6 +101,13 @@ public static class AuditEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all audit trails for a specific entity
+    /// </summary>
+    /// <param name="id">GUID ID of the entity that was modified</param>
+    /// <param name="auditService"></param>
+    /// <returns>List of all audit trails where the specified entity ID is the modified entity</returns>
+    [Authorize(PermissionConstants.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAuditTrailsByRecordId([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -88,6 +124,22 @@ public static class AuditEndpoints
         }
     }
 
+    /// <summary>
+    /// Delete audit records older than a specified threshold
+    /// </summary>
+    /// <param name="olderThan">
+    /// Timeframe of records to keep, any records older than this will be deleted
+    /// 
+    /// Options:
+    ///  - OneMonth
+    ///  - ThreeMonths
+    ///  - SixMonths
+    ///  - OneYear
+    ///  - TenYears
+    /// </param>
+    /// <param name="auditService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.Audit.DeleteOld)]
     private static async Task<IResult> Delete(CleanupTimeframe olderThan, IAuditTrailService auditService)
     {
         try

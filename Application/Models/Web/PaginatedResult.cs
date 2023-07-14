@@ -17,6 +17,7 @@ public class PaginatedResult<T> : Result
         PageSize = pageSize;
         TotalPages = (int)Math.Ceiling(count / (double)pageSize);
         TotalCount = count;
+        Messages = messages;
     }
 
     public static PaginatedResult<T> Failure(List<string> messages)

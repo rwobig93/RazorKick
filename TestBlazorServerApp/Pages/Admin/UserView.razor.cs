@@ -155,7 +155,7 @@ public partial class UserView
 
         var dialog = DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -169,7 +169,7 @@ public partial class UserView
 
         var dialog = DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {
             await GetViewingUser();
             StateHasChanged();

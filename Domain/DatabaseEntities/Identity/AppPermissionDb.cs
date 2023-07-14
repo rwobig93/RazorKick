@@ -1,12 +1,14 @@
 ﻿using Domain.Contracts;
-using Microsoft.AspNetCore.Identity;
 
 namespace Domain.DatabaseEntities.Identity;
 
-public class AppPermissionDb : IdentityRoleClaim<Guid>, IAuditableEntity<Guid>
+public class AppPermissionDb : IAuditableEntity<Guid>
 {
-    public new Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; } = new(Guid.Empty.ToByteArray());
+    public Guid RoleId { get; set; } = new (Guid.Empty.ToByteArray());
+    public string? ClaimType { get; set; }
+    public string? ClaimValue { get; set; }
     public string Name { get; set; } = "";
     public string Group { get; set; } = "";
     public string Access { get; set; } = "";

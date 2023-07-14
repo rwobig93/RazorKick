@@ -24,7 +24,6 @@ public partial class AuditTrailAdmin
     private int _totalTrails;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
-    private bool _canSearchTrails;
     private bool _canExportTrails;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -40,7 +39,7 @@ public partial class AuditTrailAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canSearchTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Search);
+        await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Search);
         _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Export);
     }
     

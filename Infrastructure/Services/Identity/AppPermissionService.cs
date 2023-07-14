@@ -3,21 +3,16 @@ using Application.Models.Identity.Permission;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Application.Services.System;
 
 namespace Infrastructure.Services.Identity;
 
 public class AppPermissionService : IAppPermissionService
 {
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
 
-    public AppPermissionService(IAppPermissionRepository permissionRepository, IDateTimeService dateTime, IRunningServerState serverState)
+    public AppPermissionService(IAppPermissionRepository permissionRepository)
     {
         _permissionRepository = permissionRepository;
-        _dateTime = dateTime;
-        _serverState = serverState;
     }
 
     public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAsync()
@@ -326,11 +321,11 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult> DeleteAsync(Guid permissionId)
+    public async Task<IResult> DeleteAsync(Guid permissionId, Guid? modifyingUser)
     {
         try
         {
-            var deleteRequest = await _permissionRepository.DeleteAsync(permissionId);
+            var deleteRequest = await _permissionRepository.DeleteAsync(permissionId, modifyingUser);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
 

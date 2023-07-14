@@ -29,7 +29,11 @@ public static class ApiEndpoints
     /// <param name="tokenRequest">Credentials to authenticate</param>
     /// <param name="accountService"></param>
     /// <returns>JWT with an expiration datetime in GMT/UTC</returns>
-    public static async Task<IResult<ApiTokenResponse>> GetToken(ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
+    /// <remarks>
+    /// - Expiration time returned is in GMT/UTC
+    /// </remarks>
+    [AllowAnonymous]
+    private static async Task<IResult<ApiTokenResponse>> GetToken(ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
     {
         try
         {

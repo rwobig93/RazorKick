@@ -48,6 +48,7 @@ public partial class RoleView
             if (firstRender)
             {
                 ParseParametersFromUri();
+                await GetClientTimezone();
                 await GetViewingRole();
                 await GetPermissions();
                 StateHasChanged();
@@ -134,7 +135,7 @@ public partial class RoleView
 
         var dialog = DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -148,7 +149,7 @@ public partial class RoleView
 
         var dialog = DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && (bool)dialogResult.Data)
+        if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {
             await GetViewingRole();
             StateHasChanged();

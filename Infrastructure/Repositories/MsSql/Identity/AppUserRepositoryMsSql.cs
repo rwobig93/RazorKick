@@ -156,6 +156,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    private async Task<AppUserDb?> GetAnonymousUser()
+    {
+        var anonymousUser = (await _database.LoadData<AppUserDb, dynamic>(
+            AppUsersMsSql.GetById, new {Id = Guid.Empty})).FirstOrDefault();
+        return anonymousUser;
+    }
+
     public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid userId)
     {
         DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
@@ -180,13 +187,21 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
-                AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
+            if (id == Guid.Empty)
+            {
+                var anonUser = await GetAnonymousUser();
+                actionReturn.Succeed(anonUser!.ToUserFullDb());
+            }
+            else
+            {
+                var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
+                    AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
 
-            var foundSecurity = (await GetSecurityAsync(foundUser!.Id)).Result;
-            foundUser.AuthState = foundSecurity!.AuthState;
+                var foundSecurity = (await GetSecurityAsync(foundUser!.Id)).Result;
+                foundUser.AuthState = foundSecurity!.AuthState;
             
-            actionReturn.Succeed(foundUser);
+                actionReturn.Succeed(foundUser);   
+            }
         }
         catch (Exception ex)
         {
@@ -368,14 +383,16 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid userId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid userId, Guid? modifyingUser)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            modifyingUser ??= Guid.Empty;
+
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            var userUpdate = new AppUserUpdate() {Id = userId};
+            var userUpdate = new AppUserUpdate() {Id = userId, LastModifiedBy = modifyingUser};
             await UpdateAsync(userUpdate);
             await _database.SaveData(AppUsersMsSql.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 

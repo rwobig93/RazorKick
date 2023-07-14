@@ -62,6 +62,7 @@ public static class PermissionConstants
         public const string View = "Permissions.System.Audit.View";
         public const string Export = "Permissions.System.Audit.Export";
         public const string Search = "Permissions.System.Audit.Search";
+        public const string DeleteOld = "Permissions.System.Audit.DeleteOld";
     }
     
     /// <summary>

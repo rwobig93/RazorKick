@@ -279,14 +279,16 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            modifyingUser ??= Guid.Empty;
+            
             // Update role w/ a property that is modified so we get the last updated on/by for the deleting user
-            var roleUpdate = new AppRoleUpdate() {Id = id};
+            var roleUpdate = new AppRoleUpdate() {Id = id, LastModifiedBy = modifyingUser};
             await UpdateAsync(roleUpdate);
             await _database.SaveData(AppRolesMsSql.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
 

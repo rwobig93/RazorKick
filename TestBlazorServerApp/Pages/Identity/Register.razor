@@ -6,7 +6,7 @@
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
         <MudItem xs="12" sm="12" md="12">
             <div class="d-flex justify-center mt-4">
-                <MudIcon Icon="@Icons.Outlined.BlurCircular" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+                <MudIcon Icon="@Icons.Material.Outlined.BlurCircular" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
             </div>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
@@ -35,7 +35,7 @@
             <MudTextField @bind-Value="DesiredPassword" Label="Desired Password" Variant="Variant.Outlined" InputType="@_passwordInput"
                           Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
                           AdornmentAriaLabel="Show Desired Password"/>
-            <MudMenu Icon="@Icons.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
+            <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
                 <MudText Align="Align.Left" Class="mx-4">Minimum Length:     @_passwordRequirements.MinimumLength</MudText>
                 <MudText Align="Align.Left" Class="mx-4">Requires Special:   @_passwordRequirements.RequiresSpecialCharacters</MudText>
                 <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>

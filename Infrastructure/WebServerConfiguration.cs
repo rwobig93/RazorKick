@@ -186,6 +186,6 @@ public static class WebServerConfiguration
         var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
         
         hangfireJobs.AddOrUpdate("UserHousekeeping", () =>
-            jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely, TimeZoneInfo.Utc);
+            jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
     }
 }

@@ -16,7 +16,7 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false);
     Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> DeleteAsync(Guid id);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser);
     Task<DatabaseActionResult> SetCreatedById(Guid roleId, Guid createdById);
     Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, string roleName);

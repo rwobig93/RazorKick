@@ -260,7 +260,7 @@ public class AppUserService : IAppUserService
     {
         try
         {
-            var deleteUser = await _userRepository.DeleteAsync(userId);
+            var deleteUser = await _userRepository.DeleteAsync(userId, Guid.Empty);
             if (!deleteUser.Success)
                 return await Result.FailAsync(deleteUser.ErrorMessage);
 

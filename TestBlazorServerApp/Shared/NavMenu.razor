@@ -7,13 +7,13 @@
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewCounter)
         {
-            <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.AddCircleOutline">
+            <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AddCircleOutline">
                 Counter
             </MudNavLink>
         }
         @if (_canViewWeather)
         {
-            <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WbSunny">
+            <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WbSunny">
                 Weather Forecasts
             </MudNavLink>
         }
@@ -29,7 +29,7 @@
         }
         @if (_canViewJobs)
         {
-            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Outlined.WorkOutline">
+            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
                 Jobs Dashboard
             </MudNavLink>
         }

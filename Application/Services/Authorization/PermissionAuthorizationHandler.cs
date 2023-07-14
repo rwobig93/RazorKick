@@ -36,7 +36,6 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
         if (!context.User.Claims.Any())
         {
-            // throw new AuthenticationException("You are currently not authenticated, please authenticate before trying again");
             context.Fail();
             return;
         }

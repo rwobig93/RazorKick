@@ -69,7 +69,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             var currentPermissionState = await GetByIdAsync(updatePermission.Id);
             var auditDiff = AuditHelpers.GetAuditDiff(currentPermissionState.Result!.ToUpdate(), updatePermission);
             
-            updatePermission.LastModifiedBy = currentUserId ?? updatePermission.LastModifiedBy;
+            updatePermission.LastModifiedBy = currentUserId ?? updatePermission.LastModifiedBy ?? Guid.Empty;
             updatePermission.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             // If no changes were detected for before and after we won't create an audit trail
@@ -365,17 +365,19 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         {
             if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
                 throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
-            if (createObject.UserId != Guid.Empty && createObject.RoleId != Guid.Empty)
+            if (createObject.UserId == GuidHelpers.GetMax() && createObject.RoleId == GuidHelpers.GetMax())
+                throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
+            if (createObject.UserId != GuidHelpers.GetMax() && createObject.RoleId != GuidHelpers.GetMax())
                 throw new Exception("Each permission assignment request can only be made for a User or Role, not both at the same time");
 
-            if (createObject.UserId != Guid.Empty)
+            if (createObject.UserId != GuidHelpers.GetMax())
             {
                 var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                     AppUsersMsSql.GetById, new {Id = createObject.UserId})).FirstOrDefault();
                 if (foundUser is null) throw new Exception("UserId provided is invalid");
             }
             
-            if (createObject.RoleId != Guid.Empty)
+            if (createObject.RoleId != GuidHelpers.GetMax())
             {
                 var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
                     AppRolesMsSql.GetById, new {Id = createObject.RoleId})).FirstOrDefault();
@@ -421,14 +423,16 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            modifyingUser ??= Guid.Empty;
+            
             // Update permission w/ a property that is modified so we get the last updated on/by for the deleting user
-            var permissionUpdate = new AppPermissionUpdate() {Id = id};
+            var permissionUpdate = new AppPermissionUpdate() {Id = id, LastModifiedBy = modifyingUser};
             await UpdateAuditing(permissionUpdate);
             await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
 

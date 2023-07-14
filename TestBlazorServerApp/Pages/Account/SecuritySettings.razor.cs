@@ -183,7 +183,7 @@ public partial class SecuritySettings
             _mfaRegisterCode = MfaService.GenerateKeyString();
             var appName = ServerState.ApplicationName;
             var qrCodeContent =
-                MfaService.GenerateOtpAuthString(appName, CurrentUser.Email!, _mfaRegisterCode);
+                MfaService.GenerateOtpAuthString(appName, CurrentUser.Email, _mfaRegisterCode);
             _qrCodeImageSource = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
             
         }
@@ -215,7 +215,7 @@ public partial class SecuritySettings
     private async Task ValidateTotpCode()
     {
         // 56172502 | 3.11.28 AM CT, Saturday May 27th
-        var totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaRegisterCode, out var timeStampMatched);
+        var totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaRegisterCode, out _);
         if (!totpCorrect)
         {
             Snackbar.Add("TOTP code provided is incorrect, please try again", Severity.Error);

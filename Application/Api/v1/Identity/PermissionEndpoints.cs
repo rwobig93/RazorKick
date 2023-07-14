@@ -1,4 +1,5 @@
 using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
@@ -6,12 +7,20 @@ using Application.Models.Web;
 using Application.Requests.Identity.Permission;
 using Application.Responses.Identity;
 using Application.Services.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Identity;
 
+/// <summary>
+/// API endpoints for application permissions
+/// </summary>
 public static class PermissionEndpoints
 {
+    /// <summary>
+    /// Register the API endpoints
+    /// </summary>
+    /// <param name="app"></param>
     public static void MapEndpointsPermissions(this IEndpointRouteBuilder app)
     {
         // Permissions
@@ -32,6 +41,12 @@ public static class PermissionEndpoints
         app.MapPost(ApiRouteConstants.Identity.Permission.DoesRoleHavePermission, DoesRoleHavePermission).ApiVersionOne();
     }
 
+    /// <summary>
+    /// Get all application permissions for roles and users
+    /// </summary>
+    /// <param name="permissionService"></param>
+    /// <returns>List of application permissions for both roles and users</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionService permissionService)
     {
         try
@@ -48,6 +63,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get a specific permission
+    /// </summary>
+    /// <param name="permissionId">GUID ID of the desired permission to retrieve</param>
+    /// <param name="permissionService"></param>
+    /// <returns>Permission object for a user or role</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<PermissionResponse>> GetPermission([FromQuery]Guid permissionId, IAppPermissionService permissionService)
     {
         try
@@ -67,7 +89,15 @@ public static class PermissionEndpoints
         }
     }
 
-    private static async Task<IResult> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionService permissionService)
+    /// <summary>
+    /// Add the specified permission to the specified role
+    /// </summary>
+    /// <param name="permissionRequest">Detail used to map a permission to a role</param>
+    /// <param name="permissionService"></param>
+    /// <returns>Guid ID of the permission added</returns>
+    [Authorize(PermissionConstants.Permissions.Add)]
+    private static async Task<IResult<Guid>> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionService 
+    permissionService)
     {
         try
         {
@@ -81,6 +111,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Add the specified permission to the specified user
+    /// </summary>
+    /// <param name="permissionRequest">Detail used to map a permission to a user</param>
+    /// <param name="permissionService"></param>
+    /// <returns>GUID ID of the permission added</returns>
+    [Authorize(PermissionConstants.Permissions.Add)]
     private static async Task<IResult<Guid>> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionService 
     permissionService)
     {
@@ -96,6 +133,14 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get whether a user has a specific permission
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="permissionId">GUID ID of the permission</param>
+    /// <param name="permissionService"></param>
+    /// <returns>Boolean indicating whether the specified user has the specified permission</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<bool>> DoesUserHavePermission([FromQuery]Guid userId, [FromQuery]Guid permissionId, 
     IAppPermissionService permissionService)
     {
@@ -113,6 +158,14 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get whether a role has a specific permission
+    /// </summary>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="permissionId">GUID ID of the permission</param>
+    /// <param name="permissionService"></param>
+    /// <returns>Boolean indicating whether the specified role has the specified permission</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<bool>> DoesRoleHavePermission([FromQuery]Guid roleId, [FromQuery]Guid permissionId, 
         IAppPermissionService permissionService)
     {
@@ -130,6 +183,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Remove the specified permission from the specified user
+    /// </summary>
+    /// <param name="permissionRequest">Detail used to remove a permission from a user</param>
+    /// <param name="permissionService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.Permissions.Remove)]
     private static async Task<IResult> RemovePermissionFromUser(PermissionRemoveFromUserRequest permissionRequest,
         IAppPermissionService permissionService)
     {
@@ -140,7 +200,7 @@ public static class PermissionEndpoints
             if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
             if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id);
+            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id, Guid.Empty);
             if (!permissionResponse.Succeeded) return permissionResponse;
             
             return await Result.SuccessAsync("Successfully removed permission from user!");
@@ -151,6 +211,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Remove the specified permission from the specified role 
+    /// </summary>
+    /// <param name="permissionRequest">Detail used to remove a permission from a role</param>
+    /// <param name="permissionService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.Permissions.Remove)]
     private static async Task<IResult> RemovePermissionFromRole(PermissionRemoveFromRoleRequest permissionRequest,
         IAppPermissionService permissionService)
     {
@@ -161,7 +228,7 @@ public static class PermissionEndpoints
             if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
             if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
             
-            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id);
+            var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id, Guid.Empty);
             if (!permissionResponse.Succeeded) return permissionResponse;
 
             return await Result<bool>.SuccessAsync("Successfully removed permission from role!");
@@ -172,6 +239,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get only permissions assigned directly to the specified user
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="permissionService"></param>
+    /// <returns>List of directly assigned permissions to the specified user</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetDirectPermissionsForUser([FromQuery]Guid userId,
         IAppPermissionService permissionService)
     {
@@ -189,6 +263,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all permissions for a user, including those inherited from assigned roles
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="permissionService"></param>
+    /// <returns>List of all permissions for a user, including those inherited from roles</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForUser([FromQuery]Guid userId,
         IAppPermissionService permissionService)
     {
@@ -206,6 +287,13 @@ public static class PermissionEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all permissions assigned to the specified role
+    /// </summary>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="permissionService"></param>
+    /// <returns>List of permissions assigned to the specified role</returns>
+    [Authorize(PermissionConstants.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForRole([FromQuery]Guid roleId,
         IAppPermissionService permissionService)
     {

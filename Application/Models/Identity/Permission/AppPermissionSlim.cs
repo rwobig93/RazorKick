@@ -1,11 +1,13 @@
-﻿namespace Application.Models.Identity.Permission;
+﻿using Application.Helpers.Runtime;
+
+namespace Application.Models.Identity.Permission;
 
 public class AppPermissionSlim
 {
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
-    public Guid RoleId { get; set; }
-    public string ClaimType { get; set; } = "";
+    public Guid UserId { get; set; } = GuidHelpers.GetMax();
+    public Guid RoleId { get; set; } = GuidHelpers.GetMax();
+    public string? ClaimType { get; set; } = "";
     public string ClaimValue { get; set; } = "";
     public string Name { get; set; } = "";
     public string Group { get; set; } = "";

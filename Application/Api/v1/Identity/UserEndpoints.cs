@@ -13,8 +13,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Identity;
 
+/// <summary>
+/// API endpoints for application users
+/// </summary>
 public static class UserEndpoints
 {
+    /// <summary>
+    /// Register user API endpoints
+    /// </summary>
+    /// <param name="app"></param>
     public static void MapEndpointsUsers(this IEndpointRouteBuilder app)
     {
         app.MapGet(ApiRouteConstants.Identity.User.GetAll, GetAllUsers).ApiVersionOne();
@@ -36,6 +43,13 @@ public static class UserEndpoints
         app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
     }
 
+    /// <summary>
+    /// Register a user account
+    /// </summary>
+    /// <param name="registerRequest">Details used to register a user account</param>
+    /// <param name="accountService"></param>
+    /// <returns></returns>
+    [AllowAnonymous]
     private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppAccountService accountService)
     {
         try
@@ -50,6 +64,11 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all users
+    /// </summary>
+    /// <param name="userService"></param>
+    /// <returns>List of all users</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<List<UserBasicResponse>>> GetAllUsers(IAppUserService userService)
     {
@@ -67,6 +86,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get the specified user
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Detail regarding the specified user</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserById([FromQuery]Guid userId, IAppUserService userService)
     {
@@ -87,6 +112,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get full user detail for a user including permissions and extended attributes
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Detail for the specified user including permissions and extended attributes</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserById([FromQuery]Guid userId, IAppUserService userService)
     {
@@ -107,6 +138,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get a user by email
+    /// </summary>
+    /// <param name="email">Email address of the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Detail for the specified user</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByEmail([FromQuery]string email, IAppUserService userService)
     {
@@ -127,6 +164,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get full user detail for a user including permissions and extended attributes
+    /// </summary>
+    /// <param name="email">Email address for the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Detail for the specified user including permissions and extended attributes</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByEmail([FromQuery]string email, IAppUserService userService)
     {
@@ -147,6 +190,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get a user by username
+    /// </summary>
+    /// <param name="username">Username of the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Details of the specified user</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByUsername([FromQuery]string username, IAppUserService userService)
     {
@@ -167,6 +216,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Get full user detail for a user including permissions and extended attributes
+    /// </summary>
+    /// <param name="username">Username of the user</param>
+    /// <param name="userService"></param>
+    /// <returns>Detail for the specified user including permissions and extended attributes</returns>
     [Authorize(Policy = PermissionConstants.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByUsername([FromQuery]string username, IAppUserService userService)
     {
@@ -187,6 +242,14 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Create a user account, bypassing registration
+    /// </summary>
+    /// <param name="userRequest">Details used to create the user</param>
+    /// <param name="userService"></param>
+    /// <param name="accountService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>GUID ID of the newly created user account</returns>
     [Authorize(Policy = PermissionConstants.Users.Create)]
     private static async Task<IResult<Guid>> CreateUser([FromBody]UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
     accountService, ICurrentUserService currentUserService)
@@ -203,6 +266,13 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Update properties of the specified4 user account
+    /// </summary>
+    /// <param name="userRequest">Details used to update a user account, any empty properties won't be updated</param>
+    /// <param name="userService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Users.Edit)]
     private static async Task<IResult> UpdateUser(UserUpdateRequest userRequest, IAppUserService userService, ICurrentUserService currentUserService)
     {
@@ -218,6 +288,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Delete the specified user account
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="userService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Users.Delete)]
     private static async Task<IResult> DeleteUser(Guid userId, IAppUserService userService)
     {
@@ -233,6 +309,16 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Reset the password of the specified user account
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="accountService"></param>
+    /// <returns></returns>
+    /// <remarks>
+    /// - User will be forced to re-authenticate after initiating a reset
+    /// - Password reset email will be sent to the user's email address
+    /// </remarks>
     [Authorize(Policy = PermissionConstants.Users.ResetPassword)]
     private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService)
     {
@@ -248,6 +334,15 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Enable the specified user account
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="accountService"></param>
+    /// <returns></returns>
+    /// <remarks>
+    /// - Can also be used to bypass a locked out account timeout
+    /// </remarks>
     [Authorize(Policy = PermissionConstants.Users.Enable)]
     private static async Task<IResult> EnableUser([FromQuery]Guid userId, IAppAccountService accountService)
     {
@@ -263,6 +358,12 @@ public static class UserEndpoints
         }
     }
 
+    /// <summary>
+    /// Disable the specified user account
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="accountService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Users.Disable)]
     private static async Task<IResult> DisableUser([FromQuery]Guid userId, IAppAccountService accountService)
     {

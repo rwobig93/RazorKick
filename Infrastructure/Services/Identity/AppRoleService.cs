@@ -6,7 +6,6 @@ using Application.Models.Identity.User;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
-using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 
 namespace Infrastructure.Services.Identity;
@@ -15,16 +14,11 @@ public class AppRoleService : IAppRoleService
 {
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
 
-    public AppRoleService(IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository,
-        IDateTimeService dateTime, IRunningServerState serverState)
+    public AppRoleService(IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
-        _dateTime = dateTime;
-        _serverState = serverState;
     }
 
     private async Task<IResult<AppRoleFull?>> ConvertToFullAsync(AppRoleDb roleDb)
@@ -251,7 +245,7 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var deleteRequest = await _roleRepository.DeleteAsync(id);
+            var deleteRequest = await _roleRepository.DeleteAsync(id, Guid.Empty);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
 

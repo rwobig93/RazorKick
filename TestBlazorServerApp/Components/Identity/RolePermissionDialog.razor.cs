@@ -133,7 +133,7 @@ public partial class RolePermissionDialog
             var addPermission = await PermissionService.CreateAsync(new AppPermissionCreate
             {
                 RoleId = RoleId,
-                ClaimType = permission.ClaimType,
+                ClaimType = permission.ClaimType ?? "",
                 ClaimValue = permission.ClaimValue,
                 Name = permission.Name,
                 Group = permission.Group,
@@ -153,7 +153,7 @@ public partial class RolePermissionDialog
 
         foreach (var permission in currentPermissions.Data.Where(perm => _assignedPermissions.All(x => x.Id != perm.Id)))
         {
-            var removePermission = await PermissionService.DeleteAsync(permission.Id);
+            var removePermission = await PermissionService.DeleteAsync(permission.Id, _currentUserId);
             if (!removePermission.Succeeded)
             {
                 removePermission.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

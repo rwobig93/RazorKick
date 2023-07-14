@@ -3,7 +3,7 @@
 </MudAvatar>
 
 @code {
-    [Parameter] public string Username { get; set; } = "Nobody";
+    [Parameter] public string? Username { get; set; } = "Nobody";
     [Parameter] public string ProfileImageUrl { get; set; } = "";
     [Parameter] public Size AvatarSize { get; set; } = Size.Small;
     [Parameter] public Color AvatarColor { get; set; } = Color.Warning;

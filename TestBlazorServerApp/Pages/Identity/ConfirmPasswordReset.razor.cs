@@ -17,8 +17,8 @@ public partial class ConfirmPasswordReset
     private bool HasValidationRan { get; set; }
     private bool PasswordChanged { get; set; }
     private Guid ConvertedUserId { get; set; } = Guid.Empty;
-    private string DesiredPassword { get; set; } = string.Empty;
-    private string ConfirmPassword { get; set; } = string.Empty;
+    private string DesiredPassword { get; set; } = "";
+    private string ConfirmPassword { get; set; } = "";
     private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
     
     private InputType _passwordInput = InputType.Password;

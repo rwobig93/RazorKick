@@ -24,8 +24,8 @@ public static class RoleMappers
     {
         return new AppRoleCreate
         {
-            Name = appRole.Name,
-            NormalizedName = appRole.NormalizedName,
+            Name = appRole.Name ?? "",
+            NormalizedName = appRole.NormalizedName ?? "",
             ConcurrencyStamp = appRole.ConcurrencyStamp,
             Description = appRole.Description,
             CreatedBy = appRole.CreatedBy,

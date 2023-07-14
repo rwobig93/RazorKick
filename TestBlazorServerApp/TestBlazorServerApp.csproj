@@ -1,15 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <RootNamespace>TestBlazorServerApp</RootNamespace>
-        <AssemblyName>TestBlazorServerApp</AssemblyName>
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <PreserveCompilationContext>true</PreserveCompilationContext>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <DocumentationFile>TestBlazorServerApp.xml</DocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,16 +14,16 @@
 
     <ItemGroup>
       <PackageReference Include="Blazorade.Core" Version="3.0.0" />
-      <PackageReference Include="Hangfire" Version="1.7.30" />
-      <PackageReference Include="Hangfire.Core" Version="1.7.30" />
+      <PackageReference Include="Hangfire" Version="1.8.3" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
       <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
-      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
-      <PackageReference Include="MudBlazor" Version="6.0.11" />
-      <PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.9" />
+      <PackageReference Include="MudBlazor" Version="6.7.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
       <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="5.1.1" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
     </ItemGroup>
 
     <ItemGroup>

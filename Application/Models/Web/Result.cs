@@ -2,10 +2,6 @@
 
 public class Result : IResult
 {
-    public Result()
-    {
-    }
-
     public List<string> Messages { get; set; } = new ();
 
     public bool Succeeded { get; set; }
@@ -63,10 +59,6 @@ public class Result : IResult
 
 public class Result<T> : Result, IResult<T>
 {
-    public Result()
-    {
-    }
-
     public T Data { get; set; } = default!;
 
     public new static Result<T> Fail()

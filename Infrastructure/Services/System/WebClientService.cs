@@ -88,7 +88,7 @@ public class WebClientService : IWebClientService
         {
             await _jsRuntime.InvokeVoidAsync("ScrollToBottom", new
             {
-                elementName = elementName
+                elementName
             });
             
             return await Result.SuccessAsync();

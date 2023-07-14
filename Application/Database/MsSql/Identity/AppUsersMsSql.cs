@@ -204,7 +204,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
-            end"
+            end;"
     };
 
     public static readonly MsSqlStoredProcedure GetByUsername = new()

@@ -13,26 +13,26 @@ public static class AppConfigurationHelpers
 
     public static AppConfiguration GetApplicationSettings(this IConfiguration configuration)
     {
-        return configuration.GetSection(AppConfiguration.SectionName).Get<AppConfiguration>();
+        return configuration.GetSection(AppConfiguration.SectionName).Get<AppConfiguration>()!;
     }
 
     public static MailConfiguration GetMailSettings(this IConfiguration configuration)
     {
-        return configuration.GetSection(MailConfiguration.SectionName).Get<MailConfiguration>();
+        return configuration.GetSection(MailConfiguration.SectionName).Get<MailConfiguration>()!;
     }
 
     public static DatabaseConfiguration GetDatabaseSettings(this IConfiguration configuration)
     {
-        return configuration.GetSection(DatabaseConfiguration.SectionName).Get<DatabaseConfiguration>();
+        return configuration.GetSection(DatabaseConfiguration.SectionName).Get<DatabaseConfiguration>()!;
     }
 
     public static LifecycleConfiguration GetLifecycleSettings(this IConfiguration configuration)
     {
-        return configuration.GetSection(LifecycleConfiguration.SectionName).Get<LifecycleConfiguration>();
+        return configuration.GetSection(LifecycleConfiguration.SectionName).Get<LifecycleConfiguration>()!;
     }
 
     public static SecurityConfiguration GetSecuritySettings(this IConfiguration configuration)
     {
-        return configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>();
+        return configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>()!;
     }
 }

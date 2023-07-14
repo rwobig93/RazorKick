@@ -21,7 +21,7 @@ public interface IAppPermissionService
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllIncludingRolesForUserAsync(Guid userId);
     Task<IResult<Guid>> CreateAsync(AppPermissionCreate createObject, bool systemUpdate = false);
     Task<IResult> UpdateAsync(AppPermissionUpdate updateObject, bool systemUpdate = false);
-    Task<IResult> DeleteAsync(Guid permissionId);
+    Task<IResult> DeleteAsync(Guid permissionId, Guid? modifyingUser);
     Task<IResult<bool>> UserHasDirectPermission(Guid userId, string permissionValue);
     Task<IResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue);
     Task<IResult<bool>> RoleHasPermission(Guid roleId, string permissionValue);

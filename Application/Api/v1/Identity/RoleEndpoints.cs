@@ -12,8 +12,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Identity;
 
+/// <summary>
+/// API endpoints for application roles
+/// </summary>
 public static class RoleEndpoints
 {
+    /// <summary>
+    /// Register role API endpoints
+    /// </summary>
+    /// <param name="app"></param>
     public static void MapEndpointsRoles(this IEndpointRouteBuilder app)
     {
         // Roles
@@ -30,6 +37,11 @@ public static class RoleEndpoints
         app.MapPost(ApiRouteConstants.Identity.Role.RemoveUserFromRole, RemoveUserFromRole).ApiVersionOne();
     }
 
+    /// <summary>
+    /// Get all roles
+    /// </summary>
+    /// <param name="roleService"></param>
+    /// <returns>List of all roles</returns>
     [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<List<RoleResponse>>> GetAllRoles(IAppRoleService roleService)
     {
@@ -47,6 +59,12 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Get the specified role
+    /// </summary>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="roleService"></param>
+    /// <returns>Detail regarding the specified role</returns>
     [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<RoleResponse>> GetById([FromQuery]Guid roleId, IAppRoleService roleService)
     {
@@ -67,6 +85,12 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Create a role
+    /// </summary>
+    /// <param name="roleRequest">Detail used to create a role</param>
+    /// <param name="roleService"></param>
+    /// <returns>GUID ID of the newly created role</returns>
     [Authorize(Policy = PermissionConstants.Roles.Create)]
     private static async Task<IResult<Guid>> CreateRole(CreateRoleRequest roleRequest, IAppRoleService roleService)
     {
@@ -82,6 +106,12 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Update a role's properties
+    /// </summary>
+    /// <param name="roleRequest">Detail used to update a role, any properties left empty will not be updated</param>
+    /// <param name="roleService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Edit)]
     private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleService roleService)
     {
@@ -97,6 +127,12 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Delete the specified role
+    /// </summary>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="roleService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Delete)]
     private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleService roleService)
     {
@@ -112,6 +148,13 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Determine whether the specified user is in the specified role
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="roleService"></param>
+    /// <returns>Boolean indicating whether the specified user is a member of the specified role</returns>
     [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<bool>> IsUserInRole([FromQuery]Guid userId, [FromQuery]Guid roleId, IAppRoleService roleService)
     {
@@ -125,6 +168,13 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Add the specified user to the specified role
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="roleId">GUID ID of the role</param>
+    /// <param name="roleService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Add)]
     private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleService roleService)
     {
@@ -141,6 +191,13 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Remove the specified user from the specified role
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="roleId">GUID ID of the user</param>
+    /// <param name="roleService"></param>
+    /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Remove)]
     private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleService roleService)
     {
@@ -157,6 +214,12 @@ public static class RoleEndpoints
         }
     }
 
+    /// <summary>
+    /// Get all roles for the specified user
+    /// </summary>
+    /// <param name="userId">GUID ID of the user</param>
+    /// <param name="roleService"></param>
+    /// <returns>List of roles assigned to the specified user</returns>
     [Authorize(Policy = PermissionConstants.Roles.View)]
     private static async Task<IResult<List<RoleResponse>>> GetRolesForUser([FromQuery]Guid userId, IAppRoleService roleService)
     {

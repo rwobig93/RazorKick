@@ -200,6 +200,6 @@ public partial class Login
 
         var mfaResponse = DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
         var mfaTokenValid = await mfaResponse.Result;
-        return !mfaTokenValid.Cancelled;
+        return !mfaTokenValid.Canceled;
     }
 }

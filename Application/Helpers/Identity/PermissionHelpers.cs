@@ -1,12 +1,10 @@
-﻿
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Domain.DatabaseEntities.Identity;
 
 namespace Application.Helpers.Identity;
 
 public static class PermissionHelpers
 {
-
     public static string? GetClaimValueFromPermission(string? permissionGroup, string? permissionName, string? permissionAccess)
     {
         if (permissionGroup is null || permissionName is null || permissionAccess is null)
@@ -21,16 +19,16 @@ public static class PermissionHelpers
 
     public static Claim ToClaim(this AppPermissionDb appPermission)
     {
-        return new Claim(appPermission.ClaimType, appPermission.ClaimValue);
+        return new Claim(appPermission.ClaimType!, appPermission.ClaimValue!);
     }
 
     public static IEnumerable<Claim> ToClaims(this IEnumerable<AppPermissionDb> appPermissions)
     {
-        return appPermissions.Select(x => new Claim(x.ClaimType, x.ClaimValue));
+        return appPermissions.Select(x => new Claim(x.ClaimType!, x.ClaimValue!));
     }
 
     public static IEnumerable<Claim> ToClaims(this IEnumerable<AppRoleDb> appRoles)
     {
-        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name));
+        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name!));
     }
 }

@@ -1,4 +1,4 @@
-﻿using Application.Constants.Database;
+﻿using System.Globalization;
 using Application.Database.MsSql.Lifecycle;
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Runtime;
@@ -266,12 +266,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         {
             var cleanupTimestamp = olderThan switch
             {
-                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(MsSqlConstants.DateStringFormat),
-                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(MsSqlConstants.DateStringFormat),
-                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat),
-                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(MsSqlConstants.DateStringFormat),
-                CleanupTimeframe.Never => _dateTime.NowDatabaseTime.AddYears(-100).ToString(MsSqlConstants.DateStringFormat),
-                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(MsSqlConstants.DateStringFormat)
+                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.TenYears => _dateTime.NowDatabaseTime.AddYears(-10).ToString(CultureInfo.CurrentCulture),
+                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
             };
 
             var rowsDeleted = await _database.SaveData(AuditTrailsMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});

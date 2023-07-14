@@ -15,7 +15,7 @@ public partial class MfaCodeValidationDialog
 
     private void VerifyMfaCode()
     {
-        var validToken = MfaService.IsPasscodeCorrect(_mfaCode, MfaKey, out var timeStampMatched);
+        var validToken = MfaService.IsPasscodeCorrect(_mfaCode, MfaKey, out _);
         if (!validToken)
         {
             Snackbar.Add("MFA Code entered is invalid, please try again", Severity.Error);
@@ -23,7 +23,7 @@ public partial class MfaCodeValidationDialog
         }
         
         // TODO: If code was matched previously we'll return a failure, this converts to a time that doesn't line up, need to troubleshoot
-        var codeMatchedTime = DateTimeOffset.FromUnixTimeSeconds(timeStampMatched).DateTime;
+        // var codeMatchedTime = DateTimeOffset.FromUnixTimeSeconds(timeStampMatched).DateTime;
         
         MudDialog.Close(DialogResult.Ok(true));
     }

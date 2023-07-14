@@ -94,7 +94,12 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            return _contextAccessor.HttpContext!.Session.GetString(LocalStorageConstants.AuthToken)!;
+            var headerHasValue = _contextAccessor.HttpContext!.Request.Headers.TryGetValue("Authorization", out var bearer);
+            if (!headerHasValue)
+                return "";
+            
+            // Authorization header should always be: <scheme> <token>, which in our case is: Bearer JWT
+            return bearer.ToString().Split(' ')[1];
         }
         catch
         {
