@@ -3,5 +3,5 @@
 public enum AccountType
 {
     User = 0,
-    Host = 1
+    Service = 1
 }

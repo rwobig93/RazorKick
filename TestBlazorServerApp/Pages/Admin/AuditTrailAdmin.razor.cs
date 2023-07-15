@@ -24,6 +24,10 @@ public partial class AuditTrailAdmin
     private int _totalTrails;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
+    private bool _dense = true;
+    private bool _hover = true;
+    private bool _striped = true;
+    private bool _bordered;
     private bool _canExportTrails;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)

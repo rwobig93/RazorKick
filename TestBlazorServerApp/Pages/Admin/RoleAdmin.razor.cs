@@ -14,6 +14,11 @@ public partial class RoleAdmin
     private string _searchString = "";
     private int _totalRoles;
     
+    private bool _dense = true;
+    private bool _hover = true;
+    private bool _striped = true;
+    private bool _bordered;
+    
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
     {
         var rolesResult = await RoleService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);

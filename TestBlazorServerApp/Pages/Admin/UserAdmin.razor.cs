@@ -23,7 +23,15 @@ public partial class UserAdmin
     private bool _canDisableUsers;
     private bool _canResetPasswords;
     private bool _allowUserSelection;
-    
+
+    private bool _dense = true;
+    private bool _hover = true;
+    private bool _striped = true;
+    private bool _bordered;
+    private bool _filterServiceAccounts;
+    private bool _filterLockedOut;
+    private bool _filterDisabled;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -55,24 +63,45 @@ public partial class UserAdmin
         _pagedData = usersResult.Data.ToArray();
         _totalUsers = (await UserService.GetCountAsync()).Data;
 
+        if (_filterDisabled)
+            _pagedData = _pagedData.Where(x => x.AuthState == AuthState.Disabled);
+        if (_filterLockedOut)
+            _pagedData = _pagedData.Where(x => x.AuthState == AuthState.LockedOut);
+        if (_filterServiceAccounts)
+            _pagedData = _pagedData.Where(x => x.AccountType == AccountType.Service);
+
         _pagedData = state.SortLabel switch
         {
             "Id" => _pagedData.OrderByDirection(state.SortDirection, o => o.Id),
             "Username" => _pagedData.OrderByDirection(state.SortDirection, o => o.Username),
             "Email" => _pagedData.OrderByDirection(state.SortDirection, o => o.EmailAddress),
             "Enabled" => _pagedData.OrderByDirection(state.SortDirection, o => o.AuthState),
+            "AccountType" => _pagedData.OrderByDirection(state.SortDirection, o => o.AccountType),
             _ => _pagedData
         };
         
         return new TableData<AppUserSlim>() {TotalItems = _totalUsers, Items = _pagedData};
     }
 
-    private void OnSearch(string text)
+    private async Task SearchText(string text)
     {
         _searchString = text;
-        _table.ReloadServerData();
+        await _table.ReloadServerData();
         _selectedItems = new HashSet<AppUserSlim>();
         StateHasChanged();
+    }
+
+    private async Task ReloadSearch()
+    {
+        await SearchText(_searchString);
+    }
+
+    private async Task ClearSearch()
+    {
+        _filterDisabled = false;
+        _filterLockedOut = false;
+        _filterServiceAccounts = false;
+        await SearchText("");
     }
 
     private async Task EnableAccounts()
@@ -91,7 +120,7 @@ public partial class UserAdmin
             else
             {
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
-                OnSearch(_searchString);
+                await SearchText(_searchString);
             }
         }
     }
@@ -112,7 +141,7 @@ public partial class UserAdmin
             else
             {
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
-                OnSearch(_searchString);
+                await SearchText(_searchString);
             }
         }
     }

@@ -187,7 +187,9 @@ public class AppAccountService : IAppAccountService
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
         // TODO: Validate account type is service & add a way to generate service accounts
-        
+        if (userSecurity.AccountType != AccountType.Service)
+            return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.ServiceAccountOnly);
+
         // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
         switch (userSecurity.AuthState)
         {
