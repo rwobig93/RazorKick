@@ -43,8 +43,33 @@ public static class WebServerConfiguration
         app.AddScheduledJobs();
     }
 
+    private static void ConfigureAppUrls(this WebApplication app)
+    {
+        using var scope = app.Services.CreateAsyncScope();
+        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger>();
+        
+        app.Urls.Add(appConfig.Value.BaseUrl);
+        logger.Information("Successfully bound application to Url: {Url}", appConfig.Value.BaseUrl);
+        
+        foreach (var altUrl in appConfig.Value.AlternativeUrls)
+        {
+            try
+            {
+                app.Urls.Add(altUrl);
+                logger.Information("Successfully bound application to Url: {Url}", altUrl);
+            }
+            catch (Exception ex)
+            {
+                logger.Fatal(ex, "Failed to map to url provided: {Error}", ex.Message);
+            }
+        }
+    }
+
     private static void ConfigureForEnvironment(this WebApplication app)
     {
+        app.ConfigureAppUrls();
+        
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -53,14 +78,6 @@ public static class WebServerConfiguration
         
         app.UseExceptionHandler("/Error");
         app.UseHsts();
-        
-        // TODO: Validate url adding via appsettings.json
-        // using var scope = app.Services.CreateAsyncScope();
-        // var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        // var servicesCollection = scope.ServiceProvider.GetRequiredService<IServiceCollection>();
-        // var appConfig = configuration.GetApplicationSettings(servicesCollection);
-        //
-        // app.Urls.Add(appConfig.BaseUrl!);
     }
 
     private static void ConfigureBlazorServerCommons(this WebApplication app)

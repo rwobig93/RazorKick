@@ -52,8 +52,8 @@ public static class DependencyInjection
     public static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
     {
         // Replace default logger w/ Serilog, configure via appsettings.json - uses the "Serilog" section
-        builder.Host.UseSerilog((ctx, lc) => 
-            lc.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
+        builder.Host.UseSerilog((ctx, logConfig) => 
+            logConfig.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
         
         builder.Services.AddBlazorServerCommon();
         builder.Services.AddSettingsConfiguration(builder.Configuration);
