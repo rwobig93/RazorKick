@@ -16,37 +16,22 @@ public partial class RoleAdmin
     
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
     {
-        var rolesResult = await RoleService.SearchAsync(_searchString);
+        var rolesResult = await RoleService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!rolesResult.Succeeded)
         {
             rolesResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return new TableData<AppRoleSlim>();
         }
 
-        var data = rolesResult.Data;
-        
-        data = data.Where(user =>
-        {
-            if (string.IsNullOrWhiteSpace(_searchString))
-                return true;
-            if (user.Name!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.Description!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            
-            return false;
-        }).ToArray();
-        
-        _totalRoles = data.Count();
+        _pagedData = rolesResult.Data.ToArray();
+        _totalRoles = (await RoleService.GetCountAsync()).Data;
 
-        data = state.SortLabel switch
+        _pagedData = state.SortLabel switch
         {
-            "Id" => data.OrderByDirection(state.SortDirection, o => o.Id),
-            "Name" => data.OrderByDirection(state.SortDirection, o => o.Name),
-            _ => data
+            "Id" => _pagedData.OrderByDirection(state.SortDirection, o => o.Id),
+            "Name" => _pagedData.OrderByDirection(state.SortDirection, o => o.Name),
+            _ => _pagedData
         };
-
-        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         
         return new TableData<AppRoleSlim>() {TotalItems = _totalRoles, Items = _pagedData};
     }

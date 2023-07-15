@@ -126,11 +126,6 @@ public class Result<T> : Result, IResult<T>
         return new Result<T> { Succeeded = true };
     }
 
-    public new static Result<T> Success(string message)
-    {
-        return new Result<T> { Succeeded = true, Messages = new List<string> { message } };
-    }
-
     public static Result<T> Success(T data)
     {
         return new Result<T> { Succeeded = true, Data = data };
@@ -149,11 +144,6 @@ public class Result<T> : Result, IResult<T>
     public new static Task<Result<T>> SuccessAsync()
     {
         return Task.FromResult(Success());
-    }
-
-    public new static Task<Result<T>> SuccessAsync(string message)
-    {
-        return Task.FromResult(Success(message));
     }
 
     public static Task<Result<T>> SuccessAsync(T data)

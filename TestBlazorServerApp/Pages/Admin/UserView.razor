@@ -72,7 +72,6 @@ else
             Disabled="true"/>
         </MudItem>
     </MudPaper>
-    @* TODO: Add ExtendedAttributes view if viewer has permission *@
     @if (_canViewRoles)
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
@@ -116,6 +115,30 @@ else
                         <MudTd DataLabel="Name">@context.Name</MudTd>
                         <MudTd DataLabel="Access">@context.Access</MudTd>
                         <MudTd DataLabel="Description">@context.Description</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
+    }
+    @if (_canViewExtendedAttrs)
+    {
+        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">User Extended Attributes</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_viewingUser.ExtendedAttributes" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Type</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Value</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Extension"/></MudTd>
+                        <MudTd DataLabel="Type">@context.Type</MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Value">@context.Value</MudTd>
                     </RowTemplate>
                 </MudTable>
             </MudItem>

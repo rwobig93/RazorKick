@@ -51,7 +51,7 @@ public class JobManager : IJobManager
             return;
         }
 
-        if (allLockedOutUsers.Result.Count() <= 0)
+        if (!allLockedOutUsers.Result.Any())
         {
             _logger.Debug("Currently no locked out users found during user housekeeping");
             return;

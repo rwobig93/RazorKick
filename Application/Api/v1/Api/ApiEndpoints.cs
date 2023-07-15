@@ -19,7 +19,6 @@ public static class ApiEndpoints
     /// <param name="app">Running application</param>
     public static void MapEndpointsApi(this IEndpointRouteBuilder app)
     {
-        // TODO: See https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/openapi?view=aspnetcore-7.0&source=recommendations
         app.MapPost(ApiRouteConstants.Api.GetToken, GetToken).ApiVersionOne();
     }
 

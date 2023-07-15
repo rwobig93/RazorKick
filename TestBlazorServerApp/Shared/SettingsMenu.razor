@@ -17,14 +17,16 @@
         <MudExpansionPanel Text="Quick Settings" Class="d-flex flex-column align-center">
             @* TODO: Bind switches to new preferences *@
             <MudItem Class="py-2">
-                <MudSwitch @bind-Checked="_testToggleOne" Class="mud-theme-secondary rounded-pill" Label="Menu Expand On Hover"/>
+                <MudSwitch @bind-Checked="_testToggleOne" Class="mud-theme-secondary rounded-pill px-2"
+                           Size="Size.Medium" Label="Menu Hover Expand"/>
             </MudItem>
             <MudItem Class="py-2">
-                <MudSwitch @bind-Checked="_testToggleTwo" Class="mud-theme-secondary rounded-pill" Label="Gear Avatar "/>
+                <MudSwitch @bind-Checked="_testToggleTwo" Class="mud-theme-secondary rounded-pill px-2"
+                           Size="Size.Medium" Label="Gear Avatar"/>
             </MudItem>
         </MudExpansionPanel>
     </MudPaper>
-    <MudPaper Elevation="5">
+    <MudPaper Elevation="5" Class="d-flex mb-4">
         <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
             <MudItem>
                 <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
@@ -42,13 +44,15 @@
             </MudItem>
         </MudExpansionPanel>
     </MudPaper>
-    <MudPaper Elevation="5" Class="d-flex flex-column mb-4 justify-center align-center mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12" Class="d-flex my-2">
-            <MudText Align="Align.Left" Class="pl-2">Session Information</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" Class="d-flex">
-            <MudText Typo="Typo.caption" Class="pl-2">Current Timezone: @_clientTimeZone</MudText>
-        </MudItem>
+    <MudPaper Elevation="5" Class="d-flex mb-4">
+        <MudExpansionPanel Text="Session Info" Class="d-flex flex-column pa-1 my-1">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudChip Color="Color.Tertiary">Current Timezone</MudChip>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudText Typo="Typo.caption" Class="pl-2">@_clientTimeZone</MudText>
+            </MudItem>
+        </MudExpansionPanel>
     </MudPaper>
     <MudSpacer/>
     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-8 mud-text-align-center">

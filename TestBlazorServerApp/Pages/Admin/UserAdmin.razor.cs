@@ -45,52 +45,24 @@ public partial class UserAdmin
     
     private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
     {
-        var usersResult = await UserService.SearchAsync(_searchString);
+        var usersResult = await UserService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!usersResult.Succeeded)
         {
             usersResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return new TableData<AppUserSlim>();
         }
 
-        var data = usersResult.Data;
-        
-        data = data.Where(user =>
-        {
-            if (string.IsNullOrWhiteSpace(_searchString))
-                return true;
-            if (user.Username.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.EmailAddress!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.FirstName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.LastName!.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (user.Id.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                return true;
-            
-            return false;
-        }).ToArray();
-        
-        _totalUsers = data.Count();
-        
-        switch (state.SortLabel)
-        {
-            case "Id":
-                data = data.OrderByDirection(state.SortDirection, o => o.Id);
-                break;
-            case "Username":
-                data = data.OrderByDirection(state.SortDirection, o => o.Username);
-                break;
-            case "Email":
-                data = data.OrderByDirection(state.SortDirection, o => o.EmailAddress);
-                break;
-            case "Enabled":
-                data = data.OrderByDirection(state.SortDirection, o => o.AuthState);
-                break;
-        }
+        _pagedData = usersResult.Data.ToArray();
+        _totalUsers = (await UserService.GetCountAsync()).Data;
 
-        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        _pagedData = state.SortLabel switch
+        {
+            "Id" => _pagedData.OrderByDirection(state.SortDirection, o => o.Id),
+            "Username" => _pagedData.OrderByDirection(state.SortDirection, o => o.Username),
+            "Email" => _pagedData.OrderByDirection(state.SortDirection, o => o.EmailAddress),
+            "Enabled" => _pagedData.OrderByDirection(state.SortDirection, o => o.AuthState),
+            _ => _pagedData
+        };
         
         return new TableData<AppUserSlim>() {TotalItems = _totalUsers, Items = _pagedData};
     }
@@ -165,7 +137,6 @@ public partial class UserAdmin
 
     private void ViewUser(Guid userId)
     {
-        // TODO: Viewing the Anonymous User goes to a page not found, either need to troubleshoot or handle this one-off
         var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.UserView, "userId", userId.ToString());
         NavManager.NavigateTo(viewUserUri);
     }

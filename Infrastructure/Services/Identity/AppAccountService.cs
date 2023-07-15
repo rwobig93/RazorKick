@@ -350,7 +350,7 @@ public class AppAccountService : IAppAccountService
         if (!addToRoleResult.Success)
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
-        
+
         var confirmationUrl = (await GetEmailConfirmationUrl(createUserResult.Result)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
@@ -394,7 +394,7 @@ public class AppAccountService : IAppAccountService
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         if (!addAttributeRequest.Success)
             return await Result<string>.FailAsync(addAttributeRequest.ErrorMessage);
-        
+
         return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode));
     }
 
@@ -478,6 +478,7 @@ public class AppAccountService : IAppAccountService
             AccountHelpers.GenerateHashAndSalt(newPassword, out var salt, out var hash);
             var securityUpdate = new AppUserSecurityAttributeUpdate
             {
+                OwnerId = userId,
                 PasswordSalt = salt,
                 PasswordHash = hash
             };
@@ -587,6 +588,7 @@ public class AppAccountService : IAppAccountService
         await SetUserPassword(foundUser.Id, password);
 
         await _userRepository.RemoveExtendedAttributeAsync(previousReset.Id);
+        await SetAuthState(userId, AuthState.Enabled);
 
         return await Result.SuccessAsync("Password reset was successful, please log back in with your fresh new password!");
     }

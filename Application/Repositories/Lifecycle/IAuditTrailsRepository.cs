@@ -18,6 +18,8 @@ public interface IAuditTrailsRepository
     Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> GetByRecordIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(AuditTrailCreate createObject, bool systemUpdate = false);
     Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> SearchAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> SearchPaginatedWithUserAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> SearchWithUserAsync(string searchText);
     Task<DatabaseActionResult<int>> DeleteOld(CleanupTimeframe olderThan);
 }

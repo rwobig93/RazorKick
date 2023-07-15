@@ -14,5 +14,6 @@ public interface IAuditTrailService
     Task<IResult<IEnumerable<AuditTrailSlim>>> GetByRecordIdAsync(Guid id);
     Task<IResult<Guid>> CreateAsync(AuditTrailCreate createObject, bool systemUpdate = false);
     Task<IResult<IEnumerable<AuditTrailSlim>>> SearchAsync(string searchText);
+    Task<IResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<int>> DeleteOld(CleanupTimeframe olderThan);
 }

@@ -15,11 +15,10 @@ public class GeneralMsSql : ISqlEnforcedEntityMsSql
                 @TableName NVARCHAR(50)
             AS
             begin
-                SELECT OBJECT_NAME(object_id), SUM(row_count) AS rows
-                FROM sys.dm_db_partition_stats
-                WHERE object_id = OBJECT_ID(@TableName)
-                  AND index_id < 2
-                GROUP BY OBJECT_NAME(object_id);
+                SELECT SUM(spart.rows)
+                FROM sys.partitions spart
+                WHERE spart.object_id = object_id(@TableName)
+                AND spart.index_id < 2;
             end"
     };
     

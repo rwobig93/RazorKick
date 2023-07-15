@@ -198,6 +198,30 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
+    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    {
+        Table = Table,
+        Action = "SearchPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                set nocount on;
+                
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE TableName LIKE '%' + @SearchTerm + '%'
+                    OR RecordId LIKE '%' + @SearchTerm + '%'
+                    OR Action LIKE '%' + @SearchTerm + '%'
+                    OR Before LIKE '%' + @SearchTerm + '%'
+                    OR After LIKE '%' + @SearchTerm + '%'
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+
     public static readonly MsSqlStoredProcedure SearchWithUser = new()
     {
         Table = Table,
@@ -218,6 +242,31 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                     OR Before LIKE '%' + @SearchTerm + '%'
                     OR After LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure SearchPaginatedWithUser = new()
+    {
+        Table = Table,
+        Action = "SearchPaginatedWithUser",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginatedWithUser]
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                set nocount on;
+                
+                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                FROM dbo.[{Table.TableName}] a
+                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                WHERE TableName LIKE '%' + @SearchTerm + '%'
+                    OR RecordId LIKE '%' + @SearchTerm + '%'
+                    OR Action LIKE '%' + @SearchTerm + '%'
+                    OR Before LIKE '%' + @SearchTerm + '%'
+                    OR After LIKE '%' + @SearchTerm + '%'
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

@@ -187,6 +187,24 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
+    public async Task<IResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        try
+        {
+            var auditTrails = await _auditRepository.SearchPaginatedWithUserAsync(searchText, pageNumber, pageSize);
+            if (!auditTrails.Success)
+                return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
+
+            var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
+
+            return await Result<IEnumerable<AuditTrailSlim>>.SuccessAsync(convertedAuditTrail);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<int>> DeleteOld(CleanupTimeframe olderThan)
     {
         try

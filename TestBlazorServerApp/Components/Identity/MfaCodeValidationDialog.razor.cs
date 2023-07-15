@@ -22,9 +22,6 @@ public partial class MfaCodeValidationDialog
             return;
         }
         
-        // TODO: If code was matched previously we'll return a failure, this converts to a time that doesn't line up, need to troubleshoot
-        // var codeMatchedTime = DateTimeOffset.FromUnixTimeSeconds(timeStampMatched).DateTime;
-        
         MudDialog.Close(DialogResult.Ok(true));
     }
     

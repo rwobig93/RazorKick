@@ -214,7 +214,6 @@ public partial class SecuritySettings
 
     private async Task ValidateTotpCode()
     {
-        // 56172502 | 3.11.28 AM CT, Saturday May 27th
         var totpCorrect = MfaService.IsPasscodeCorrect(_totpCode, _mfaRegisterCode, out _);
         if (!totpCorrect)
         {

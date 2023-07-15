@@ -16,6 +16,7 @@ public static class PermissionConstants
         public const string Enable = "Permissions.Identity.Users.Enable";
         public const string Disable = "Permissions.Identity.Users.Disable";
         public const string ResetPassword = "Permissions.Identity.Users.ResetPassword";
+        public const string ViewExtAttrs = "Permissions.Identity.Users.ExtendedAttrView";
     }
 
     public static class Roles

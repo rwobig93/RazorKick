@@ -240,6 +240,46 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AuditTrailDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults =
+                await _database.LoadData<AuditTrailDb, dynamic>(
+                    AuditTrailsMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> SearchPaginatedWithUserAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults =
+                await _database.LoadData<AuditTrailWithUserDb, dynamic>(
+                    AuditTrailsMsSql.SearchPaginatedWithUser, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchPaginatedWithUser.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> SearchWithUserAsync(string searchText)
     {
         DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();

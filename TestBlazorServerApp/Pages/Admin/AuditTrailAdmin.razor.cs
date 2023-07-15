@@ -45,33 +45,27 @@ public partial class AuditTrailAdmin
     
     private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state)
     {
-        // TODO: Move all page loading to paginated methods
-        var trailResult = await AuditService.SearchAsync(_searchString);
+        var trailResult = await AuditService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!trailResult.Succeeded)
         {
             trailResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return new TableData<AuditTrailSlim>();
         }
 
-        var data = trailResult.Data;
+        _pagedData = trailResult.Data.ToArray();
+        _totalTrails = (await AuditService.GetCountAsync()).Data;
 
-        data = data.ToArray();
-        
-        _totalTrails = data.Count();
-
-        data = state.SortLabel switch
+        _pagedData = state.SortLabel switch
         {
-            "Id" => data.OrderByDirection(state.SortDirection, o => o.Id),
-            "Timestamp" => data.OrderByDirection(state.SortDirection, o => o.Timestamp),
-            "RecordId" => data.OrderByDirection(state.SortDirection, o => o.RecordId),
-            "Action" => data.OrderByDirection(state.SortDirection, o => o.Action),
-            "TableName" => data.OrderByDirection(state.SortDirection, o => o.TableName),
-            "ChangedByUsername" => data.OrderByDirection(state.SortDirection, o => o.ChangedByUsername),
-            _ => data
+            "Id" => _pagedData.OrderByDirection(state.SortDirection, o => o.Id),
+            "Timestamp" => _pagedData.OrderByDirection(state.SortDirection, o => o.Timestamp),
+            "RecordId" => _pagedData.OrderByDirection(state.SortDirection, o => o.RecordId),
+            "Action" => _pagedData.OrderByDirection(state.SortDirection, o => o.Action),
+            "TableName" => _pagedData.OrderByDirection(state.SortDirection, o => o.TableName),
+            "ChangedByUsername" => _pagedData.OrderByDirection(state.SortDirection, o => o.ChangedByUsername),
+            _ => _pagedData
         };
 
-        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
-        
         return new TableData<AuditTrailSlim>() {TotalItems = _totalTrails, Items = _pagedData};
     }
 

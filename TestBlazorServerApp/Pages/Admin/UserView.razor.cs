@@ -39,6 +39,7 @@ public partial class UserView
     private bool _canViewPermissions;
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
+    private bool _canViewExtendedAttrs;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -101,6 +102,7 @@ public partial class UserView
         _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
+        _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
     }
     
     private async Task Save()
