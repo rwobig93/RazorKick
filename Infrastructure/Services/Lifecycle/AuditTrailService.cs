@@ -212,6 +212,16 @@ public class AuditTrailService : IAuditTrailService
             var deleteTrails = await _auditRepository.DeleteOld(olderThan);
             if (!deleteTrails.Success)
                 return await Result<int>.FailAsync(deleteTrails.ErrorMessage);
+            
+            switch (deleteTrails.Result)
+            {
+                case > 0:
+                    _logger.Information("Successfully cleaned up {AuditCount} old logs", deleteTrails.Result);
+                    break;
+                case <= 0:
+                    _logger.Information("No audit logs older than {Timeframe} found, no logs cleaned up", olderThan.ToString());
+                    break;
+            }
 
             return await Result<int>.SuccessAsync(deleteTrails.Result);
         }

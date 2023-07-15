@@ -15,14 +15,18 @@ public class JobManager : IJobManager
     private readonly IAppAccountService _accountService;
     private readonly IDateTimeService _dateTime;
     private readonly SecurityConfiguration _securityConfig;
+    private readonly IAuditTrailService _auditService;
+    private readonly LifecycleConfiguration _lifecycleConfig;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
-        IOptions<SecurityConfiguration> securityConfig)
+        IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig)
     {
         _logger = logger;
         _userRepository = userRepository;
         _accountService = accountService;
         _dateTime = dateTime;
+        _auditService = auditService;
+        _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
 
@@ -35,6 +39,22 @@ public class JobManager : IJobManager
         catch (Exception ex)
         {
             _logger.Error(ex, "User housekeeping failed: {Error}", ex.Message);
+        }
+    }
+
+    public async Task DailyCleanup()
+    {
+        try
+        {
+            var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.AuditLogLifetime);
+            if (!auditCleanup.Succeeded)
+                _logger.Error("Audit cleanup failed: {Error}", auditCleanup.Messages);
+            
+            _logger.Debug("Finished daily cleanup");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Daily cleanup failed: {Error}", ex.Message);
         }
     }
 

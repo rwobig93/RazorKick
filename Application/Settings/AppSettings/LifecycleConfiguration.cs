@@ -1,4 +1,7 @@
-﻿namespace Application.Settings.AppSettings;
+﻿using System.ComponentModel.DataAnnotations;
+using Domain.Enums.Lifecycle;
+
+namespace Application.Settings.AppSettings;
 
 public class LifecycleConfiguration : IAppSettingsSection
 {
@@ -7,4 +10,7 @@ public class LifecycleConfiguration : IAppSettingsSection
     public bool EnforceTestAccounts { get; set; }
     
     public bool AuditLoginLogout { get; set; }
+
+    [EnumDataType(typeof(CleanupTimeframe))]
+    public CleanupTimeframe AuditLogLifetime { get; set; } = CleanupTimeframe.OneYear;
 }

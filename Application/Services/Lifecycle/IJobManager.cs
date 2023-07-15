@@ -3,4 +3,5 @@
 public interface IJobManager
 {
     Task UserHousekeeping();
+    Task DailyCleanup();
 }
