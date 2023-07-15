@@ -420,8 +420,10 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var updatedId = await _database.SaveDataReturnId(AppUsersMsSql.SetUserId, new { CurrentId = currentId, NewId = newId });
-            var ownerId = await _database.SaveDataReturnId(AppUserSecurityAttributesMsSql.SetOwnerId, new { CurrentId = currentId, NewId = newId });
+            var updatedId = await _database.SaveDataReturnId(
+                AppUsersMsSql.SetUserId, new { CurrentId = currentId, NewId = newId });
+            var ownerId = await _database.SaveDataReturnId(
+                AppUserSecurityAttributesMsSql.SetOwnerId, new { CurrentId = currentId, NewId = newId });
             if (updatedId != ownerId)
                 throw new Exception("SetUserID failed, updated User ID doesn't equal security owner ID");
             

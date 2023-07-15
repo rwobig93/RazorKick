@@ -11,7 +11,6 @@ public static class JwtHelpers
 {
     public static readonly JwtSecurityTokenHandler JwtHandler = new();
     public const int JwtTokenValidBeforeSeconds = 3;
-    private const int JwtRefreshTokenTimeoutMinutes = 1440;
 
     private static byte[] GetJwtSecret(SecurityConfiguration securityConfig)
     {
@@ -60,8 +59,8 @@ public static class JwtHelpers
 
     public static DateTime GetJwtRefreshTokenExpirationTime(IDateTimeService dateTime, SecurityConfiguration securityConfig)
     {
-        // Add additional buffer for refresh token to be used
-        return dateTime.NowDatabaseTime.AddMinutes(securityConfig.UserTokenExpirationMinutes + JwtRefreshTokenTimeoutMinutes);
+        // Add additional buffer for refresh token to be used, since refresh JWT is used automatically Idle applies to this calculation
+        return dateTime.NowDatabaseTime.AddMinutes(securityConfig.UserTokenExpirationMinutes + securityConfig.SessionIdleTimeoutMinutes);
     }
 
     public static DateTime GetJwtExpirationTime(string token)

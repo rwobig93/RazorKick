@@ -14,19 +14,6 @@
         </MudNavLink>
     </MudPaper>
     <MudPaper Elevation="5" Class="d-flex mb-4">
-        <MudExpansionPanel Text="Quick Settings" Class="d-flex flex-column align-center">
-            @* TODO: Bind switches to new preferences *@
-            <MudItem Class="py-2">
-                <MudSwitch @bind-Checked="_testToggleOne" Class="mud-theme-secondary rounded-pill px-2"
-                           Size="Size.Medium" Label="Menu Hover Expand"/>
-            </MudItem>
-            <MudItem Class="py-2">
-                <MudSwitch @bind-Checked="_testToggleTwo" Class="mud-theme-secondary rounded-pill px-2"
-                           Size="Size.Medium" Label="Gear Avatar"/>
-            </MudItem>
-        </MudExpansionPanel>
-    </MudPaper>
-    <MudPaper Elevation="5" Class="d-flex mb-4">
         <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
             <MudItem>
                 <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>

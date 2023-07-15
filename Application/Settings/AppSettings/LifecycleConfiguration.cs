@@ -4,7 +4,7 @@ public class LifecycleConfiguration : IAppSettingsSection
 {
     public const string SectionName = "Lifecycle";
     
-    public bool EnforceNonSystemAndAdminAccounts { get; set; }
+    public bool EnforceTestAccounts { get; set; }
     
     public bool AuditLoginLogout { get; set; }
 }

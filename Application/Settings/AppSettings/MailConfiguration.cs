@@ -15,5 +15,4 @@ public class MailConfiguration : IAppSettingsSection
     public string? Password { get; init; }
     
     public string? DisplayName { get; init; }
-    
 }

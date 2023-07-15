@@ -204,5 +204,7 @@ public static class WebServerConfiguration
         
         hangfireJobs.AddOrUpdate("UserHousekeeping", () =>
             jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
+        
+        // TODO: Add job for audit clean based on configured span
     }
 }

@@ -15,4 +15,5 @@ public class AppUserSecurityAttributeUpdate
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public int? BadPasswordAttempts { get; set; }
     public DateTime? LastBadPassword { get; set; }
+    public DateTime? LastFullLogin { get; set; }
 }

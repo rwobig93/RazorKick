@@ -31,6 +31,7 @@ using Infrastructure.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using IResult = Application.Models.Web.IResult;
 
 namespace Infrastructure.Services.Identity;
@@ -51,12 +52,14 @@ public class AppAccountService : IAppAccountService
     private readonly IAuditTrailService _auditService;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly SecurityConfiguration _securityConfig;
+    private readonly ICurrentUserService _currentUserService;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
-        IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig)
+        IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
+        ICurrentUserService currentUserService)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -71,7 +74,45 @@ public class AppAccountService : IAppAccountService
         _serializer = serializer;
         _auditService = auditService;
         _contextAccessor = contextAccessor;
+        _currentUserService = currentUserService;
         _securityConfig = securityConfig.Value;
+    }
+
+    private static async Task<IResult<UserLoginResponse>> VerifyAccountIsLoginReady(AppUserSecurityDb userSecurity)
+    {
+        // Email isn't confirmed so we don't allow login
+        if (!userSecurity.EmailConfirmed)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
+
+        return userSecurity.AuthState switch
+        {
+            AuthState.Disabled => await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError),
+            AuthState.LockedOut => await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError),
+            _ => await Result<UserLoginResponse>.SuccessAsync()
+        };
+    }
+
+    private async Task<IResult<UserLoginResponse>> VerifyPasswordIsCorrect(AppUserSecurityDb userSecurity, string password)
+    {
+        var passwordValid = await IsPasswordCorrect(userSecurity.Id, password);
+        
+        // Password is valid, return success
+        if (passwordValid.Data) return await Result<UserLoginResponse>.SuccessAsync();
+        
+        // Password provided is invalid, handle bad password
+        userSecurity.BadPasswordAttempts += 1;
+        userSecurity.LastBadPassword = _dateTime.NowDatabaseTime;
+        await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+            
+        // Account isn't locked out yet but a bad password was entered
+        if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+            
+        // Account is now locked out due to bad password attempts
+        userSecurity.AuthState = AuthState.LockedOut;
+        userSecurity.AuthStateTimestamp = _dateTime.NowDatabaseTime;
+        await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+        return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
     }
 
     public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
@@ -79,56 +120,30 @@ public class AppAccountService : IAppAccountService
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(loginRequest.Username)).Result;
         if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
-        
-        if (!userSecurity.EmailConfirmed)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
-        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-        switch (userSecurity.AuthState)
-        {
-            case AuthState.Disabled:
-                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
-            case AuthState.LockedOut:
-                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
-        }
-        
-        var passwordValid = await IsPasswordCorrect(userSecurity.Id, loginRequest.Password);
-        if (!passwordValid.Data)
-        {
-            userSecurity.BadPasswordAttempts += 1;
-            userSecurity.LastBadPassword = _dateTime.NowDatabaseTime;
-            await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-            
-            // Account isn't locked out yet but a bad password was entered
-            if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
-                return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
-            
-            // Account is now locked out due to bad password attempts
-            userSecurity.AuthState = AuthState.LockedOut;
-            userSecurity.AuthStateTimestamp = _dateTime.NowDatabaseTime;
-            await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
-        }
 
-        // Entered password is correct so we reset previous bad password attempts
-        userSecurity.BadPasswordAttempts = 0;
-        userSecurity.LastModifiedBy = _serverState.SystemUserId;
-        userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
+        var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
+        if (!accountIsLoginReady.Succeeded)
+            return accountIsLoginReady;
+
+        var passwordIsValid = await VerifyPasswordIsCorrect(userSecurity, loginRequest.Password);
+        if (!passwordIsValid.Succeeded)
+            return passwordIsValid;
         
+        // Entered password is correct so we reset previous bad password attempts and indicate full login timestamp
+        userSecurity.BadPasswordAttempts = 0;
+        userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         userSecurity.RefreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
         userSecurity.RefreshTokenExpiryTime = JwtHelpers.GetJwtExpirationTime(userSecurity.RefreshToken);
-        
-        var updateUser = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
-        if (!updateUser.Success)
-            return await Result<UserLoginResponse>.FailAsync(updateUser.ErrorMessage);
-        
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Success)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
 
+        // Generate the JWT and return
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var response = new UserLoginResponse() { Token = token, RefreshToken = userSecurity.RefreshToken,
             RefreshTokenExpiryTime = (DateTime)userSecurity.RefreshTokenExpiryTime };
 
+        // Create audit log for login if configured
         if (_serverState.AuditLoginLogout)
         {
             await _auditService.CreateAsync(new AuditTrailCreate
@@ -247,29 +262,30 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            if (_serverState.AuditLoginLogout)
-            {
-                if (userId == Guid.Empty)
-                    userId = GetIdFromPrincipal(_authProvider.AuthenticationStateUser);
-                var user = (await _userRepository.GetByIdAsync(userId)).Result ??
-                           new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
-
-                await _auditService.CreateAsync(new AuditTrailCreate
-                {
-                    TableName = "AuthState",
-                    RecordId = userId,
-                    ChangedBy = _serverState.SystemUserId,
-                    Action = DatabaseActionType.Logout,
-                    Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", user.Username}, {"Email", user.Email}}),
-                    After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"Email", ""}})
-                });
-            }
-            
+            // Remove JWT and refresh JWT from the local client storage and deauthenticate
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
-            
             _authProvider.DeauthenticateUser();
             _httpClient.DefaultRequestHeaders.Authorization = null;
+            
+            if (!_serverState.AuditLoginLogout) return await Result.SuccessAsync();
+            
+            // Create audit log for logout if configured
+            if (userId == Guid.Empty)
+                userId = await _currentUserService.GetCurrentUserId() ?? Guid.Empty;
+                
+            var user = (await _userRepository.GetByIdAsync(userId)).Result ??
+                       new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
+
+            await _auditService.CreateAsync(new AuditTrailCreate
+            {
+                TableName = "AuthState",
+                RecordId = userId,
+                ChangedBy = _serverState.SystemUserId,
+                Action = DatabaseActionType.Logout,
+                Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", user.Username}, {"Email", user.Email}}),
+                After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"Email", ""}})
+            });
 
             return await Result.SuccessAsync();
         }
@@ -660,9 +676,9 @@ public class AppAccountService : IAppAccountService
 
         var preferencesFull = preferences.Result.ToFull();
             
-        preferencesFull.CustomThemeOne = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeOne!);
-        preferencesFull.CustomThemeTwo = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeTwo!);
-        preferencesFull.CustomThemeThree = _serializer.Deserialize<AppThemeCustom>(preferences.Result.CustomThemeThree!);
+        preferencesFull.CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeOne!);
+        preferencesFull.CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeTwo!);
+        preferencesFull.CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeThree!);
 
         return await Result<AppUserPreferenceFull>.SuccessAsync(preferencesFull);
     }
@@ -824,6 +840,13 @@ public class AppAccountService : IAppAccountService
         try
         {
             var userSecurity = await _userRepository.GetSecurityAsync(userId);
+            userSecurity.Result!.LastFullLogin ??= _dateTime.NowDatabaseTime;
+            
+            // If configured force login time has passed since last full login we want the user to login again
+            if (userSecurity.Result!.LastFullLogin!.Value.AddMinutes(_securityConfig.ForceLoginIntervalMinutes) < _dateTime.NowDatabaseTime)
+                return true;
+            
+            // If account auth state is set to force re-login we want the user to login again
             return userSecurity.Result!.AuthState == AuthState.LoginRequired;
         }
         catch (Exception)

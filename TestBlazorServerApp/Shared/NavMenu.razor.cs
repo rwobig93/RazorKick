@@ -9,7 +9,6 @@ namespace TestBlazorServerApp.Shared;
 
 public partial class NavMenu
 {
-    // TODO: Find a working solution for MudTooltip to span full nav menu and only display when drawer is closed
     private bool _canViewApi;
     private bool _canViewJobs;
     private bool _canViewCounter;

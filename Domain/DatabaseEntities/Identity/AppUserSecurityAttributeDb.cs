@@ -16,6 +16,5 @@ public class AppUserSecurityAttributeDb
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public int BadPasswordAttempts { get; set; }
     public DateTime? LastBadPassword { get; set; }
-    // TODO: Add this to the database and implement a check on this against SecurityConfiguration.ForceLoginIntervalMinutes
     public DateTime? LastFullLogin { get; set; }
 }

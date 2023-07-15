@@ -426,7 +426,8 @@ public static class UserMappers
             AuthState = securityDb.AuthState,
             AuthStateTimestamp = securityDb.AuthStateTimestamp,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
-            LastBadPassword = securityDb.LastBadPassword
+            LastBadPassword = securityDb.LastBadPassword,
+            LastFullLogin = securityDb.LastFullLogin
         };
     }
 
@@ -444,7 +445,8 @@ public static class UserMappers
             RefreshToken = securityDb.RefreshToken,
             RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
-            LastBadPassword = securityDb.LastBadPassword
+            LastBadPassword = securityDb.LastBadPassword,
+            LastFullLogin = securityDb.LastFullLogin
         };
     }
 
@@ -476,6 +478,7 @@ public static class UserMappers
             RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
             LastBadPassword = securityDb.LastBadPassword,
+            LastFullLogin = securityDb.LastFullLogin,
             TwoFactorEnabled = securityDb.TwoFactorEnabled,
             TwoFactorKey = securityDb.TwoFactorKey
         };
@@ -514,7 +517,8 @@ public static class UserMappers
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,
-            LastBadPassword = appUser.LastBadPassword
+            LastBadPassword = appUser.LastBadPassword,
+            LastFullLogin = appUser.LastFullLogin
         };
     }
     
@@ -551,7 +555,8 @@ public static class UserMappers
             RefreshToken = appUser.RefreshToken,
             RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,
-            LastBadPassword = appUser.LastBadPassword
+            LastBadPassword = appUser.LastBadPassword,
+            LastFullLogin = appUser.LastFullLogin
         };
     }
 

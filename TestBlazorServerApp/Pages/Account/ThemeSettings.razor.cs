@@ -76,7 +76,7 @@ public partial class ThemeSettings
         StateHasChanged();
     }
 
-    private async Task UpdatePreferences()
+    private async Task SavePreferences()
     {
         var updatePreferences = _userPreferences.ToUpdate();
         var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
@@ -87,6 +87,7 @@ public partial class ThemeSettings
         }
 
         Snackbar.Add("Themes successfully updated!");
+        await GetPreferences();
         StateHasChanged();
     }
 
@@ -106,5 +107,7 @@ public partial class ThemeSettings
             default:
                 throw new ArgumentOutOfRangeException(nameof(_editingThemeId));
         }
+        
+        UpdateEditingThemeValues(_editingThemeId);
     }
 }

@@ -62,7 +62,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
-                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0;
@@ -80,7 +80,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
-                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0
@@ -111,7 +111,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
-                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0 AND s.AuthState = 3;
@@ -181,7 +181,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
-                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Id = @Id AND u.IsDeleted = 0
@@ -253,7 +253,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
-                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword
+                        s.RefreshToken, s.RefreshTokenExpiryTime, s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Username = @Username AND u.IsDeleted = 0

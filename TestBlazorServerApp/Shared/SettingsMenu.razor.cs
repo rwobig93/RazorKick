@@ -22,8 +22,6 @@ public partial class SettingsMenu
     [Parameter] public MudTheme SelectedTheme { get; set; } = AppThemes.DarkTheme.Theme;
     [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
 
-    private bool _testToggleOne;
-    private bool _testToggleTwo;
     private string _clientTimeZone = "GMT";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

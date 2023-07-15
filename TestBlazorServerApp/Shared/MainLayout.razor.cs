@@ -2,17 +2,22 @@
 using System.Security.Principal;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using QRCoder.Extensions;
+using TestBlazorServerApp.Pages.Account;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
@@ -22,13 +27,18 @@ public partial class MainLayout
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     [Inject] private IRunningServerState ServerState { get; set; } = null!;
     [Inject] private ILocalStorageService LocalStorage { get; set; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
+    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     
+
     public ClaimsPrincipal CurrentUser { get; set; } = new();
     
     public AppUserPreferenceFull _userPreferences = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
-    
+
     private AppUserFull UserFull { get; set; } = new();
     private bool _settingsDrawerOpen;
 
@@ -44,15 +54,28 @@ public partial class MainLayout
 
     private async Task GetCurrentUser()
     {
+        // Gather current tokens if they exist for authentication flow
+        var tokenRequest = await GetRefreshTokenRequest();
+        
         try
         {
-            CurrentUser = await CurrentUserService.GetCurrentUserPrincipal() ?? new ClaimsPrincipal();
-            UserFull = await CurrentUserService.GetCurrentUserFull() ?? new AppUserFull();
+            CurrentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+            UserFull = (await CurrentUserService.GetCurrentUserFull())!;
+
+            // If both tokens are present on the client local storage and there aren't any claims the token has expired
+            if (!string.IsNullOrWhiteSpace(tokenRequest.Token) &&
+                 !string.IsNullOrWhiteSpace(tokenRequest.RefreshToken) &&
+                !CurrentUser.Claims.Any())
+                throw new SecurityTokenException("Token expired");
         }
-        catch (SecurityTokenException)
+        catch (Exception)
         {
-            // Gather current tokens if they exist to attempt a re-authentication
-            var tokenRequest = await GetRefreshTokenRequest();
+            if (string.IsNullOrWhiteSpace(tokenRequest.Token) || string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
+            {
+                // Using refresh token failed, user must do a fresh login
+                await LogoutAndClearCache();
+                return;
+            }
 
             var response = await AccountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
             if (!response.Succeeded)
@@ -65,18 +88,37 @@ public partial class MainLayout
             // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
             await AccountService.CacheAuthTokens(response);
         }
-        catch (Exception)
-        {
-            // User has invalid or old saved token so we'll force a local storage clear and deauthenticate then redirect
-            await LogoutAndClearCache();
-        }
     }
 
     private async Task LogoutAndClearCache()
     {
+        var loginRedirectReason = LoginRedirectReason.SessionExpired;
+
+        try
+        {
+            // Validate if re-login is forced to give feedback to the user, items are ordered for overwrite precedence
+            if (UserFull.Id != Guid.Empty)
+            {
+                var userSecurity = (await UserService.GetSecurityInfoAsync(UserFull.Id)).Data;
+                
+                // Force re-login was set on the account
+                if (userSecurity!.AuthState == AuthState.LoginRequired)
+                    loginRedirectReason = LoginRedirectReason.ReAuthenticationForce;
+                // Last full login is older than the configured timeout
+                if (userSecurity.LastFullLogin!.Value.AddMinutes(SecuritySettings.Value.ForceLoginIntervalMinutes) <
+                    DateTimeService.NowDatabaseTime)
+                    loginRedirectReason = LoginRedirectReason.FullLoginTimeout;
+            }
+        }
+        catch
+        {
+            // Ignore any exceptions since we'll just be logging out anyway
+        }
+
         await AccountService.LogoutGuiAsync(Guid.Empty);
+        var loginUriBase = new Uri(string.Concat(AppSettings.Value.BaseUrl, AppRouteConstants.Identity.Login));
         var loginUriFull = QueryHelpers.AddQueryString(
-            AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
+            loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
         
         NavManager.NavigateTo(loginUriFull, true);
     }

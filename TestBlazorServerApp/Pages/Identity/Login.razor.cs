@@ -7,6 +7,7 @@ using Application.Repositories.Identity;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
@@ -27,7 +29,8 @@ public partial class Login
     
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IAppUserService UserService { get; set; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -38,7 +41,7 @@ public partial class Login
     private List<string> AuthResults { get; set; } = new();
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-
+    
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -74,6 +77,9 @@ public partial class Login
             case nameof(LoginRedirectReason.ReAuthenticationForce):
                 Snackbar.Add(LoginRedirectConstants.ReAuthenticationForce, Severity.Error);
                 break;
+            case nameof(LoginRedirectReason.FullLoginTimeout):
+                Snackbar.Add(LoginRedirectConstants.FullLoginTimeout, Severity.Error);
+                break;
             default:
                 Snackbar.Add(LoginRedirectConstants.Unknown, Severity.Error);
                 break;
@@ -101,7 +107,7 @@ public partial class Login
             
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
             
-            NavManager.NavigateTo(NavManager.Uri, true);
+            NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
         }
         catch (Exception ex)
         {

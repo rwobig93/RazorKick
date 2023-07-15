@@ -18,22 +18,6 @@
             </MudNavLink>
         }
     }
-    @if (_canViewApi || _canViewJobs)
-    {
-        <MudDivider Light="true" DividerType="DividerType.Middle"/>
-        @if (_canViewApi)
-        {
-            <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
-                API
-            </MudNavLink>
-        }
-        @if (_canViewJobs)
-        {
-            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
-                Jobs Dashboard
-            </MudNavLink>
-        }
-    }
     @if (_canViewUsers || _canViewRoles)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
@@ -53,6 +37,22 @@
         {
             <MudNavLink Href="@AppRouteConstants.Admin.AuditTrails" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FormatListNumbered">
                 Audit Trails
+            </MudNavLink>
+        }
+    }
+    @if (_canViewApi || _canViewJobs)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewApi)
+        {
+            <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+                API
+            </MudNavLink>
+        }
+        @if (_canViewJobs)
+        {
+            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
+                Jobs Dashboard
             </MudNavLink>
         }
     }

@@ -84,7 +84,7 @@ public class SqlDatabaseSeederService : IHostedService
         if (adminUser.Success)
             await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
 
-        if (_lifecycleConfig.EnforceNonSystemAndAdminAccounts)
+        if (_lifecycleConfig.EnforceTestAccounts)
         {
             var moderatorUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,
