@@ -42,47 +42,6 @@
                 </MudButton>
             </MudItem>
         </MudPaper>
-        @if (_canGenerateApiTokens)
-        {
-            <MudPaper Width="98%" Class="pa-4 mb-3">
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Token</MudText>
-                </MudItem>
-                @* TODO: find spacing for these elements to get them aligned in the center & verify token generation *@
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"
-                         Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center">
-                    <MudButton Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
-                        Color="Color.Primary" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined">
-                        @_apiTokenGenButtonText
-                    </MudButton>
-                    <MudSpacer/>
-                    <MudSelect Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
-                        @bind-Value="_tokenTimeframe" Label="Token Lifetime" OpenIcon="@Icons.Material.Filled.Api" AdornmentColor="Color.Secondary">
-                        @foreach (JwtTimeframe item in Enum.GetValues(typeof(JwtTimeframe)))
-                        {
-                            <MudSelectItem Value="@item">@item</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Hover="true" Dense="true" Striped="true">
-                    <MudTable Items="@_userApiTokens">
-                        <HeaderContent>
-                            <MudTh></MudTh>
-                            <MudTh>Expiration</MudTh>
-                            <MudTh>Token (Last 4)</MudTh>
-                            <MudTh>Copy Token To Clipboard</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
-                            <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToLongTimeString()</MudTd>
-                            <MudTd DataLabel="Value">@context.Value[^4..]</MudTd>
-                            <MudTd DataLabel="Copy"><MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                                                               OnClick="@(() => CopyToClipboard(@context.Value))"/></MudTd>
-                        </RowTemplate>
-                    </MudTable>
-                </MudItem>
-            </MudPaper>
-        }
         <MudPaper Width="98%" Class="pa-4 mb-3">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Multi-Factor Authentication (MFA)</MudText>
@@ -128,5 +87,45 @@
                 </MudItem>
             }
         </MudPaper>
+        @if (_canGenerateApiTokens)
+        {
+            <MudPaper Width="98%" Class="pa-4 mb-3">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Token</MudText>
+                </MudItem>
+                @* TODO: find spacing for these elements to get them aligned in the center & verify token generation *@
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"
+                         Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center">
+                    <MudButton Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
+                        Color="Color.Primary" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined">
+                        @_apiTokenGenButtonText
+                    </MudButton>
+                    <MudSelect Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
+                        @bind-Value="_tokenTimeframe" Label="Token Lifetime" OpenIcon="@Icons.Material.Filled.Api" AdornmentColor="Color.Secondary">
+                        @foreach (UserApiTokenTimeframe item in Enum.GetValues(typeof(UserApiTokenTimeframe)))
+                        {
+                            <MudSelectItem Value="@item">@item</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" Hover="true" Dense="true" Striped="true">
+                    <MudTable Items="@_userApiTokens">
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>Expiration</MudTh>
+                            <MudTh>Token (Last 4)</MudTh>
+                            <MudTh>Copy Token To Clipboard</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
+                            <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToLongTimeString()</MudTd>
+                            <MudTd DataLabel="Value">@context.Value[^4..]</MudTd>
+                            <MudTd DataLabel="Copy"><MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
+                                                               OnClick="@(() => CopyToClipboard(@context.Value))"/></MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudItem>
+            </MudPaper>
+        }
     </MudGrid>
 </MudContainer>

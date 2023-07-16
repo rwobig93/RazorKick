@@ -206,11 +206,11 @@ public static class RoleEndpoints
             var roleResponse = await roleService.RemoveUserFromRoleAsync(userId, roleId);
             if (!roleResponse.Succeeded) return await Result<bool>.FailAsync(roleResponse.Messages);
             
-            return await Result<bool>.SuccessAsync("Successfully removed user from role!");
+            return await Result.SuccessAsync("Successfully removed user from role!");
         }
         catch (Exception ex)
         {
-            return await Result<bool>.FailAsync(ex.Message);
+            return await Result.FailAsync(ex.Message);
         }
     }
 

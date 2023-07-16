@@ -849,26 +849,22 @@ public class AppAccountService : IAppAccountService
         return await Result.SuccessAsync($"User account successfully set: {userSecurity.Result.AuthState.ToString()}");
     }
 
-    public async Task<IResult> GenerateUserApiToken(Guid userId, JwtTimeframe timeframe)
+    public async Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe)
     {
+        // TODO: API token will be a random string, then used to verify identity instead of user+pass, then generate the JWT w/ the user claims
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
         if (!foundUserRequest.Success || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
-        var userClaims = await GetClaimsAsync(foundUserRequest.Result.ToUserDb());
-        var apiToken = JwtHelpers.GenerateUserApiJwtEncryptedToken(userClaims, timeframe, _dateTime, _securityConfig, _appConfig);
-        var apiTokenExpiration = JwtHelpers.GetJwtExpirationTime(apiToken);
-
-        var deleteTokensRequest = await DeleteUserApiTokens(foundUserRequest.Result.Id);
-        if (!deleteTokensRequest.Succeeded)
-            return await Result.FailAsync(deleteTokensRequest.Messages);
+        var userApiToken = UrlHelpers.GenerateToken(_securityConfig.UserApiTokenSizeInBytes);
+        var tokenExpiration = UserApiHelpers.GetUserApiTokenExpirationTime(_dateTime, timeframe);
 
         var newExtendedAttribute = new AppUserExtendedAttributeCreate()
         {
             OwnerId = foundUserRequest.Result.Id,
-            Name = apiTokenExpiration.ToString(CultureInfo.CurrentCulture),
+            Name = tokenExpiration.ToString(CultureInfo.CurrentCulture),
             Type = ExtendedAttributeType.UserApiToken,
-            Value = apiToken
+            Value = userApiToken
         };
         var addRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         if (!addRequest.Success)
@@ -877,7 +873,32 @@ public class AppAccountService : IAppAccountService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteUserApiTokens(Guid userId)
+    public async Task<IResult> DeleteUserApiToken(Guid userId, string value)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
+        var apiTokenRequest = 
+            await _userRepository.GetExtendedAttributeByTypeAndValueAsync(ExtendedAttributeType.UserApiToken, value);
+        if (!apiTokenRequest.Success || apiTokenRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+
+        var apiToken = apiTokenRequest.Result.FirstOrDefault();
+        if (apiToken is null)
+            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+
+        if (apiToken.OwnerId != foundUserRequest.Result.Id)
+            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+        
+        var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(apiToken.Id);
+        if (!removeRequest.Success)
+            return await Result.FailAsync(removeRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> DeleteAllUserApiTokens(Guid userId)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
         if (!foundUserRequest.Success || foundUserRequest.Result is null)

@@ -685,6 +685,25 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb?>>> GetExtendedAttributeByTypeAndValueAsync(
+        ExtendedAttributeType type, string value)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb?>> actionReturn = new();
+
+        try
+        {
+            var foundAttribute = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributesMsSql.GetByTypeAndValue, new {Value = value}));
+            actionReturn.Succeed(foundAttribute);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetByTypeAndValue.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId,
         ExtendedAttributeType type)
     {

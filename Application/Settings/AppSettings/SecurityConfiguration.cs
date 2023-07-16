@@ -20,6 +20,9 @@ public class SecurityConfiguration: IAppSettingsSection
     [Range(1, 5_184_000)]
     public int ApiTokenExpirationMinutes { get; init; } = 60;
     
+    [Range(16, 256)]
+    public int UserApiTokenSizeInBytes { get; init; } = 128;
+    
     [Range(0, 86_400)]
     public int SessionIdleTimeoutMinutes { get; init; } = 240;
     

@@ -50,7 +50,7 @@ public partial class SecuritySettings
     private List<AppUserExtendedAttributeSlim> _userApiTokens = new();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private string _apiTokenGenButtonText = "Generate Token";
-    private JwtTimeframe _tokenTimeframe = JwtTimeframe.OneYear;
+    private UserApiTokenTimeframe _tokenTimeframe = UserApiTokenTimeframe.OneYear;
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -231,11 +231,11 @@ public static class PermissionEndpoints
             var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id, Guid.Empty);
             if (!permissionResponse.Succeeded) return permissionResponse;
 
-            return await Result<bool>.SuccessAsync("Successfully removed permission from role!");
+            return await Result.SuccessAsync("Successfully removed permission from role!");
         }
         catch (Exception ex)
         {
-            return await Result<bool>.FailAsync(ex.Message);
+            return await Result.FailAsync(ex.Message);
         }
     }
 

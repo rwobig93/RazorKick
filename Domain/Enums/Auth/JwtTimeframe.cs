@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enums.Auth;
 
-public enum JwtTimeframe
+public enum UserApiTokenTimeframe
 {
     OneDay = 0,
     OneWeek = 1,

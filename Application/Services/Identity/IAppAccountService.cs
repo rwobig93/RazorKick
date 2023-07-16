@@ -34,6 +34,7 @@ public interface IAppAccountService
     Task<bool> IsCurrentSessionValid();
     Task<bool> IsUserRequiredToReAuthenticate(Guid userId);
     Task<IResult> SetAuthState(Guid userId, AuthState authState);
-    Task<IResult> GenerateUserApiToken(Guid userId, JwtTimeframe timeframe);
-    Task<IResult> DeleteUserApiTokens(Guid userId);
+    Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe);
+    Task<IResult> DeleteUserApiToken(Guid userId, string value);
+    Task<IResult> DeleteAllUserApiTokens(Guid userId);
 }

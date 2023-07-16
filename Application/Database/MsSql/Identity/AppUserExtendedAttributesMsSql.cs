@@ -99,6 +99,23 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByTypeAndValue = new()
+    {
+        Table = Table,
+        Action = "GetByTypeAndValue",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByTypeAndValue]
+                @Type int,
+                @Value NVARCHAR(256)
+            AS
+            begin
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Value = @Value AND e.Type = @Type
+                ORDER BY e.Id;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure GetAll = new()
     {
         Table = Table,

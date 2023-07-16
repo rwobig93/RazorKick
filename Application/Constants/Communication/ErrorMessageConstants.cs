@@ -5,6 +5,7 @@ public static class ErrorMessageConstants
     // General / Generic Errors
     public const string GenericError = "An internal server error occurred, please contact the administrator";
     public const string InvalidValueError = "The value provided was invalid, please try again";
+    public const string GenericNotFound = "Was unable to find anything matching your request";
     
     // User Errors
     public const string AccountDisabledError = "Your account is disabled, please contact the administrator";
