@@ -1,9 +1,14 @@
-﻿using Application.Constants.Web;
+﻿using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
+using Domain.Enums.Auth;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -15,9 +20,13 @@ public partial class SecuritySettings
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
     [Inject] private IMfaService MfaService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
 
     private AppUserSecurityFull CurrentUser { get; set; } = new();
-
+    
+    private bool _canGenerateApiTokens;
+    
     // User Password Change
     private string CurrentPassword { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
@@ -37,12 +46,21 @@ public partial class SecuritySettings
     private string _totpCode = "";
     private bool QrCodeGenerating { get; set; }
     
+    // User API Tokens
+    private List<AppUserExtendedAttributeSlim> _userApiTokens = new();
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private string _apiTokenGenButtonText = "Generate Token";
+    private JwtTimeframe _tokenTimeframe = JwtTimeframe.OneYear;
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
+            await GetClientTimezone();
+            await GetUserApiTokens();
             UpdatePageElementStates();
             StateHasChanged();
         }
@@ -55,6 +73,12 @@ public partial class SecuritySettings
             return;
 
         CurrentUser = foundUser;
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
     }
 
     private void UpdatePageElementStates()
@@ -239,5 +263,59 @@ public partial class SecuritySettings
     {
         if (arg.Key == "Enter")
             await ValidateTotpCode();
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task GetUserApiTokens()
+    {
+        if (!_canGenerateApiTokens) return;
+
+        var tokensRequest =
+            await UserService.GetUserExtendedAttributesByTypeAsync(CurrentUser.Id, ExtendedAttributeType.UserApiToken);
+        if (!tokensRequest.Succeeded)
+        {
+            tokensRequest.Messages.ForEach(x => Snackbar.Add($"Api Token retrieval failed: {x}", Severity.Error));
+            return;
+        }
+
+        _userApiTokens = tokensRequest.Data.ToList();
+        if (_userApiTokens.Any())
+            _apiTokenGenButtonText = "Regenerate Token";
+    }
+
+    private async Task GenerateUserApiToken()
+    {
+        if (!_canGenerateApiTokens) return;
+
+        var generateRequest = await AccountService.GenerateUserApiToken(CurrentUser.Id, _tokenTimeframe);
+        if (!generateRequest.Succeeded)
+        {
+            generateRequest.Messages.ForEach(x => Snackbar.Add($"Failed to generate token: {x}", Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully generated API token!", Severity.Success);
+        await GetUserApiTokens();
+        StateHasChanged();
+    }
+
+    private async Task CopyToClipboard(string content)
+    {
+        var copyRequest = await WebClientService.InvokeClipboardCopy(content);
+        if (!copyRequest.Succeeded)
+        {
+            copyRequest.Messages.ForEach(x => Snackbar.Add($"Failed to copy to clipboard: {x}", Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully copied your API token to your clipboard!", Severity.Info);
     }
 }

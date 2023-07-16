@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Enums.Auth;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Helpers.Auth;
@@ -55,6 +56,26 @@ public static class JwtHelpers
     public static DateTime GetApiJwtExpirationTime(IDateTimeService dateTime, SecurityConfiguration securityConfig)
     {
         return dateTime.NowDatabaseTime.AddMinutes(securityConfig.ApiTokenExpirationMinutes);
+    }
+
+    public static DateTime GetUserApiJwtExpirationTime(IDateTimeService dateTime, JwtTimeframe timeframe)
+    {
+        return timeframe switch
+        {
+            JwtTimeframe.OneDay => dateTime.NowDatabaseTime.AddDays(1),
+            JwtTimeframe.OneWeek => dateTime.NowDatabaseTime.AddDays(7),
+            JwtTimeframe.TwoWeeks => dateTime.NowDatabaseTime.AddDays(14),
+            JwtTimeframe.OneMonth => dateTime.NowDatabaseTime.AddMonths(1),
+            JwtTimeframe.TwoMonths => dateTime.NowDatabaseTime.AddMonths(2),
+            JwtTimeframe.ThreeMonths => dateTime.NowDatabaseTime.AddMonths(3),
+            JwtTimeframe.SixMonths => dateTime.NowDatabaseTime.AddMonths(6),
+            JwtTimeframe.OneYear => dateTime.NowDatabaseTime.AddYears(1),
+            JwtTimeframe.TwoYears => dateTime.NowDatabaseTime.AddYears(2),
+            JwtTimeframe.ThreeYears => dateTime.NowDatabaseTime.AddYears(3),
+            JwtTimeframe.FiveYears => dateTime.NowDatabaseTime.AddYears(5),
+            JwtTimeframe.TenYears => dateTime.NowDatabaseTime.AddYears(10),
+            _ => throw new ArgumentOutOfRangeException(nameof(timeframe), timeframe, null)
+        };
     }
 
     public static DateTime GetJwtRefreshTokenExpirationTime(IDateTimeService dateTime, SecurityConfiguration securityConfig)
@@ -124,6 +145,22 @@ public static class JwtHelpers
         return JwtHandler.WriteToken(token);
     }
 
+    public static string GenerateUserApiJwtEncryptedToken(IEnumerable<Claim> claims, JwtTimeframe timeframe, IDateTimeService dateTime, 
+    SecurityConfiguration 
+    securityConfig,
+        AppConfiguration appConfig)
+    {
+        var token = new JwtSecurityToken(
+            claims: claims,
+            notBefore: GetJwtValidBeforeTime(dateTime),
+            expires: GetUserApiJwtExpirationTime(dateTime, timeframe),
+            signingCredentials: GetSigningCredentials(securityConfig),
+            issuer: GetJwtIssuer(appConfig),
+            audience: GetJwtAudience(appConfig));
+        
+        return JwtHandler.WriteToken(token);
+    }
+
     public static string GenerateUserJwtRefreshToken(IDateTimeService dateTime, SecurityConfiguration securityConfig, AppConfiguration appConfig,
         Guid userId)
     {
@@ -148,13 +185,20 @@ public static class JwtHelpers
 
     public static ClaimsPrincipal? GetClaimsPrincipalFromToken(string? token, SecurityConfiguration securityConfig, AppConfiguration appConfig)
     {
-        var validator = GetJwtValidationParameters(securityConfig, appConfig);
+        try
+        {
+            var validator = GetJwtValidationParameters(securityConfig, appConfig);
 
-        if (string.IsNullOrWhiteSpace(token))
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+        
+            var claimsPrincipal = JwtHandler.ValidateToken(token, validator, out _);
+            return claimsPrincipal;
+        }
+        catch (Exception)
+        {
             return null;
-
-        var claimsPrincipal = JwtHandler.ValidateToken(token, validator, out _);
-        return claimsPrincipal;
+        }
     }
 
     public static bool IsJwtValid(string? token, SecurityConfiguration securityConfig, AppConfiguration appConfig)

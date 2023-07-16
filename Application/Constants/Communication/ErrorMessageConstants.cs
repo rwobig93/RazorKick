@@ -12,8 +12,8 @@ public static class ErrorMessageConstants
         "Your account is locked out due to bad password attempts, please contact the administrator or wait for the lockout expiration to end";
     public const string EmailNotConfirmedError = "Your email has not been confirmed, please confirm your email";
     public const string UserNotFoundError = "Was unable to find a user with the provided information";
-    public const string ServiceAccountOnly = 
-        "This action can only be done by a service account, your account is a user account. Please contact the administrator for a service account";
+    public const string ServiceAccountOnly = "This action is meant for service accounts. " + 
+        "Please contact the administrator for a service account or generate your own token from the account page";
     
     // Authentication Errors
     public const string CredentialsInvalidError = "The username and password combination provided is invalid";

@@ -112,4 +112,18 @@ public class WebClientService : IWebClientService
             return await Result.FailAsync($"Failed to invoke play audio: {ex.Message}");
         }
     }
+
+    public async Task<IResult> InvokeClipboardCopy(string content)
+    {
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("copyToClipboard");
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync($"Failed to invoke clipboard copy: {ex.Message}");
+        }
+    }
 }

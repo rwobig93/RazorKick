@@ -50,6 +50,7 @@ public static class PermissionConstants
     public static class Api
     {
         public const string View = "Permissions.System.Api.View";
+        public const string GenerateToken = "Permissions.System.Api.GenerateToken";
     }
 
     public static class Example

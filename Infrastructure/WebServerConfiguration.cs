@@ -99,8 +99,7 @@ public static class WebServerConfiguration
     private static void SetupRunningServerState(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
-        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
-        var lifecycleConfig = scope.ServiceProvider.GetRequiredService<IOptions<LifecycleConfiguration>>();
+        var appConfig = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<AppConfiguration>>();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
         
         #if DEBUG
@@ -109,8 +108,7 @@ public static class WebServerConfiguration
             serverState.IsRunningInDebugMode = false;
         #endif
         
-        serverState.ApplicationName = appConfig.Value.ApplicationName;
-        serverState.AuditLoginLogout = lifecycleConfig.Value.AuditLoginLogout;
+        serverState.ApplicationName = appConfig.CurrentValue.ApplicationName;
     }
 
     private static void ValidateDatabaseStructure(this IHost app)

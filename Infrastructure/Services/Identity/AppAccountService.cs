@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Globalization;
+using System.Security.Claims;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
@@ -22,6 +23,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Auth;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
@@ -53,13 +55,14 @@ public class AppAccountService : IAppAccountService
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly SecurityConfiguration _securityConfig;
     private readonly ICurrentUserService _currentUserService;
+    private readonly LifecycleConfiguration _lifecycleConfig;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
         IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -75,6 +78,7 @@ public class AppAccountService : IAppAccountService
         _auditService = auditService;
         _contextAccessor = contextAccessor;
         _currentUserService = currentUserService;
+        _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
 
@@ -144,7 +148,7 @@ public class AppAccountService : IAppAccountService
             RefreshTokenExpiryTime = (DateTime)userSecurity.RefreshTokenExpiryTime };
 
         // Create audit log for login if configured
-        if (_serverState.AuditLoginLogout)
+        if (_lifecycleConfig.AuditLoginLogout)
         {
             await _auditService.CreateAsync(new AuditTrailCreate
             {
@@ -180,7 +184,7 @@ public class AppAccountService : IAppAccountService
         }
     }
 
-    public async Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest)
+    public async Task<IResult<ApiTokenResponse>> GetServiceAccountApiToken(ApiGetTokenRequest tokenRequest)
     {
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(tokenRequest.Username)).Result;
         if (userSecurity is null)
@@ -252,14 +256,6 @@ public class AppAccountService : IAppAccountService
         }
     }
 
-    private static Guid GetIdFromPrincipal(ClaimsPrincipal principal)
-    {
-        var userIdClaim = principal.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
-        var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
-        
-        return !isGuid ? Guid.Empty : userId;
-    }
-
     public async Task<IResult> LogoutGuiAsync(Guid userId)
     {
         try
@@ -270,7 +266,7 @@ public class AppAccountService : IAppAccountService
             _authProvider.DeauthenticateUser();
             _httpClient.DefaultRequestHeaders.Authorization = null;
             
-            if (!_serverState.AuditLoginLogout) return await Result.SuccessAsync();
+            if (!_lifecycleConfig.AuditLoginLogout) return await Result.SuccessAsync();
             
             // Create audit log for logout if configured
             if (userId == Guid.Empty)
@@ -685,28 +681,6 @@ public class AppAccountService : IAppAccountService
         return await Result<AppUserPreferenceFull>.SuccessAsync(preferencesFull);
     }
 
-    public async Task<IResult> ChangeUserEnabledState(Guid userId, bool enabled)
-    {
-        var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
-        if (!userSecurity.Success)
-            return await Result.FailAsync(userSecurity.ErrorMessage);
-        
-        userSecurity.Result!.AuthState = enabled ? AuthState.Enabled : AuthState.Disabled;
-
-        var securityUpdate = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
-        if (!securityUpdate.Success)
-            return await Result.FailAsync(securityUpdate.ErrorMessage);
-        
-        userSecurity.Result!.LastModifiedBy = _serverState.SystemUserId;
-        userSecurity.Result!.LastModifiedOn = _dateTime.NowDatabaseTime;
-
-        var updateRequest = await _userRepository.UpdateAsync(userSecurity.Result.ToUserUpdate());
-        if (!updateRequest.Success)
-            return await Result.FailAsync(updateRequest.ErrorMessage);
-
-        return await Result.SuccessAsync($"User account successfully {nameof(userSecurity.Result.AuthState)}");
-    }
-
     public async Task<IResult> ForceUserPasswordReset(Guid userId)
     {
         var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
@@ -873,5 +847,63 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync($"User account successfully set: {userSecurity.Result.AuthState.ToString()}");
+    }
+
+    public async Task<IResult> GenerateUserApiToken(Guid userId, JwtTimeframe timeframe)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
+        var userClaims = await GetClaimsAsync(foundUserRequest.Result.ToUserDb());
+        var apiToken = JwtHelpers.GenerateUserApiJwtEncryptedToken(userClaims, timeframe, _dateTime, _securityConfig, _appConfig);
+        var apiTokenExpiration = JwtHelpers.GetJwtExpirationTime(apiToken);
+
+        var deleteTokensRequest = await DeleteUserApiTokens(foundUserRequest.Result.Id);
+        if (!deleteTokensRequest.Succeeded)
+            return await Result.FailAsync(deleteTokensRequest.Messages);
+
+        var newExtendedAttribute = new AppUserExtendedAttributeCreate()
+        {
+            OwnerId = foundUserRequest.Result.Id,
+            Name = apiTokenExpiration.ToString(CultureInfo.CurrentCulture),
+            Type = ExtendedAttributeType.UserApiToken,
+            Value = apiToken
+        };
+        var addRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+        if (!addRequest.Success)
+            return await Result.FailAsync(addRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> DeleteUserApiTokens(Guid userId)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+        
+        var existingTokenRequest =
+            await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUserRequest.Result.Id, ExtendedAttributeType.UserApiToken);
+        if (!existingTokenRequest.Success)
+            return await Result.FailAsync(existingTokenRequest.ErrorMessage);
+
+        var messages = new List<string>();
+        
+        var existingTokens = (existingTokenRequest.Result ?? new List<AppUserExtendedAttributeDb>()).ToArray();
+        if (existingTokens.Any())
+        {
+            foreach (var token in existingTokens)
+            {
+                var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(token.Id);
+                if (!removeRequest.Success)
+                    messages.Add(removeRequest.ErrorMessage);
+            }
+        }
+
+        if (messages.Any())
+            return await Result.FailAsync(messages);
+
+        return await Result.SuccessAsync();
     }
 }

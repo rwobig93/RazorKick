@@ -10,4 +10,5 @@ public interface IWebClientService
     Task<IResult> InvokeScrollToElement(string elementName);
     Task<IResult> InvokeScrollToBottom(string elementName);
     Task<IResult> InvokePlayAudio(string elementName);
+    Task<IResult> InvokeClipboardCopy(string content);
 }

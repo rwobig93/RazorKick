@@ -43,7 +43,6 @@ public partial class AuditTrailAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Search);
         _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Export);
     }
     

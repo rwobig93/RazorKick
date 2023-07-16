@@ -36,7 +36,7 @@ public static class ApiEndpoints
     {
         try
         {
-            return await accountService.GetApiToken(tokenRequest);
+            return await accountService.GetServiceAccountApiToken(tokenRequest);
         }
         catch (Exception ex)
         {

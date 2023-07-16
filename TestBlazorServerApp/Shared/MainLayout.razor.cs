@@ -2,7 +2,6 @@
 using System.Security.Principal;
 using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Requests.Identity.User;
@@ -16,8 +15,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using QRCoder.Extensions;
-using TestBlazorServerApp.Pages.Account;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
