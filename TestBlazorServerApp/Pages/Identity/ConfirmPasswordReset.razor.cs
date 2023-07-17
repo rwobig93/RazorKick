@@ -110,4 +110,19 @@ public partial class ConfirmPasswordReset
         confirmationResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
         PasswordChanged = true;
     }
+    
+    private IEnumerable<string> ValidatePasswordRequirements(string content)
+    {
+        var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
+        if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
+            yield return passwordIssues.First();
+    }
+    
+    private IEnumerable<string> ValidatePasswordsMatch(string content)
+    {
+        if (!string.IsNullOrEmpty(content) &&
+            !string.IsNullOrWhiteSpace(DesiredPassword) &&
+            content != DesiredPassword)
+            yield return "Desired & Confirm Passwords Don't Match";
+    }
 }

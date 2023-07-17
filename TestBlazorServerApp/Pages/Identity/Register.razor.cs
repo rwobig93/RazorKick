@@ -117,4 +117,19 @@ public partial class Register
         DesiredPassword = "MZB*R*odX%Hy!J6b7Jrm6fK@PJ77v*dfWB$*9PtUV%zPTetSb!VP!uk";
         ConfirmPassword = "MZB*R*odX%Hy!J6b7Jrm6fK@PJ77v*dfWB$*9PtUV%zPTetSb!VP!uk";
     }
+    
+    private IEnumerable<string> ValidatePasswordRequirements(string content)
+    {
+        var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
+        if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
+            yield return passwordIssues.First();
+    }
+    
+    private IEnumerable<string> ValidatePasswordsMatch(string content)
+    {
+        if (!string.IsNullOrEmpty(content) &&
+            !string.IsNullOrWhiteSpace(DesiredPassword) &&
+            content != DesiredPassword)
+            yield return "Desired & Confirm Passwords Don't Match";
+    }
 }
