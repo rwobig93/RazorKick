@@ -6,6 +6,7 @@ public class SecurityConfiguration: IAppSettingsSection
 {
     public const string SectionName = "Security";
 
+    // TODO: Change to JWT Secret of some form, add password pepper
     [Required]
     [MinLength(32)]
     [MaxLength(128)]

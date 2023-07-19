@@ -623,6 +623,9 @@ public class AppAccountService : IAppAccountService
         if (userSecurity == null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
+        // TODO: Move to validating refresh token directly and remove the token from the account security
+        // TODO: Add client ID in local storage, add that as an extended attribute and force auth if client ID isn't present
+        // TODO: Wipe out existing extended attributes for client ID's if login force is applied
         // Validate the refresh token provided matches the current refresh token on the account
         if (userSecurity.RefreshToken != refreshRequest.RefreshToken)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
@@ -852,6 +855,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe)
     {
         // TODO: API token will be a random string, then used to verify identity instead of user+pass, then generate the JWT w/ the user claims
+        // TODO: Do user+token for validation so we are always binding to the user, add lockout for attempts to prevent brute force
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
         if (!foundUserRequest.Success || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
