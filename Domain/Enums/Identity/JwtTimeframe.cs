@@ -1,4 +1,4 @@
-﻿namespace Domain.Enums.Auth;
+﻿namespace Domain.Enums.Identity;
 
 public enum UserApiTokenTimeframe
 {

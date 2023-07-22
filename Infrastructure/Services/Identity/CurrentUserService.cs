@@ -5,7 +5,6 @@ using Application.Repositories.Identity;
 using Application.Responses.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
-using Infrastructure.Services.Authentication;
 
 namespace Infrastructure.Services.Identity;
 

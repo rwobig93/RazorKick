@@ -1,7 +1,7 @@
-using Application.Services.Identity;
+using Application.Services.Integrations;
 using QRCoder;
 
-namespace Infrastructure.Services.Identity;
+namespace Infrastructure.Services.Integrations;
 
 public class QrCodeService : IQrCodeService
 {

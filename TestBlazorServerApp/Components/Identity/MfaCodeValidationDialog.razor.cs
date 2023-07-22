@@ -1,4 +1,4 @@
-using Application.Services.Identity;
+using Application.Services.Integrations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 

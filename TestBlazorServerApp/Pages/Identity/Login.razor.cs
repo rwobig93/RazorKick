@@ -1,25 +1,34 @@
+using System.Collections.Specialized;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Auth;
 using Application.Helpers.Identity;
+using Application.Helpers.Web;
 using Application.Repositories.Identity;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
+using Application.Services.Integrations;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
+using Domain.Enums.Integration;
 using Infrastructure.Services.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using OAuth2.Client;
+using OAuth2.Client.Impl;
+using OAuth2.Infrastructure;
 using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Identity;
@@ -27,11 +36,15 @@ namespace TestBlazorServerApp.Pages.Identity;
 public partial class Login
 {
     [Parameter] public string RedirectReason { get; set; } = "";
+    [Parameter] public string OauthCode { get; set; } = "";
+    [Parameter] public string OauthState { get; set; } = "";
     
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
+    [Inject] private IOptions<OauthConfiguration> OauthSettings { get; init; } = null!;
+    [Inject] private IExternalAuthProviderService ExternalAuth { get; set; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -50,6 +63,7 @@ public partial class Login
         {
             ParseParametersFromUri();
             HandleRedirectReasons();
+            await HandleExternalLoginRedirect();
             StateHasChanged();
         }
 
@@ -63,6 +77,12 @@ public partial class Login
         
         if (queryParameters.TryGetValue(LoginRedirectConstants.RedirectParameter, out var redirectReason))
             RedirectReason = redirectReason!;
+        
+        if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
+            OauthCode = oauthCode!;
+        
+        if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
+            OauthState = oauthState!;
     }
 
     private void HandleRedirectReasons()
@@ -208,5 +228,47 @@ public partial class Login
         var mfaResponse = await DialogService.ShowAsync<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
         var mfaTokenValid = await mfaResponse.Result;
         return !mfaTokenValid.Canceled;
+    }
+
+    private async Task InitiateExternalLogin(ExternalAuthProvider provider)
+    {
+        var providerLoginUriRequest = await ExternalAuth.GetLoginUri(provider);
+        if (!providerLoginUriRequest.Succeeded || string.IsNullOrWhiteSpace(providerLoginUriRequest.Data))
+        {
+            Snackbar.Add($"Failed to initiate login to desired provider: [{provider.ToString()}]", Severity.Error);
+            providerLoginUriRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        NavManager.NavigateTo(providerLoginUriRequest.Data);
+    }
+
+    private async Task HandleExternalLoginRedirect()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(OauthCode) || string.IsNullOrWhiteSpace(OauthState)) return;
+
+            var isValidProvider = Enum.TryParse(OauthState, out ExternalAuthProvider parsedProvider);
+            if (!isValidProvider)
+            {
+                Snackbar.Add($"Provided provider redirect is not valid: {OauthState}", Severity.Error);
+                return;
+            }
+
+            var externalProfileRequest = await ExternalAuth.GetUserProfile(parsedProvider, OauthCode);
+            if (!externalProfileRequest.Succeeded)
+            {
+                Snackbar.Add("Provided Oauth code is invalid", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add($"Successfully authenticated with external provider! => {parsedProvider.ToString()}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Failure occurred when attempting to handle external login redirect, likely invalid data provided");
+            Snackbar.Add("Invalid external login data provided, please try logging in again", Severity.Error);
+        }
     }
 }

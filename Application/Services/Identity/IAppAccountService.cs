@@ -4,7 +4,6 @@ using Application.Requests.Api;
 using Application.Requests.Identity.User;
 using Application.Responses.Api;
 using Application.Responses.Identity;
-using Domain.Enums.Auth;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
 

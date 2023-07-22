@@ -2,7 +2,7 @@
 
 namespace Application.Settings.AppSettings;
 
-public class SecurityConfiguration: IAppSettingsSection
+public class SecurityConfiguration : IAppSettingsSection
 {
     public const string SectionName = "Security";
 

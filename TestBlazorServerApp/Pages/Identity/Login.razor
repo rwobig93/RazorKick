@@ -1,10 +1,11 @@
 ﻿@attribute [Route(AppRouteConstants.Identity.Login)]
 @using System.Globalization
+@using Domain.Enums.Integration
 
 @attribute [AllowAnonymous]
 
 <MudContainer MaxWidth="MaxWidth.Medium">
-    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+    <MudGrid Class="justify-center my-4 mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
             <MudIcon Icon="@Icons.Material.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
         </MudItem>
@@ -34,6 +35,38 @@
                        OnClick="@ForgotPassword">Forgot Password
             </MudButton>
         </MudItem>
+    </MudGrid>
+    @if (ExternalAuth.ProviderEnabledDiscord || ExternalAuth.ProviderEnabledGoogle || ExternalAuth.ProviderEnabledSpotify ||
+         ExternalAuth.ProviderEnabledFacebook)
+    {
+        <MudGrid Class="justify-center my-4 mud-text-align-center">
+            @if (ExternalAuth.ProviderEnabledGoogle)
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Custom.Brands.Google"
+                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Google))">Login with Google
+                    </MudButton>
+                </MudItem>
+            }
+            @if (ExternalAuth.ProviderEnabledSpotify)
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.LibraryMusic"
+                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Spotify))">Login with Spotify
+                    </MudButton>
+                </MudItem>
+            }
+            @if (ExternalAuth.ProviderEnabledFacebook)
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Custom.Brands.Facebook"
+                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Facebook))">Login with Facebook
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    <MudGrid Class="justify-center my-4 mud-text-align-center">
         @if (ServerState.IsRunningInDebugMode)
         {
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">

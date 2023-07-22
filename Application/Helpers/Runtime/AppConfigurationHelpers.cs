@@ -35,4 +35,9 @@ public static class AppConfigurationHelpers
     {
         return configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>()!;
     }
+
+    public static OauthConfiguration GetOauthSettings(this IConfiguration configuration)
+    {
+        return configuration.GetSection(OauthConfiguration.SectionName).Get<OauthConfiguration>()!;
+    }
 }

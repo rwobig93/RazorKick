@@ -23,13 +23,11 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Auth;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
-using Infrastructure.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -717,9 +715,9 @@ public class AppAccountService : IAppAccountService
 
         var preferencesFull = preferences.Result.ToFull();
             
-        preferencesFull.CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeOne!);
-        preferencesFull.CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeTwo!);
-        preferencesFull.CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeThree!);
+        preferencesFull.CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeOne!) ?? new AppThemeCustom();
+        preferencesFull.CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeTwo!) ?? new AppThemeCustom();
+        preferencesFull.CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferences.Result.CustomThemeThree!) ?? new AppThemeCustom();
 
         return await Result<AppUserPreferenceFull>.SuccessAsync(preferencesFull);
     }

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
-namespace Infrastructure.Services.Authentication;
+namespace Infrastructure.Services.Identity;
 
 public class AuthStateProvider : AuthenticationStateProvider
 {

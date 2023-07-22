@@ -1,9 +1,8 @@
-﻿using System.Globalization;
-using Application.Helpers.Runtime;
+﻿using Application.Helpers.Runtime;
 using Application.Models.Identity.UserExtensions;
 using Application.Services.Identity;
 using Application.Services.System;
-using Domain.Enums.Auth;
+using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 
 namespace TestBlazorServerApp.Components.Account;

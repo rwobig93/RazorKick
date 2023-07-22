@@ -1,5 +1,5 @@
 ﻿using Application.Services.System;
-using Domain.Enums.Auth;
+using Domain.Enums.Identity;
 
 namespace Application.Helpers.Auth;
 

@@ -1,6 +1,6 @@
 using Domain.Enums.Integration;
 
-namespace Application.Services.Identity;
+namespace Application.Services.Integrations;
 
 public interface IMfaService
 {

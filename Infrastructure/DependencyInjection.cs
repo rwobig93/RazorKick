@@ -24,14 +24,12 @@ using Hangfire.PostgreSql;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
-using Infrastructure.Services.Authentication;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
 using Infrastructure.Services.Lifecycle;
 using Infrastructure.Services.System;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -96,6 +94,10 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddOptions<SecurityConfiguration>()
             .Bind(configuration.GetSection(SecurityConfiguration.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddOptions<OauthConfiguration>()
+            .Bind(configuration.GetSection(OauthConfiguration.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
     }
@@ -169,7 +171,6 @@ public static class DependencyInjection
     private static void AddAuthServices(this IServiceCollection services, IConfiguration configuration)
     {
         var securitySettings = configuration.GetSecuritySettings();
-        var appSettings = configuration.GetApplicationSettings();
 
         services.AddHttpContextAccessor();
         services.AddSingleton<IAppUserService, AppUserService>();
@@ -183,8 +184,10 @@ public static class DependencyInjection
 
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+        services.AddSingleton<IExternalAuthProviderService, ExternalAuthProviderService>();
         
-        services.AddJwtAuthentication(securitySettings, appSettings);
+        services.AddJwtAuthentication(configuration);
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
@@ -322,52 +325,12 @@ public static class DependencyInjection
         // Seeds the targeted database using the indicated provider on startup
         services.AddHostedService<SqlDatabaseSeederService>();
     }
-
-    private static AuthenticationBuilder AddOauthProviders(this AuthenticationBuilder builder, SecurityConfiguration securityConfig,
-        AppConfiguration appConfig)
-    {
-        // TODO: Add oauth configuration section for configuring providers and displaying them if they are configured at the login page
-        if (appConfig.ApplicationName == "")
-        {
-            builder.AddGoogle(options =>
-            {
-                options.ClientId = appConfig.ApplicationName;
-                options.ClientSecret = appConfig.ApplicationName;
-            });
-        }
-
-        if (appConfig.ApplicationName == "")
-        {
-            builder.AddDiscord(options =>
-            {
-                options.ClientId = appConfig.ApplicationName;
-                options.ClientSecret = appConfig.ApplicationName;
-            });
-        }
-
-        if (appConfig.ApplicationName == "")
-        {
-            builder.AddMicrosoftAccount(options =>
-            {
-                options.ClientId = appConfig.ApplicationName;
-                options.ClientSecret = appConfig.ApplicationName;
-            });
-        }
-
-        if (appConfig.ApplicationName == "")
-        {
-            builder.AddFacebook(options =>
-            {
-                options.ClientId = appConfig.ApplicationName;
-                options.ClientSecret = appConfig.ApplicationName;
-            });
-        }
-
-        return builder;
-    }
     
-    private static void AddJwtAuthentication(this IServiceCollection services, SecurityConfiguration securityConfig, AppConfiguration appConfig)
+    private static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
+        var securityConfig = configuration.GetSecuritySettings();
+        var appConfig = configuration.GetApplicationSettings();
+        
         services
             .AddAuthentication(authentication =>
             {
@@ -375,7 +338,6 @@ public static class DependencyInjection
                 authentication.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 authentication.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddGoogle()
             .AddJwtBearer(bearer =>
             {
                 bearer.RequireHttpsMetadata = true;

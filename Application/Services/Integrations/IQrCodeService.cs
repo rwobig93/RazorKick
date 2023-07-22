@@ -1,4 +1,4 @@
-namespace Application.Services.Identity;
+namespace Application.Services.Integrations;
 
 public interface IQrCodeService
 {

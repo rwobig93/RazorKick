@@ -1,8 +1,8 @@
-using Application.Services.Identity;
+using Application.Services.Integrations;
 using Domain.Enums.Integration;
 using OtpNet;
 
-namespace Infrastructure.Services.Identity;
+namespace Infrastructure.Services.Integrations;
 
 public class MfaService : IMfaService
 {
