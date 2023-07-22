@@ -6,6 +6,7 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
+using Application.Helpers.Integrations;
 using Application.Helpers.Web;
 using Application.Repositories.Identity;
 using Application.Requests.Identity.User;
@@ -232,7 +233,7 @@ public partial class Login
 
     private async Task InitiateExternalLogin(ExternalAuthProvider provider)
     {
-        var providerLoginUriRequest = await ExternalAuth.GetLoginUri(provider);
+        var providerLoginUriRequest = await ExternalAuth.GetLoginUri(provider, ExternalAuthRedirect.Login);
         if (!providerLoginUriRequest.Succeeded || string.IsNullOrWhiteSpace(providerLoginUriRequest.Data))
         {
             Snackbar.Add($"Failed to initiate login to desired provider: [{provider.ToString()}]", Severity.Error);
@@ -249,21 +250,39 @@ public partial class Login
         {
             if (string.IsNullOrWhiteSpace(OauthCode) || string.IsNullOrWhiteSpace(OauthState)) return;
 
-            var isValidProvider = Enum.TryParse(OauthState, out ExternalAuthProvider parsedProvider);
-            if (!isValidProvider)
+            var redirectState = ExternalAuthHelpers.GetStateFromRedirect(OauthState);
+            if (redirectState.Item1 == ExternalAuthProvider.Unknown)
             {
                 Snackbar.Add($"Provided provider redirect is not valid: {OauthState}", Severity.Error);
                 return;
             }
 
-            var externalProfileRequest = await ExternalAuth.GetUserProfile(parsedProvider, OauthCode);
+            var externalProfileRequest = await ExternalAuth.GetUserProfile(redirectState.Item1, OauthCode);
             if (!externalProfileRequest.Succeeded)
             {
                 Snackbar.Add("Provided Oauth code is invalid", Severity.Error);
                 return;
             }
 
-            Snackbar.Add($"Successfully authenticated with external provider! => {parsedProvider.ToString()}", Severity.Success);
+            if (redirectState.Item2 == ExternalAuthRedirect.Security)
+                NavManager.NavigateTo(AppRouteConstants.Account.Security);
+            
+            // TODO: Handle login and redirect to authenticate the user
+            var authResponse = await AccountService.LoginExternalAuthAsync(new UserExternalAuthLoginRequest
+            {
+                Provider = redirectState.Item1,
+                Email = externalProfileRequest.Data.Email,
+                ExternalId = externalProfileRequest.Data.Id
+            });
+            
+            if (!authResponse.Succeeded)
+            {
+                authResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+            
+            Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
+            NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
         }
         catch (Exception ex)
         {

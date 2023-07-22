@@ -87,6 +87,8 @@ public static class AccountHelpers
 
         if (password.Length < passwordRequirements.MinimumLength)
             issueList.Add($"Password provided doesn't meet the minimum character count of {passwordRequirements.MinimumLength}");
+        if (password.Length > passwordRequirements.MaximumLength)
+            issueList.Add($"Password provided is over the maximum character count of {passwordRequirements.MaximumLength}");
         if (passwordRequirements.RequiresNumbers && !password.Any(char.IsDigit))
             issueList.Add("Password provided doesn't contain a number, which is a requirement");
         if (passwordRequirements.RequiresSpecialCharacters && !password.PasswordContainsSpecialCharacter())
@@ -104,6 +106,8 @@ public static class AccountHelpers
         var passwordRequirements = GetPasswordRequirements();
 
         if (password.Length < passwordRequirements.MinimumLength)
+            return false;
+        if (password.Length > passwordRequirements.MaximumLength)
             return false;
         if (passwordRequirements.RequiresNumbers && !password.Any(char.IsDigit))
             return false;

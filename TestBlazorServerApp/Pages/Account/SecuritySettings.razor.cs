@@ -24,6 +24,7 @@ public partial class SecuritySettings
     [Inject] private IMfaService MfaService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IExternalAuthProviderService ExternalAuthService { get; init; } = null!;
 
     private AppUserSecurityFull CurrentUser { get; set; } = new();
     

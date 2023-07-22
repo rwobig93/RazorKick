@@ -38,6 +38,7 @@
                           Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
             <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
                 <MudText Align="Align.Left" Class="mx-4">Minimum Length:     @_passwordRequirements.MinimumLength</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Maximum Length:     @_passwordRequirements.MaximumLength</MudText>
                 <MudText Align="Align.Left" Class="mx-4">Requires Special:   @_passwordRequirements.RequiresSpecialCharacters</MudText>
                 <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
                 <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>

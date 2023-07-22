@@ -8,9 +8,10 @@
     <AccountSettingsNavBar/>
 </MudContainer>
 
-<MudContainer>
-    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
-        <MudPaper Width="98%" Class="pa-4 mb-3">
+<MudContainer Style="min-width: 650px;">
+    <MudTabs Outlined="true" Position="Position.Left" Rounded="true" Border="true" Centered="true" Elevation="10"
+        ApplyEffectsToContainer="true" Class="mt-8" PanelClass="d-flex flex-column pa-6">
+        <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="Password">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Change Password</MudText>
             </MudItem>
@@ -25,11 +26,12 @@
                               AdornmentAriaLabel="Show Desired Password"
                               Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
                 <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
-                    <MudText Align="Align.Left" Class="mx-4">Minimum Length:     @_passwordRequirements.MinimumLength</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Special:   @_passwordRequirements.RequiresSpecialCharacters</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Minimum Length: @_passwordRequirements.MinimumLength</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Maximum Length: @_passwordRequirements.MaximumLength</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Special: @_passwordRequirements.RequiresSpecialCharacters</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Numbers:   @_passwordRequirements.RequiresNumbers</MudText>
+                    <MudText Align="Align.Left" Class="mx-4">Requires Numbers: @_passwordRequirements.RequiresNumbers</MudText>
                 </MudMenu>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2">
@@ -39,12 +41,12 @@
                               Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordsMatch))"/>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save" 
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save"
                            OnClick="@UpdatePassword">Change Password
                 </MudButton>
             </MudItem>
-        </MudPaper>
-        <MudPaper Width="98%" Class="pa-4 mb-3">
+        </MudTabPanel>
+        <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="MFA">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Multi-Factor Authentication (MFA)</MudText>
             </MudItem>
@@ -88,14 +90,22 @@
                     </MudButton>
                 </MudItem>
             }
-        </MudPaper>
+        </MudTabPanel>
+        @if (ExternalAuthService.AnyProvidersEnabled)
+        {
+            <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="External Sign-In">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">External Sign-In (Oauth2)</MudText>
+                </MudItem>
+            </MudTabPanel>
+        }
         @if (_canGenerateApiTokens)
         {
-            <MudPaper Width="98%" Class="pa-4 mb-3">
+            <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="API">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Tokens</MudText>
                 </MudItem>
-                <MudItem  xs="16" sm="20" md="28" lg="36" Hover="true" Dense="true" Striped="true">
+                <MudItem xs="16" sm="20" md="28" lg="36" Hover="true" Dense="true" Striped="true">
                     <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens" Elevation="6">
                         <ToolBarContent>
                             <MudContainer Class="d-flex flex-wrap gap-4">
@@ -120,7 +130,7 @@
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
                             <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToFriendlyDisplay()</MudTd>
                             <MudTd DataLabel="Value">
-                                @context.Value[^4..] 
+                                @context.Value[^4..]
                                 <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
                                            OnClick="@(async () => await CopyToClipboard(context.Value))"/>
                             </MudTd>
@@ -134,7 +144,7 @@
                         </LoadingContent>
                     </MudTable>
                 </MudItem>
-            </MudPaper>
+            </MudTabPanel>
         }
-    </MudGrid>
+    </MudTabs>
 </MudContainer>

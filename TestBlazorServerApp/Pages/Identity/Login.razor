@@ -36,8 +36,7 @@
             </MudButton>
         </MudItem>
     </MudGrid>
-    @if (ExternalAuth.ProviderEnabledDiscord || ExternalAuth.ProviderEnabledGoogle || ExternalAuth.ProviderEnabledSpotify ||
-         ExternalAuth.ProviderEnabledFacebook)
+    @if (ExternalAuth.AnyProvidersEnabled)
     {
         <MudGrid Class="justify-center my-4 mud-text-align-center">
             @if (ExternalAuth.ProviderEnabledGoogle)

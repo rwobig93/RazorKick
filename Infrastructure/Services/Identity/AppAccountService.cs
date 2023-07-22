@@ -25,6 +25,7 @@ using Blazored.LocalStorage;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
+using Domain.Enums.Integration;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
@@ -132,6 +133,81 @@ public class AppAccountService : IAppAccountService
             return passwordIsValid;
         
         // Entered password is correct so we reset previous bad password attempts and indicate full login timestamp
+        userSecurity.BadPasswordAttempts = 0;
+        userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
+        var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
+        if (!updateSecurity.Success)
+            return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
+        
+        // Generate and register client id as a successful login with user+pass, only registered client id's can re-auth w/ refresh tokens
+        var clientId = AccountHelpers.GenerateClientId();
+        var newExtendedAttribute = new AppUserExtendedAttributeCreate
+        {
+            OwnerId = userSecurity.Id,
+            Name = "FullLoginClientId",
+            Type = ExtendedAttributeType.UserClientId,
+            Value = clientId,
+            Description = ""
+        };
+        var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+        if (!addAttributeRequest.Success)
+            return await Result<UserLoginResponse>.FailAsync(addAttributeRequest.ErrorMessage);
+
+        // Generate the JWT and return
+        var token = await GenerateJwtAsync(userSecurity.ToUserDb());
+        var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
+        var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
+        var response = new UserLoginResponse() { ClientId = clientId, Token = token, RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = refreshTokenExpiration };
+
+        // Create audit log for login if configured
+        if (_lifecycleConfig.AuditLoginLogout)
+        {
+            await _auditService.CreateAsync(new AuditTrailCreate
+            {
+                TableName = "AuthState",
+                RecordId = userSecurity.Id,
+                ChangedBy = _serverState.SystemUserId,
+                Action = DatabaseActionType.Login,
+                Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}}),
+                After = _serializer.Serialize(new Dictionary<string, string>() 
+                    {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}})
+            });
+        }
+        
+        return await Result<UserLoginResponse>.SuccessAsync(response);
+    }
+
+    private async Task<IResult> VerifyExternalAuthIsValid(AppUserSecurityDb userSecurity, ExternalAuthProvider provider,
+        string externalId)
+    {
+        var existingProviderRequest = 
+            await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(userSecurity.Id, ExtendedAttributeType.ExternalAuthLogin, externalId);
+        if (!existingProviderRequest.Success || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
+            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+
+        var matchingAuthBinding = existingProviderRequest.Result.First();
+        if (matchingAuthBinding.Description != provider.ToString())
+            return await Result.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+        
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest)
+    {
+        var userSecurity = (await _userRepository.GetByEmailAsync(loginRequest.Email)).Result;
+        if (userSecurity is null)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+
+        var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
+        if (!accountIsLoginReady.Succeeded)
+            return accountIsLoginReady;
+
+        var externalAuthIsValid = await VerifyExternalAuthIsValid(userSecurity, loginRequest.Provider, loginRequest.ExternalId);
+        if (!externalAuthIsValid.Succeeded)
+            return await Result<UserLoginResponse>.FailAsync(externalAuthIsValid.Messages);
+        
+        // External auth is successful so we reset previous bad password attempts and indicate full login timestamp
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
@@ -396,6 +472,13 @@ public class AppAccountService : IAppAccountService
         {
             return await Result.FailAsync(string.Format($"Username {registerRequest.Username} is already in use, please try again"));
         }
+
+        var passwordMeetsRequirements = await PasswordMeetsRequirements(registerRequest.Password);
+        if (!passwordMeetsRequirements.Succeeded || !passwordMeetsRequirements.Data)
+        {
+            var issuesWithPassword = AccountHelpers.GetAnyIssuesWithPassword(registerRequest.Password);
+            return await Result.FailAsync(issuesWithPassword);
+        }
         
         var newUser = new AppUserDb()
         {
@@ -540,6 +623,13 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
+            var passwordMeetsRequirements = await PasswordMeetsRequirements(newPassword);
+            if (!passwordMeetsRequirements.Succeeded || !passwordMeetsRequirements.Data)
+            {
+                var issuesWithPassword = AccountHelpers.GetAnyIssuesWithPassword(newPassword);
+                return await Result.FailAsync(issuesWithPassword);
+            }
+            
             AccountHelpers.GenerateHashAndSalt(newPassword, _securityConfig.PasswordPepper, out var salt, out var hash);
             var securityUpdate = new AppUserSecurityAttributeUpdate
             {
@@ -987,7 +1077,7 @@ public class AppAccountService : IAppAccountService
         if (!existingTokenRequest.Success)
             return await Result.FailAsync(existingTokenRequest.ErrorMessage);
 
-        var messages = new List<string>();
+        var errorMessages = new List<string>();
         
         var existingTokens = (existingTokenRequest.Result ?? new List<AppUserExtendedAttributeDb>()).ToArray();
         if (existingTokens.Any())
@@ -996,13 +1086,65 @@ public class AppAccountService : IAppAccountService
             {
                 var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(token.Id);
                 if (!removeRequest.Success)
-                    messages.Add(removeRequest.ErrorMessage);
+                    errorMessages.Add(removeRequest.ErrorMessage);
             }
         }
 
-        if (messages.Any())
-            return await Result.FailAsync(messages);
+        if (errorMessages.Any())
+            return await Result.FailAsync(errorMessages);
 
         return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> SetExternalAuthProvider(Guid userId, ExternalAuthProvider provider, string externalId)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
+        // We should only have one provider binding per account, we'll just wipe out any that exist just in case
+        await RemoveExternalAuthProvider(userId, provider);
+
+        var createAuthRequest = await _userRepository.AddExtendedAttributeAsync(new AppUserExtendedAttributeCreate
+        {
+            OwnerId = userId,
+            Name = "ExternalAuthProviderBinding",
+            Value = externalId,
+            Description = provider.ToString(),
+            Type = ExtendedAttributeType.ExternalAuthLogin
+        });
+        if (!createAuthRequest.Success)
+            return await Result.FailAsync(createAuthRequest.ErrorMessage);
+
+        return await Result.SuccessAsync($"Successfully bound provider {provider.ToString()} to the account");
+    }
+
+    public async Task<IResult> RemoveExternalAuthProvider(Guid userId, ExternalAuthProvider provider)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
+        var existingProviderRequest = 
+            await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ExternalAuthLogin);
+        if (!existingProviderRequest.Success || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
+            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+
+        var errorMessages = new List<string>();
+        
+        foreach (var authEntry in existingProviderRequest.Result)
+        {
+            if (authEntry.Description != provider.ToString())
+                continue;
+
+            var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(authEntry.Id);
+            if (!removeRequest.Success)
+                errorMessages.Add(removeRequest.ErrorMessage);
+        }
+
+        if (errorMessages.Any())
+            return await Result.FailAsync(errorMessages);
+
+        return await Result.SuccessAsync($"Successfully unbound external provider {provider.ToString()} from account");
     }
 }

@@ -5,6 +5,7 @@ using Application.Requests.Identity.User;
 using Application.Responses.Api;
 using Application.Responses.Identity;
 using Domain.Enums.Identity;
+using Domain.Enums.Integration;
 using Domain.Models.Identity;
 
 namespace Application.Services.Identity;
@@ -12,6 +13,7 @@ namespace Application.Services.Identity;
 public interface IAppAccountService
 {
     Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
+    Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
     Task<IResult<ApiTokenResponse>> GetApiAuthToken(ApiGetTokenRequest tokenRequest);
     Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse);
@@ -37,4 +39,6 @@ public interface IAppAccountService
     Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe, string description);
     Task<IResult> DeleteUserApiToken(Guid userId, string value);
     Task<IResult> DeleteAllUserApiTokens(Guid userId);
+    Task<IResult> SetExternalAuthProvider(Guid userId, ExternalAuthProvider provider, string externalId);
+    Task<IResult> RemoveExternalAuthProvider(Guid userId, ExternalAuthProvider provider);
 }

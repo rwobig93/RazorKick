@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using Application.Constants.Web;
+using Application.Helpers.Integrations;
 using Application.Mappers.Integrations;
 using Application.Models.Identity.External;
 using Application.Models.Web;
@@ -14,12 +15,14 @@ namespace Infrastructure.Services.Integrations;
 
 public class ExternalAuthProviderService : IExternalAuthProviderService
 {
+    public bool AnyProvidersEnabled => _anyProvidersEnabled;
     public bool ProviderEnabledGoogle => _enabledGoogle;
     public bool ProviderEnabledDiscord => _enabledDiscord;
     public bool ProviderEnabledSpotify => _enabledSpotify;
     public bool ProviderEnabledFacebook => _enabledFacebook;
     
     private static string? _redirectUri;
+    private static bool _anyProvidersEnabled;
     private static bool _enabledGoogle;
     private static bool _enabledDiscord;
     private static bool _enabledSpotify;
@@ -40,6 +43,18 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         ConfigureGoogleClient();
         ConfigureSpotifyClient();
         ConfigureFacebookClient();
+        UpdateProviderStatus();
+    }
+
+    private static void UpdateProviderStatus()
+    {
+        if (_enabledGoogle || _enabledDiscord || _enabledSpotify || _enabledFacebook)
+        {
+            _anyProvidersEnabled = true;
+            return;
+        }
+
+        _anyProvidersEnabled = false;
     }
 
     private void ConfigureDiscordClient()
@@ -145,7 +160,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         }
     }
 
-    public async Task<IResult<string>> GetLoginUri(ExternalAuthProvider provider)
+    public async Task<IResult<string>> GetLoginUri(ExternalAuthProvider provider, ExternalAuthRedirect redirect)
     {
         string loginUri;
         
@@ -161,19 +176,19 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 if (!ProviderEnabledGoogle)
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
                 
-                loginUri = await _googleClient!.GetLoginLinkUriAsync(provider.ToString());
+                loginUri = await _googleClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
                 break;
             case ExternalAuthProvider.Spotify:
                 if (!ProviderEnabledSpotify)
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
 
-                loginUri = await _spotifyClient!.GetLoginLinkUriAsync(provider.ToString());
+                loginUri = await _spotifyClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
                 break;
             case ExternalAuthProvider.Facebook:
                 if (!ProviderEnabledFacebook)
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
                 
-                loginUri = await _facebookClient!.GetLoginLinkUriAsync(provider.ToString());
+                loginUri = await _facebookClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
