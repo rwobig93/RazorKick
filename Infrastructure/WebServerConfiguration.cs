@@ -4,6 +4,7 @@ using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
+using Application.Services.Authorization;
 using Application.Services.Database;
 using Application.Services.Lifecycle;
 using Application.Services.System;
@@ -124,6 +125,7 @@ public static class WebServerConfiguration
         {
             DashboardTitle = "Jobs",
             // Authorization = new[] {new HangfireAuthorizationFilter()}
+            DarkModeEnabled = true
         });
     }
 

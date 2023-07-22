@@ -20,7 +20,7 @@ using Asp.Versioning;
 using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
-using Hangfire.Dashboard.Dark.Core;
+using Hangfire.PostgreSql;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
@@ -31,6 +31,7 @@ using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
 using Infrastructure.Services.Lifecycle;
 using Infrastructure.Services.System;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -101,10 +102,25 @@ public static class DependencyInjection
 
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
     {
+        var databaseSettings = configuration.GetDatabaseSettings();
+        
         services.AddHangfire(x =>
         {
-            x.UseSqlServerStorage(configuration.GetDatabaseSettings().Core);
-            x.UseDarkDashboard();
+            x.UseSerilogLogProvider();
+            switch (databaseSettings.Provider)
+            {
+                case DatabaseProviderType.MsSql:
+                    x.UseSqlServerStorage(databaseSettings.Core);
+                    break;
+                case DatabaseProviderType.Postgresql:
+                    // Need to add database support for application before we can fully support Postgresql
+                    x.UsePostgreSqlStorage(databaseSettings.Core);
+                    throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+                case DatabaseProviderType.MySql:
+                    throw new Exception("MySql Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+                default:
+                    throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+            }
         });
         services.AddHangfireServer();
         services.AddMudServices(config =>
@@ -306,6 +322,49 @@ public static class DependencyInjection
         // Seeds the targeted database using the indicated provider on startup
         services.AddHostedService<SqlDatabaseSeederService>();
     }
+
+    private static AuthenticationBuilder AddOauthProviders(this AuthenticationBuilder builder, SecurityConfiguration securityConfig,
+        AppConfiguration appConfig)
+    {
+        // TODO: Add oauth configuration section for configuring providers and displaying them if they are configured at the login page
+        if (appConfig.ApplicationName == "")
+        {
+            builder.AddGoogle(options =>
+            {
+                options.ClientId = appConfig.ApplicationName;
+                options.ClientSecret = appConfig.ApplicationName;
+            });
+        }
+
+        if (appConfig.ApplicationName == "")
+        {
+            builder.AddDiscord(options =>
+            {
+                options.ClientId = appConfig.ApplicationName;
+                options.ClientSecret = appConfig.ApplicationName;
+            });
+        }
+
+        if (appConfig.ApplicationName == "")
+        {
+            builder.AddMicrosoftAccount(options =>
+            {
+                options.ClientId = appConfig.ApplicationName;
+                options.ClientSecret = appConfig.ApplicationName;
+            });
+        }
+
+        if (appConfig.ApplicationName == "")
+        {
+            builder.AddFacebook(options =>
+            {
+                options.ClientId = appConfig.ApplicationName;
+                options.ClientSecret = appConfig.ApplicationName;
+            });
+        }
+
+        return builder;
+    }
     
     private static void AddJwtAuthentication(this IServiceCollection services, SecurityConfiguration securityConfig, AppConfiguration appConfig)
     {
@@ -316,6 +375,7 @@ public static class DependencyInjection
                 authentication.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 authentication.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+            .AddGoogle()
             .AddJwtBearer(bearer =>
             {
                 bearer.RequireHttpsMetadata = true;

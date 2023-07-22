@@ -93,10 +93,10 @@
         {
             <MudPaper Width="98%" Class="pa-4 mb-3">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Token</MudText>
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Tokens</MudText>
                 </MudItem>
                 <MudItem  xs="16" sm="20" md="28" lg="36" Hover="true" Dense="true" Striped="true">
-                    <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens">
+                    <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens" Elevation="6">
                         <ToolBarContent>
                             <MudContainer Class="d-flex flex-wrap gap-4">
                                 <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"

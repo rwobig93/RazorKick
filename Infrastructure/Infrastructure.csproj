@@ -23,6 +23,7 @@
 
     <ItemGroup>
       <PackageReference Include="Asp.Versioning.Http" Version="7.0.0" />
+      <PackageReference Include="AspNet.Security.OAuth.Discord" Version="7.0.2" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
       <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
       <PackageReference Include="EPPlus" Version="6.2.6" />
@@ -30,9 +31,12 @@
       <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
       <PackageReference Include="Hangfire" Version="1.8.3" />
       <PackageReference Include="Hangfire.Core" Version="1.8.3" />
-      <PackageReference Include="Hangfire.Dashboard.Dark.Core" Version="1.0.11" />
+      <PackageReference Include="Hangfire.PostgreSql" Version="1.19.13" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="7.0.9" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="7.0.9" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="7.0.9" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
       <PackageReference Include="MudBlazor" Version="6.7.0" />
