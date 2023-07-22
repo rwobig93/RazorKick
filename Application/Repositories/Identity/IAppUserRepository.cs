@@ -28,13 +28,17 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
-    Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
+    Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string? value, string? description);
     Task<DatabaseActionResult> RemoveExtendedAttributeAsync(Guid attributeId);
     Task<DatabaseActionResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<DatabaseActionResult<AppUserPreferenceDb>> GetPreferences(Guid userId);
     Task<DatabaseActionResult<AppUserExtendedAttributeDb>> GetExtendedAttributeByIdAsync(Guid attributeId);
-    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb?>>> GetExtendedAttributeByTypeAndValueAsync(ExtendedAttributeType type, string value);
-    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(Guid userId, ExtendedAttributeType type);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb?>>> GetExtendedAttributeByTypeAndValueAsync(
+        ExtendedAttributeType type, string value);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAsync(
+        Guid userId, ExtendedAttributeType type);
+    Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAndValueAsync(
+        Guid userId, ExtendedAttributeType type, string value);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByNameAsync(Guid userId, string name);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllUserExtendedAttributesAsync(Guid userId);
     Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetAllExtendedAttributesByTypeAsync(ExtendedAttributeType type);

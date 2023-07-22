@@ -155,7 +155,7 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialog = await DialogService.ShowAsync<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {
@@ -169,7 +169,7 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
+        var dialog = await DialogService.ShowAsync<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (!dialogResult.Canceled && (bool)dialogResult.Data)
         {

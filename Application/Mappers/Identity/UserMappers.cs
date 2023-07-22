@@ -207,6 +207,7 @@ public static class UserMappers
             OwnerId = extendedAttributeDb.OwnerId,
             Name = extendedAttributeDb.Name,
             Value = extendedAttributeDb.Value,
+            Description = extendedAttributeDb.Description,
             Type = extendedAttributeDb.Type
         };
     }
@@ -442,8 +443,6 @@ public static class UserMappers
             TwoFactorKey = securityDb.TwoFactorKey,
             AuthState = securityDb.AuthState,
             AuthStateTimestamp = securityDb.AuthStateTimestamp,
-            RefreshToken = securityDb.RefreshToken,
-            RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
             LastBadPassword = securityDb.LastBadPassword,
             LastFullLogin = securityDb.LastFullLogin
@@ -474,8 +473,6 @@ public static class UserMappers
             PasswordSalt = securityDb.PasswordSalt,
             AuthState = securityDb.AuthState,
             AuthStateTimestamp = securityDb.AuthStateTimestamp,
-            RefreshToken = securityDb.RefreshToken,
-            RefreshTokenExpiryTime = securityDb.RefreshTokenExpiryTime,
             BadPasswordAttempts = securityDb.BadPasswordAttempts,
             LastBadPassword = securityDb.LastBadPassword,
             LastFullLogin = securityDb.LastFullLogin,
@@ -514,8 +511,6 @@ public static class UserMappers
             TwoFactorKey = appUser.TwoFactorKey,
             AuthState = appUser.AuthState,
             AuthStateTimestamp = appUser.AuthStateTimestamp,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,
             LastBadPassword = appUser.LastBadPassword,
             LastFullLogin = appUser.LastFullLogin
@@ -552,8 +547,6 @@ public static class UserMappers
             TwoFactorKey = appUser.TwoFactorKey,
             AuthState = appUser.AuthState,
             AuthStateTimestamp = appUser.AuthStateTimestamp,
-            RefreshToken = appUser.RefreshToken,
-            RefreshTokenExpiryTime = appUser.RefreshTokenExpiryTime,
             BadPasswordAttempts = appUser.BadPasswordAttempts,
             LastBadPassword = appUser.LastBadPassword,
             LastFullLogin = appUser.LastFullLogin

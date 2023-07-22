@@ -342,11 +342,11 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue)
+    public async Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string? value, string? description)
     {
         try
         {
-            var updateRequest = await _userRepository.UpdateExtendedAttributeAsync(attributeId, newValue);
+            var updateRequest = await _userRepository.UpdateExtendedAttributeAsync(attributeId, value, description);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 

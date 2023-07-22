@@ -22,8 +22,6 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                     [TwoFactorKey] NVARCHAR(256) NULL,
                     [AuthState] int NOT NULL,
                     [AuthStateTimestamp] datetime2 NULL,
-                    [RefreshToken] NVARCHAR(400) NULL,
-                    [RefreshTokenExpiryTime] datetime2 NULL,
                     [BadPasswordAttempts] int NOT NULL,
                     [LastBadPassword] datetime2 NULL,
                     [LastFullLogin] datetime2 NULL
@@ -118,19 +116,16 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                 @TwoFactorKey NVARCHAR(256),
                 @AuthState int,
                 @AuthStateTimestamp datetime2,
-                @RefreshToken NVARCHAR(400),
-                @RefreshTokenExpiryTime datetime2,
                 @BadPasswordAttempts int,
                 @LastBadPassword datetime2,
                 @LastFullLogin datetime2
             AS
             begin
                 INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, TwoFactorEnabled, TwoFactorKey, AuthState,
-                                         AuthStateTimestamp, RefreshToken, RefreshTokenExpiryTime, BadPasswordAttempts, LastBadPassword,
-                                         LastFullLogin)
+                                         AuthStateTimestamp, BadPasswordAttempts, LastBadPassword, LastFullLogin)
                 OUTPUT INSERTED.Id
-                values (@OwnerId, @PasswordHash, @PasswordSalt, @TwoFactorEnabled, @TwoFactorKey, @AuthState, @AuthStateTimestamp, @RefreshToken,
-                        @RefreshTokenExpiryTime, @BadPasswordAttempts, @LastBadPassword, @LastFullLogin);
+                values (@OwnerId, @PasswordHash, @PasswordSalt, @TwoFactorEnabled, @TwoFactorKey, @AuthState, @AuthStateTimestamp,
+                        @BadPasswordAttempts, @LastBadPassword, @LastFullLogin);
             end"
     };
     
@@ -147,8 +142,6 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                 @TwoFactorKey NVARCHAR(256) = null,
                 @AuthState int = null,
                 @AuthStateTimestamp datetime2 = null,
-                @RefreshToken NVARCHAR(400) = null,
-                @RefreshTokenExpiryTime datetime2 = null,
                 @BadPasswordAttempts int = null,
                 @LastBadPassword datetime2 = null,
                 @LastFullLogin datetime2 = null
@@ -158,8 +151,6 @@ public class AppUserSecurityAttributesMsSql : ISqlEnforcedEntityMsSql
                 SET PasswordHash = COALESCE(@PasswordHash, PasswordHash), PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt),
                     TwoFactorEnabled = COALESCE(@TwoFactorEnabled, TwoFactorEnabled), TwoFactorKey = COALESCE(@TwoFactorKey, TwoFactorKey),
                     AuthState = COALESCE(@AuthState, AuthState), AuthStateTimestamp = COALESCE(@AuthStateTimestamp, AuthStateTimestamp),
-                    RefreshToken = COALESCE(@RefreshToken, RefreshToken),
-                    RefreshTokenExpiryTime = COALESCE(@RefreshTokenExpiryTime, RefreshTokenExpiryTime),
                     BadPasswordAttempts = COALESCE(@BadPasswordAttempts, BadPasswordAttempts),
                     LastBadPassword = COALESCE(@LastBadPassword, LastBadPassword), LastFullLogin =  COALESCE(@LastFullLogin, LastFullLogin)
                 WHERE OwnerId = @OwnerId;

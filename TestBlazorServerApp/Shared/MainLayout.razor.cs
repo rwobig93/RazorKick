@@ -126,6 +126,7 @@ public partial class MainLayout
         
         try
         {
+            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
             tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
             tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
         }

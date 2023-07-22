@@ -6,5 +6,6 @@ public enum ExtendedAttributeType
     PasswordResetToken = 1,
     UserPreference = 2,
     ThemePreference = 3,
-    UserApiToken = 4
+    UserApiToken = 4,
+    UserClientId = 5
 }

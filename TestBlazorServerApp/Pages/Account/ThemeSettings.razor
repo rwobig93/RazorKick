@@ -2,6 +2,7 @@
 @using Domain.Enums.Identity
 
 @attribute [Route(AppRouteConstants.Account.Themes)]
+@attribute [Authorize]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <AccountSettingsNavBar/>

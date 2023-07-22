@@ -177,4 +177,20 @@ public static class RoleMappers
             LastModifiedOn = roleFull.LastModifiedOn
         };
     }
+
+    public static AppRoleUpdate ToUpdate(this AppRoleDb roleDb)
+    {
+        return new AppRoleUpdate
+        {
+            Id = roleDb.Id,
+            Name = roleDb.Name,
+            NormalizedName = roleDb.NormalizedName,
+            ConcurrencyStamp = roleDb.ConcurrencyStamp,
+            Description = roleDb.Description,
+            CreatedBy = roleDb.CreatedBy,
+            CreatedOn = roleDb.CreatedOn,
+            LastModifiedBy = roleDb.LastModifiedBy,
+            LastModifiedOn = roleDb.LastModifiedOn
+        };
+    }
 }

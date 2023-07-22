@@ -103,7 +103,7 @@ public class WebClientService : IWebClientService
     {
         try
         {
-            await _jsRuntime.InvokeVoidAsync("PlayAudio");
+            await _jsRuntime.InvokeVoidAsync("PlayAudio", new {elementName});
             
             return await Result.SuccessAsync();
         }
@@ -117,7 +117,7 @@ public class WebClientService : IWebClientService
     {
         try
         {
-            await _jsRuntime.InvokeVoidAsync("copyToClipboard");
+            await _jsRuntime.InvokeVoidAsync("copyToClipboard", content);
 
             return await Result.SuccessAsync();
         }

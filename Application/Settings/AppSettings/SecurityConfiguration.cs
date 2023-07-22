@@ -6,11 +6,15 @@ public class SecurityConfiguration: IAppSettingsSection
 {
     public const string SectionName = "Security";
 
-    // TODO: Change to JWT Secret of some form, add password pepper
     [Required]
     [MinLength(32)]
     [MaxLength(128)]
-    public string Secret { get; init; } = null!;
+    public string JsonTokenSecret { get; init; } = null!;
+    
+    [Required]
+    [MinLength(32)]
+    [MaxLength(128)]
+    public string PasswordPepper { get; init; } = null!;
     
     [Range(0, 2_592_000)]
     public int PermissionValidationIntervalSeconds { get; init; } = 5;

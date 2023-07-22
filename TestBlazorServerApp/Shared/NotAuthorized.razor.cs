@@ -55,7 +55,7 @@ public partial class NotAuthorized
             }
 
             var authRequired = await AccountService.IsUserRequiredToReAuthenticate(UserFull.Id);
-            if (authRequired)
+            if (authRequired.Data)
             {
                 // Re-authentication is required, force back to login page after logging out
                 await LogoutAndClearCache();
@@ -119,6 +119,7 @@ public partial class NotAuthorized
         
         try
         {
+            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
             tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
             tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
         }

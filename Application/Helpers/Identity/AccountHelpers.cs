@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using Application.Constants.Identity;
+using Application.Helpers.Web;
 using Application.Responses.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -11,26 +12,31 @@ namespace Application.Helpers.Identity;
 public static class AccountHelpers
 {
     public static PasswordValidator<AppUserDb> PasswordValidator { get; } = new();
-    
-    public static string GenerateSalt()
+
+    public static string GenerateClientId()
+    {
+        return UrlHelpers.GenerateToken(64);
+    }
+
+    private static string GenerateSalt()
     {
         return Bcrypt.GenerateSalt();
     }
 
-    public static string GenerateHash(string password, string salt)
+    private static string GenerateHash(string password, string salt, string pepper)
     {
-        return Bcrypt.HashPassword(password, salt);
+        return Bcrypt.HashPassword(password + pepper, salt + pepper);
     }
 
-    public static void GenerateHashAndSalt(string password, out string salt, out string hash)
+    public static void GenerateHashAndSalt(string password, string pepper, out string salt, out string hash)
     {
         salt = GenerateSalt();
-        hash = GenerateHash(password, salt);
+        hash = GenerateHash(password, salt, pepper);
     }
 
-    public static bool IsPasswordCorrect(string password, string salt, string hash)
+    public static bool IsPasswordCorrect(string password, string salt, string pepper, string hash)
     {
-        var newHash = GenerateHash(password, salt);
+        var newHash = GenerateHash(password, salt, pepper);
         return hash == newHash;
     }
 

@@ -17,7 +17,7 @@
         </member>
         <member name="M:Application.Api.v1.Api.ApiEndpoints.GetToken(Application.Requests.Api.ApiGetTokenRequest,Application.Services.Identity.IAppAccountService)">
             <summary>
-            Gets a service account Json Web Token (JWT) for use in API calls
+            Gets a Json Web Token (JWT) for use in API calls
             </summary>
             <param name="tokenRequest">Credentials to authenticate</param>
             <param name="accountService"></param>

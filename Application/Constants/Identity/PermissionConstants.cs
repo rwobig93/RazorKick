@@ -82,6 +82,8 @@ public static class PermissionConstants
     {
         return new List<string>()
         {
+            Example.Counter,
+            Example.Weather,
             Jobs.View,
             Permissions.View,
             Permissions.Add,

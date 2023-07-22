@@ -43,7 +43,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         // Validate if user is required to do a full re-authentication
         var userId = context.User.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).First().Value;
         var userIdParsed = Guid.Parse(userId);
-        if (await _accountService.IsUserRequiredToReAuthenticate(userIdParsed))
+        if ((await _accountService.IsUserRequiredToReAuthenticate(userIdParsed)).Data)
         {
             context.Fail();
             await Task.CompletedTask;
@@ -51,7 +51,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
         
         // Validate or re-authenticate active session based on current state
-        if (!await _accountService.IsCurrentSessionValid())
+        if (!(await _accountService.IsCurrentSessionValid()).Data)
         {
             var reAuthenticationSuccess = await AttemptReAuthentication();
             if (!reAuthenticationSuccess)
@@ -112,11 +112,13 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         
         try
         {
+            tokenRequest.ClientId = await _localStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
             tokenRequest.Token = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
             tokenRequest.RefreshToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
         }
         catch
         {
+            tokenRequest.ClientId = "";
             tokenRequest.Token = "";
             tokenRequest.RefreshToken = "";
         }

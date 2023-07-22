@@ -17,7 +17,8 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(256) NOT NULL,
-                    [Value] NVARCHAR(256) NOT NULL,
+                    [Value] NVARCHAR(512) NOT NULL,
+                    [Description] NVARCHAR(1024) NULL,
                     [Type] int NOT NULL
                 )
             end"
@@ -116,6 +117,24 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
+    public static readonly MsSqlStoredProcedure GetByTypeAndValueForOwner = new()
+    {
+        Table = Table,
+        Action = "GetByTypeAndValueForOwner",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByTypeAndValueForOwner]
+                @OwnerId UNIQUEIDENTIFIER,
+                @Type int,
+                @Value NVARCHAR(256)
+            AS
+            begin
+                SELECT e.*
+                FROM dbo.[{Table.TableName}] e
+                WHERE e.Value = @Value AND e.Type = @Type AND e.OwnerId = @OwnerId
+                ORDER BY e.Id;
+            end"
+    };
+    
     public static readonly MsSqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -184,13 +203,14 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @OwnerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
-                @Value NVARCHAR(256),
+                @Value NVARCHAR(512),
+                @Description NVARCHAR(1024),
                 @Type int
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, Name, Value, Type)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, Name, Value, Description, Type)
                 OUTPUT INSERTED.Id
-                values (@OwnerId, @Name, @Value, @Type);
+                values (@OwnerId, @Name, @Value, @Description, @Type);
             end"
     };
     
@@ -201,11 +221,12 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Value NVARCHAR(256) = null
+                @Value NVARCHAR(512) = null,
+                @Description NVARCHAR(1024) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET Value = COALESCE(@Value, Value)
+                SET Value = COALESCE(@Value, Value), Description = COALESCE(@Description, Description)
                 WHERE Id = @Id;
             end"
     };

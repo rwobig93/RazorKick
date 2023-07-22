@@ -9,8 +9,6 @@ public static class AuditTrailConstants
         "CreatedBy",
         "CreatedOn",
         "LastModifiedBy",
-        "LastModifiedOn",
-        "RefreshToken",
-        "RefreshTokenExpiryTime"
+        "LastModifiedOn"
     };
 }

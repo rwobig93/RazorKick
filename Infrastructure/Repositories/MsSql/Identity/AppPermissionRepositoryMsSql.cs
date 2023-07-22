@@ -392,7 +392,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
                 TableName = AppPermissionsMsSql.Table.TableName,
                 RecordId = createdId,
                 ChangedBy = (createObject.CreatedBy),
-                Action = DatabaseActionType.Create
+                Action = DatabaseActionType.Create,
+                After = _serializer.Serialize(createObject)
             });
             
             actionReturn.Succeed(createdId);
@@ -430,9 +431,14 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             modifyingUser ??= Guid.Empty;
+
+            var foundPermission = await GetByIdAsync(id);
+            if (!foundPermission.Success || foundPermission.Result is null)
+                throw new Exception(foundPermission.ErrorMessage);
+            var permissionUpdate = foundPermission.Result.ToUpdate();
             
             // Update permission w/ a property that is modified so we get the last updated on/by for the deleting user
-            var permissionUpdate = new AppPermissionUpdate() {Id = id, LastModifiedBy = modifyingUser};
+            permissionUpdate.LastModifiedBy = modifyingUser;
             await UpdateAuditing(permissionUpdate);
             await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
 
@@ -441,7 +447,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
                 TableName = AppPermissionsMsSql.Table.TableName,
                 RecordId = id,
                 ChangedBy = ((Guid)permissionUpdate.LastModifiedBy!),
-                Action = DatabaseActionType.Delete
+                Action = DatabaseActionType.Delete,
+                Before = _serializer.Serialize(permissionUpdate)
             });
 
             actionReturn.Succeed();

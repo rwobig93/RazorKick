@@ -248,7 +248,8 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 TableName = AppRolesMsSql.Table.TableName,
                 RecordId = createdId,
                 ChangedBy = (createObject.CreatedBy),
-                Action = DatabaseActionType.Create
+                Action = DatabaseActionType.Create,
+                After = _serializer.Serialize(createObject)
             });
             
             actionReturn.Succeed(createdId);
@@ -286,9 +287,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         try
         {
             modifyingUser ??= Guid.Empty;
+
+            var foundRole = await GetByIdAsync(id);
+            if (!foundRole.Success || foundRole.Result is null)
+                throw new Exception(foundRole.ErrorMessage);
+            var roleUpdate = foundRole.Result.ToUpdate();
             
             // Update role w/ a property that is modified so we get the last updated on/by for the deleting user
-            var roleUpdate = new AppRoleUpdate() {Id = id, LastModifiedBy = modifyingUser};
+            roleUpdate.LastModifiedBy = modifyingUser;
             await UpdateAsync(roleUpdate);
             await _database.SaveData(AppRolesMsSql.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
 
@@ -297,7 +303,8 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 TableName = AppRolesMsSql.Table.TableName,
                 RecordId = id,
                 ChangedBy = ((Guid)roleUpdate.LastModifiedBy!),
-                Action = DatabaseActionType.Delete
+                Action = DatabaseActionType.Delete,
+                Before = _serializer.Serialize(roleUpdate)
             });
             
             actionReturn.Succeed();

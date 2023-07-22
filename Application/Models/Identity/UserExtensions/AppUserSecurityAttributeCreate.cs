@@ -11,8 +11,6 @@ public class AppUserSecurityAttributeCreate
     public string? TwoFactorKey { get; set; }
     public AuthState AuthState { get; set; }
     public DateTime? AuthStateTimestamp { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiryTime { get; set; }
     public int BadPasswordAttempts { get; set; } = 0;
     public DateTime? LastBadPassword { get; set; }
     public DateTime? LastFullLogin { get; set; }

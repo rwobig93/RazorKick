@@ -339,8 +339,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 TwoFactorKey = null,
                 AuthState = AuthState.Disabled,
                 AuthStateTimestamp = null,
-                RefreshToken = null,
-                RefreshTokenExpiryTime = null,
                 BadPasswordAttempts = 0,
                 LastBadPassword = null
             });
@@ -350,7 +348,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 TableName = AppUsersMsSql.Table.TableName,
                 RecordId = createdId,
                 ChangedBy = ((Guid) createObject.CreatedBy!),
-                Action = DatabaseActionType.Create
+                Action = DatabaseActionType.Create,
+                After = _serializer.Serialize(createObject)
             };
 
             await _auditRepository.CreateAsync(auditTrail);
@@ -391,8 +390,13 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             modifyingUser ??= Guid.Empty;
 
+            var foundUser = await GetByIdAsync(userId);
+            if (!foundUser.Success || foundUser.Result is null)
+                throw new Exception(foundUser.ErrorMessage);
+            var userUpdate = foundUser.Result.ToUpdate();
+            
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            var userUpdate = new AppUserUpdate() {Id = userId, LastModifiedBy = modifyingUser};
+            userUpdate.LastModifiedBy = modifyingUser;
             await UpdateAsync(userUpdate);
             await _database.SaveData(AppUsersMsSql.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 
@@ -401,7 +405,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 TableName = AppUsersMsSql.Table.TableName,
                 RecordId = userId,
                 ChangedBy = ((Guid)userUpdate.LastModifiedBy!),
-                Action = DatabaseActionType.Delete
+                Action = DatabaseActionType.Delete,
+                Before = _serializer.Serialize(userUpdate)
             });
             
             actionReturn.Succeed();
@@ -581,13 +586,14 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue)
+    public async Task<DatabaseActionResult> UpdateExtendedAttributeAsync(Guid attributeId, string? value, string? description)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(AppUserExtendedAttributesMsSql.Update, new {Id = attributeId, Value = newValue});
+            await _database.SaveData(AppUserExtendedAttributesMsSql.Update,
+                new {Id = attributeId, Value = value, Description = description});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -692,8 +698,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var foundAttribute = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
-                AppUserExtendedAttributesMsSql.GetByTypeAndValue, new {Value = value}));
+            var foundAttribute = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributesMsSql.GetByTypeAndValue, new {Type = type, Value = value});
             actionReturn.Succeed(foundAttribute);
         }
         catch (Exception ex)
@@ -718,6 +724,25 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetAllOfTypeForOwner.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>>> GetUserExtendedAttributesByTypeAndValueAsync(
+        Guid userId, ExtendedAttributeType type, string value)
+    {
+        DatabaseActionResult<IEnumerable<AppUserExtendedAttributeDb>> actionReturn = new();
+
+        try
+        {
+            var foundAttributes = await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                AppUserExtendedAttributesMsSql.GetByTypeAndValueForOwner, new {OwnerId = userId, Type = type, Value = value});
+            actionReturn.Succeed(foundAttributes);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUserExtendedAttributesMsSql.GetByTypeAndValueForOwner.Path, ex.Message);
         }
 
         return actionReturn;

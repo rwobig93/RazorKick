@@ -7,10 +7,11 @@ using Application.Models.Identity.UserExtensions;
 using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
-using Domain.Enums.Auth;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using TestBlazorServerApp.Components.Account;
+using TestBlazorServerApp.Components.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 
@@ -49,8 +50,7 @@ public partial class SecuritySettings
     // User API Tokens
     private List<AppUserExtendedAttributeSlim> _userApiTokens = new();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private string _apiTokenGenButtonText = "Generate Token";
-    private UserApiTokenTimeframe _tokenTimeframe = UserApiTokenTimeframe.OneYear;
+    private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = new();
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -61,7 +61,7 @@ public partial class SecuritySettings
             await GetPermissions();
             await GetClientTimezone();
             await GetUserApiTokens();
-            UpdatePageElementStates();
+            await UpdatePageElementStates();
             StateHasChanged();
         }
     }
@@ -81,7 +81,7 @@ public partial class SecuritySettings
         _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
     }
 
-    private void UpdatePageElementStates()
+    private async Task UpdatePageElementStates()
     {
         _mfaButtonText = CurrentUser.TwoFactorEnabled switch
         {
@@ -89,6 +89,7 @@ public partial class SecuritySettings
             false when !string.IsNullOrWhiteSpace(CurrentUser.TwoFactorKey) => "Enable MFA",
             _ => "Register MFA TOTP Token"
         };
+        await Task.CompletedTask;
     }
 
     private async Task UpdatePassword()
@@ -200,7 +201,6 @@ public partial class SecuritySettings
     private async Task RegisterTotp()
     {
         QrCodeGenerating = true;
-        await Task.Yield();
         
         try
         {
@@ -209,7 +209,6 @@ public partial class SecuritySettings
             var qrCodeContent =
                 MfaService.GenerateOtpAuthString(appName, CurrentUser.Email, _mfaRegisterCode);
             _qrCodeImageSource = QrCodeService.GenerateQrCodeSrc(qrCodeContent);
-            
         }
         catch (Exception ex)
         {
@@ -218,6 +217,7 @@ public partial class SecuritySettings
         
         QrCodeGenerating = false;
         await Task.CompletedTask;
+        StateHasChanged();
     }
 
     private async Task ToggleMfaEnablement(bool enabled)
@@ -233,7 +233,7 @@ public partial class SecuritySettings
         StateHasChanged();
         var mfaEnablement = CurrentUser.TwoFactorEnabled ? "Enabled" : "Disabled";
         Snackbar.Add($"Successfully toggled MFA to {mfaEnablement}");
-        UpdatePageElementStates();
+        await UpdatePageElementStates();
     }
 
     private async Task ValidateTotpCode()
@@ -246,10 +246,10 @@ public partial class SecuritySettings
         }
         
         await AccountService.SetTwoFactorKey(CurrentUser.Id, _mfaRegisterCode);
-
+        await AccountService.SetTwoFactorEnabled(CurrentUser.Id, true);
+        
         _mfaRegisterCode = "";
         _qrCodeImageSource = "";
-        await AccountService.SetTwoFactorEnabled(CurrentUser.Id, true);
         Snackbar.Add("TOTP code provided is correct!", Severity.Success);
         
         // Wait for the snackbar message to be read then we reload the page to force page elements to update
@@ -287,22 +287,62 @@ public partial class SecuritySettings
         }
 
         _userApiTokens = tokensRequest.Data.ToList();
-        if (_userApiTokens.Any())
-            _apiTokenGenButtonText = "Regenerate Token";
     }
 
     private async Task GenerateUserApiToken()
     {
         if (!_canGenerateApiTokens) return;
+        
+        var dialogParameters = new DialogParameters() {{"ApiTokenId", Guid.Empty}};
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        await DialogService.Show<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions).Result;
 
-        var generateRequest = await AccountService.GenerateUserApiToken(CurrentUser.Id, _tokenTimeframe);
-        if (!generateRequest.Succeeded)
+        await GetUserApiTokens();
+        StateHasChanged();
+    }
+
+    private async Task UpdateApiToken()
+    {
+        if (_selectedApiTokens.Count != 1) return;
+        
+        var dialogParameters = new DialogParameters() {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        await DialogService.Show<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions).Result;
+        
+        await GetUserApiTokens();
+        StateHasChanged();
+    }
+
+    private async Task DeleteApiTokens()
+    {
+        var tokensList = _selectedApiTokens.Select(x => $"Token: [{x.Value[^4..]}] {x.Description}").ToArray();
+        
+        var dialogParameters = new DialogParameters()
         {
-            generateRequest.Messages.ForEach(x => Snackbar.Add($"Failed to generate token: {x}", Severity.Error));
+            {"Title", $"Are you sure you want to delete these {_selectedApiTokens.Count} API Tokens?"},
+            {"Content", string.Join(Environment.NewLine, tokensList)}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var confirmation = await DialogService.Show<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions).Result;
+        if (confirmation.Canceled)
             return;
+
+        var messages = new List<string>();
+        
+        foreach (var token in _selectedApiTokens)
+        {
+            var tokenDeleteRequest = await AccountService.DeleteUserApiToken(CurrentUser.Id, token.Value);
+            if (!tokenDeleteRequest.Succeeded)
+                messages.Add(tokenDeleteRequest.Messages.First());
         }
 
-        Snackbar.Add("Successfully generated API token!", Severity.Success);
+        if (messages.Any())
+        {
+            messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        Snackbar.Add("Finished deleting selected API tokens", Severity.Success);
         await GetUserApiTokens();
         StateHasChanged();
     }
@@ -316,7 +356,7 @@ public partial class SecuritySettings
             return;
         }
 
-        Snackbar.Add("Successfully copied your API token to your clipboard!", Severity.Info);
+        Snackbar.Add("Successfully copied API token to your clipboard!", Severity.Info);
     }
     
     private IEnumerable<string> ValidatePasswordRequirements(string content)

@@ -25,7 +25,7 @@ public interface IAppUserService
     Task<IResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
     Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
-    Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string newValue);
+    Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string? value, string? description);
     Task<IResult> RemoveExtendedAttributeAsync(Guid attributeId);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull?>> GetPreferences(Guid userId);

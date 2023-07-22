@@ -25,11 +25,13 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly LifecycleConfiguration _lifecycleConfig;
     private readonly IRunningServerState _serverState;
+    private readonly SecurityConfiguration _securityConfig;
 
     private AppUserSecurityDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IAppPermissionRepository permissionRepository, IOptions<LifecycleConfiguration> lifecycleConfig, IRunningServerState serverState)
+        IAppPermissionRepository permissionRepository, IOptions<LifecycleConfiguration> lifecycleConfig, IRunningServerState serverState,
+        IOptions<SecurityConfiguration> securityConfig)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -37,6 +39,7 @@ public class SqlDatabaseSeederService : IHostedService
         _permissionRepository = permissionRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _serverState = serverState;
+        _securityConfig = securityConfig.Value;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -67,12 +70,12 @@ public class SqlDatabaseSeederService : IHostedService
         
         var moderatorRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.ModeratorName, RoleConstants.DefaultRoles.ModeratorDescription);
-        if (moderatorRole.Success)
+        if (moderatorRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
             await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionConstants.GetModeratorRolePermissions());
 
         var defaultRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.DefaultName, RoleConstants.DefaultRoles.DefaultDescription);
-        if (defaultRole.Success)
+        if (defaultRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
             await EnforcePermissionsForRole(defaultRole.Result!.Id, PermissionConstants.GetDefaultRolePermissions());
     }
 
@@ -192,7 +195,7 @@ public class SqlDatabaseSeederService : IHostedService
             AccountType = AccountType.User
         });
         
-        AccountHelpers.GenerateHashAndSalt(userPassword, out var salt, out var hash);
+        AccountHelpers.GenerateHashAndSalt(userPassword, _securityConfig.PasswordPepper, out var salt, out var hash);
         await _userRepository.UpdateSecurityAsync(new AppUserSecurityAttributeUpdate
         {
             OwnerId = createdUser.Result,
@@ -202,14 +205,12 @@ public class SqlDatabaseSeederService : IHostedService
             TwoFactorKey = null,
             AuthState = AuthState.Enabled,
             AuthStateTimestamp = null,
-            RefreshToken = null,
-            RefreshTokenExpiryTime = null,
             BadPasswordAttempts = 0,
             LastBadPassword = null
         });
         
         _logger.Information("Created missing {UserName} user with id: {UserId}", userName, createdUser.Result);
-
+        
         return await _userRepository.GetByIdAsync(createdUser.Result);
     }
 

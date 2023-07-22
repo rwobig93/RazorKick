@@ -14,7 +14,7 @@ public static class JwtHelpers
 
     private static byte[] GetJwtSecret(SecurityConfiguration securityConfig)
     {
-        return Encoding.ASCII.GetBytes(securityConfig.Secret);
+        return Encoding.ASCII.GetBytes(securityConfig.JsonTokenSecret);
     }
 
     public static string GetJwtIssuer(AppConfiguration appConfig)

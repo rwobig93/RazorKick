@@ -1,8 +1,8 @@
 ﻿@using TestBlazorServerApp.Components.Account
 @using Application.Helpers.Runtime
-@using Domain.Enums.Auth
 
 @attribute [Route(AppRouteConstants.Account.Security)]
+@attribute [Authorize]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <AccountSettingsNavBar/>
@@ -95,36 +95,43 @@
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Token</MudText>
                 </MudItem>
-                @* TODO: find spacing for these elements to get them aligned in the center & verify token generation *@
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"
-                         Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center">
-                    <MudButton Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
-                        Color="Color.Primary" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined">
-                        @_apiTokenGenButtonText
-                    </MudButton>
-                    <MudSelect Class="d-flex flex-wrap pa-4 mb-3 gap-4 justify-center mud-text-align-center align-center" 
-                        @bind-Value="_tokenTimeframe" Label="Token Lifetime" OpenIcon="@Icons.Material.Filled.Api" AdornmentColor="Color.Secondary">
-                        @foreach (UserApiTokenTimeframe item in Enum.GetValues(typeof(UserApiTokenTimeframe)))
-                        {
-                            <MudSelectItem Value="@item">@item</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Hover="true" Dense="true" Striped="true">
-                    <MudTable Items="@_userApiTokens">
+                <MudItem  xs="16" sm="20" md="28" lg="36" Hover="true" Dense="true" Striped="true">
+                    <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                         IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                                    <MudMenuItem IconColor="Color.Secondary" Disabled="@(_selectedApiTokens.Count != 1)" OnClick="UpdateApiToken"
+                                                 Icon="@Icons.Material.Filled.Update">Update</MudMenuItem>
+                                    <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedApiTokens.Count < 1)" OnClick="DeleteApiTokens"
+                                                 Icon="@Icons.Material.Filled.Delete">Delete</MudMenuItem>
+                                </MudMenu>
+                                <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined"
+                                           EndIcon="@Icons.Material.Filled.Add">Create</MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
                         <HeaderContent>
                             <MudTh></MudTh>
                             <MudTh>Expiration</MudTh>
                             <MudTh>Token (Last 4)</MudTh>
-                            <MudTh>Copy Token To Clipboard</MudTh>
+                            <MudTh>Description</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
-                            <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToLongTimeString()</MudTd>
-                            <MudTd DataLabel="Value">@context.Value[^4..]</MudTd>
-                            <MudTd DataLabel="Copy"><MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                                                               OnClick="@(() => CopyToClipboard(@context.Value))"/></MudTd>
+                            <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToFriendlyDisplay()</MudTd>
+                            <MudTd DataLabel="Value">
+                                @context.Value[^4..] 
+                                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
+                                           OnClick="@(async () => await CopyToClipboard(context.Value))"/>
+                            </MudTd>
+                            <MudTd DataLabel="Description">@context.Description</MudTd>
                         </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No API Tokens Found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudText>Loading...</MudText>
+                        </LoadingContent>
                     </MudTable>
                 </MudItem>
             </MudPaper>

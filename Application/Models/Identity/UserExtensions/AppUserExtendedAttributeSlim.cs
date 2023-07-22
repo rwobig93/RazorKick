@@ -8,5 +8,6 @@ public class AppUserExtendedAttributeSlim
     public Guid OwnerId { get; set; }
     public string Name { get; set; } = "";
     public string Value { get; set; } = "";
+    public string Description { get; set; } = "";
     public ExtendedAttributeType Type { get; set; }
 }

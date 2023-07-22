@@ -1,6 +1,7 @@
 ﻿@using TestBlazorServerApp.Components.Account
 
 @attribute [Route(AppRouteConstants.Account.AccountSettings)]
+@attribute [Authorize]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <AccountSettingsNavBar/>

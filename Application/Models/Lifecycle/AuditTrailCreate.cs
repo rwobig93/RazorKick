@@ -9,6 +9,6 @@ public class AuditTrailCreate
     public Guid ChangedBy { get; set; } = Guid.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public DatabaseActionType Action { get; set; }
-    public string Before { get; set; } = "";
-    public string After { get; set; } = "";
+    public string Before { get; set; } = "{}";
+    public string After { get; set; } = "{}";
 }

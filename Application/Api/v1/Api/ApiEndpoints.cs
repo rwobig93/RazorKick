@@ -23,7 +23,7 @@ public static class ApiEndpoints
     }
 
     /// <summary>
-    /// Gets a service account Json Web Token (JWT) for use in API calls
+    /// Gets a Json Web Token (JWT) for use in API calls
     /// </summary>
     /// <param name="tokenRequest">Credentials to authenticate</param>
     /// <param name="accountService"></param>
@@ -36,7 +36,7 @@ public static class ApiEndpoints
     {
         try
         {
-            return await accountService.GetServiceAccountApiToken(tokenRequest);
+            return await accountService.GetApiAuthToken(tokenRequest);
         }
         catch (Exception ex)
         {
