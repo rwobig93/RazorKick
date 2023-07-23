@@ -18,11 +18,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using TestBlazorServerApp.Components.Account;
 using TestBlazorServerApp.Components.Shared;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 
 public partial class SecuritySettings
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [Parameter] public string OauthCode { get; set; } = "";
     [Parameter] public string OauthState { get; set; } = "";
     
@@ -69,7 +71,6 @@ public partial class SecuritySettings
     private bool _linkedAuthGoogle;
     private bool _linkedAuthDiscord;
     private bool _linkedAuthSpotify;
-    private bool _linkedAuthFacebook;
     
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -340,14 +341,12 @@ public partial class SecuritySettings
             _linkedAuthDiscord = false;
             _linkedAuthGoogle = false;
             _linkedAuthSpotify = false;
-            _linkedAuthFacebook = false;
             return;
         }
 
         _linkedAuthDiscord = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Discord.ToString());
         _linkedAuthGoogle = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Google.ToString());
         _linkedAuthSpotify = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Spotify.ToString());
-        _linkedAuthFacebook = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Facebook.ToString());
     }
 
     private async Task GenerateUserApiToken()

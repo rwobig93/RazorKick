@@ -4,11 +4,16 @@ using Application.Models.Identity.User;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages;
 
 public partial class Index
 {
+    // MainLayout has a CascadingParameter of itself, this allows the refresh button on the AppBar to refresh all page state data
+    //  If this parameter isn't cascaded to a page then the refresh button won't affect that pages' state data
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+    
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     

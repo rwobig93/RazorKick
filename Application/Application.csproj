@@ -26,6 +26,7 @@
       <PackageReference Include="Hangfire" Version="1.8.3" />
       <PackageReference Include="Hangfire.Core" Version="1.8.3" />
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.32.0" />
+      <PackageReference Include="MudBlazor" Version="6.7.0" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
       <PackageReference Include="RestSharp.Authenticators" Version="1.1.1" />
       <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />

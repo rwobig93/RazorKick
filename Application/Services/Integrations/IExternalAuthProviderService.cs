@@ -10,7 +10,6 @@ public interface IExternalAuthProviderService
     public bool ProviderEnabledGoogle { get; }
     public bool ProviderEnabledDiscord { get; }
     public bool ProviderEnabledSpotify { get; }
-    public bool ProviderEnabledFacebook { get; }
     
     public Task<IResult<string>> GetLoginUri(ExternalAuthProvider provider, ExternalAuthRedirect redirect);
     public Task<IResult<ExternalUserProfile>> GetUserProfile(ExternalAuthProvider provider, string oauthCode);

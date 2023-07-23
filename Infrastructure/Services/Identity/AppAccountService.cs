@@ -6,6 +6,7 @@ using Application.Constants.Web;
 using Application.Helpers.Auth;
 using Application.Helpers.Communication;
 using Application.Helpers.Identity;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
@@ -500,7 +501,7 @@ public class AppAccountService : IAppAccountService
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
 
-        var confirmationUrl = (await GetEmailConfirmationUrl(createUserResult.Result)).Data;
+        var confirmationUrl = (await GetEmailConfirmationUrl(createUserResult.Result, registerRequest.Email)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
         
@@ -516,7 +517,7 @@ public class AppAccountService : IAppAccountService
             $"Account {newUser.Username} successfully registered, please check your email to confirm!{caveatMessage}");
     }
 
-    public async Task<IResult<string>> GetEmailConfirmationUrl(Guid userId)
+    public async Task<IResult<string>> GetEmailConfirmationUrl(Guid userId, string emailAddress)
     {
         var previousConfirmations =
             (await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.EmailConfirmationToken)).Result;
@@ -536,7 +537,7 @@ public class AppAccountService : IAppAccountService
         var newExtendedAttribute = new AppUserExtendedAttributeCreate
         {
             OwnerId = userId,
-            Name = "AccountEmailConfirmation",
+            Name = emailAddress,
             Type = ExtendedAttributeType.EmailConfirmationToken,
             Value = confirmationCode,
             Description = ""
@@ -579,17 +580,11 @@ public class AppAccountService : IAppAccountService
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         }
+        
         if (previousConfirmation.Value != confirmationCode)
         {
-            await _auditService.CreateAsync(new AuditTrailCreate
-            {
-                TableName = "EmailConfirmation",
-                RecordId = userId,
-                ChangedBy = _serverState.SystemUserId,
-                Timestamp = _dateTime.NowDatabaseTime,
-                Action = DatabaseActionType.Troubleshooting,
-                Before = _serializer.Serialize(new Dictionary<string, string>()),
-                After = _serializer.Serialize(new Dictionary<string, string>
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", userSecurity.Id,
+                new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
@@ -597,12 +592,12 @@ public class AppAccountService : IAppAccountService
                     {"Details", "Email confirmation was attempted with an invalid confirmation code"},
                     {"Correct Code ", previousConfirmation.Value},
                     {"Provided Code", confirmationCode}
-                })
-            });
+                });
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         }
-        
+
+        userSecurity.Email = previousConfirmation.Name;
         userSecurity.AuthState = AuthState.Enabled;
         userSecurity.EmailConfirmed = true;
         userSecurity.LastModifiedBy = _serverState.SystemUserId;
@@ -618,7 +613,52 @@ public class AppAccountService : IAppAccountService
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         await _userRepository.RemoveExtendedAttributeAsync(previousConfirmation.Id);
         
-        return await Result<string>.SuccessAsync(userSecurity.Id.ToString(), $"Account Confirmed for {userSecurity.Username}.");
+        return await Result<string>.SuccessAsync(userSecurity.Id.ToString(), $"Email Confirmed for {userSecurity.Username}");
+    }
+
+    public async Task<IResult> InitiateEmailChange(Guid userId, string newEmail)
+    {
+        var foundUserRequest = await _userRepository.GetByIdAsync(userId);
+        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
+        if (!AccountHelpers.IsValidEmailAddress(newEmail))
+            return await Result.FailAsync($"The email address {newEmail} provided isn't a valid email, please try again");
+        
+        var matchingEmail = (await _userRepository.GetByEmailAsync(newEmail)).Result;
+        if (matchingEmail is not null)
+            return await Result.FailAsync(
+                $"The email address {newEmail} is already in use and cannot be assigned to another account");
+
+        var confirmationUrl = (await GetEmailConfirmationUrl(foundUserRequest.Result.Id, newEmail)).Data;
+        if (string.IsNullOrWhiteSpace(confirmationUrl))
+        {
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", foundUserRequest.Result.Id,
+                new Dictionary<string, string>()
+                {
+                    {"UserId", foundUserRequest.Result.Id.ToString()},
+                    {"Username", foundUserRequest.Result.Username},
+                    {"Email", foundUserRequest.Result.Email},
+                    {"Details", "Was unable to generate confirmation Url"},
+                    {"Confirmation Url", confirmationUrl}
+                });
+            return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
+        }
+        
+        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
+        var response = await _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl);
+        if (response.Successful) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
+        
+        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", foundUserRequest.Result.Id,
+            new Dictionary<string, string>()
+            {
+                {"UserId", foundUserRequest.Result.Id.ToString()},
+                {"Username", foundUserRequest.Result.Username},
+                {"Email", foundUserRequest.Result.Email},
+                {"Details", "Failure occurred sending email confirmation"},
+                {"Errors", response.ErrorMessages.ToString() ?? ""}
+            });
+        return await Result.FailAsync($"Failed to send confirmation email to {newEmail}, please contact the administrator");
     }
 
     public async Task<IResult> SetUserPassword(Guid userId, string newPassword)

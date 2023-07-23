@@ -10,12 +10,15 @@ using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
 public partial class UserView
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;

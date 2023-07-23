@@ -1,11 +1,14 @@
 ﻿using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class ConfirmEmail
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+    
     [Parameter] public string UserId { get; set; } = "";
     [Parameter] public string ConfirmationCode { get; set; } = "";
     

@@ -1,7 +1,12 @@
-﻿namespace TestBlazorServerApp.Pages.Example;
+﻿using Microsoft.AspNetCore.Components;
+using TestBlazorServerApp.Shared;
+
+namespace TestBlazorServerApp.Pages.Example;
 
 public partial class Counter
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     private int _currentCount;
     private Color _iconColor = Color.Primary;
 

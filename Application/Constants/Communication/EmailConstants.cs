@@ -6,4 +6,5 @@ public class EmailConstants
     
     public const string PathRegistrationConfirmation = "RegistrationConfirmation.cshtml";
     public const string PathPasswordReset = "PasswordReset.cshtml";
+    public const string PathEmailChangeConfirmation = "EmailChangeConfirmation.cshtml";
 }

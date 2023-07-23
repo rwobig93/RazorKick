@@ -19,8 +19,9 @@ public interface IAppAccountService
     Task<IResult> LogoutGuiAsync(Guid userId);
     Task<IResult<bool>> PasswordMeetsRequirements(string password);
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
-    Task<IResult<string>> GetEmailConfirmationUrl(Guid userId);
+    Task<IResult<string>> GetEmailConfirmationUrl(Guid userId, string emailAddress);
     Task<IResult<string>> ConfirmEmailAsync(Guid userId, string confirmationCode);
+    Task<IResult> InitiateEmailChange(Guid userId, string newEmail);
     Task<IResult> SetUserPassword(Guid userId, string newPassword);
     Task<IResult<bool>> IsPasswordCorrect(Guid userId, string password);
     Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest);

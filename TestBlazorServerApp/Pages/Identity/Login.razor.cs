@@ -31,11 +31,14 @@ using OAuth2.Client;
 using OAuth2.Client.Impl;
 using OAuth2.Infrastructure;
 using TestBlazorServerApp.Components.Identity;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class Login
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     [Parameter] public string RedirectReason { get; set; } = "";
     [Parameter] public string OauthCode { get; set; } = "";
     [Parameter] public string OauthState { get; set; } = "";

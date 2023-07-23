@@ -6,11 +6,14 @@ using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
 using MudBlazor.Utilities;
 using TestBlazorServerApp.Settings;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 
 public partial class ThemeSettings
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     private AppUserPreferenceFull _userPreferences = new();

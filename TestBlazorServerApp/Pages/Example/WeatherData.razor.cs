@@ -1,9 +1,13 @@
 ﻿using Application.Responses.Example;
+using Microsoft.AspNetCore.Components;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Example;
 
 public partial class WeatherData
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     private bool _dense = true;
     private bool _hover = true;
     private bool _striped = true;

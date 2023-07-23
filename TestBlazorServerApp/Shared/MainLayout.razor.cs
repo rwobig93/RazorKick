@@ -144,6 +144,13 @@ public partial class MainLayout
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
     }
 
+    private async Task RefreshPageData()
+    {
+        await Task.Yield();
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
     private async Task DrawerToggle()
     {
         _userPreferences.DrawerDefaultOpen = !_userPreferences.DrawerDefaultOpen;

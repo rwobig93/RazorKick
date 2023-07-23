@@ -1,5 +1,8 @@
 ﻿using Application.Constants.Lifecycle;
 using Application.Models.Lifecycle;
+using Application.Services.Lifecycle;
+using Application.Services.System;
+using Domain.Enums.Database;
 
 namespace Application.Helpers.Lifecycle;
 
@@ -41,5 +44,20 @@ public static class AuditHelpers
         auditDiff.After = changedProps.ToDictionary(prop => prop, prop => afterDict[prop])!;
 
         return auditDiff;
+    }
+
+    public static async Task CreateTroubleshootLog(this IAuditTrailService auditService, IRunningServerState serverState, IDateTimeService dateTime,
+        ISerializerService serializer, string tableName, Guid recordId, Dictionary<string, string> log)
+    {
+        await auditService.CreateAsync(new AuditTrailCreate
+        {
+            TableName = tableName,
+            RecordId = recordId,
+            ChangedBy = serverState.SystemUserId,
+            Timestamp = dateTime.NowDatabaseTime,
+            Action = DatabaseActionType.Troubleshooting,
+            Before = serializer.Serialize(new Dictionary<string, string>()),
+            After = serializer.Serialize(log)
+        });
     }
 }

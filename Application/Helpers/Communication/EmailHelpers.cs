@@ -7,13 +7,25 @@ namespace Application.Helpers.Communication;
 
 public static class EmailHelpers
 {
-    public static async Task<SendResponse> SendRegistrationEmail(this IFluentEmail mailService, string emailAddress, string username, string 
-    confirmationUrl)
+    public static async Task<SendResponse> SendRegistrationEmail(this IFluentEmail mailService, string emailAddress, string username,
+        string confirmationUrl)
     {
         var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
             EmailConstants.PathRegistrationConfirmation);
         
         return await mailService.Subject("Registration Confirmation").To(emailAddress)
+            .UsingTemplateFromFile(templatePath, new EmailAction() 
+                {ActionUrl = confirmationUrl, Username = username})
+            .SendAsync();
+    }
+    
+    public static async Task<SendResponse> SendEmailChangeConfirmation(this IFluentEmail mailService, string emailAddress, string username,
+        string confirmationUrl)
+    {
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
+            EmailConstants.PathEmailChangeConfirmation);
+        
+        return await mailService.Subject("Email Change Confirmation").To(emailAddress)
             .UsingTemplateFromFile(templatePath, new EmailAction() 
                 {ActionUrl = confirmationUrl, Username = username})
             .SendAsync();

@@ -55,14 +55,6 @@
                     </MudButton>
                 </MudItem>
             }
-            @if (ExternalAuth.ProviderEnabledFacebook)
-            {
-                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Custom.Brands.Facebook"
-                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Facebook))">Login with Facebook
-                    </MudButton>
-                </MudItem>
-            }
         </MudGrid>
     }
     <MudGrid Class="justify-center my-4 mud-text-align-center">

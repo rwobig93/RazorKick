@@ -3,11 +3,14 @@ using Application.Models.Identity.Role;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
 public partial class RoleAdmin
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     private MudTable<AppRoleSlim> _table = new();
     private IEnumerable<AppRoleSlim> _pagedData = new List<AppRoleSlim>();

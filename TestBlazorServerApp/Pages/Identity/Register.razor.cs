@@ -5,11 +5,14 @@ using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.System;
 using Microsoft.AspNetCore.Components;
+using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class Register
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
 

@@ -19,17 +19,14 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
     public bool ProviderEnabledGoogle => _enabledGoogle;
     public bool ProviderEnabledDiscord => _enabledDiscord;
     public bool ProviderEnabledSpotify => _enabledSpotify;
-    public bool ProviderEnabledFacebook => _enabledFacebook;
     
     private static string? _redirectUri;
     private static bool _anyProvidersEnabled;
     private static bool _enabledGoogle;
     private static bool _enabledDiscord;
     private static bool _enabledSpotify;
-    private static bool _enabledFacebook;
     private static GoogleClient? _googleClient;
     private static SpotifyClient? _spotifyClient;
-    private static FacebookClient? _facebookClient;
     private readonly OauthConfiguration _oauthConfig;
     private readonly ILogger _logger;
 
@@ -42,13 +39,12 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         ConfigureDiscordClient();
         ConfigureGoogleClient();
         ConfigureSpotifyClient();
-        ConfigureFacebookClient();
         UpdateProviderStatus();
     }
 
     private static void UpdateProviderStatus()
     {
-        if (_enabledGoogle || _enabledDiscord || _enabledSpotify || _enabledFacebook)
+        if (_enabledGoogle || _enabledDiscord || _enabledSpotify)
         {
             _anyProvidersEnabled = true;
             return;
@@ -67,6 +63,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         
         try
         {
+            // Scopes: identify guilds
             _enabledDiscord = false;
         }
         catch (Exception ex)
@@ -119,7 +116,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 ClientId = _oauthConfig.SpotifyClientId.Trim(),
                 ClientSecret = _oauthConfig.SpotifyClientSecret.Trim(),
                 RedirectUri = _redirectUri,
-                Scope = "profile email",
+                Scope = "user-read-email",
                 IsEnabled = true,
                 ClientTypeName = "WebClient"
             });
@@ -129,34 +126,6 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         {
             _logger.Error(ex, "Failed to configure Spotify Client for external Oauth");
             _enabledSpotify = false;
-        }
-    }
-
-    private void ConfigureFacebookClient()
-    {
-        if (string.IsNullOrWhiteSpace(_oauthConfig.FacebookClientId) || string.IsNullOrWhiteSpace(_oauthConfig.FacebookClientSecret))
-        {
-            _enabledFacebook = false;
-            return;
-        }
-        
-        try
-        {
-            _facebookClient = new FacebookClient(new RequestFactory(), new OAuth2.Configuration.ClientConfiguration
-            {
-                ClientId = _oauthConfig.FacebookClientId.Trim(),
-                ClientSecret = _oauthConfig.FacebookClientSecret.Trim(),
-                RedirectUri = _redirectUri,
-                Scope = "profile email",
-                IsEnabled = true,
-                ClientTypeName = "WebClient"
-            });
-            _enabledFacebook = true;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Failed to configure Facebook Client for external Oauth");
-            _enabledFacebook = false;
         }
     }
 
@@ -183,12 +152,6 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
 
                 loginUri = await _spotifyClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
-                break;
-            case ExternalAuthProvider.Facebook:
-                if (!ProviderEnabledFacebook)
-                    return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
-                
-                loginUri = await _facebookClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
@@ -226,13 +189,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 externalProfile =
                     (await _spotifyClient!.GetUserInfoAsync(new NameValueCollection() {{"code", oauthCode}})).ToExternalProfile();
                 break;
-            case ExternalAuthProvider.Facebook:
-                if (!ProviderEnabledFacebook)
-                    return await Result<ExternalUserProfile>.FailAsync($"{provider.ToString()} currently isn't enabled");
-
-                externalProfile =
-                    (await _facebookClient!.GetUserInfoAsync(new NameValueCollection() {{"code", oauthCode}})).ToExternalProfile();
-                break;
+            case ExternalAuthProvider.Unknown:
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider, null);
         }
