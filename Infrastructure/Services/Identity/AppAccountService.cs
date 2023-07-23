@@ -118,7 +118,7 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
     }
 
-    public async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
+    private async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
     {
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(loginRequest.Username)).Result;
         if (userSecurity is null)
@@ -178,34 +178,33 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
-    private async Task<IResult> VerifyExternalAuthIsValid(AppUserSecurityDb userSecurity, ExternalAuthProvider provider,
-        string externalId)
+    private async Task<IResult<AppUserExtendedAttributeSlim>> VerifyExternalAuthIsValid(ExternalAuthProvider provider, string externalId)
     {
         var existingProviderRequest = 
-            await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(userSecurity.Id, ExtendedAttributeType.ExternalAuthLogin, externalId);
+            await _userRepository.GetExtendedAttributeByTypeAndValueAsync(ExtendedAttributeType.ExternalAuthLogin, externalId);
         if (!existingProviderRequest.Success || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
-            return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+            return await Result<AppUserExtendedAttributeSlim>.FailAsync(ErrorMessageConstants.ExternalAuthNotLinked);
 
         var matchingAuthBinding = existingProviderRequest.Result.First();
-        if (matchingAuthBinding.Description != provider.ToString())
-            return await Result.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+        if (matchingAuthBinding!.Description != provider.ToString())
+            return await Result<AppUserExtendedAttributeSlim>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
-        return await Result.SuccessAsync();
+        return await Result<AppUserExtendedAttributeSlim>.SuccessAsync(matchingAuthBinding.ToSlim());
     }
 
     public async Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest)
     {
-        var userSecurity = (await _userRepository.GetByEmailAsync(loginRequest.Email)).Result;
+        var externalAuthIsValid = await VerifyExternalAuthIsValid(loginRequest.Provider, loginRequest.ExternalId);
+        if (!externalAuthIsValid.Succeeded)
+            return await Result<UserLoginResponse>.FailAsync(externalAuthIsValid.Messages);
+        
+        var userSecurity = (await _userRepository.GetByIdSecurityAsync(externalAuthIsValid.Data.OwnerId)).Result;
         if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
 
         var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
         if (!accountIsLoginReady.Succeeded)
             return accountIsLoginReady;
-
-        var externalAuthIsValid = await VerifyExternalAuthIsValid(userSecurity, loginRequest.Provider, loginRequest.ExternalId);
-        if (!externalAuthIsValid.Succeeded)
-            return await Result<UserLoginResponse>.FailAsync(externalAuthIsValid.Messages);
         
         // External auth is successful so we reset previous bad password attempts and indicate full login timestamp
         userSecurity.BadPasswordAttempts = 0;
@@ -234,6 +233,10 @@ public class AppAccountService : IAppAccountService
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
         var response = new UserLoginResponse() { ClientId = clientId, Token = token, RefreshToken = refreshToken,
             RefreshTokenExpiryTime = refreshTokenExpiration };
+            
+        var result = await CacheAuthTokens(Result<UserLoginResponse>.Success(response));
+        if (!result.Succeeded)
+            return await Result<UserLoginResponse>.FailAsync(result.Messages.FirstOrDefault()!);
 
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
@@ -386,7 +389,6 @@ public class AppAccountService : IAppAccountService
         try
         {
             // Remove client id and tokens from local client storage and deauthenticate
-            await _localStorage.RemoveItemAsync(LocalStorageConstants.ClientId);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
             _authProvider.DeauthenticateUser();

@@ -17,10 +17,6 @@ public static class ExternalAuthHelpers
 
     private static ExternalAuthRedirect StringToRedirect(string redirect)
     {
-        var isValidRedirect = Enum.TryParse(redirect, out ExternalAuthRedirect parsedRedirect);
-        if (!isValidRedirect)
-            return ExternalAuthRedirect.Login;
-        
         return redirect switch
         {
             "redindxlin" => ExternalAuthRedirect.Login,
@@ -30,7 +26,7 @@ public static class ExternalAuthHelpers
         };
     }
 
-    private static ExternalAuthProvider StringToProvider(string provider)
+    public static ExternalAuthProvider StringToProvider(string provider)
     {
         var isValidProvider = Enum.TryParse(provider, out ExternalAuthProvider parsedProvider);
         return !isValidProvider ? ExternalAuthProvider.Unknown : parsedProvider;
@@ -41,18 +37,18 @@ public static class ExternalAuthHelpers
         return string.Join("-", provider.ToString(), RedirectToString(redirect));
     }
 
-    public static Tuple<ExternalAuthProvider, ExternalAuthRedirect> GetStateFromRedirect(string state)
+    public static (ExternalAuthProvider provider, ExternalAuthRedirect redirect) GetStateFromRedirect(string state)
     {
         try
         {
             var stateSplit = state.Split('-');
             var provider = StringToProvider(stateSplit[0]);
             var redirect = StringToRedirect(stateSplit[1]);
-            return new Tuple<ExternalAuthProvider, ExternalAuthRedirect>(provider, redirect);
+            return new ValueTuple<ExternalAuthProvider, ExternalAuthRedirect>(provider, redirect);
         }
         catch (Exception)
         {
-            return new Tuple<ExternalAuthProvider, ExternalAuthRedirect>(ExternalAuthProvider.Google, ExternalAuthRedirect.Login);
+            return new ValueTuple<ExternalAuthProvider, ExternalAuthRedirect>(ExternalAuthProvider.Google, ExternalAuthRedirect.Login);
         }
     }
 }

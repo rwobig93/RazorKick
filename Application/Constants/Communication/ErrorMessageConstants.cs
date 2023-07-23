@@ -21,6 +21,8 @@ public static class ErrorMessageConstants
     public const string PasswordsNoMatchError = "Provided password and confirmation don't match, please try again";
     public const string TokenInvalidError = "The token provided is invalid";
     public const string UnauthenticatedError = "You are currently unauthenticated and connot do that action, please login and try again";
+    public const string ExternalAuthNotLinked =
+        "This external account is not linked to your internal account, please login and link this account in your account settings";
 
     // Permission Errors
     public const string PermissionError = "You aren't authorized to do that, please go away";

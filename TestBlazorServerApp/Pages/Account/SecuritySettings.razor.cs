@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Identity;
+using Application.Helpers.Integrations;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -8,9 +9,13 @@ using Application.Responses.Identity;
 using Application.Services.Identity;
 using Application.Services.Integrations;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
+using Domain.Enums.Integration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using TestBlazorServerApp.Components.Account;
 using TestBlazorServerApp.Components.Shared;
 
@@ -18,6 +23,9 @@ namespace TestBlazorServerApp.Pages.Account;
 
 public partial class SecuritySettings
 {
+    [Parameter] public string OauthCode { get; set; } = "";
+    [Parameter] public string OauthState { get; set; } = "";
+    
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
@@ -25,10 +33,13 @@ public partial class SecuritySettings
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IExternalAuthProviderService ExternalAuthService { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
 
     private AppUserSecurityFull CurrentUser { get; set; } = new();
     
     private bool _canGenerateApiTokens;
+    private MudTabs _securityTabs = null!;
+    private MudTabPanel _externalAuthPanel = null!;
     
     // User Password Change
     private string CurrentPassword { get; set; } = "";
@@ -54,16 +65,25 @@ public partial class SecuritySettings
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = new();
     
+    // External Auth
+    private bool _linkedAuthGoogle;
+    private bool _linkedAuthDiscord;
+    private bool _linkedAuthSpotify;
+    private bool _linkedAuthFacebook;
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            ParseParametersFromUri();
             await GetCurrentUser();
             await GetPermissions();
             await GetClientTimezone();
             await GetUserApiTokens();
+            await GetUserExternalAuthLinks();
             await UpdatePageElementStates();
+            await HandleExternalLoginRedirect();
             StateHasChanged();
         }
     }
@@ -75,6 +95,18 @@ public partial class SecuritySettings
             return;
 
         CurrentUser = foundUser;
+    }
+
+    private void ParseParametersFromUri()
+    {
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var queryParameters = QueryHelpers.ParseQuery(uri.Query);
+        
+        if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
+            OauthCode = oauthCode!;
+        
+        if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
+            OauthState = oauthState!;
     }
 
     private async Task GetPermissions()
@@ -291,6 +323,33 @@ public partial class SecuritySettings
         _userApiTokens = tokensRequest.Data.ToList();
     }
 
+    private async Task GetUserExternalAuthLinks()
+    {
+        if (!ExternalAuthService.AnyProvidersEnabled) return;
+
+        var externalAuthRequest =
+            await UserService.GetUserExtendedAttributesByTypeAsync(CurrentUser.Id, ExtendedAttributeType.ExternalAuthLogin);
+        if (!externalAuthRequest.Succeeded)
+        {
+            externalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        if (!externalAuthRequest.Data.Any())
+        {
+            _linkedAuthDiscord = false;
+            _linkedAuthGoogle = false;
+            _linkedAuthSpotify = false;
+            _linkedAuthFacebook = false;
+            return;
+        }
+
+        _linkedAuthDiscord = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Discord.ToString());
+        _linkedAuthGoogle = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Google.ToString());
+        _linkedAuthSpotify = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Spotify.ToString());
+        _linkedAuthFacebook = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Facebook.ToString());
+    }
+
     private async Task GenerateUserApiToken()
     {
         if (!_canGenerateApiTokens) return;
@@ -374,5 +433,62 @@ public partial class SecuritySettings
             !string.IsNullOrWhiteSpace(DesiredPassword) &&
             content != DesiredPassword)
             yield return "Desired & Confirm Passwords Don't Match";
+    }
+
+    private async Task HandleExternalAuthLinking(ExternalAuthProvider provider, bool accountIsLinked)
+    {
+        // Account is linked so we'll unlink/remove the account
+        if (accountIsLinked)
+        {
+            var removeRequest = await AccountService.RemoveExternalAuthProvider(CurrentUser.Id, provider);
+            if (!removeRequest.Succeeded)
+            {
+                removeRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+
+            Snackbar.Add($"Successfully unlinked your {provider} account", Severity.Success);
+            await GetUserExternalAuthLinks();
+            StateHasChanged();
+            return;
+        }
+        
+        // Account is not linked so we'll start linking - initiate a redirect to the provider, on successful auth we'll link the account
+        var loginUriRedirectRequest = await ExternalAuthService.GetLoginUri(provider, ExternalAuthRedirect.Security);
+        if (!loginUriRedirectRequest.Succeeded)
+        {
+            loginUriRedirectRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        NavManager.NavigateTo(loginUriRedirectRequest.Data);
+    }
+
+    private async Task HandleExternalLoginRedirect()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(OauthCode) || string.IsNullOrWhiteSpace(OauthState)) return;
+
+            var provider = ExternalAuthHelpers.StringToProvider(OauthCode);
+
+            var addExternalAuthRequest =
+                await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
+            if (!addExternalAuthRequest.Succeeded)
+            {
+                addExternalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+            
+            Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {provider} account!", Severity.Success);
+            await GetUserExternalAuthLinks();
+            _securityTabs.ActivatePanel(_externalAuthPanel);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Failure occurred when attempting to handle external login redirect, likely invalid data provided");
+            Snackbar.Add("Invalid external login data provided, please try logging in again", Severity.Error);
+        }
     }
 }

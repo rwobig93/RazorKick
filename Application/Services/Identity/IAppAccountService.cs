@@ -12,7 +12,6 @@ namespace Application.Services.Identity;
 
 public interface IAppAccountService
 {
-    Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
     Task<IResult<ApiTokenResponse>> GetApiAuthToken(ApiGetTokenRequest tokenRequest);
