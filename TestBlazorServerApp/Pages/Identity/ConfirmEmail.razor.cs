@@ -1,9 +1,4 @@
-﻿using Application.Services.Identity;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
-using TestBlazorServerApp.Shared;
-
-namespace TestBlazorServerApp.Pages.Identity;
+﻿namespace TestBlazorServerApp.Pages.Identity;
 
 public partial class ConfirmEmail
 {

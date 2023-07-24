@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using TestBlazorServerApp.Shared;
-
-namespace TestBlazorServerApp.Pages.Example;
+﻿namespace TestBlazorServerApp.Pages.Example;
 
 public partial class Counter
 {

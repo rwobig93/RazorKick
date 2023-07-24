@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-
-namespace TestBlazorServerApp.Components.Shared;
+﻿namespace TestBlazorServerApp.Components.Shared;
 
 public partial class ConfirmationDialog
 {

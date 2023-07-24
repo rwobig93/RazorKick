@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using OAuth2.Client;
 using OAuth2.Client.Impl;
 using OAuth2.Infrastructure;
@@ -48,7 +49,9 @@ public partial class Login
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
     [Inject] private IOptions<OauthConfiguration> OauthSettings { get; init; } = null!;
-    [Inject] private IExternalAuthProviderService ExternalAuth { get; set; } = null!;
+    [Inject] private IExternalAuthProviderService ExternalAuth { get; init; } = null!;
+    [Inject] private ILocalStorageService LocalStorage { get; init; } = null!;
+    [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
@@ -68,6 +71,7 @@ public partial class Login
             ParseParametersFromUri();
             HandleRedirectReasons();
             await HandleExternalLoginRedirect();
+            await ValidateUserAuthenticated();
             StateHasChanged();
         }
 
@@ -313,5 +317,77 @@ public partial class Login
             Logger.Warning(ex, "Failure occurred when attempting to handle external login redirect, likely invalid data provided");
             Snackbar.Add("Invalid external login data provided, please try logging in again", Severity.Error);
         }
+    }
+
+    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
+    {
+        var tokenRequest = new RefreshTokenRequest();
+        
+        try
+        {
+            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
+            tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
+        }
+        catch
+        {
+            tokenRequest.Token = "";
+            tokenRequest.RefreshToken = "";
+        }
+
+        return tokenRequest;
+    }
+
+    private async Task LogoutAndClearCache()
+    {
+        var loginRedirectReason = LoginRedirectReason.SessionExpired;
+
+        try
+        {
+            var currentUserFull = (await CurrentUserService.GetCurrentUserFull())!;
+            // Validate if re-login is forced to give feedback to the user, items are ordered for overwrite precedence
+            if (currentUserFull.Id != Guid.Empty)
+            {
+                var userSecurity = (await UserService.GetSecurityInfoAsync(currentUserFull.Id)).Data;
+                
+                // Force re-login was set on the account
+                if (userSecurity!.AuthState == AuthState.LoginRequired)
+                    loginRedirectReason = LoginRedirectReason.ReAuthenticationForce;
+                // Last full login is older than the configured timeout
+                if (userSecurity.LastFullLogin!.Value.AddMinutes(SecuritySettings.Value.ForceLoginIntervalMinutes) <
+                    DateTimeService.NowDatabaseTime)
+                    loginRedirectReason = LoginRedirectReason.FullLoginTimeout;
+            }
+        }
+        catch
+        {
+            // Ignore any exceptions since we'll just be logging out anyway
+        }
+
+        await AccountService.LogoutGuiAsync(Guid.Empty);
+        var loginUriBase = new Uri(string.Concat(AppSettings.Value.BaseUrl, AppRouteConstants.Identity.Login));
+        var loginUriFull = QueryHelpers.AddQueryString(
+            loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
+        
+        NavManager.NavigateTo(loginUriFull, true);
+    }
+
+    private async Task ValidateUserAuthenticated()
+    {
+        // If user is already authenticated we'll send them to the index page instead of having them hang around here thinking they aren't
+        //    already authenticated
+        var currentUserId = await CurrentUserService.GetCurrentUserId();
+        if (currentUserId is null) return;
+        
+        var isUserAuthenticated = await AccountService.IsCurrentSessionValid();
+        if (!isUserAuthenticated.Data) return;
+        
+        var isReAuthenticationRequired = await AccountService.IsUserRequiredToReAuthenticate(currentUserId.Value);
+        if (!isReAuthenticationRequired.Data) return;
+
+        var tokens = await GetRefreshTokenRequest();
+        var reAuthenticationRequest = await AccountService.ReAuthUsingRefreshTokenAsync(tokens);
+        if (reAuthenticationRequest.Succeeded)
+            NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
     }
 }

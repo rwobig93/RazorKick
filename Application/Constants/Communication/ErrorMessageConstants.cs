@@ -15,6 +15,7 @@ public static class ErrorMessageConstants
     public const string UserNotFoundError = "Was unable to find a user with the provided information";
     public const string ServiceAccountOnly = "This action is meant for service accounts. " + 
         "Please contact the administrator for a service account or generate your own token from the account page";
+    public const string UserAccountOnly = "This action is meant for user accounts. Please login with a user account or register to get your own";
     
     // Authentication Errors
     public const string CredentialsInvalidError = "The username and password combination provided is invalid";

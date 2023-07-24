@@ -1,6 +1,4 @@
 using Application.Services.Integrations;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 
 namespace TestBlazorServerApp.Components.Identity;
 

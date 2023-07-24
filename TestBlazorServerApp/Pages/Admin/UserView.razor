@@ -1,5 +1,5 @@
 @using Application.Constants.Identity
-@using TestBlazorServerApp.Components.Shared
+@using Domain.Enums.Identity
 @using TestBlazorServerApp.Converters
 
 @attribute [Route(AppRouteConstants.Admin.UserView)]
@@ -15,10 +15,16 @@ else
         <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                    OnClick="GoBack">Go Back
         </MudButton>
-        @if (_canEditUsers)
+        @if (_canEditUsers && _viewingUser.AccountType == AccountType.User)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                        OnClick="ToggleEditMode">@_editButtonText
+            </MudButton>
+        }
+        @if (_canAdminServiceAccounts && _viewingUser.AccountType == AccountType.Service)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="EditServiceAccount">Edit Service Account
             </MudButton>
         }
         @if (_canEditRoles)
@@ -61,6 +67,9 @@ else
             <MudCheckBox @bind-Checked="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)" 
             Class="pe-4"/>
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
+            <MudTextField @bind-Value="_viewingUser.Notes" Label="Notes" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>

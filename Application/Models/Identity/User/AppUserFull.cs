@@ -20,6 +20,7 @@ public class AppUserFull
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
+    public string? Notes { get; set; }
     // Entities from other tables
     public List<AppRoleSlim> Roles { get; set; } = new();
     public List<AppUserExtendedAttributeSlim> ExtendedAttributes { get; set; } = new();

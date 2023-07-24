@@ -21,6 +21,7 @@ public class AppUserFullDb
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
+    public string? Notes { get; set; }
     public List<AppRoleDb> Roles { get; set; } = new();
     public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
     public List<AppPermissionDb> Permissions { get; set; } = new();

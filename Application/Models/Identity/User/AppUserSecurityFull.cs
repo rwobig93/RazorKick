@@ -20,6 +20,7 @@ public class AppUserSecurityFull
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
+    public string? Notes { get; set; }
     // Security Attributes
     public string PasswordHash { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;

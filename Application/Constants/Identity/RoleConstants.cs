@@ -10,6 +10,9 @@ public static class RoleConstants
         public const string ModeratorName = "Moderator";
         public const string ModeratorDescription = "Moderator role with most administration permissions";
     
+        public const string ServiceAccountName = "ServiceAccount";
+        public const string ServiceAccountDescription = "Service Account role with permissions for service accounts";
+    
         public const string DefaultName = "Default";
         public const string DefaultDescription = "Default role with base permissions, granted to every account by default";
     }
@@ -20,6 +23,7 @@ public static class RoleConstants
         {
             DefaultRoles.AdminName,
             DefaultRoles.ModeratorName,
+            DefaultRoles.ServiceAccountName,
             DefaultRoles.DefaultName
         };
     }
@@ -38,6 +42,14 @@ public static class RoleConstants
         {
             DefaultRoles.ModeratorName,
             DefaultRoles.DefaultName
+        };
+    }
+
+    public static List<string> GetServiceAccountRoleNames()
+    {
+        return new List<string>()
+        {
+            DefaultRoles.ServiceAccountName
         };
     }
 

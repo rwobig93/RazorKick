@@ -27,7 +27,6 @@ public partial class MainLayout
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
-    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     
 
     public ClaimsPrincipal CurrentUser { get; set; } = new();
@@ -84,6 +83,7 @@ public partial class MainLayout
 
             // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
             await AccountService.CacheAuthTokens(response);
+            StateHasChanged();
         }
     }
 
@@ -117,6 +117,7 @@ public partial class MainLayout
         var loginUriFull = QueryHelpers.AddQueryString(
             loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
         
+        StateHasChanged();
         NavManager.NavigateTo(loginUriFull, true);
     }
 

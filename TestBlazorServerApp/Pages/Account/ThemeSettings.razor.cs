@@ -1,12 +1,9 @@
 ﻿using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Services.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
-using Microsoft.AspNetCore.Components;
 using MudBlazor.Utilities;
 using TestBlazorServerApp.Settings;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 

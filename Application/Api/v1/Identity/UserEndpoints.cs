@@ -267,7 +267,7 @@ public static class UserEndpoints
     }
 
     /// <summary>
-    /// Update properties of the specified4 user account
+    /// Update properties of the specified user account
     /// </summary>
     /// <param name="userRequest">Details used to update a user account, any empty properties won't be updated</param>
     /// <param name="userService"></param>

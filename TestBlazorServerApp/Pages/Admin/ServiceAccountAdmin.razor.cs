@@ -6,7 +6,7 @@ using TestBlazorServerApp.Components.Identity;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
-public partial class UserAdmin
+public partial class ServiceAccountAdmin
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
@@ -18,10 +18,6 @@ public partial class UserAdmin
     private string _searchString = "";
     private int _totalUsers;
 
-    private bool _canEnableUsers;
-    private bool _canDisableUsers;
-    private bool _canResetPasswords;
-    private bool _allowUserSelection;
     private bool _canAdminServiceAccounts;
 
     private bool _dense = true;
@@ -43,37 +39,47 @@ public partial class UserAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canResetPasswords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.ResetPassword);
-        _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Disable);
-        _canEnableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Enable);
         _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.ServiceAccounts.Admin);
-
-        _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers;
     }
     
     private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
     {
-        var usersResult = await UserService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
+        var usersResult = await UserService.GetAllPaginatedAsync(state.Page, state.PageSize);
         if (!usersResult.Succeeded)
         {
             usersResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return new TableData<AppUserSlim>();
         }
 
-        _pagedData = usersResult.Data.ToArray();
-        _totalUsers = (await UserService.GetCountAsync()).Data;
+        _pagedData = usersResult.Data.Where(account =>
+        {
+            if (account.Username.Contains(_searchString))
+                return true;
+            if (account.FirstName?.Contains(_searchString) ?? "".Contains(_searchString))
+                return true;
+            if (account.LastName?.Contains(_searchString) ?? "".Contains(_searchString))
+                return true;
+            if (account.Notes?.Contains(_searchString) ?? "".Contains(_searchString))
+                return true;
+
+            return false;
+        }).ToArray();
 
         if (_filterDisabled)
             _pagedData = _pagedData.Where(x => x.AuthState == AuthState.Disabled);
         if (_filterLockedOut)
             _pagedData = _pagedData.Where(x => x.AuthState == AuthState.LockedOut);
 
+        _pagedData = _pagedData.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        _totalUsers = usersResult.Data.Count();
+
         _pagedData = state.SortLabel switch
         {
             "Id" => _pagedData.OrderByDirection(state.SortDirection, o => o.Id),
             "Username" => _pagedData.OrderByDirection(state.SortDirection, o => o.Username),
+            "FirstName" => _pagedData.OrderByDirection(state.SortDirection, o => o.FirstName),
+            "LastName" => _pagedData.OrderByDirection(state.SortDirection, o => o.LastName),
             "Enabled" => _pagedData.OrderByDirection(state.SortDirection, o => o.AuthState),
-            "AccountType" => _pagedData.OrderByDirection(state.SortDirection, o => o.AccountType),
             "Notes" => _pagedData.OrderByDirection(state.SortDirection, o => o.Notes),
             _ => _pagedData
         };
@@ -103,7 +109,7 @@ public partial class UserAdmin
 
     private async Task EnableAccounts()
     {
-        if (!_canEnableUsers)
+        if (!_canAdminServiceAccounts)
         {
             Snackbar.Add("You don't have permission to enable accounts, how'd you initiate this request!?", Severity.Error);
             return;
@@ -120,11 +126,12 @@ public partial class UserAdmin
                 await SearchText(_searchString);
             }
         }
+        StateHasChanged();
     }
 
     private async Task DisableAccounts()
     {
-        if (!_canDisableUsers)
+        if (!_canAdminServiceAccounts)
         {
             Snackbar.Add("You don't have permission to disable accounts, how'd you initiate this request!?", Severity.Error);
             return;
@@ -141,37 +148,7 @@ public partial class UserAdmin
                 await SearchText(_searchString);
             }
         }
-    }
-
-    private async Task ForcePasswordResets()
-    {
-        if (!_canResetPasswords)
-        {
-            Snackbar.Add("You don't have permission to reset passwords, how'd you initiate this request!?", Severity.Error);
-            return;
-        }
-
-        foreach (var account in _selectedItems)
-        {
-            if (account.AccountType != AccountType.User)
-            {
-                Snackbar.Add($"Account {account.Username} is a service account, can't force a password reset {account.AccountType} accounts",
-                    Severity.Error);
-                continue;
-            }
-            
-            var result = await AccountService.ForceUserPasswordReset(account.Id);
-            if (!result.Succeeded)
-                result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            else
-                result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
-        }
-    }
-
-    private void ViewUser(Guid userId)
-    {
-        var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.UserView, "userId", userId.ToString());
-        NavManager.NavigateTo(viewUserUri);
+        StateHasChanged();
     }
 
     private async Task CreateServiceAccount()
@@ -194,6 +171,39 @@ public partial class UserAdmin
         {
             Snackbar.Add("Something happened and we couldn't retrieve the password for this account, please contact the administrator",
                 Severity.Error);
+            await ReloadSearch();
+            return;
+        }
+        
+        var copyParameters = new DialogParameters()
+        {
+            {"Title", "Please copy the account password and save it somewhere safe"},
+            {"FieldLabel", "Service Account Password"},
+            {"TextToDisplay", new string('*', createdPassword.Length)},
+            {"TextToCopy", createdPassword}
+        };
+        await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
+        await ReloadSearch();
+    }
+
+    private async Task EditServiceAccount()
+    {
+        if (!_canAdminServiceAccounts)
+        {
+            Snackbar.Add("You don't have permission to edit accounts, how'd you initiate this request!?", Severity.Error);
+            return;
+        }
+        
+        var updateParameters = new DialogParameters() { {"ServiceAccountId", _selectedItems.First().Id} };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
+            "Update Service Account", updateParameters, dialogOptions).Result;
+        if (updateAccountDialog.Canceled)
+            return;
+
+        var createdPassword = (string?) updateAccountDialog.Data;
+        if (string.IsNullOrWhiteSpace(createdPassword))
+        {
             await ReloadSearch();
             return;
         }

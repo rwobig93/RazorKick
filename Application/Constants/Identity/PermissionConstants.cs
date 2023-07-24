@@ -19,6 +19,12 @@ public static class PermissionConstants
         public const string ViewExtAttrs = "Permissions.Identity.Users.ExtendedAttrView";
     }
 
+    public static class ServiceAccounts
+    {
+        public const string View = "Permissions.Identity.Service.View";
+        public const string Admin = "Permissions.Identity.Service.Admin";
+    }
+
     public static class Roles
     {
         public const string View = "Permissions.Identity.Roles.View";
@@ -102,6 +108,14 @@ public static class PermissionConstants
             Audit.View,
             Audit.Search,
             Audit.Export
+        };
+    }
+
+    public static List<string> GetServiceAccountRolePermissions()
+    {
+        return new List<string>()
+        {
+            Api.View
         };
     }
 

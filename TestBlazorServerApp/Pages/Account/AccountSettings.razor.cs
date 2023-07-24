@@ -1,9 +1,5 @@
 ﻿using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Services.Identity;
-using Microsoft.AspNetCore.Components;
-using TestBlazorServerApp.Components.Shared;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 

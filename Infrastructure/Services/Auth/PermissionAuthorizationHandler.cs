@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 
-namespace Application.Services.Authorization;
+namespace Infrastructure.Services.Auth;
 
 public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {

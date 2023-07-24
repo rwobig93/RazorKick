@@ -16,6 +16,7 @@
 @using Application.Services.Identity
 @using Application.Services.System
 @using Blazored.LocalStorage
+@using Infrastructure.Services.Auth
 @using Infrastructure.Services.Identity
 @using TestBlazorServerApp.Components.Shared;
 
@@ -27,3 +28,4 @@
 @inject IDialogService DialogService
 @inject ICurrentUserService CurrentUserService
 @inject ILogger Logger
+@inject IDateTimeService DateTimeService

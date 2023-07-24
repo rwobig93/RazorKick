@@ -1,13 +1,8 @@
 ﻿using Application.Constants.Identity;
-using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Models.Lifecycle;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
-using Application.Services.System;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -16,7 +11,6 @@ public partial class AuditTrailAdmin
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
     [Inject] private IAuditTrailService AuditService { get; init; } = null!;
-    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;

@@ -9,7 +9,6 @@ using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Models.Lifecycle;
 using Application.Models.Web;
@@ -30,6 +29,7 @@ using Domain.Enums.Integration;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using FluentEmail.Core;
+using Infrastructure.Services.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -119,11 +119,14 @@ public class AppAccountService : IAppAccountService
         return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
     }
 
-    private async Task<IResult<UserLoginResponse>> LoginAsync(UserLoginRequest loginRequest)
+    private async Task<IResult<UserLoginResponse>> LoginInteractiveAsync(UserLoginRequest loginRequest)
     {
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(loginRequest.Username)).Result;
         if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
+
+        if (userSecurity.AccountType != AccountType.User)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.UserAccountOnly);
 
         var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
         if (!accountIsLoginReady.Succeeded)
@@ -261,7 +264,7 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            var loginResponse = await LoginAsync(loginRequest);
+            var loginResponse = await LoginInteractiveAsync(loginRequest);
             if (!loginResponse.Succeeded)
                 return loginResponse;
             
@@ -665,6 +668,10 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
+            var userSecurityRequest = await _userRepository.GetByIdSecurityAsync(userId);
+            if (!userSecurityRequest.Success || userSecurityRequest.Result is null)
+                return await Result.FailAsync(userSecurityRequest.ErrorMessage);
+            
             var passwordMeetsRequirements = await PasswordMeetsRequirements(newPassword);
             if (!passwordMeetsRequirements.Succeeded || !passwordMeetsRequirements.Data)
             {
@@ -673,23 +680,20 @@ public class AppAccountService : IAppAccountService
             }
             
             AccountHelpers.GenerateHashAndSalt(newPassword, _securityConfig.PasswordPepper, out var salt, out var hash);
-            var securityUpdate = new AppUserSecurityAttributeUpdate
-            {
-                OwnerId = userId,
-                PasswordSalt = salt,
-                PasswordHash = hash
-            };
+            
+            var securityUpdate = userSecurityRequest.Result.ToSecurityUpdate();
+            securityUpdate.PasswordSalt = salt;
+            securityUpdate.PasswordHash = hash;
+            
             var securityResult = await _userRepository.UpdateSecurityAsync(securityUpdate);
             if (!securityResult.Success)
                 return await Result.FailAsync(securityResult.ErrorMessage);
 
-            var updateUser = new AppUserUpdate
-            {
-                Id = userId,
-                LastModifiedBy = _serverState.SystemUserId,
-                LastModifiedOn = _dateTime.NowDatabaseTime
-            };
-            var userResult = await _userRepository.UpdateAsync(updateUser);
+            var userUpdate = userSecurityRequest.Result.ToUpdate();
+            userUpdate.LastModifiedBy = _serverState.SystemUserId;
+            userUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
+            
+            var userResult = await _userRepository.UpdateAsync(userUpdate);
             if (!userResult.Success)
                 return await Result.FailAsync(userResult.ErrorMessage);
             

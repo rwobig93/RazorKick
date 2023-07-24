@@ -55,8 +55,4 @@
       <None Remove="EmailTemplates\PasswordReset.cshtml" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Services\Authentication\" />
-    </ItemGroup>
-
 </Project>

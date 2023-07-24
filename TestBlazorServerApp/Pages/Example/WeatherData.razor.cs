@@ -1,6 +1,4 @@
 ﻿using Application.Responses.Example;
-using Microsoft.AspNetCore.Components;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Example;
 

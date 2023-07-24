@@ -72,6 +72,11 @@ public class SqlDatabaseSeederService : IHostedService
             RoleConstants.DefaultRoles.ModeratorName, RoleConstants.DefaultRoles.ModeratorDescription);
         if (moderatorRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
             await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionConstants.GetModeratorRolePermissions());
+        
+        var serviceAccountRole = await CreateOrGetSeedRole(
+            RoleConstants.DefaultRoles.ServiceAccountName, RoleConstants.DefaultRoles.ServiceAccountDescription);
+        if (serviceAccountRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
+            await EnforcePermissionsForRole(serviceAccountRole.Result!.Id, PermissionConstants.GetServiceAccountRolePermissions());
 
         var defaultRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.DefaultName, RoleConstants.DefaultRoles.DefaultDescription);

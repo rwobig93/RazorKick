@@ -299,10 +299,7 @@ public class AppUserService : IAppUserService
             if (!searchResult.Success)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 
-            var results = (searchResult.Result?.ToSlims() ?? new List<AppUserSlim>())
-                .OrderBy(x => x.Username);
-
-            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(results);
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(searchResult.Result?.ToSlims() ?? new List<AppUserSlim>());
         }
         catch (Exception ex)
         {
@@ -314,6 +311,17 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var matchingEmail = (await _userRepository.GetByEmailAsync(createObject.Email)).Result;
+            if (matchingEmail is not null)
+                return await Result<Guid>.FailAsync(
+                    $"The email address {createObject.Email} is already in use, are you sure you don't have an account already?");
+        
+            var matchingUserName = (await _userRepository.GetByUsernameAsync(createObject.Username)).Result;
+            if (matchingUserName != null)
+            {
+                return await Result<Guid>.FailAsync(string.Format($"Username {createObject.Username} is already in use, please try again"));
+            }
+            
             var createUser = await _userRepository.CreateAsync(createObject);
             if (!createUser.Success)
                 return await Result<Guid>.FailAsync(createUser.ErrorMessage);

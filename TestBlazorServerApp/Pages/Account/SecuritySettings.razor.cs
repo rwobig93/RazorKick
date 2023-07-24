@@ -1,24 +1,16 @@
 ﻿using Application.Constants.Identity;
-using Application.Constants.Web;
 using Application.Helpers.Identity;
 using Application.Helpers.Integrations;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Responses.Identity;
-using Application.Services.Identity;
 using Application.Services.Integrations;
-using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Enums.Integration;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using TestBlazorServerApp.Components.Account;
-using TestBlazorServerApp.Components.Shared;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Account;
 

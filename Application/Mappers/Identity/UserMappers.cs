@@ -30,6 +30,7 @@ public static class UserMappers
             IsDeleted = appUserFull.IsDeleted,
             DeletedOn = appUserFull.DeletedOn,
             AccountType = appUserFull.AccountType,
+            Notes = appUserFull.Notes,
             AuthState = appUserFull.AuthState
         };
     }
@@ -50,7 +51,9 @@ public static class UserMappers
             LastModifiedOn = appUserDb.LastModifiedOn,
             IsDeleted = appUserDb.IsDeleted,
             DeletedOn = appUserDb.DeletedOn,
-            AccountType = appUserDb.AccountType
+            AccountType = appUserDb.AccountType,
+            Notes = appUserDb.Notes,
+            AuthState = AuthState.Enabled
         };
     }
 
@@ -110,7 +113,8 @@ public static class UserMappers
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
             Permissions = new List<AppPermissionSlim>(),
-            AuthState = appUser.AuthState
+            AuthState = appUser.AuthState,
+            Notes = appUser.Notes
         };
     }
 
@@ -134,7 +138,8 @@ public static class UserMappers
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
             Permissions = new List<AppPermissionSlim>(),
-            AuthState = appUser.AuthState
+            AuthState = appUser.AuthState,
+            Notes = appUser.Notes
         };
     }
     
@@ -174,7 +179,8 @@ public static class UserMappers
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
-            AccountType = appUser.AccountType
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
     
@@ -249,7 +255,8 @@ public static class UserMappers
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
-            AccountType = appUser.AccountType
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
     
@@ -268,8 +275,7 @@ public static class UserMappers
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = null,
             LastModifiedOn = null,
-            AccountType = AccountType.User,
-
+            AccountType = AccountType.User
         };
     }
 
@@ -278,8 +284,8 @@ public static class UserMappers
         return new AppUserUpdate
         {
             Id = appUser.Id,
-            Username = null,
-            Email = null,
+            Username = appUser.Username,
+            Email = appUser.EmailAddress,
             EmailConfirmed = null,
             PhoneNumber = null,
             PhoneNumberConfirmed = null,
@@ -287,8 +293,9 @@ public static class UserMappers
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
-            LastModifiedOn = null,
-            AccountType = AccountType.User
+            LastModifiedOn = appUser.LastModifiedOn,
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
     
@@ -469,6 +476,7 @@ public static class UserMappers
             IsDeleted = securityDb.IsDeleted,
             DeletedOn = securityDb.DeletedOn,
             AccountType = securityDb.AccountType,
+            Notes = securityDb.Notes,
             PasswordHash = securityDb.PasswordHash,
             PasswordSalt = securityDb.PasswordSalt,
             AuthState = securityDb.AuthState,
@@ -496,7 +504,8 @@ public static class UserMappers
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
-            AccountType = appUser.AccountType
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
     
@@ -532,7 +541,8 @@ public static class UserMappers
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
-            AccountType = appUser.AccountType
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
     
@@ -572,7 +582,8 @@ public static class UserMappers
             LastModifiedOn = securityDb.LastModifiedOn,
             IsDeleted = securityDb.IsDeleted,
             DeletedOn = securityDb.DeletedOn,
-            AccountType = securityDb.AccountType
+            AccountType = securityDb.AccountType,
+            Notes = securityDb.Notes
         };
     }
 
@@ -591,7 +602,8 @@ public static class UserMappers
             ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
             LastModifiedBy = userDb.LastModifiedBy,
             LastModifiedOn = userDb.LastModifiedOn,
-            AccountType = userDb.AccountType
+            AccountType = userDb.AccountType,
+            Notes = userDb.Notes
         };
     }
 
@@ -603,7 +615,7 @@ public static class UserMappers
             Username = userDb.Username,
             EmailAddress = userDb.Email,
             FirstName = userDb.FirstName,
-            LastName = userDb.FirstName,
+            LastName = userDb.LastName,
             CreatedBy = userDb.CreatedBy,
             ProfilePictureDataUrl = userDb.ProfilePictureDataUrl,
             CreatedOn = userDb.CreatedOn,
@@ -612,7 +624,8 @@ public static class UserMappers
             IsDeleted = userDb.IsDeleted,
             DeletedOn = userDb.DeletedOn,
             AccountType = userDb.AccountType,
-            AuthState = userDb.AuthState
+            AuthState = userDb.AuthState,
+            Notes = userDb.Notes
         };
     }
 
@@ -653,7 +666,8 @@ public static class UserMappers
             Roles = new List<AppRoleSlim>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
             Permissions = new List<AppPermissionSlim>(),
-            AuthState = userDb.AuthState
+            AuthState = userDb.AuthState,
+            Notes = userDb.Notes
         };
     }
 
@@ -680,7 +694,31 @@ public static class UserMappers
             Roles = new List<AppRoleDb>(),
             ExtendedAttributes = new List<AppUserExtendedAttributeDb>(),
             Permissions = new List<AppPermissionDb>(),
-            AuthState = AuthState.Unknown
+            AuthState = AuthState.Unknown,
+            Notes = userDb.Notes
+        };
+    }
+
+    public static AppUserCreate ToCreate(this AppUserSecurityFull appUser)
+    {
+        return new AppUserCreate
+        {
+            Username = appUser.Username,
+            Email = appUser.Email,
+            EmailConfirmed = appUser.EmailConfirmed,
+            PhoneNumber = appUser.PhoneNumber,
+            PhoneNumberConfirmed = appUser.PhoneNumberConfirmed,
+            FirstName = appUser.FirstName,
+            LastName = appUser.LastName,
+            ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            CreatedBy = appUser.CreatedBy,
+            CreatedOn = appUser.CreatedOn,
+            LastModifiedBy = appUser.LastModifiedBy,
+            LastModifiedOn = appUser.LastModifiedOn,
+            IsDeleted = appUser.IsDeleted,
+            DeletedOn = appUser.DeletedOn,
+            AccountType = appUser.AccountType,
+            Notes = appUser.Notes
         };
     }
 }

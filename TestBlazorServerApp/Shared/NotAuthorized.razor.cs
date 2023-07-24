@@ -23,7 +23,6 @@ public partial class NotAuthorized
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
-    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
     
     
     public ClaimsPrincipal CurrentUser { get; set; } = new();

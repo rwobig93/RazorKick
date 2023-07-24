@@ -6,6 +6,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
 {
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersMsSql).GetDbScriptsFromClass();
     
+    // TODO: Implement Table for server information and versioning | Add database migration framework
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 1,
@@ -29,7 +30,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     [LastModifiedOn] datetime2 NULL,
                     [IsDeleted] BIT NOT NULL,
                     [DeletedOn] datetime2 NULL,
-                    [AccountType] int NOT NULL
+                    [AccountType] int NOT NULL,
+                    [Notes] NVARCHAR(1024) NULL
                 )
                 CREATE INDEX [IX_User_Id] ON [dbo].[AppUsers] ([Id])
                 CREATE INDEX [IX_User_UserName] ON [dbo].[AppUsers] ([Username])
@@ -114,7 +116,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE u.IsDeleted = 0 AND s.AuthState = 3;
+                WHERE u.IsDeleted = 0 AND AND s.AuthState = 3;
             end"
     };
 
@@ -281,15 +283,16 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2,
                 @IsDeleted BIT,
                 @DeletedOn datetime2,
-                @AccountType int
+                @AccountType int,
+                @Notes NVARCHAR(1024)
             AS
             begin
                 INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, FirstName, LastName,
                                          CreatedBy, ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         AccountType)
+                                         AccountType, Notes)
                 OUTPUT INSERTED.Id
                 VALUES (@Username, @Email, @EmailConfirmed, @PhoneNumber, @PhoneNumberConfirmed, @FirstName, @LastName, @CreatedBy,
-                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType);
+                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType, @Notes);
             end"
     };
 
@@ -356,7 +359,8 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
                 @DeletedOn datetime2 = null,
-                @AccountType int = null
+                @AccountType int = null,
+                @Notes NVARCHAR(1024) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
@@ -366,7 +370,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    AccountType = COALESCE(@AccountType, AccountType)
+                    AccountType = COALESCE(@AccountType, AccountType), Notes = COALESCE(@Notes, Notes)
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };

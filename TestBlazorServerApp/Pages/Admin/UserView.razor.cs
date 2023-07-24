@@ -1,16 +1,10 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
-using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Services.Identity;
-using Application.Services.System;
 using Domain.Enums.Identity;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
 using TestBlazorServerApp.Components.Identity;
-using TestBlazorServerApp.Shared;
 
 namespace TestBlazorServerApp.Pages.Admin;
 
@@ -43,6 +37,7 @@ public partial class UserView
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
     private bool _canViewExtendedAttrs;
+    private bool _canAdminServiceAccounts;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -106,6 +101,7 @@ public partial class UserView
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
         _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
+        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
     }
     
     private async Task Save()
@@ -126,7 +122,7 @@ public partial class UserView
         
         ToggleEditMode();
         await GetViewingUser();
-        Snackbar.Add("User successfully updated!", Severity.Success);
+        Snackbar.Add("Account successfully updated!", Severity.Success);
         StateHasChanged();
     }
 
@@ -188,5 +184,42 @@ public partial class UserView
             clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
 
         _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task EditServiceAccount()
+    {
+        if (_viewingUser.AccountType != AccountType.Service) return;
+        
+        if (!_canAdminServiceAccounts)
+        {
+            Snackbar.Add("You don't have permission to edit service accounts, how'd you initiate this request!?", Severity.Error);
+            return;
+        }
+        
+        var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
+            "Update Service Account", updateParameters, dialogOptions).Result;
+        if (updateAccountDialog.Canceled)
+            return;
+
+        var createdPassword = (string?) updateAccountDialog.Data;
+        if (string.IsNullOrWhiteSpace(createdPassword))
+        {
+            StateHasChanged();
+            return;
+        }
+        
+        var copyParameters = new DialogParameters()
+        {
+            {"Title", "Please copy the account password and save it somewhere safe"},
+            {"FieldLabel", "Service Account Password"},
+            {"TextToDisplay", new string('*', createdPassword.Length)},
+            {"TextToCopy", createdPassword}
+        };
+        await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
+        await GetViewingUser();
+        Snackbar.Add("Account successfully updated!", Severity.Success);
+        StateHasChanged();
     }
 }

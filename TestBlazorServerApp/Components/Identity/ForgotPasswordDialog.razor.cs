@@ -1,9 +1,6 @@
 using Application.Constants.Communication;
 using Application.Helpers.Identity;
 using Application.Requests.Identity.User;
-using Application.Services.Identity;
-using Application.Services.System;
-using Microsoft.AspNetCore.Components;
 
 namespace TestBlazorServerApp.Components.Identity;
 

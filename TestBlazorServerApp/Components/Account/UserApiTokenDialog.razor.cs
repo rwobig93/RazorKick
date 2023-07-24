@@ -1,9 +1,6 @@
 ﻿using Application.Helpers.Runtime;
 using Application.Models.Identity.UserExtensions;
-using Application.Services.Identity;
-using Application.Services.System;
 using Domain.Enums.Identity;
-using Microsoft.AspNetCore.Components;
 
 namespace TestBlazorServerApp.Components.Account;
 
@@ -11,7 +8,6 @@ public partial class UserApiTokenDialog
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
-    [Inject] private IDateTimeService DateTimeService { get; init; } = null!;
 
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Guid ApiTokenId { get; set; } = Guid.Empty;
