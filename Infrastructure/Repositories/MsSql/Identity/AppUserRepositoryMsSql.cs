@@ -93,15 +93,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         }
     }
 
-    private static Func<AppUserFullDb, AppRoleDb, AppUserFullDb> UserFullJoinMapping()
-    {
-        return (userFull, role) =>
-        {
-            userFull.Roles.Add(role);
-            return userFull;
-        };
-    }
-
     public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync()
     {
         DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
@@ -156,13 +147,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    private async Task<AppUserDb?> GetAnonymousUser()
-    {
-        var anonymousUser = (await _database.LoadData<AppUserDb, dynamic>(
-            AppUsersMsSql.GetById, new {Id = Guid.Empty})).FirstOrDefault();
-        return anonymousUser;
-    }
-
     public async Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid userId)
     {
         DatabaseActionResult<AppUserSecurityDb> actionReturn = new();
@@ -181,27 +165,28 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id)
+    public async Task<DatabaseActionResult<AppUserFullDb?>> GetByIdFullAsync(Guid userId)
     {
-        DatabaseActionResult<AppUserFullDb> actionReturn = new();
+        DatabaseActionResult<AppUserFullDb?> actionReturn = new();
 
         try
         {
-            if (id == Guid.Empty)
-            {
-                var anonUser = await GetAnonymousUser();
-                actionReturn.Succeed(anonUser!.ToUserFullDb());
-            }
-            else
-            {
-                var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
-                    AppUsersMsSql.GetByIdFull, UserFullJoinMapping(), new {Id = id})).FirstOrDefault();
+            var foundUser = (await _database.LoadData<AppUserFullDb, dynamic>(
+                AppUsersMsSql.GetById, new {Id = userId})).FirstOrDefault();
 
-                var foundSecurity = (await GetSecurityAsync(foundUser!.Id)).Result;
-                foundUser.AuthState = foundSecurity!.AuthState;
-            
-                actionReturn.Succeed(foundUser);   
+            if (foundUser is not null)
+            {
+                foundUser.Roles = (await _database.LoadData<AppRoleDb, dynamic>(
+                    AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.Permissions = (await _database.LoadData<AppPermissionDb, dynamic>(
+                    AppPermissionsMsSql.GetByUserId, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.ExtendedAttributes = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                    AppUserExtendedAttributesMsSql.GetByOwnerId, new {OwnerId = foundUser.Id})).ToList();
             }
+                
+            actionReturn.Succeed(foundUser);   
         }
         catch (Exception ex)
         {
@@ -254,9 +239,20 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
-                AppUsersMsSql.GetByUsernameFull, UserFullJoinMapping(), new {Username = username})).FirstOrDefault();
-            actionReturn.Succeed(foundUser!);
+            var foundUser = (await _database.LoadData<AppUserFullDb, dynamic>(
+                AppUsersMsSql.GetByUsername, new {Username = username})).FirstOrDefault();
+
+            if (foundUser is not null)
+            {
+                foundUser.Roles = (await _database.LoadData<AppRoleDb, dynamic>(
+                    AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.Permissions = (await _database.LoadData<AppPermissionDb, dynamic>(
+                    AppPermissionsMsSql.GetByUserId, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.ExtendedAttributes = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                    AppUserExtendedAttributesMsSql.GetByOwnerId, new {OwnerId = foundUser.Id})).ToList();
+            }
         }
         catch (Exception ex)
         {
@@ -309,9 +305,20 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
         try
         {
-            var foundUser = (await _database.LoadDataJoin<AppUserFullDb, AppRoleDb, dynamic>(
-                AppUsersMsSql.GetByEmailFull, UserFullJoinMapping(), new {Email = email})).FirstOrDefault();
-            actionReturn.Succeed(foundUser!);
+            var foundUser = (await _database.LoadData<AppUserFullDb, dynamic>(
+                AppUsersMsSql.GetByEmail, new {Email = email})).FirstOrDefault();
+
+            if (foundUser is not null)
+            {
+                foundUser.Roles = (await _database.LoadData<AppRoleDb, dynamic>(
+                    AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.Permissions = (await _database.LoadData<AppPermissionDb, dynamic>(
+                    AppPermissionsMsSql.GetByUserId, new {UserId = foundUser.Id})).ToList();
+
+                foundUser.ExtendedAttributes = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
+                    AppUserExtendedAttributesMsSql.GetByOwnerId, new {OwnerId = foundUser.Id})).ToList();
+            }
         }
         catch (Exception ex)
         {

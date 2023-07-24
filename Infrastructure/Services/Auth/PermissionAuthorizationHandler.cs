@@ -60,6 +60,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 await Task.CompletedTask;
                 return;
             }
+            
+            _navManager.NavigateTo(_navManager.Uri, false);
         }
         
         // If active session is valid and not expired validate permissions via claims

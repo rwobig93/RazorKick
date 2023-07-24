@@ -13,17 +13,28 @@
           Virtualize="true" Loading="@(_forecasts == null)" Filter="@SearchFunction" @bind-selected="_selectedItem"
           FixedFooter="true" FixedHeader="true">
     <ToolBarContent>
-        <MudContainer Class="d-flex flex-wrap gap-4">
-            <MudText Typo="Typo.h6">Weather Forecast</MudText>
+        <MudContainer Class="d-flex flex-wrap gap-4 justify-center align-center">
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudText Typo="Typo.h6">Weather Forecast</MudText>
+            </MudItem>
             <MudSpacer/>
-            <MudTooltip Text="Refresh Data">
-                <MudButton Color="Color.Success" OnClick="@RefreshWeatherData" Variant="Variant.Outlined">
-                    <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
-                </MudButton>
-            </MudTooltip>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTooltip Text="Refresh Data">
+                    <MudButton Color="Color.Success" OnClick="@RefreshWeatherData" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudItem>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTooltip Text="Number of day entries to get | Tip: Hold Shift + Use mouse wheel scroll">
+                    <MudNumericField @bind-Value="@_daysToGet" Label="Days To Get" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                </MudTooltip>
+            </MudItem>
             <MudSpacer/>
-            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </MudItem>
         </MudContainer>
     </ToolBarContent>
     <HeaderContent>
@@ -43,12 +54,13 @@
         <MudTd DataLabel="Summary">@context.Summary</MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudContainer Class="d-flex flex-wrap gap-4">
+        <MudContainer Class="d-flex flex-wrap gap-4 justify-center align-center">
             <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
             <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
             <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
             <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
-            <MudTablePager PageSizeOptions="new[] {7, 10, 25, 50, 100, 300, 1000}">10</MudTablePager>
+            <MudSpacer/>
+            <MudTablePager PageSizeOptions="new[] {25, 50, 100, 1000}">25</MudTablePager>
         </MudContainer>
     </PagerContent>
 </MudTable>

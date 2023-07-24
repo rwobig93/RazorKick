@@ -338,11 +338,11 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
                 AppPermissionsMsSql.GetByUserId, new {UserId = userId});
             allPermissions.AddRange(userPermissions);
 
-            var roleIds = await _database.LoadData<Guid, dynamic>(
+            var roles = await _database.LoadData<AppRoleDb, dynamic>(
                 AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = userId});
-            foreach (var id in roleIds)
+            foreach (var role in roles)
             {
-                var rolePermissions = await GetAllForRoleAsync(id);
+                var rolePermissions = await GetAllForRoleAsync(role.Id);
                 if (rolePermissions.Success)
                     allPermissions.AddRange(rolePermissions.Result!);
             }

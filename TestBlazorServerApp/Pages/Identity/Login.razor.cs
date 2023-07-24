@@ -234,9 +234,8 @@ public partial class Login
             ["MfaKey"]=foundUser.Data.TwoFactorKey
         };
 
-        var mfaResponse = await DialogService.ShowAsync<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
-        var mfaTokenValid = await mfaResponse.Result;
-        return !mfaTokenValid.Canceled;
+        var mfaResponse = await DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions).Result;
+        return !mfaResponse.Canceled;
     }
 
     private async Task InitiateExternalLogin(ExternalAuthProvider provider)
@@ -374,13 +373,14 @@ public partial class Login
 
     private async Task ValidateUserAuthenticated()
     {
+        // TODO: After longer timeouts an authenticated account is going to the login page w/o state, need to troubleshoot why
         // If user is already authenticated we'll send them to the index page instead of having them hang around here thinking they aren't
         //    already authenticated
-        var currentUserId = await CurrentUserService.GetCurrentUserId();
-        if (currentUserId is null) return;
-        
         var isUserAuthenticated = await AccountService.IsCurrentSessionValid();
         if (!isUserAuthenticated.Data) return;
+        
+        var currentUserId = await CurrentUserService.GetCurrentUserId();
+        if (currentUserId is null) return;
         
         var isReAuthenticationRequired = await AccountService.IsUserRequiredToReAuthenticate(currentUserId.Value);
         if (!isReAuthenticationRequired.Data) return;

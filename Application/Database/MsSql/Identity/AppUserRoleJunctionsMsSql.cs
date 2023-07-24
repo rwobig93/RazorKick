@@ -112,9 +112,10 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
                 @UserId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT RoleId
-                FROM dbo.[{Table.TableName}]
-                WHERE UserId = @UserId;
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] ur
+                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                WHERE ur.UserId = @UserId;
             end"
     };
     
@@ -127,9 +128,10 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
                 @RoleId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT UserId
-                FROM dbo.[{Table.TableName}]
-                WHERE RoleId = @RoleId;
+                SELECT u.*
+                FROM dbo.[{Table.TableName}] ur
+                JOIN dbo.[{AppUsersMsSql.Table.TableName}] u ON u.Id = ur.UserId
+                WHERE ur.RoleId = @RoleId;
             end"
     };
     

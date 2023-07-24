@@ -5,6 +5,7 @@ public static class ApiRouteConstants
     public static class Api
     {
         public const string GetToken = "/api/token";
+        public const string WhoAmI = "/api/whoami";
     }
 
     public static class Monitoring

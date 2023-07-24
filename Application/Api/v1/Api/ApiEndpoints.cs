@@ -3,6 +3,7 @@ using Application.Helpers.Web;
 using Application.Models.Web;
 using Application.Requests.Api;
 using Application.Responses.Api;
+using Application.Responses.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Authorization;
 
@@ -20,6 +21,7 @@ public static class ApiEndpoints
     public static void MapEndpointsApi(this IEndpointRouteBuilder app)
     {
         app.MapPost(ApiRouteConstants.Api.GetToken, GetToken).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.Api.WhoAmI, WhoAmI).ApiVersionOne();
     }
 
     /// <summary>
@@ -41,6 +43,25 @@ public static class ApiEndpoints
         catch (Exception ex)
         {
             return await Result<ApiTokenResponse>.FailAsync(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Return basic information about the currently authenticated account
+    /// </summary>
+    /// <param name="currentUserService"></param>
+    /// <returns>Basic user information</returns>
+    [Authorize]
+    private static async Task<IResult<UserBasicResponse>> WhoAmI(ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUser = await currentUserService.GetApiCurrentUserBasic();
+            return await Result<UserBasicResponse>.SuccessAsync(currentUser);
+        }
+        catch (Exception ex)
+        {
+            return await Result<UserBasicResponse>.FailAsync(ex.Message);
         }
     }
 }

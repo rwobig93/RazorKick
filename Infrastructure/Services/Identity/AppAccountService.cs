@@ -295,7 +295,6 @@ public class AppAccountService : IAppAccountService
                 return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
         }
         
-        // TODO: Add a way to generate service accounts
         return userSecurity.AccountType switch
         {
             AccountType.User => await HandleApiAuthUserAccount(tokenRequest, userSecurity),

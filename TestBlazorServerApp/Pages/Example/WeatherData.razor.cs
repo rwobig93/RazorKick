@@ -10,6 +10,7 @@ public partial class WeatherData
     private bool _hover = true;
     private bool _striped = true;
     private bool _bordered;
+    private int _daysToGet = 100;
     private string _searchString = "";
     private WeatherDataResponse _selectedItem = null!;
     
@@ -32,6 +33,6 @@ public partial class WeatherData
 
     private async Task RefreshWeatherData()
     {
-        _forecasts = await WeatherForecast.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now), 25);
+        _forecasts = await WeatherForecast.GetForecastAsync(DateOnly.FromDateTime(DateTime.Now), _daysToGet);
     }
 }

@@ -26,6 +26,13 @@
             - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
+        <member name="M:Application.Api.v1.Api.ApiEndpoints.WhoAmI(Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Return basic information about the currently authenticated account
+            </summary>
+            <param name="currentUserService"></param>
+            <returns>Basic user information</returns>
+        </member>
         <member name="T:Application.Api.v1.Example.WeatherEndpoints">
             <summary>
             API endpoints for the example weather service

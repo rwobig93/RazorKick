@@ -130,9 +130,8 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.ShowAsync<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled && (bool)dialogResult.Data)
+        var dialog = await DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions).Result;
+        if (!dialog.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -144,9 +143,8 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.ShowAsync<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled && (bool)dialogResult.Data)
+        var dialog = await DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions).Result;
+        if (!dialog.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();

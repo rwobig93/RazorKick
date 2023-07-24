@@ -1,5 +1,5 @@
-﻿using Application.Mappers.Identity;
-using Application.Models.Identity.Permission;
+﻿using Application.Constants.Communication;
+using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
@@ -14,39 +14,32 @@ namespace Infrastructure.Services.Identity;
 public class AppUserService : IAppUserService
 {
     private readonly IAppUserRepository _userRepository;
-    private readonly IAppPermissionRepository _permissionRepository;
     private readonly ISerializerService _serializer;
 
-    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, ISerializerService serializer)
+    public AppUserService(IAppUserRepository userRepository, ISerializerService serializer)
     {
         _userRepository = userRepository;
-        _permissionRepository = permissionRepository;
         _serializer = serializer;
     }
 
-    private async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb userFullDb)
+    private static async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb? userFullDb)
     {
+        if (userFullDb is null)
+            return await Result<AppUserFull?>.FailAsync(ErrorMessageConstants.UserNotFoundError);
+        
         var fullUser = userFullDb.ToFull();
         
         fullUser.Roles = userFullDb.Roles.ToSlims()
             .OrderBy(x => x.Name)
             .ToList();
 
-        var foundAttributes = await _userRepository.GetAllUserExtendedAttributesAsync(userFullDb.Id);
-        if (!foundAttributes.Success)
-            return await Result<AppUserFull?>.FailAsync(foundAttributes.ErrorMessage);
-
-        fullUser.ExtendedAttributes = (foundAttributes.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>())
+        fullUser.ExtendedAttributes = userFullDb.ExtendedAttributes.ToSlims()
             .OrderBy(x => x.Type)
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Value)
             .ToList();
-
-        var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userFullDb.Id);
-        if (!foundPermissions.Success)
-            return await Result<AppUserFull?>.FailAsync(foundPermissions.ErrorMessage);
-
-        fullUser.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+        
+        fullUser.Permissions = userFullDb.Permissions.ToSlims()
             .OrderBy(x => x.Group)
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Access)
@@ -126,9 +119,6 @@ public class AppUserService : IAppUserService
             var foundUser = await _userRepository.GetByIdFullAsync(userId);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
-
-            if (foundUser.Result is null)
-                return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
 
             return await ConvertToFullAsync(foundUser.Result);
         }
@@ -228,9 +218,6 @@ public class AppUserService : IAppUserService
             var foundUser = await _userRepository.GetByEmailFullAsync(email);
             if (!foundUser.Success)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
-
-            if (foundUser.Result is null)
-                return await Result<AppUserFull?>.FailAsync(foundUser.Result?.ToFull());
 
             return await ConvertToFullAsync(foundUser.Result);
         }

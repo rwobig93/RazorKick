@@ -117,7 +117,6 @@ public partial class MainLayout
         var loginUriFull = QueryHelpers.AddQueryString(
             loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
         
-        StateHasChanged();
         NavManager.NavigateTo(loginUriFull, true);
     }
 

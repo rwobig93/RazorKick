@@ -414,17 +414,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            var roleIds = await _database.LoadData<Guid, dynamic>(
+            var roles = await _database.LoadData<AppRoleDb, dynamic>(
                 AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = userId});
 
-            var allRoles = (await GetAllAsync()).Result ?? new List<AppRoleDb>();
-            var matchingRoles = allRoles.Where(x => roleIds.Any(r => r == x.Id));
-
-            actionReturn.Succeed(matchingRoles);
+            actionReturn.Succeed(roles);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, "GetRolesForUser", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.GetRolesOfUser.Path, ex.Message);
         }
 
         return actionReturn;
@@ -436,17 +433,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            var userIds = await _database.LoadData<Guid, dynamic>(
+            var users = await _database.LoadData<AppUserDb, dynamic>(
                 AppUserRoleJunctionsMsSql.GetUsersOfRole, new {RoleId = roleId});
-
-            var allUsers = await _database.LoadData<AppUserDb, dynamic>(AppUsersMsSql.GetAll, new { });
-            var matchingUsers = allUsers.Where(x => userIds.Any(u => u == x.Id));
-
-            actionReturn.Succeed(matchingUsers);
+            
+            actionReturn.Succeed(users);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, "GetUsersForRole", ex.Message);
+            actionReturn.FailLog(_logger, AppUserRoleJunctionsMsSql.GetUsersOfRole.Path, ex.Message);
         }
 
         return actionReturn;

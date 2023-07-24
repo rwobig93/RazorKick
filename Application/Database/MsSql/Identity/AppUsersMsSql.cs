@@ -116,7 +116,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
-                WHERE u.IsDeleted = 0 AND AND s.AuthState = 3;
+                WHERE u.IsDeleted = 0 AND s.AuthState = 3;
             end"
     };
 
@@ -200,8 +200,9 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT u.*, r.*
+                SELECT u.*, s.AuthState as AuthState, r.*
                 FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
                 JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
                 WHERE u.Id = @Id AND u.IsDeleted = 0

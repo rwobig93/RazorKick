@@ -13,7 +13,7 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid id);
-    Task<DatabaseActionResult<AppUserFullDb>> GetByIdFullAsync(Guid id);
+    Task<DatabaseActionResult<AppUserFullDb?>> GetByIdFullAsync(Guid id);
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdSecurityAsync(Guid id);
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameAsync(string username);
     Task<DatabaseActionResult<AppUserFullDb>> GetByUsernameFullAsync(string username);

@@ -125,7 +125,7 @@ public partial class ServiceAccountAdminDialog
 
         if (string.IsNullOrWhiteSpace(_serviceUser.Username) || _serviceUser.Username.Length < 3)
         {
-            Snackbar.Add("Username too short, please have at least 3 characters and try again", Severity.Error);
+            Snackbar.Add("Username is too short, please have at least 3 characters and try again", Severity.Error);
             return false;
         }
         
