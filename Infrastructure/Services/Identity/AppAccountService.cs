@@ -4,7 +4,6 @@ using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
-using Application.Helpers.Communication;
 using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
@@ -18,6 +17,7 @@ using Application.Requests.Identity.User;
 using Application.Responses.Api;
 using Application.Responses.Identity;
 using Application.Services.Identity;
+using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
@@ -28,7 +28,7 @@ using Domain.Enums.Identity;
 using Domain.Enums.Integration;
 using Domain.Models.Database;
 using Domain.Models.Identity;
-using FluentEmail.Core;
+using Hangfire;
 using Infrastructure.Services.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
@@ -41,7 +41,7 @@ namespace Infrastructure.Services.Identity;
 public class AppAccountService : IAppAccountService 
 {
     private readonly IAppUserRepository _userRepository;
-    private readonly IFluentEmail _mailService;
+    private readonly IEmailService _mailService;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _appPermissionRepository;
     private readonly AppConfiguration _appConfig;
@@ -60,7 +60,7 @@ public class AppAccountService : IAppAccountService
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IFluentEmail mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
+        IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
         ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
     {
@@ -286,20 +286,16 @@ public class AppAccountService : IAppAccountService
         if (userSecurity is null)
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError);
         
-        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-        switch (userSecurity.AuthState)
+        return userSecurity.AuthState switch
         {
-            case AuthState.Disabled:
-                return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError);
-            case AuthState.LockedOut:
-                return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError);
-        }
-        
-        return userSecurity.AccountType switch
-        {
-            AccountType.User => await HandleApiAuthUserAccount(tokenRequest, userSecurity),
-            AccountType.Service => await HandleApiAuthServiceAccount(tokenRequest, userSecurity),
-            _ => await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError)
+            AuthState.Disabled => await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountDisabledError),
+            AuthState.LockedOut => await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.AccountLockedOutError),
+            _ => userSecurity.AccountType switch
+            {
+                AccountType.User => await HandleApiAuthUserAccount(tokenRequest, userSecurity),
+                AccountType.Service => await HandleApiAuthServiceAccount(tokenRequest, userSecurity),
+                _ => await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.CredentialsInvalidError)
+            }
         };
     }
 
@@ -507,10 +503,9 @@ public class AppAccountService : IAppAccountService
         if (string.IsNullOrWhiteSpace(confirmationUrl))
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
         
-        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
-        var response = await _mailService.SendRegistrationEmail(newUser.Email, newUser.Username, confirmationUrl);
+        var response = BackgroundJob.Enqueue(() => _mailService.SendRegistrationEmail(newUser.Email, newUser.Username, confirmationUrl));
 
-        if (!response.Successful)
+        if (response is null)
             return await Result.FailAsync(
                 $"Account was registered successfully but a failure occurred attempting to send an email to " +
                 $"the address provided, please contact the administrator for assistance{caveatMessage}");
@@ -647,9 +642,9 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
         }
         
-        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
-        var response = await _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl);
-        if (response.Successful) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
+        var response = BackgroundJob.Enqueue(() =>
+            _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
+        if (response is null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
         await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", foundUserRequest.Result.Id,
             new Dictionary<string, string>()
@@ -657,8 +652,7 @@ public class AppAccountService : IAppAccountService
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},
                 {"Email", foundUserRequest.Result.Email},
-                {"Details", "Failure occurred sending email confirmation"},
-                {"Errors", response.ErrorMessages.ToString() ?? ""}
+                {"Details", "Failure occurred sending email confirmation"}
             });
         return await Result.FailAsync($"Failed to send confirmation email to {newEmail}, please contact the administrator");
     }
@@ -757,9 +751,9 @@ public class AppAccountService : IAppAccountService
             confirmationUri = QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", newExtendedAttribute.Value);
         }
 
-        // TODO: Look into why calling this as a BackgroundJob.Enqueue(() => send) fails
-        var response = await _mailService.SendPasswordResetEmail(foundUser.Email, foundUser.Username, confirmationUri);
-        if (!response.Successful)
+        var response =
+            BackgroundJob.Enqueue(() => _mailService.SendPasswordResetEmail(foundUser.Email, foundUser.Username, confirmationUri));
+        if (response is null)
             return await Result.FailAsync(
                 "Failure occurred attempting to send the password reset email, please reach out to the administrator");
 

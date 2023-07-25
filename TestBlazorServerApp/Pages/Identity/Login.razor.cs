@@ -66,13 +66,21 @@ public partial class Login
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Whether it's first render or not we don't see a user returned, further investigation needed
         if (firstRender)
         {
+            var currentUser = await CurrentUserService.GetCurrentUserId();
+            Snackbar.Add("First render");
             ParseParametersFromUri();
             HandleRedirectReasons();
             await HandleExternalLoginRedirect();
             await ValidateUserAuthenticated();
             StateHasChanged();
+        }
+        else
+        {
+            var currentUser = await CurrentUserService.GetCurrentUserId();
+            Snackbar.Add("Not first render");
         }
 
         await Task.CompletedTask;

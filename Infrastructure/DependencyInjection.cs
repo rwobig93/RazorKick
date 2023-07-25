@@ -232,6 +232,8 @@ public static class DependencyInjection
     {
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<IExcelService, ExcelService>();
+        services.AddTransient<IEmailService, EmailService>();
+        
         services.AddTransient<IMfaService, MfaService>();
         services.AddTransient<IQrCodeService, QrCodeService>();
         services.AddTransient<IJobManager, JobManager>();
