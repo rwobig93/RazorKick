@@ -8,6 +8,7 @@ using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Integrations;
 using Application.Helpers.Web;
+using Application.Mappers.Identity;
 using Application.Repositories.Identity;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
@@ -66,21 +67,12 @@ public partial class Login
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Whether it's first render or not we don't see a user returned, further investigation needed
         if (firstRender)
         {
-            var currentUser = await CurrentUserService.GetCurrentUserId();
-            Snackbar.Add("First render");
             ParseParametersFromUri();
             HandleRedirectReasons();
             await HandleExternalLoginRedirect();
-            await ValidateUserAuthenticated();
             StateHasChanged();
-        }
-        else
-        {
-            var currentUser = await CurrentUserService.GetCurrentUserId();
-            Snackbar.Add("Not first render");
         }
 
         await Task.CompletedTask;
@@ -238,8 +230,8 @@ public partial class Login
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var dialogParameters = new DialogParameters()
         {
-            ["VerifyCodeMessage"]="Please enter your MFA code to login",
-            ["MfaKey"]=foundUser.Data.TwoFactorKey
+            {"VerifyCodeMessage", "Please enter your MFA code to login"},
+            {"MfaKey", foundUser.Data.TwoFactorKey}
         };
 
         var mfaResponse = await DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions).Result;
@@ -326,25 +318,6 @@ public partial class Login
         }
     }
 
-    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
-    {
-        var tokenRequest = new RefreshTokenRequest();
-        
-        try
-        {
-            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
-            tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
-            tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
-        }
-        catch
-        {
-            tokenRequest.Token = "";
-            tokenRequest.RefreshToken = "";
-        }
-
-        return tokenRequest;
-    }
-
     private async Task LogoutAndClearCache()
     {
         var loginRedirectReason = LoginRedirectReason.SessionExpired;
@@ -377,25 +350,5 @@ public partial class Login
             loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
         
         NavManager.NavigateTo(loginUriFull, true);
-    }
-
-    private async Task ValidateUserAuthenticated()
-    {
-        // TODO: After longer timeouts an authenticated account is going to the login page w/o state, need to troubleshoot why
-        // If user is already authenticated we'll send them to the index page instead of having them hang around here thinking they aren't
-        //    already authenticated
-        var isUserAuthenticated = await AccountService.IsCurrentSessionValid();
-        if (!isUserAuthenticated.Data) return;
-        
-        var currentUserId = await CurrentUserService.GetCurrentUserId();
-        if (currentUserId is null) return;
-        
-        var isReAuthenticationRequired = await AccountService.IsUserRequiredToReAuthenticate(currentUserId.Value);
-        if (!isReAuthenticationRequired.Data) return;
-
-        var tokens = await GetRefreshTokenRequest();
-        var reAuthenticationRequest = await AccountService.ReAuthUsingRefreshTokenAsync(tokens);
-        if (reAuthenticationRequest.Succeeded)
-            NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
     }
 }

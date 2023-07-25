@@ -196,6 +196,27 @@ public class AppAccountService : IAppAccountService
         return await Result<AppUserExtendedAttributeSlim>.SuccessAsync(matchingAuthBinding.ToSlim());
     }
 
+    public async Task<IResult<LocalStorageRequest>> GetLocalStorage()
+    {
+        var tokenRequest = new LocalStorageRequest();
+        
+        try
+        {
+            tokenRequest.ClientId = await _localStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
+            tokenRequest.Token = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            tokenRequest.RefreshToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
+        }
+        catch
+        {
+            tokenRequest.ClientId = "";
+            tokenRequest.Token = "";
+            tokenRequest.RefreshToken = "";
+            return await Result<LocalStorageRequest>.FailAsync(tokenRequest, "Failed to load cookie authentication");
+        }
+
+        return await Result<LocalStorageRequest>.SuccessAsync(tokenRequest);
+    }
+
     public async Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest)
     {
         var externalAuthIsValid = await VerifyExternalAuthIsValid(loginRequest.Provider, loginRequest.ExternalId);
@@ -238,7 +259,7 @@ public class AppAccountService : IAppAccountService
         var response = new UserLoginResponse() { ClientId = clientId, Token = token, RefreshToken = refreshToken,
             RefreshTokenExpiryTime = refreshTokenExpiration };
             
-        var result = await CacheAuthTokens(Result<UserLoginResponse>.Success(response));
+        var result = await CacheTokensAndAuthAsync(response);
         if (!result.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(result.Messages.FirstOrDefault()!);
 
@@ -268,7 +289,7 @@ public class AppAccountService : IAppAccountService
             if (!loginResponse.Succeeded)
                 return loginResponse;
             
-            var result = await CacheAuthTokens(loginResponse);
+            var result = await CacheTokensAndAuthAsync(loginResponse.Data);
             if (!result.Succeeded)
                 return await Result<UserLoginResponse>.FailAsync(result.Messages.FirstOrDefault()!);
 
@@ -366,15 +387,18 @@ public class AppAccountService : IAppAccountService
         return await Result<ApiTokenResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse)
+    public async Task<IResult> CacheTokensAndAuthAsync(UserLoginResponse loginResponse)
     {
         try
         {
-            await _localStorage.SetItemAsync(LocalStorageConstants.ClientId, loginResponse.Data.ClientId);
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Data.Token);
-            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.Data.RefreshToken);
+            await _localStorage.SetItemAsync(LocalStorageConstants.ClientId, loginResponse.ClientId);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthToken, loginResponse.Token);
+            await _localStorage.SetItemAsync(LocalStorageConstants.AuthTokenRefresh, loginResponse.RefreshToken);
 
-            await _authProvider.GetAuthenticationStateAsync(loginResponse.Data.Token);
+            var authState = await _authProvider.GetAuthenticationStateAsync(loginResponse.Token);
+            if (authState.User.Identity?.Name == UserConstants.UnauthenticatedIdentity.Name)
+                return await Result.FailAsync(ErrorMessageConstants.TokenInvalidError);
+            
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -419,6 +443,56 @@ public class AppAccountService : IAppAccountService
         {
             return await Result.FailAsync();
         }
+    }
+
+    public async Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync()
+    {
+        // Get tokens and clientId from local storage
+        var localStorageRequest = await GetLocalStorage();
+        if (!localStorageRequest.Succeeded)
+            return await Result<UserLoginResponse>.FailAsync(localStorageRequest.Messages);
+
+        var localStorage = localStorageRequest.Data;
+        
+        if (string.IsNullOrWhiteSpace(localStorage.ClientId) ||
+            string.IsNullOrWhiteSpace(localStorage.Token) ||
+            string.IsNullOrWhiteSpace(localStorage.RefreshToken))
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        var tokenUserId = JwtHelpers.GetJwtUserId(localStorage.Token);
+        var refreshTokenUserId = JwtHelpers.GetJwtUserId(localStorage.RefreshToken);
+        
+        // Validate provided token and refresh token user ID's match, otherwise the request is suspicious
+        if (tokenUserId != refreshTokenUserId)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
+        if (user == null)
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        // Validate the provided client id has been registered, if not this client can't use a refresh token
+        var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
+            user.Id, ExtendedAttributeType.UserClientId, localStorage.ClientId);
+        if (!clientIdRequest.Success || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        if (!JwtHelpers.IsJwtValid(localStorage.RefreshToken, _securityConfig, _appConfig))
+            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+        
+        // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
+        var token = JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _securityConfig, _appConfig);
+        var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, user.Id);
+        var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
+
+        var response = new UserLoginResponse { ClientId = localStorage.ClientId, Token = token, RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = refreshTokenExpiration };
+
+        // Cache new tokens and authenticate user principal
+        var cacheRequest = await CacheTokensAndAuthAsync(response);
+        if (!cacheRequest.Succeeded)
+            return await Result<UserLoginResponse>.FailAsync(cacheRequest.Messages);
+
+        return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
     public async Task<IResult<bool>> PasswordMeetsRequirements(string password)
@@ -787,41 +861,6 @@ public class AppAccountService : IAppAccountService
         await SetAuthState(userId, AuthState.Enabled);
 
         return await Result.SuccessAsync("Password reset was successful, please log back in with your fresh new password!");
-    }
-
-    public async Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync(RefreshTokenRequest? refreshRequest)
-    {
-        if (refreshRequest is null)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
-        
-        var tokenUserId = JwtHelpers.GetJwtUserId(refreshRequest.Token);
-        var refreshTokenUserId = JwtHelpers.GetJwtUserId(refreshRequest.RefreshToken);
-        
-        // Validate provided token and refresh token user ID's match, otherwise the request is suspicious
-        if (tokenUserId != refreshTokenUserId)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
-        
-        var user = (await _userRepository.GetByIdAsync(refreshTokenUserId)).Result;
-        if (user == null)
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
-        
-        // Validate the provided client id has been registered, if not this client can't use a refresh token
-        var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
-            user.Id, ExtendedAttributeType.UserClientId, refreshRequest.ClientId);
-        if (!clientIdRequest.Success || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
-        
-        if (!JwtHelpers.IsJwtValid(refreshRequest.RefreshToken, _securityConfig, _appConfig))
-            return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
-        
-        // Token & Refresh Token have been validated and matched, now re-auth the user and generate new tokens
-        var token = JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _securityConfig, _appConfig);
-        var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, user.Id);
-        var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
-
-        var response = new UserLoginResponse { ClientId = refreshRequest.ClientId, Token = token, RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = refreshTokenExpiration };
-        return await Result<UserLoginResponse>.SuccessAsync(response);
     }
 
     public async Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate)

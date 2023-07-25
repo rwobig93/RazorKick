@@ -1,6 +1,6 @@
 ﻿namespace Application.Requests.Identity.User;
 
-public class RefreshTokenRequest
+public class LocalStorageRequest
 {
     public string ClientId { get; set; } = null!;
     public string Token { get; set; } = null!;

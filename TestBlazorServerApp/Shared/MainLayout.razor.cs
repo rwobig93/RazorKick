@@ -1,20 +1,12 @@
 ﻿using System.Security.Claims;
 using System.Security.Principal;
 using Application.Constants.Identity;
-using Application.Constants.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Requests.Identity.User;
-using Application.Services.Identity;
-using Application.Services.System;
 using Application.Settings.AppSettings;
-using Blazored.LocalStorage;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using TestBlazorServerApp.Settings;
 
 namespace TestBlazorServerApp.Shared;
@@ -23,7 +15,6 @@ public partial class MainLayout
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
     [Inject] private IRunningServerState ServerState { get; set; } = null!;
-    [Inject] private ILocalStorageService LocalStorage { get; set; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
@@ -42,6 +33,7 @@ public partial class MainLayout
     {
         if (firstRender)
         {
+            await ValidateAuthSession();
             await GetCurrentUser();
             await GetPreferences();
             StateHasChanged();
@@ -50,45 +42,68 @@ public partial class MainLayout
 
     private async Task GetCurrentUser()
     {
-        // Gather current tokens if they exist for authentication flow
-        var tokenRequest = await GetRefreshTokenRequest();
-        
         try
         {
             CurrentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
             UserFull = (await CurrentUserService.GetCurrentUserFull())!;
-
-            // If both tokens are present on the client local storage and there aren't any claims the token has expired
-            if (!string.IsNullOrWhiteSpace(tokenRequest.Token) &&
-                 !string.IsNullOrWhiteSpace(tokenRequest.RefreshToken) &&
-                !CurrentUser.Claims.Any())
-                throw new SecurityTokenException("Token expired");
         }
         catch (Exception)
         {
-            if (string.IsNullOrWhiteSpace(tokenRequest.Token) || string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
+            // Failure occurred, start fresh
+            // await LogoutAndClearCache();
+        }
+    }
+
+    private async Task ValidateAuthSession()
+    {
+        try
+        {
+            var loggedInUser = await CurrentUserService.GetCurrentUserPrincipal();
+            
+            // User is unauthenticated or authenticated so we'll just continue on loading the page
+            if (loggedInUser == UserConstants.UnauthenticatedPrincipal ||
+                loggedInUser != UserConstants.ExpiredPrincipal)
+                return;
+            
+            // User is is expired so we'll attempt to re-authenticate the user
+            var tokenRequest = await AccountService.GetLocalStorage();
+            if (!tokenRequest.Succeeded) return;
+
+            if (string.IsNullOrWhiteSpace(tokenRequest.Data.ClientId) ||
+                string.IsNullOrWhiteSpace(tokenRequest.Data.Token) ||
+                string.IsNullOrWhiteSpace(tokenRequest.Data.RefreshToken))
+            {
+                // A token is missing so something happened, we'll just start over
+                await LogoutAndClearCache();
+                return;
+            }
+
+            // Session is expired so we'll attempt a re-authentication using the refresh token
+            var refreshResponse = await AccountService.ReAuthUsingRefreshTokenAsync();
+            if (!refreshResponse.Succeeded)
             {
                 // Using refresh token failed, user must do a fresh login
                 await LogoutAndClearCache();
                 return;
             }
-
-            var response = await AccountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
-            if (!response.Succeeded)
-            {
-                // Using refresh token failed, user must do a fresh login
-                await LogoutAndClearCache();
-                return;
-            }
-
-            // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
-            await AccountService.CacheAuthTokens(response);
-            StateHasChanged();
+                
+            // Re-authentication was successful so we'll continue with an authenticated identity
+            await AccountService.CacheTokensAndAuthAsync(refreshResponse.Data);
+            NavManager.NavigateTo(NavManager.Uri, true);
+        }
+        catch (Exception)
+        {
+            await LogoutAndClearCache();
         }
     }
 
     private async Task LogoutAndClearCache()
     {
+        // If we are already on the login page we'll just let the user get back to it
+        var currentUri = new Uri(NavManager.Uri);
+        if (currentUri.AbsolutePath == AppRouteConstants.Identity.Login)
+            return;
+        
         var loginRedirectReason = LoginRedirectReason.SessionExpired;
 
         try
@@ -120,25 +135,6 @@ public partial class MainLayout
         NavManager.NavigateTo(loginUriFull, true);
     }
 
-    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
-    {
-        var tokenRequest = new RefreshTokenRequest();
-        
-        try
-        {
-            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
-            tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
-            tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
-        }
-        catch
-        {
-            tokenRequest.Token = "";
-            tokenRequest.RefreshToken = "";
-        }
-
-        return tokenRequest;
-    }
-
     private static bool IsUserAuthenticated(IPrincipal? principal)
     {
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
@@ -146,7 +142,6 @@ public partial class MainLayout
 
     private async Task RefreshPageData()
     {
-        await Task.Yield();
         StateHasChanged();
         await Task.CompletedTask;
     }

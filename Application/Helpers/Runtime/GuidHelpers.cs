@@ -6,4 +6,9 @@ public static class GuidHelpers
     {
         return new Guid("ffffffff-ffff-ffff-ffff-ffffffffffff");
     }
+
+    public static Guid GetFromNullable(this Guid? guid)
+    {
+        return guid is null ? Guid.Empty : Guid.Parse(guid.ToString()!);
+    }
 }

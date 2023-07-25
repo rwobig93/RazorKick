@@ -1,11 +1,6 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
-using Application.Services.Integrations;
-using Application.Settings.AppSettings;
-using FluentEmail.Core;
-using Hangfire;
-using Microsoft.Extensions.Options;
 
 namespace TestBlazorServerApp.Pages;
 
@@ -17,8 +12,6 @@ public partial class Index
     
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    [Inject] private IEmailService MailService { get; init; } = null!;
-    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
 
     private AppUserFull _loggedInUser = new();
     

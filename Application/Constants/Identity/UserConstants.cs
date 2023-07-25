@@ -23,8 +23,10 @@ public static class UserConstants
     };
 
     public static readonly ClaimsIdentity UnauthenticatedIdentity = new();
+    public static readonly ClaimsIdentity ExpiredIdentity = new(new[] { new Claim(ClaimTypes.Name, "ExpiredUserIdentity") });
 
     public static readonly ClaimsPrincipal UnauthenticatedPrincipal = new(UnauthenticatedIdentity);
+    public static readonly ClaimsPrincipal ExpiredPrincipal = new(ExpiredIdentity);
     
     public static class DefaultUsers
     {

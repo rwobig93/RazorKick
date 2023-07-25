@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
+using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Helpers.Web;
 using Application.Responses.Identity;
@@ -119,5 +120,18 @@ public static class AccountHelpers
             return false;
 
         return true;
+    }
+
+    public static Guid GetId(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var rawId = principalClaims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            return Guid.Parse(rawId);
+        }
+        catch (Exception)
+        {
+            return Guid.Empty;
+        }
     }
 }

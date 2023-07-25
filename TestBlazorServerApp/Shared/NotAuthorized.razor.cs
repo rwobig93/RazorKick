@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
@@ -8,6 +9,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Enums.Identity;
+using Infrastructure.Services.Auth;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -23,6 +25,7 @@ public partial class NotAuthorized
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
+    [Inject] private AuthStateProvider AuthStateProvider { get; init; } = null!;
     
     
     public ClaimsPrincipal CurrentUser { get; set; } = new();
@@ -32,6 +35,7 @@ public partial class NotAuthorized
     {
         if (firstRender)
         {
+            await ValidateAuthSession();
             await GetCurrentUser();
             StateHasChanged();
         }
@@ -43,38 +47,60 @@ public partial class NotAuthorized
         {
             CurrentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
             UserFull = (await CurrentUserService.GetCurrentUserFull())!;
+        }
+        catch (Exception)
+        {
+            // Failure occurred, start fresh
+            await LogoutAndClearCache();
+        }
+    }
 
-            // If we've made it to the NotAuthorized page
-            var tokenRequest = await GetRefreshTokenRequest();
-            if (string.IsNullOrWhiteSpace(tokenRequest.Token) || string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
+    private async Task ValidateAuthSession()
+    {
+        try
+        {
+            var loggedInUser = await CurrentUserService.GetCurrentUserPrincipal();
+            
+            // User is unauthenticated so they definitely don't have access, we'll let them see that for themselves
+            if (loggedInUser == UserConstants.UnauthenticatedPrincipal)
+                return;
+            
+            // User isn't unauthenticated and isn't expired then it's a valid authenticated user who doesn't have access to this resource
+            if (loggedInUser != UserConstants.ExpiredPrincipal)
+                return;
+            
+            // User is is expired so we'll attempt to re-authenticate the user since they could have access to this resource
+            var tokenRequest = await AccountService.GetLocalStorage();
+            if (!tokenRequest.Succeeded) return;
+
+            if (string.IsNullOrWhiteSpace(tokenRequest.Data.ClientId) ||
+                string.IsNullOrWhiteSpace(tokenRequest.Data.Token) ||
+                string.IsNullOrWhiteSpace(tokenRequest.Data.RefreshToken))
             {
                 // A token is missing so something happened, we'll just start over
                 await LogoutAndClearCache();
                 return;
             }
 
-            var authRequired = await AccountService.IsUserRequiredToReAuthenticate(UserFull.Id);
-            if (authRequired.Data)
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync(tokenRequest.Data.Token);
+            if (authState.User == UserConstants.ExpiredPrincipal)
             {
-                // Re-authentication is required, force back to login page after logging out
-                await LogoutAndClearCache();
-                return;
+                // Session is expired so we'll attempt a re-authentication using the refresh token
+                var refreshResponse = await AccountService.ReAuthUsingRefreshTokenAsync();
+                if (!refreshResponse.Succeeded)
+                {
+                    // Using refresh token failed, user must do a fresh login
+                    await LogoutAndClearCache();
+                    return;
+                }
+                
+                // Re-authentication was successful so we'll continue with an authenticated identity
+                await AccountService.CacheTokensAndAuthAsync(refreshResponse.Data);
+                NavManager.NavigateTo(NavManager.Uri, true);
             }
-
-            var refreshResponse = await AccountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
-            if (!refreshResponse.Succeeded)
-            {
-                // Using refresh token failed, user must do a fresh login
-                await LogoutAndClearCache();
-                return;
-            }
-
-            // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
-            await AccountService.CacheAuthTokens(refreshResponse);
         }
         catch (Exception)
         {
-            // Failure occurred, start fresh
             await LogoutAndClearCache();
         }
     }
@@ -110,24 +136,5 @@ public partial class NotAuthorized
             loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
         
         NavManager.NavigateTo(loginUriFull, true);
-    }
-
-    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
-    {
-        var tokenRequest = new RefreshTokenRequest();
-        
-        try
-        {
-            tokenRequest.ClientId = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
-            tokenRequest.Token = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
-            tokenRequest.RefreshToken = await LocalStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
-        }
-        catch
-        {
-            tokenRequest.Token = "";
-            tokenRequest.RefreshToken = "";
-        }
-
-        return tokenRequest;
     }
 }

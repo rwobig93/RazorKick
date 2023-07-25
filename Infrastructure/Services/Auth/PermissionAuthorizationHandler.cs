@@ -2,11 +2,10 @@
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
+using Application.Helpers.Identity;
 using Application.Models.Identity.Permission;
-using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
-using Blazored.LocalStorage;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -20,37 +19,49 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private readonly AppConfiguration _appConfig;
     private readonly IAppAccountService _accountService;
     private readonly NavigationManager _navManager;
-    private readonly ILocalStorageService _localStorage;
     
-    public PermissionAuthorizationHandler(IOptions<AppConfiguration> appConfig, IAppAccountService accountService, NavigationManager navManager,
-        ILocalStorageService localStorage)
+    public PermissionAuthorizationHandler(IOptions<AppConfiguration> appConfig, IAppAccountService accountService, NavigationManager navManager)
     {
         _accountService = accountService;
         _navManager = navManager;
-        _localStorage = localStorage;
         _appConfig = appConfig.Value;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
-        if (!context.User.Claims.Any())
+        if (!context.User.Claims.Any() || context.User == UserConstants.UnauthenticatedPrincipal)
         {
+            context.Fail();
+            return;
+        }
+
+        // User has an expired session, let's try re-authenticating them using the refresh token
+        if (context.User == UserConstants.ExpiredPrincipal)
+        {
+            var reAuthenticationSuccess = await AttemptReAuthentication();
+            if (!reAuthenticationSuccess)
+            {
+                context.Fail();
+                await Task.CompletedTask;
+                return;
+            }
+            
+            _navManager.NavigateTo(_navManager.Uri, true);
             context.Fail();
             return;
         }
         
         // Validate if user is required to do a full re-authentication
-        var userId = context.User.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).First().Value;
-        var userIdParsed = Guid.Parse(userId);
-        if ((await _accountService.IsUserRequiredToReAuthenticate(userIdParsed)).Data)
+        var userId = context.User.Claims.GetId();
+        if ((await _accountService.IsUserRequiredToReAuthenticate(userId)).Data)
         {
             context.Fail();
             await Task.CompletedTask;
             return;
         }
         
-        // Validate or re-authenticate active session based on current state
+        // Validate or re-authenticate active session based on token expiration, this can happen if the token hasn't been validated recently
         if (!(await _accountService.IsCurrentSessionValid()).Data)
         {
             var reAuthenticationSuccess = await AttemptReAuthentication();
@@ -61,7 +72,9 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 return;
             }
             
-            _navManager.NavigateTo(_navManager.Uri, false);
+            _navManager.NavigateTo(_navManager.Uri, true);
+            context.Fail();
+            return;
         }
         
         // If active session is valid and not expired validate permissions via claims
@@ -81,12 +94,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
 
     private async Task<bool> AttemptReAuthentication()
     {
-        // Gather current tokens if they exist to attempt a re-authentication
-        var tokenRequest = await GetRefreshTokenRequest();
-        if (string.IsNullOrWhiteSpace(tokenRequest.Token) || string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
-            return false;
-
-        var response = await _accountService.ReAuthUsingRefreshTokenAsync(tokenRequest);
+        var response = await _accountService.ReAuthUsingRefreshTokenAsync();
         if (!response.Succeeded)
         {
             // Using refresh token failed, user must do a fresh login
@@ -95,7 +103,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
 
         // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
-        await _accountService.CacheAuthTokens(response);
+        await _accountService.CacheTokensAndAuthAsync(response.Data);
         return true;
     }
 
@@ -106,25 +114,5 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
         
         _navManager.NavigateTo(loginUriFull, true);
-    }
-
-    private async Task<RefreshTokenRequest> GetRefreshTokenRequest()
-    {
-        var tokenRequest = new RefreshTokenRequest();
-        
-        try
-        {
-            tokenRequest.ClientId = await _localStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
-            tokenRequest.Token = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
-            tokenRequest.RefreshToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
-        }
-        catch
-        {
-            tokenRequest.ClientId = "";
-            tokenRequest.Token = "";
-            tokenRequest.RefreshToken = "";
-        }
-
-        return tokenRequest;
     }
 }

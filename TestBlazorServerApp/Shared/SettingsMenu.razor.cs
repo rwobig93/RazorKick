@@ -67,7 +67,7 @@ public partial class SettingsMenu
     private async Task LogoutUser()
     {
         await AccountService.LogoutGuiAsync(UserFull.Id);
-        NavManager.NavigateTo(AppRouteConstants.Index, true);
+        NavManager.NavigateTo(AppRouteConstants.Identity.Login, true);
     }
 
     private async Task GetClientTimezone()

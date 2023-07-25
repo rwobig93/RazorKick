@@ -41,12 +41,13 @@ public class AuthStateProvider : AuthenticationStateProvider
             await GetAuthTokenFromSession();
 
             var currentPrincipal = JwtHelpers.GetClaimsPrincipalFromToken(_authToken, _securityConfig, _appConfig);
-            if (currentPrincipal is null)
+            if (currentPrincipal is null || currentPrincipal == UserConstants.UnauthenticatedPrincipal)
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
 
-            if (currentPrincipal.Identity?.Name != UserConstants.UnauthenticatedIdentity.Name)
-                return new AuthenticationState(currentPrincipal);
+            if (currentPrincipal == UserConstants.ExpiredPrincipal)
+                return new AuthenticationState(UserConstants.ExpiredPrincipal);
             
+            // User is valid and not token isn't expired
             return GenerateNewAuthenticationState(_authToken);
         }
         catch
@@ -76,18 +77,15 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     private async Task GetAuthTokenFromSession()
     {
+        if (!string.IsNullOrWhiteSpace(_authToken)) return;
+
         _authToken = GetTokenFromHttpSession();
-        if (!string.IsNullOrWhiteSpace(_authToken))
-            return;
-            
-        if (string.IsNullOrWhiteSpace(_authToken))
-        {
-            _authToken = await GetTokenFromLocalStorage();
-            return;
-        }
-            
-        if (string.IsNullOrWhiteSpace(_authToken))
-            _authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
+        if (!string.IsNullOrWhiteSpace(_authToken)) return;
+
+        _authToken = await GetTokenFromLocalStorage();
+        if (!string.IsNullOrWhiteSpace(_authToken)) return;
+
+        _authToken = _httpClient.DefaultRequestHeaders.Authorization?.ToString() ?? "";
     }
 
     private string GetTokenFromHttpSession()

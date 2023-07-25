@@ -12,11 +12,13 @@ namespace Application.Services.Identity;
 
 public interface IAppAccountService
 {
+    Task<IResult<LocalStorageRequest>> GetLocalStorage();
     Task<IResult<UserLoginResponse>> LoginExternalAuthAsync(UserExternalAuthLoginRequest loginRequest);
     Task<IResult<UserLoginResponse>> LoginGuiAsync(UserLoginRequest loginRequest);
     Task<IResult<ApiTokenResponse>> GetApiAuthToken(ApiGetTokenRequest tokenRequest);
-    Task<IResult> CacheAuthTokens(IResult<UserLoginResponse> loginResponse);
+    Task<IResult> CacheTokensAndAuthAsync(UserLoginResponse loginResponse);
     Task<IResult> LogoutGuiAsync(Guid userId);
+    Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync();
     Task<IResult<bool>> PasswordMeetsRequirements(string password);
     Task<IResult> RegisterAsync(UserRegisterRequest registerRequest);
     Task<IResult<string>> GetEmailConfirmationUrl(Guid userId, string emailAddress);
@@ -26,7 +28,6 @@ public interface IAppAccountService
     Task<IResult<bool>> IsPasswordCorrect(Guid userId, string password);
     Task<IResult> ForgotPasswordAsync(ForgotPasswordRequest forgotRequest);
     Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword);
-    Task<IResult<UserLoginResponse>> ReAuthUsingRefreshTokenAsync(RefreshTokenRequest? refreshRequest);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
     Task<IResult> ForceUserLogin(Guid userId);

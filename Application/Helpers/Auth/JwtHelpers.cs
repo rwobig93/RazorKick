@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Application.Constants.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Microsoft.IdentityModel.Tokens;
@@ -154,9 +155,14 @@ public static class JwtHelpers
 
             if (string.IsNullOrWhiteSpace(token))
                 return null;
-        
+
             var claimsPrincipal = JwtHandler.ValidateToken(token, validator, out _);
             return claimsPrincipal;
+        }
+        catch (SecurityTokenExpiredException)
+        {
+            // User principal has expired / token has expired so we'll return an expired principal
+            return UserConstants.ExpiredPrincipal;
         }
         catch (Exception)
         {
@@ -167,6 +173,14 @@ public static class JwtHelpers
     public static bool IsJwtValid(string? token, SecurityConfiguration securityConfig, AppConfiguration appConfig)
     {
         var claimsPrincipal = GetClaimsPrincipalFromToken(token, securityConfig, appConfig);
-        return claimsPrincipal is not null;
+
+        if (claimsPrincipal is null)
+            return false;
+        if (claimsPrincipal == UserConstants.UnauthenticatedPrincipal)
+            return false;
+        if (claimsPrincipal == UserConstants.ExpiredPrincipal)
+            return false;
+        
+        return true;
     }
 }

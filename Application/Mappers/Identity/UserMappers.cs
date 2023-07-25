@@ -721,4 +721,15 @@ public static class UserMappers
             Notes = appUser.Notes
         };
     }
+
+    public static UserLoginResponse ToLoginResponse(this LocalStorageRequest localStorage)
+    {
+        return new UserLoginResponse
+        {
+            ClientId = localStorage.ClientId,
+            Token = localStorage.Token,
+            RefreshToken = localStorage.RefreshToken,
+            RefreshTokenExpiryTime = DateTime.Now.ToUniversalTime()
+        };
+    }
 }
