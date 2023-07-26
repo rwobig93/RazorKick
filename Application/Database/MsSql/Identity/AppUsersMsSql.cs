@@ -6,7 +6,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
 {
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersMsSql).GetDbScriptsFromClass();
     
-    // TODO: Implement Table for server information and versioning | Add database migration framework
+    // TODO: Implement database migration framework
     public static readonly MsSqlTable Table = new()
     {
         EnforcementOrder = 1,

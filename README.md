@@ -1,5 +1,5 @@
-<h1 align="center"> Boilerplate / Testing Grounds </h1>
-<h3 align="center"> Project used for testing features/functionality and boilerplate code </h3>
+<h1 align="center"> RazorKick </h1>
+<h3 align="center"> RazorKick is a starting boilerplate / template project to get a 'Kick' start on your Blazor applications </h3>
 
 <hr/>
 

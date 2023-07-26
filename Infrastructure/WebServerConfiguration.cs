@@ -6,7 +6,6 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Services.Lifecycle;
-using Application.Services.System;
 using Application.Settings.AppSettings;
 using Hangfire;
 using HealthChecks.UI.Client;
@@ -29,7 +28,6 @@ public static class WebServerConfiguration
     {
         app.ConfigureForEnvironment();
         app.ConfigureBlazorServerCommons();
-        app.SetupRunningServerState();
         
         app.ValidateDatabaseStructure();
         
@@ -95,22 +93,7 @@ public static class WebServerConfiguration
         });
         app.UseMiddleware<ErrorHandlerMiddleware>();
     }
-
-    private static void SetupRunningServerState(this IHost app)
-    {
-        using var scope = app.Services.CreateAsyncScope();
-        var appConfig = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<AppConfiguration>>();
-        var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
-        
-        #if DEBUG
-            serverState.IsRunningInDebugMode = true;
-        #else
-            serverState.IsRunningInDebugMode = false;
-        #endif
-        
-        serverState.ApplicationName = appConfig.CurrentValue.ApplicationName;
-    }
-
+    
     private static void ValidateDatabaseStructure(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();

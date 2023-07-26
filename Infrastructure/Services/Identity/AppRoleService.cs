@@ -205,11 +205,11 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false)
+    public async Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId)
     {
         try
         {
-            var createRequest = await _roleRepository.CreateAsync(createObject);
+            var createRequest = await _roleRepository.CreateAsync(createObject, modifyingUserId);
             if (!createRequest.Success)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
 
@@ -221,7 +221,7 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false)
+    public async Task<IResult> UpdateAsync(AppRoleUpdate updateObject, Guid modifyingUserId)
     {
         try
         {
@@ -229,7 +229,7 @@ public class AppRoleService : IAppRoleService
             if (RoleConstants.GetUnchangeableRoleNames().Contains(roleToChange.Data!.Name!) && roleToChange.Data!.Name! != updateObject.Name)
                 return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
 
-            var updateRequest = await _roleRepository.UpdateAsync(updateObject);
+            var updateRequest = await _roleRepository.UpdateAsync(updateObject, modifyingUserId);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
@@ -241,11 +241,11 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult> DeleteAsync(Guid id)
+    public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
         try
         {
-            var deleteRequest = await _roleRepository.DeleteAsync(id, Guid.Empty);
+            var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
 
@@ -289,11 +289,11 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId)
+    public async Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         try
         {
-            var userAdd = await _roleRepository.AddUserToRoleAsync(userId, roleId);
+            var userAdd = await _roleRepository.AddUserToRoleAsync(userId, roleId, modifyingUserId);
             if (!userAdd.Success)
                 return await Result.FailAsync(userAdd.ErrorMessage);
 
@@ -305,11 +305,11 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
+    public async Task<IResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         try
         {
-            var userRemove = await _roleRepository.RemoveUserFromRoleAsync(userId, roleId);
+            var userRemove = await _roleRepository.RemoveUserFromRoleAsync(userId, roleId, modifyingUserId);
             if (!userRemove.Success)
                 return await Result.FailAsync(userRemove.ErrorMessage);
 

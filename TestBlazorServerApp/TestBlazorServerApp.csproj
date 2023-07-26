@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <PreserveCompilationContext>true</PreserveCompilationContext>
+        <Version>$([System.DateTime]::UtcNow.ToString(`yyyy.MM.dd.HHmm`))</Version>
     </PropertyGroup>
 
     <ItemGroup>

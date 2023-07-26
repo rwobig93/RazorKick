@@ -20,9 +20,9 @@ public interface IAppPermissionRepository
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllForRoleAsync(Guid roleId);
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllDirectForUserAsync(Guid userId);
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllIncludingRolesForUserAsync(Guid userId);
-    Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser);
+    Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId);
+    Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject, Guid modifyingUserId);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<DatabaseActionResult<bool>> UserHasDirectPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> RoleHasPermission(Guid roleId, string permissionValue);

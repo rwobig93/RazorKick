@@ -13,6 +13,7 @@ using Application.Repositories.Identity;
 using Application.Requests.Identity.User;
 using Application.Services.Identity;
 using Application.Services.Integrations;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;

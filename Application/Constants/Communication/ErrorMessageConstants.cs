@@ -5,7 +5,7 @@ public static class ErrorMessageConstants
     // General / Generic Errors
     public const string GenericError = "An internal server error occurred, please contact the administrator";
     public const string InvalidValueError = "The value provided was invalid, please try again";
-    public const string GenericNotFound = "Was unable to find anything matching your request";
+    public const string GenericNotFound = "Was unable to find that resource, it doesn't exist";
     
     // User Errors
     public const string AccountDisabledError = "Your account is disabled, please contact the administrator";
@@ -27,6 +27,9 @@ public static class ErrorMessageConstants
 
     // Permission Errors
     public const string PermissionError = "You aren't authorized to do that, please go away";
+    public const string CannotAdministrateMissingPermission =
+        "You don't have the permission you are attempting to add/remove so you also can't administrate this permission";
+    public const string CannotAdministrateAdminRole = "You aren't a valid role level to administrate this role";
     public const string AdminSelfPowerRemovalError =
         "You can't remove admin access from yourself, another admin will have to revoke your access";
     public const string DefaultAdminPowerRemovalError = "Default admin cannot have admin access revoked";

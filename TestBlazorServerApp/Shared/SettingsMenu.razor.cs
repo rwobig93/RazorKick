@@ -3,6 +3,7 @@ using Application.Constants.Web;
 using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Components;
@@ -14,6 +15,7 @@ public partial class SettingsMenu
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IRunningServerState ServerState { get; init; } = null!;
     
     [Parameter] public AppUserPreferenceFull UserPreferences { get; set; } = new();
     [Parameter] public ClaimsPrincipal CurrentUser { get; set; } = new();

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
@@ -18,7 +17,7 @@ public partial class RoleView
     
     [Parameter] public Guid RoleId { get; set; }
 
-    private ClaimsPrincipal _currentUser = new();
+    private Guid _currentUserId;
     private AppRoleFull _viewingRole = new();
     private string? _createdByUsername = "";
     private string? _modifiedByUsername = "";
@@ -88,19 +87,20 @@ public partial class RoleView
 
     private async Task GetPermissions()
     {
-        _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Add);
-        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Remove);
-        _canEditRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Edit);
-        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
-        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
-        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
-        _canViewUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.View);
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
+        _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
+        _canEditRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Edit);
+        _canViewPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.View);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Remove);
+        _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.View);
     }
 
     private async Task Save()
     {
-        var updateResult = await RoleService.UpdateAsync(_viewingRole.ToUpdate());
+        var updateResult = await RoleService.UpdateAsync(_viewingRole.ToUpdate(), _currentUserId);
         if (!updateResult.Succeeded)
         {
             updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

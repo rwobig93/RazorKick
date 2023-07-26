@@ -32,8 +32,14 @@
         </MudExpansionPanel>
     </MudPaper>
     <MudPaper Elevation="5" Class="d-flex mb-4">
-        <MudExpansionPanel Text="Session Info" Class="d-flex flex-column pa-1 my-1">
+        <MudExpansionPanel Text="Client Information" Class="d-flex flex-column pa-1 my-1">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
+                <MudChip Color="Color.Primary">Application Version</MudChip>
+            </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudText Typo="Typo.caption" Class="pl-2">@($"v{ServerState.ApplicationVersion.ToString()}")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
                 <MudChip Color="Color.Tertiary">Current Timezone</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">

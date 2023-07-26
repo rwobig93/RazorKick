@@ -10,7 +10,8 @@ public partial class UserRoleDialog
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
 
     [Parameter] public Guid UserId { get; set; }
-    
+
+    private Guid _currentUserId;
     private List<AppRoleSlim> _assignedRoles = new();
     private List<AppRoleSlim> _availableRoles = new();
     private HashSet<AppRoleSlim> _addRoles = new();
@@ -31,7 +32,7 @@ public partial class UserRoleDialog
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        CurrentUserService.GetIdFromPrincipal(currentUser);
+        _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
         _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
     }
@@ -95,7 +96,7 @@ public partial class UserRoleDialog
 
         foreach (var role in _assignedRoles.Where(role => currentRoles.Data.All(x => x.Id != role.Id)))
         {
-            var addRole = await RoleService.AddUserToRoleAsync(UserId, role.Id);
+            var addRole = await RoleService.AddUserToRoleAsync(UserId, role.Id, _currentUserId);
             if (!addRole.Succeeded)
             {
                 addRole.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -107,7 +108,7 @@ public partial class UserRoleDialog
 
         foreach (var role in currentRoles.Data.Where(role => _assignedRoles.All(x => x.Id != role.Id)))
         {
-            var removeRole = await RoleService.RemoveUserFromRoleAsync(UserId, role.Id);
+            var removeRole = await RoleService.RemoveUserFromRoleAsync(UserId, role.Id, _currentUserId);
             if (!removeRole.Succeeded)
             {
                 removeRole.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

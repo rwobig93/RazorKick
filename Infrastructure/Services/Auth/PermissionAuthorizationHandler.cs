@@ -1,36 +1,30 @@
-﻿using System.Security.Claims;
-using Application.Constants.Identity;
+﻿using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Services.Identity;
-using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Auth;
 
 public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
-    private readonly AppConfiguration _appConfig;
     private readonly IAppAccountService _accountService;
     private readonly NavigationManager _navManager;
     
-    public PermissionAuthorizationHandler(IOptions<AppConfiguration> appConfig, IAppAccountService accountService, NavigationManager navManager)
+    public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navManager)
     {
         _accountService = accountService;
         _navManager = navManager;
-        _appConfig = appConfig.Value;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
-        if (!context.User.Claims.Any() || context.User == UserConstants.UnauthenticatedPrincipal)
+        if (context.User == UserConstants.UnauthenticatedPrincipal || !context.User.Claims.Any())
         {
             context.Fail();
             return;
@@ -78,9 +72,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
         
         // If active session is valid and not expired validate permissions via claims
-        var permissions = context.User.Claims.Where(x => x.Type == ApplicationClaimTypes.Permission &&
-                                                         x.Value == requirement.Permission &&
-                                                         x.Issuer == JwtHelpers.GetJwtIssuer(_appConfig));
+        var permissions = context.User.Claims.Where(x =>
+            x.Type == ApplicationClaimTypes.Permission && x.Value == requirement.Permission);
         if (permissions.Any())
         {
             context.Succeed(requirement);
@@ -95,16 +88,11 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private async Task<bool> AttemptReAuthentication()
     {
         var response = await _accountService.ReAuthUsingRefreshTokenAsync();
-        if (!response.Succeeded)
-        {
-            // Using refresh token failed, user must do a fresh login
-            await LogoutAndClearCache();
-            return false;
-        }
-
-        // Re-authentication using authorized token & refresh token succeeded, cache new tokens and move on
-        await _accountService.CacheTokensAndAuthAsync(response.Data);
-        return true;
+        if (response.Succeeded) return true;
+        
+        // Using refresh token failed, user must do a fresh login
+        await LogoutAndClearCache();
+        return false;
     }
 
     private async Task LogoutAndClearCache()

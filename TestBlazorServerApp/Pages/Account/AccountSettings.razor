@@ -41,7 +41,7 @@
                 <MudProgressLinear Color="Color.Info" Indeterminate="true" Rounded="true"/>
                 <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Processing Email Change...</MudText>
             }
-            else
+            @if (!_processingEmailChange && _canChangeEmail)
             {
                 <MudItem xs="12" sm="12" md="12" Class="d-flex pa-2 flex-column align-center">
                     <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" EndIcon="@Icons.Material.Filled.Email"

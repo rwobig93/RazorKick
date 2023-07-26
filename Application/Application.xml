@@ -79,20 +79,22 @@
             <param name="permissionService"></param>
             <returns>Permission object for a user or role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToRole(Application.Requests.Identity.Permission.PermissionCreateForRoleRequest,Application.Services.Identity.IAppPermissionService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToRole(Application.Requests.Identity.Permission.PermissionCreateForRoleRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Add the specified permission to the specified role
             </summary>
             <param name="permissionRequest">Detail used to map a permission to a role</param>
             <param name="permissionService"></param>
+            <param name="currentUserService"></param>
             <returns>Guid ID of the permission added</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToUser(Application.Requests.Identity.Permission.PermissionCreateForUserRequest,Application.Services.Identity.IAppPermissionService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToUser(Application.Requests.Identity.Permission.PermissionCreateForUserRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Add the specified permission to the specified user
             </summary>
             <param name="permissionRequest">Detail used to map a permission to a user</param>
             <param name="permissionService"></param>
+            <param name="currentUserService"></param>
             <returns>GUID ID of the permission added</returns>
         </member>
         <member name="M:Application.Api.v1.Identity.PermissionEndpoints.DoesUserHavePermission(System.Guid,System.Guid,Application.Services.Identity.IAppPermissionService)">
@@ -179,28 +181,31 @@
             <param name="roleService"></param>
             <returns>Detail regarding the specified role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.CreateRole(Application.Requests.Identity.Role.CreateRoleRequest,Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.CreateRole(Application.Requests.Identity.Role.CreateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a role
             </summary>
             <param name="roleRequest">Detail used to create a role</param>
             <param name="roleService"></param>
+            <param name="currentUserService"></param>
             <returns>GUID ID of the newly created role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.UpdateRole(Application.Requests.Identity.Role.UpdateRoleRequest,Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.UpdateRole(Application.Requests.Identity.Role.UpdateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a role's properties
             </summary>
             <param name="roleRequest">Detail used to update a role, any properties left empty will not be updated</param>
             <param name="roleService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.DeleteRole(System.Guid,Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.DeleteRole(System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete the specified role
             </summary>
             <param name="roleId">GUID ID of the role</param>
             <param name="roleService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
         </member>
         <member name="M:Application.Api.v1.Identity.RoleEndpoints.IsUserInRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService)">
@@ -212,22 +217,24 @@
             <param name="roleService"></param>
             <returns>Boolean indicating whether the specified user is a member of the specified role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.AddUserToRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.AddUserToRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Add the specified user to the specified role
             </summary>
             <param name="userId">GUID ID of the user</param>
             <param name="roleId">GUID ID of the role</param>
             <param name="roleService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.RemoveUserFromRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.RemoveUserFromRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Remove the specified user from the specified role
             </summary>
             <param name="userId">GUID ID of the user</param>
             <param name="roleId">GUID ID of the user</param>
             <param name="roleService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
         </member>
         <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetRolesForUser(System.Guid,Application.Services.Identity.IAppRoleService)">

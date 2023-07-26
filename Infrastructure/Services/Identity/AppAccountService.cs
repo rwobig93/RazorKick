@@ -568,7 +568,8 @@ public class AppAccountService : IAppAccountService
         var caveatMessage = "";
         await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
         var defaultRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.DefaultName)).Result;
-        var addToRoleResult = await _roleRepository.AddUserToRoleAsync(createUserResult.Result, defaultRole!.Id);
+        var addToRoleResult = await _roleRepository.AddUserToRoleAsync(
+            createUserResult.Result, defaultRole!.Id, _serverState.SystemUserId);
         if (!addToRoleResult.Success)
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";

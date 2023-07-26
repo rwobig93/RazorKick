@@ -15,13 +15,13 @@ public interface IAppRoleService
     Task<IResult<AppRoleFull?>> GetByNameFullAsync(string roleName);
     Task<IResult<IEnumerable<AppRoleSlim>>> SearchAsync(string searchText);
     Task<IResult<IEnumerable<AppRoleSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
-    Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false);
-    Task<IResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false);
-    Task<IResult> DeleteAsync(Guid id);
+    Task<IResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId);
+    Task<IResult> UpdateAsync(AppRoleUpdate updateObject, Guid modifyingUserId);
+    Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, string roleName);
-    Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId);
-    Task<IResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId);
+    Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
+    Task<IResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
     Task<IResult<IEnumerable<AppRoleSlim>>> GetRolesForUser(Guid userId);
     Task<IResult<IEnumerable<AppUserSlim>>> GetUsersForRole(Guid roleId);
 }

@@ -3,6 +3,7 @@ using System.Security.Principal;
 using Application.Constants.Identity;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
+using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
@@ -49,8 +50,7 @@ public partial class MainLayout
         }
         catch (Exception)
         {
-            // Failure occurred, start fresh
-            // await LogoutAndClearCache();
+            // Failure occurred, user is unauthenticated or token has expired and will be handled by the permission auth handler
         }
     }
 

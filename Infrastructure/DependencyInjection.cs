@@ -209,6 +209,7 @@ public static class DependencyInjection
         services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
         services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
         services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
+        services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
     }
 
     private static void AddRepositories(this IServiceCollection services, IConfiguration configuration)

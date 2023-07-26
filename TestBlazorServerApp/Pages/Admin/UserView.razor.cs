@@ -32,7 +32,8 @@ public partial class UserView
     private bool _canEnableUsers;
     private bool _canDisableUsers;
     private bool _canViewRoles;
-    private bool _canEditRoles;
+    private bool _canAddRoles;
+    private bool _canRemoveRoles;
     private bool _canViewPermissions;
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
@@ -96,7 +97,8 @@ public partial class UserView
         _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Disable);
         _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Enable);
         _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
-        _canEditRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Edit);
+        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Remove);
         _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);

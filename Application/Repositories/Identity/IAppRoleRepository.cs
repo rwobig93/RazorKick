@@ -14,14 +14,14 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
-    Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser);
+    Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId);
+    Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, Guid modifyingUserId);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<DatabaseActionResult> SetCreatedById(Guid roleId, Guid createdById);
     Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<DatabaseActionResult<bool>> IsUserInRoleAsync(Guid userId, string roleName);
-    Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId);
-    Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId);
+    Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
+    Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetRolesForUser(Guid userId);
     Task<DatabaseActionResult<IEnumerable<AppUserDb>>> GetUsersForRole(Guid roleId);
 }

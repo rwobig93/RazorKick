@@ -1,6 +1,7 @@
 using Application.Helpers.Identity;
 using Application.Requests.Identity.User;
 using Application.Responses.Identity;
+using Application.Services.Lifecycle;
 
 namespace TestBlazorServerApp.Pages.Identity;
 

@@ -281,7 +281,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 DELETE
                 FROM dbo.[{Table.TableName}]
-                WHERE Timestamp < @olderThan;
+                WHERE Timestamp < @OlderThan;
             end"
     };
 }

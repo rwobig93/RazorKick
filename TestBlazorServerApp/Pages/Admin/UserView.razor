@@ -27,7 +27,7 @@ else
                        OnClick="EditServiceAccount">Edit Service Account
             </MudButton>
         }
-        @if (_canEditRoles)
+        @if (_canAddRoles || _canRemoveRoles)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.PermContactCalendar"
                        OnClick="EditRoles">Edit Roles

@@ -1,4 +1,6 @@
-﻿using Application.Mappers.Identity;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
+using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 
 namespace TestBlazorServerApp.Pages.Account;
@@ -12,12 +14,14 @@ public partial class AccountSettings
     
     private AppUserFull CurrentUser { get; set; } = new();
     private bool _processingEmailChange;
+    private bool _canChangeEmail;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
             StateHasChanged();
         }
     }
@@ -29,6 +33,12 @@ public partial class AccountSettings
             return;
 
         CurrentUser = (await UserService.GetByIdFullAsync((Guid) userId)).Data!;
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canChangeEmail = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.ChangeEmail);
     }
 
     private async Task UpdateAccount()
@@ -47,6 +57,8 @@ public partial class AccountSettings
 
     private async Task ChangeEmail()
     {
+        if (!_canChangeEmail) return;
+        
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Confirm New Email Address"},

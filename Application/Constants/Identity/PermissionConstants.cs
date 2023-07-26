@@ -17,6 +17,7 @@ public static class PermissionConstants
         public const string Disable = "Permissions.Identity.Users.Disable";
         public const string ResetPassword = "Permissions.Identity.Users.ResetPassword";
         public const string ViewExtAttrs = "Permissions.Identity.Users.ExtendedAttrView";
+        public const string ChangeEmail = "Permissions.Identity.Users.ChangeEmail";
     }
 
     public static class ServiceAccounts
@@ -90,6 +91,7 @@ public static class PermissionConstants
         {
             Example.Counter,
             Example.Weather,
+            Preferences.ChangeTheme,
             Jobs.View,
             Permissions.View,
             Permissions.Add,
@@ -98,6 +100,8 @@ public static class PermissionConstants
             Roles.Edit,
             Roles.Create,
             Roles.Delete,
+            Roles.Add,
+            Roles.Remove,
             Users.View,
             Users.Edit,
             Users.Create,
@@ -105,9 +109,11 @@ public static class PermissionConstants
             Users.Disable,
             Users.Enable,
             Users.ResetPassword,
+            Users.ChangeEmail,
             Audit.View,
             Audit.Search,
-            Audit.Export
+            Audit.Export,
+            ServiceAccounts.View
         };
     }
 
@@ -125,7 +131,8 @@ public static class PermissionConstants
         {
             Example.Counter,
             Example.Weather,
-            Preferences.ChangeTheme
+            Preferences.ChangeTheme,
+            Users.ChangeEmail
         };
     }
 }

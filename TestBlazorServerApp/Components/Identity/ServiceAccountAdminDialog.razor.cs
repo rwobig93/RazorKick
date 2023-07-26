@@ -172,7 +172,8 @@ public partial class ServiceAccountAdminDialog
                 return;
             }
             
-            var addRoleRequest = await RoleService.AddUserToRoleAsync(_serviceUser.Id, getServiceAccountRoleRequest.Data.Id);
+            var addRoleRequest = await RoleService.AddUserToRoleAsync(
+                _serviceUser.Id, getServiceAccountRoleRequest.Data.Id, _currentUser.Id);
             if (!addRoleRequest.Succeeded)
             {
                 addRoleRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

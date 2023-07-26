@@ -6,6 +6,7 @@ using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Responses.Identity;
 using Application.Services.Integrations;
+using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Enums.Integration;

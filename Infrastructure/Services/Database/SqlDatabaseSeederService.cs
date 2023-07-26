@@ -5,8 +5,10 @@ using Application.Mappers.Identity;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
+using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
-using Application.Services.System;
+using Application.Repositories.Lifecycle;
+using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
@@ -26,12 +28,13 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly LifecycleConfiguration _lifecycleConfig;
     private readonly IRunningServerState _serverState;
     private readonly SecurityConfiguration _securityConfig;
+    private readonly IServerStateRecordsRepository _serverStateRepository;
 
     private AppUserSecurityDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
         IAppPermissionRepository permissionRepository, IOptions<LifecycleConfiguration> lifecycleConfig, IRunningServerState serverState,
-        IOptions<SecurityConfiguration> securityConfig)
+        IOptions<SecurityConfiguration> securityConfig, IServerStateRecordsRepository serverStateRepository)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -39,6 +42,7 @@ public class SqlDatabaseSeederService : IHostedService
         _permissionRepository = permissionRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _serverState = serverState;
+        _serverStateRepository = serverStateRepository;
         _securityConfig = securityConfig.Value;
     }
 
@@ -48,6 +52,7 @@ public class SqlDatabaseSeederService : IHostedService
         await SeedSystemUser();
         await SeedDatabaseRoles();
         await SeedDatabaseUsers();
+        await SeedServerStateRecords();
         _logger.Information("Finished seeding database");
     }
 
@@ -58,7 +63,7 @@ public class SqlDatabaseSeederService : IHostedService
             UserConstants.DefaultUsers.SystemEmail, UrlHelpers.GenerateToken(64));
         _systemUser = systemUser.Result!;
 
-        _serverState.SystemUserId = _systemUser.Id;
+        _serverState.UpdateSystemUserId(_systemUser.Id);
     }
 
     private async Task SeedDatabaseRoles()
@@ -86,6 +91,9 @@ public class SqlDatabaseSeederService : IHostedService
 
     private async Task SeedDatabaseUsers()
     {
+        // Seed system user permissions
+        await EnforceRolesForUser(_systemUser.Id, RoleConstants.GetAdminRoleNames());
+        
         var adminUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AdminUsername, UserConstants.DefaultUsers.AdminFirstName, UserConstants.DefaultUsers.AdminLastName,
             UserConstants.DefaultUsers.AdminEmail, UserConstants.DefaultUsers.AdminPassword);
@@ -112,9 +120,36 @@ public class SqlDatabaseSeederService : IHostedService
             UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
         if (anonymousUser.Success)
             await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
+    }
+
+    private async Task SeedServerStateRecords()
+    {
+        var existingStateRecord = await _serverStateRepository.GetByVersion(_serverState.ApplicationVersion);
+        if (!existingStateRecord.Success)
+        {
+            _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
+            return;
+        }
+
+        var existingRecord = existingStateRecord.Result?.FirstOrDefault();
+        if (existingRecord is not null)
+        {
+            _logger.Debug("Existing record for current application version exists => [{Id}]{Version} :: {Timestamp}",
+                existingRecord.Id, existingRecord.AppVersion, existingRecord.Timestamp);
+            return;
+        }
+
+        var createRecordRequest = await _serverStateRepository.CreateAsync(new ServerStateRecordCreate
+        {
+            AppVersion = _serverState.ApplicationVersion.ToString()
+        });
+        if (!createRecordRequest.Success)
+        {
+            _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
+            return;
+        }
         
-        // Seed system user permissions
-        await EnforceRolesForUser(_systemUser.Id, RoleConstants.GetAdminRoleNames());
+        _logger.Information("Created server state record: {Id} {Version}", createRecordRequest.Result, _serverState.ApplicationVersion);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -139,7 +174,7 @@ public class SqlDatabaseSeederService : IHostedService
             CreatedOn = DateTime.Now,
             CreatedBy = _systemUser.Id,
             LastModifiedBy = Guid.Empty
-        });
+        }, _systemUser.Id);
         _logger.Information("Created missing {RoleName} role with id: {RoleId}", roleName, createdRole.Result);
 
         return await _roleRepository.GetByIdAsync(createdRole.Result);
@@ -156,7 +191,7 @@ public class SqlDatabaseSeederService : IHostedService
             var convertedPermission = permission.ToAppPermissionCreate();
             convertedPermission.RoleId = roleId;
             convertedPermission.CreatedBy = _systemUser.Id;
-            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission);
+            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission, _systemUser.Id);
             if (!addedPermission.Success)
             {
                 _logger.Error("Failed to enforce permission {PermissionValue} on role {RoleId}: {ErrorMessage}",
@@ -225,7 +260,7 @@ public class SqlDatabaseSeederService : IHostedService
         foreach (var role in roleNames.Where(role => !currentRoles.Result!.Any(x => x.Name == role)))
         {
             var foundRole = await _roleRepository.GetByNameAsync(role);
-            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id);
+            await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id, _systemUser.Id);
             
             _logger.Debug("Added missing role {RoleId} to user {UserId}", foundRole.Result.Id, userId);
         }

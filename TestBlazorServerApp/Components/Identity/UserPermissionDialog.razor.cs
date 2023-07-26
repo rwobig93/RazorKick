@@ -138,7 +138,7 @@ public partial class UserPermissionDialog
                 Access = permission.Access,
                 Description = permission.Description,
                 CreatedBy = _currentUserId
-            });
+            }, _currentUserId);
             
             if (!addPermission.Succeeded)
             {

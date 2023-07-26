@@ -1,6 +1,7 @@
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Web;
@@ -94,16 +95,18 @@ public static class PermissionEndpoints
     /// </summary>
     /// <param name="permissionRequest">Detail used to map a permission to a role</param>
     /// <param name="permissionService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Guid ID of the permission added</returns>
     [Authorize(PermissionConstants.Permissions.Add)]
     private static async Task<IResult<Guid>> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionService 
-    permissionService)
+    permissionService, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
             var addRequest = permissionRequest.ToCreate();
             
-            return await permissionService.CreateAsync(addRequest);
+            return await permissionService.CreateAsync(addRequest, currentUserId);
         }
         catch (Exception ex)
         {
@@ -116,16 +119,18 @@ public static class PermissionEndpoints
     /// </summary>
     /// <param name="permissionRequest">Detail used to map a permission to a user</param>
     /// <param name="permissionService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>GUID ID of the permission added</returns>
     [Authorize(PermissionConstants.Permissions.Add)]
     private static async Task<IResult<Guid>> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionService 
-    permissionService)
+    permissionService, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
             var addRequest = permissionRequest.ToCreate();
             
-            return await permissionService.CreateAsync(addRequest);
+            return await permissionService.CreateAsync(addRequest, currentUserId);
         }
         catch (Exception ex)
         {

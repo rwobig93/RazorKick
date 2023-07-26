@@ -1,4 +1,6 @@
-﻿using Application.Database.MsSql.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
+using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
@@ -8,12 +10,10 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Identity;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Models.Database;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
 
@@ -22,31 +22,24 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
 
-    public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
-        IServiceScopeFactory scopeFactory, IAuditTrailsRepository auditRepository, ISerializerService serializer)
+    public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository,
+        ISerializerService serializer)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _serverState = serverState;
-        _scopeFactory = scopeFactory;
         _auditRepository = auditRepository;
         _serializer = serializer;
     }
 
-    private async Task UpdateAuditing(AppRoleCreate createRole, bool systemUpdate = false)
+    private void UpdateAuditing(AppRoleCreate createRole, Guid modifyingUserId)
     {
         try
         {
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-            createRole.CreatedBy = currentUserId ?? createRole.CreatedBy;
+            createRole.CreatedBy = modifyingUserId;
             createRole.CreatedOn = _dateTime.NowDatabaseTime;
         }
         catch (Exception ex)
@@ -56,19 +49,15 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         }
     }
 
-    private async Task UpdateAuditing(AppRoleUpdate updateRole, bool systemUpdate = false)
+    private async Task UpdateAuditing(AppRoleUpdate updateRole, Guid modifyingUserId)
     {
         try
         {
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
-            var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-
             // Get current state for diff comparision
             var currentRoleState = await GetByIdAsync(updateRole.Id);
             var auditDiff = AuditHelpers.GetAuditDiff(currentRoleState.Result!.ToObject(), updateRole);
             
-            updateRole.LastModifiedBy = currentUserId ?? updateRole.LastModifiedBy;
+            updateRole.LastModifiedBy = modifyingUserId;
             updateRole.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             // If no changes were detected for before and after we won't create an audit trail
@@ -234,13 +223,63 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, bool systemUpdate = false)
+    private async Task<DatabaseActionResult> ValidateAdministrativeRoleAction(Guid roleId, Guid modifyingUserId)
+    {
+        DatabaseActionResult actionReturn = new();
+        
+        try
+        {
+            var modifyingRole = await GetByIdAsync(roleId);
+            if (!modifyingRole.Success || modifyingRole.Result is null)
+            {
+                actionReturn.Fail(ErrorMessageConstants.GenericNotFound);
+                return actionReturn;
+            }
+
+            // If the modifying role isn't administrative we'll move on
+            if (modifyingRole.Result.Name != RoleConstants.DefaultRoles.AdminName &&
+                modifyingRole.Result.Name != RoleConstants.DefaultRoles.ModeratorName)
+            {
+                actionReturn.Succeed();
+                return actionReturn;
+            }
+
+            // Role is administrative so we'll verify the user can take this action - only if they are a member of the role or admin
+            var isAdminRequest = await IsUserInRoleAsync(modifyingUserId, RoleConstants.DefaultRoles.AdminName);
+            
+            // User is admin so they can continue
+            if (isAdminRequest.Result)
+            {
+                actionReturn.Succeed();
+                return actionReturn;
+            }
+
+            // User is a moderator and is modifying the moderator role
+            var isModeratorRequest = await IsUserInRoleAsync(modifyingUserId, RoleConstants.DefaultRoles.ModeratorName);
+            if (isModeratorRequest.Result && modifyingRole.Result.Name == RoleConstants.DefaultRoles.ModeratorName)
+            {
+                actionReturn.Succeed();
+                return actionReturn;
+            }
+
+            // User isn't admin and is a moderator attempting to modify something they shouldn't be
+            actionReturn.Fail(ErrorMessageConstants.CannotAdministrateAdminRole);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, "ValidateAdministrativeRoleAction", ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
-            await UpdateAuditing(createObject, systemUpdate);
+            UpdateAuditing(createObject, modifyingUserId);
             var createdId = await _database.SaveDataReturnId(AppRolesMsSql.Insert, createObject);
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
@@ -262,13 +301,13 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, bool systemUpdate = false)
+    public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await UpdateAuditing(updateObject, systemUpdate);
+            await UpdateAuditing(updateObject, modifyingUserId);
             await _database.SaveData(AppRolesMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
@@ -280,22 +319,20 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            modifyingUser ??= Guid.Empty;
-
             var foundRole = await GetByIdAsync(id);
             if (!foundRole.Success || foundRole.Result is null)
                 throw new Exception(foundRole.ErrorMessage);
             var roleUpdate = foundRole.Result.ToUpdate();
             
             // Update role w/ a property that is modified so we get the last updated on/by for the deleting user
-            roleUpdate.LastModifiedBy = modifyingUser;
-            await UpdateAsync(roleUpdate);
+            roleUpdate.LastModifiedBy = modifyingUserId;
+            await UpdateAsync(roleUpdate, modifyingUserId);
             await _database.SaveData(AppRolesMsSql.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
@@ -361,8 +398,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         {
             var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
                 AppRolesMsSql.GetByName, new {Name = roleName})).FirstOrDefault();
+            if (foundRole is null)
+            {
+                actionReturn.Fail(ErrorMessageConstants.GenericNotFound);
+                return actionReturn;
+            }
+            
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
-                AppUserRoleJunctionsMsSql.GetByUserRoleId, new {UserId = userId, RoleId = foundRole!.Name})).FirstOrDefault();
+                AppUserRoleJunctionsMsSql.GetByUserRoleId, new {UserId = userId, RoleId = foundRole.Id})).FirstOrDefault();
             var hasRole = userRoleJunction is not null;
             actionReturn.Succeed(hasRole);
         }
@@ -374,12 +417,19 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId)
+    public async Task<DatabaseActionResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            var isValidAdminAction = await ValidateAdministrativeRoleAction(roleId, modifyingUserId);
+            if (!isValidAdminAction.Success)
+            {
+                actionReturn.Fail(isValidAdminAction.ErrorMessage);
+                return actionReturn;
+            }
+
             await _database.SaveData(AppUserRoleJunctionsMsSql.Insert, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }
@@ -391,12 +441,19 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId)
+    public async Task<DatabaseActionResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            var isValidAdminAction = await ValidateAdministrativeRoleAction(roleId, modifyingUserId);
+            if (!isValidAdminAction.Success)
+            {
+                actionReturn.Fail(isValidAdminAction.ErrorMessage);
+                return actionReturn;
+            }
+
             await _database.SaveData(AppUserRoleJunctionsMsSql.Delete, new {UserId = userId, RoleId = roleId});
             actionReturn.Succeed();
         }

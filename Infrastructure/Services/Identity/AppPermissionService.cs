@@ -1,4 +1,5 @@
-﻿using Application.Mappers.Identity;
+﻿using Application.Constants.Communication;
+using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Web;
 using Application.Repositories.Identity;
@@ -289,11 +290,11 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(AppPermissionCreate createObject, bool systemUpdate = false)
+    public async Task<IResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
     {
         try
         {
-            var createRequest = await _permissionRepository.CreateAsync(createObject);
+            var createRequest = await _permissionRepository.CreateAsync(createObject, modifyingUserId);
             if (!createRequest.Success)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
 
@@ -305,11 +306,11 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult> UpdateAsync(AppPermissionUpdate updateObject, bool systemUpdate = false)
+    public async Task<IResult> UpdateAsync(AppPermissionUpdate updateObject, Guid modifyingUserId)
     {
         try
         {
-            var updateRequest = await _permissionRepository.UpdateAsync(updateObject);
+            var updateRequest = await _permissionRepository.UpdateAsync(updateObject, modifyingUserId);
             if (!updateRequest.Success)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
@@ -321,11 +322,15 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult> DeleteAsync(Guid permissionId, Guid? modifyingUser)
+    public async Task<IResult> DeleteAsync(Guid permissionId, Guid modifyingUserId)
     {
         try
         {
-            var deleteRequest = await _permissionRepository.DeleteAsync(permissionId, modifyingUser);
+            var deletingPermission = await _permissionRepository.GetByIdAsync(permissionId);
+            if (!deletingPermission.Success || deletingPermission.Result is null || string.IsNullOrWhiteSpace(deletingPermission.Result.ClaimValue))
+                return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+            
+            var deleteRequest = await _permissionRepository.DeleteAsync(permissionId, modifyingUserId);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
 

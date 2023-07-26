@@ -1,6 +1,7 @@
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Web;
@@ -90,15 +91,18 @@ public static class RoleEndpoints
     /// </summary>
     /// <param name="roleRequest">Detail used to create a role</param>
     /// <param name="roleService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>GUID ID of the newly created role</returns>
     [Authorize(Policy = PermissionConstants.Roles.Create)]
-    private static async Task<IResult<Guid>> CreateRole(CreateRoleRequest roleRequest, IAppRoleService roleService)
+    private static async Task<IResult<Guid>> CreateRole(CreateRoleRequest roleRequest, IAppRoleService roleService,
+        ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
             var createRequest = roleRequest.ToCreateObject();
 
-            return await roleService.CreateAsync(createRequest);
+            return await roleService.CreateAsync(createRequest, currentUserId);
         }
         catch (Exception ex)
         {
@@ -111,13 +115,16 @@ public static class RoleEndpoints
     /// </summary>
     /// <param name="roleRequest">Detail used to update a role, any properties left empty will not be updated</param>
     /// <param name="roleService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Edit)]
-    private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleService roleService)
+    private static async Task<IResult> UpdateRole(UpdateRoleRequest roleRequest, IAppRoleService roleService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            var updateRequest = await roleService.UpdateAsync(roleRequest.ToUpdate());
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
+            var updateRequest = await roleService.UpdateAsync(roleRequest.ToUpdate(), currentUserId);
             if (!updateRequest.Succeeded) return updateRequest;
             return await Result.SuccessAsync("Successfully updated role!");
         }
@@ -132,13 +139,16 @@ public static class RoleEndpoints
     /// </summary>
     /// <param name="roleId">GUID ID of the role</param>
     /// <param name="roleService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Delete)]
-    private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleService roleService)
+    private static async Task<IResult> DeleteRole(Guid roleId, IAppRoleService roleService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            var deleteRequest = await roleService.DeleteAsync(roleId);
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
+            var deleteRequest = await roleService.DeleteAsync(roleId, currentUserId);
             if (!deleteRequest.Succeeded) return deleteRequest;
             return await Result.SuccessAsync("Successfully deleted role!");
         }
@@ -174,13 +184,16 @@ public static class RoleEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="roleId">GUID ID of the role</param>
     /// <param name="roleService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Add)]
-    private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleService roleService)
+    private static async Task<IResult> AddUserToRole(Guid userId, Guid roleId, IAppRoleService roleService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            var roleResponse = await roleService.AddUserToRoleAsync(userId, roleId);
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
+            var roleResponse = await roleService.AddUserToRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Succeeded) return await Result<bool>.FailAsync(roleResponse.Messages);
             
             return await Result.SuccessAsync("Successfully added user to role!");
@@ -197,13 +210,16 @@ public static class RoleEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="roleId">GUID ID of the user</param>
     /// <param name="roleService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Roles.Remove)]
-    private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleService roleService)
+    private static async Task<IResult> RemoveUserFromRole(Guid userId, Guid roleId, IAppRoleService roleService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            var roleResponse = await roleService.RemoveUserFromRoleAsync(userId, roleId);
+            var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
+            var roleResponse = await roleService.RemoveUserFromRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Succeeded) return await Result<bool>.FailAsync(roleResponse.Messages);
             
             return await Result.SuccessAsync("Successfully removed user from role!");
