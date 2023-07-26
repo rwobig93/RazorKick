@@ -25,17 +25,18 @@ public partial class RoleView
     private DateTime? _modifiedOn;
     private const string DateDisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private string _editButtonText = "Enable Edit Mode";
 
     private bool _invalidDataProvided;
     private bool _editMode;
     private bool _canEditRoles;
     private bool _canAddRoles;
     private bool _canRemoveRoles;
+    private bool _canDeleteRole;
     private bool _canViewPermissions;
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
     private bool _canViewUsers;
-    private string _editButtonText = "Enable Edit Mode";
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -92,6 +93,7 @@ public partial class RoleView
         _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
         _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
         _canEditRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Edit);
+        _canDeleteRole = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Delete);
         _canViewPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.View);
         _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Remove);
@@ -115,6 +117,8 @@ public partial class RoleView
 
     private void ToggleEditMode()
     {
+        if (!_canEditRoles) return;
+        
         _editMode = !_editMode;
 
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
@@ -127,6 +131,8 @@ public partial class RoleView
 
     private async Task EditUserMembership()
     {
+        if (!_canAddRoles || !_canRemoveRoles) return;
+        
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
@@ -140,6 +146,8 @@ public partial class RoleView
 
     private async Task EditPermissions()
     {
+        if (!_canAddPermissions || !_canRemovePermissions) return;
+        
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
@@ -158,5 +166,31 @@ public partial class RoleView
             clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
 
         _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task DeleteRole()
+    {
+        // TODO: Add easy validation against permission for each action on all admin pages
+        if (!_canDeleteRole) return;
+        
+        var dialogParameters = new DialogParameters()
+        {
+            {"Title", "Are you sure you want to delete this role?"},
+            {"Content", $"Role Name: {_viewingRole.Name}"}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialog = await DialogService.Show<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions).Result;
+        if (dialog.Canceled) return;
+
+        var deleteRequest = await RoleService.DeleteAsync(_viewingRole.Id, _currentUserId);
+        if (!deleteRequest.Succeeded)
+        {
+            deleteRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully deleted role!", Severity.Success);
+        NavManager.NavigateTo(AppRouteConstants.Admin.Roles);
     }
 }

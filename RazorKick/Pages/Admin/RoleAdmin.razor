@@ -10,13 +10,21 @@
     <MudTable ServerData="@(new Func<TableState, Task<TableData<AppRoleSlim>>>(ServerReload))"
               Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table" MultiSelection="false">
         <ToolBarContent>
-            <MudContainer Class="d-flex flex-wrap gap-4">
+            <MudItem Class="d-flex ma-2">
                 <MudText Typo="Typo.h6">Roles</MudText>
-                <MudSpacer/>
+            </MudItem>
+            @if (_canCreateRoles)
+            {
+                <MudItem Class="d-flex ma-2">
+                    <MudButton Color="Color.Success" OnClick="@(CreateRole)" Variant="Variant.Outlined"
+                               EndIcon="@Icons.Material.Filled.Add">Create</MudButton>
+                </MudItem>
+            }
+            <MudSpacer/>
+            <MudItem Class="d-flex ma-2">
                 <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
-            </MudContainer>
-            @* TODO: Add ability to CRUD roles *@
+            </MudItem>
         </ToolBarContent>
         <HeaderContent>
             <MudTh></MudTh>

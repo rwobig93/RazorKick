@@ -10,21 +10,19 @@
     <MudTable ServerData="@(new Func<TableState, Task<TableData<AuditTrailSlim>>>(ServerReload))"
                Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table">
         <ToolBarContent>
-            <MudContainer Class="d-flex flex-wrap gap-4">
-                <MudText Typo="Typo.h6">Audit Trails</MudText>
-                <MudSpacer/>
-                @if (_canExportTrails)
-                {
-                    <MudTooltip Text="Export Current Data To An Excel Workbook">
-                        <MudButton Color="Color.Tertiary" OnClick="@(ExportToExcel)" Variant="Variant.Outlined">
-                            <MudIcon Icon="@Icons.Material.Filled.FileDownload"/>
-                        </MudButton>
-                    </MudTooltip>
-                }
-                <MudSpacer/>
-                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
-            </MudContainer>
+            <MudText Typo="Typo.h6">Audit Trails</MudText>
+            <MudSpacer/>
+            @if (_canExportTrails)
+            {
+                <MudTooltip Text="Export Current Data To An Excel Workbook">
+                    <MudButton Color="Color.Tertiary" OnClick="@(ExportToExcel)" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.FileDownload"/>
+                    </MudButton>
+                </MudTooltip>
+            }
+            <MudSpacer/>
+            <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
         </ToolBarContent>
         <HeaderContent>
             <MudTh></MudTh>

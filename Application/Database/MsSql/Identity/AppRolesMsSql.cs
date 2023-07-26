@@ -16,8 +16,6 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 CREATE TABLE [dbo].[AppRoles](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Name] NVARCHAR(256) NOT NULL,
-                    [NormalizedName] NVARCHAR(256) NOT NULL,
-                    [ConcurrencyStamp] NVARCHAR(256) NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
@@ -103,22 +101,6 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByNormalizedName = new()
-    {
-        Table = Table,
-        Action = "GetByNormalizedName",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByNormalizedName]
-                @NormalizedName NVARCHAR(256)
-            AS
-            begin
-                SELECT TOP 1 r.*
-                FROM dbo.[{Table.TableName}] r
-                WHERE r.NormalizedName = @NormalizedName
-                ORDER BY r.Id;
-            end"
-    };
-    
     public static readonly MsSqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -126,8 +108,6 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @Name NVARCHAR(256),
-                @NormalizedName NVARCHAR(256),
-                @ConcurrencyStamp NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
@@ -135,9 +115,9 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Name, NormalizedName, ConcurrencyStamp, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (Name, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@Name, @NormalizedName, @ConcurrencyStamp, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Name, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -188,8 +168,6 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256) = null,
-                @NormalizedName NVARCHAR(256) = null,
-                @ConcurrencyStamp NVARCHAR(256) = null,
                 @Description NVARCHAR(4000) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
@@ -198,9 +176,7 @@ public class AppRolesMsSql : ISqlEnforcedEntityMsSql
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET Name = COALESCE(@Name, Name), NormalizedName = COALESCE(@NormalizedName, NormalizedName),
-                    ConcurrencyStamp = COALESCE(@ConcurrencyStamp, ConcurrencyStamp), Description = COALESCE(@Description, Description),
-                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                SET Name = COALESCE(@Name, Name), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = COALESCE(@Id, Id);
             end"

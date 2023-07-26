@@ -31,6 +31,12 @@ else
                        OnClick="EditPermissions">Edit Permissions
             </MudButton>
         }
+        @if (_canDeleteRole)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" 
+                       OnClick="@DeleteRole">Delete Role
+            </MudButton>
+        }
         @if (_editMode)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 

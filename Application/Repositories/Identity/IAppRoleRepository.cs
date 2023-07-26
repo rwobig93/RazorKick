@@ -11,7 +11,6 @@ public interface IAppRoleRepository
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid roleId);
     Task<DatabaseActionResult<AppRoleDb>> GetByNameAsync(string roleName);
-    Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId);

@@ -1,4 +1,7 @@
-﻿using Application.Models.Identity.Role;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
+using Application.Models.Identity.Role;
+using RazorKick.Components.Identity;
 
 namespace RazorKick.Pages.Admin;
 
@@ -7,15 +10,32 @@ public partial class RoleAdmin
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    
     private MudTable<AppRoleSlim> _table = new();
     private IEnumerable<AppRoleSlim> _pagedData = new List<AppRoleSlim>();
     private string _searchString = "";
     private int _totalRoles;
-    
     private bool _dense = true;
     private bool _hover = true;
     private bool _striped = true;
     private bool _bordered;
+
+    private bool _canCreateRoles;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetPermissions();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Create);
+    }
     
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
     {
@@ -49,5 +69,17 @@ public partial class RoleAdmin
     {
         var viewRoleUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.RoleView, "roleId", roleId.ToString());
         NavManager.NavigateTo(viewRoleUri);
+    }
+
+    private async Task CreateRole()
+    {
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var createRoleDialog = await DialogService.Show<RoleCreateDialog>("Create New Role", dialogOptions).Result;
+        if (createRoleDialog.Canceled)
+            return;
+
+        var createdRoleId = (Guid) createRoleDialog.Data;
+        var newRoleViewUrl = QueryHelpers.AddQueryString(AppRouteConstants.Admin.RoleView, "roleId", createdRoleId.ToString());
+        NavManager.NavigateTo(newRoleViewUrl);
     }
 }

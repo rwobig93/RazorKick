@@ -29,6 +29,6 @@ public static class PermissionHelpers
 
     public static IEnumerable<Claim> ToClaims(this IEnumerable<AppRoleDb> appRoles)
     {
-        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name!));
+        return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name));
     }
 }

@@ -1,5 +1,4 @@
-﻿using Application.Helpers.Identity;
-using Application.Models.Identity.Permission;
+﻿using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Requests.Identity.Role;
@@ -24,14 +23,10 @@ public static class RoleMappers
     {
         return new AppRoleCreate
         {
-            Name = appRole.Name ?? "",
-            NormalizedName = appRole.NormalizedName ?? "",
-            ConcurrencyStamp = appRole.ConcurrencyStamp,
+            Name = appRole.Name,
             Description = appRole.Description,
             CreatedBy = appRole.CreatedBy,
-            CreatedOn = appRole.CreatedOn,
-            LastModifiedBy = appRole.LastModifiedBy,
-            LastModifiedOn = appRole.LastModifiedOn
+            CreatedOn = appRole.CreatedOn
         };
     }
 
@@ -40,13 +35,9 @@ public static class RoleMappers
         return new AppRoleCreate
         {
             Name = createRole.Name,
-            NormalizedName = createRole.Name.NormalizeForDatabase(),
-            ConcurrencyStamp = null,
             Description = createRole.Description,
             CreatedBy = default,
-            CreatedOn = default,
-            LastModifiedBy = null,
-            LastModifiedOn = null
+            CreatedOn = default
         };
     }
     
@@ -104,8 +95,8 @@ public static class RoleMappers
         return new RoleResponse
         {
             Id = appRole.Id,
-            Name = appRole.Name ?? "",
-            Description = appRole.Description ?? ""
+            Name = appRole.Name,
+            Description = appRole.Description
         };
     }
     
@@ -119,8 +110,8 @@ public static class RoleMappers
         return new RoleFullResponse
         {
             Id = appRole.Id,
-            Name = appRole.Name ?? "",
-            Description = appRole.Description ?? "",
+            Name = appRole.Name,
+            Description = appRole.Description,
             Permissions = new List<PermissionResponse>()
         };
     }
@@ -136,11 +127,7 @@ public static class RoleMappers
         {
             Id = appRole.Id,
             Name = appRole.Name,
-            NormalizedName = appRole.NormalizedName,
-            ConcurrencyStamp = appRole.ConcurrencyStamp,
             Description = appRole.Description,
-            CreatedBy = appRole.CreatedBy,
-            CreatedOn = appRole.CreatedOn,
             LastModifiedBy = appRole.LastModifiedBy,
             LastModifiedOn = appRole.LastModifiedOn
         };
@@ -152,11 +139,7 @@ public static class RoleMappers
         {
             Id = roleRequest.Id,
             Name = roleRequest.Name,
-            NormalizedName = roleRequest.Name!.NormalizeForDatabase(),
-            ConcurrencyStamp = null,
             Description = roleRequest.Description,
-            CreatedBy = default,
-            CreatedOn = default,
             LastModifiedBy = null,
             LastModifiedOn = null
         };
@@ -168,11 +151,7 @@ public static class RoleMappers
         {
             Id = roleFull.Id,
             Name = roleFull.Name,
-            NormalizedName = roleFull.Name!.NormalizeForDatabase(),
-            ConcurrencyStamp = null,
             Description = roleFull.Description,
-            CreatedBy = roleFull.CreatedBy,
-            CreatedOn = roleFull.CreatedOn,
             LastModifiedBy = roleFull.LastModifiedBy,
             LastModifiedOn = roleFull.LastModifiedOn
         };
@@ -184,11 +163,7 @@ public static class RoleMappers
         {
             Id = roleDb.Id,
             Name = roleDb.Name,
-            NormalizedName = roleDb.NormalizedName,
-            ConcurrencyStamp = roleDb.ConcurrencyStamp,
             Description = roleDb.Description,
-            CreatedBy = roleDb.CreatedBy,
-            CreatedOn = roleDb.CreatedOn,
             LastModifiedBy = roleDb.LastModifiedBy,
             LastModifiedOn = roleDb.LastModifiedOn
         };

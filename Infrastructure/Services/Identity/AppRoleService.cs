@@ -209,6 +209,19 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            if (createObject.Name.Length < 3)
+                return await Result<Guid>.FailAsync("Role name must be longer than 3 characters");
+            
+            if (string.IsNullOrWhiteSpace(createObject.Description))
+                return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
+
+            var existingRoleWithName = await _roleRepository.GetByNameAsync(createObject.Name);
+            if (!existingRoleWithName.Success)
+                return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
+            
+            if (existingRoleWithName.Result is not null)
+                return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
+
             var createRequest = await _roleRepository.CreateAsync(createObject, modifyingUserId);
             if (!createRequest.Success)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
@@ -226,8 +239,27 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roleToChange = await GetByIdAsync(updateObject.Id);
-            if (RoleConstants.GetUnchangeableRoleNames().Contains(roleToChange.Data!.Name!) && roleToChange.Data!.Name! != updateObject.Name)
-                return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
+            
+            if (updateObject.Name is not null && updateObject.Name.Length < 3)
+                return await Result<Guid>.FailAsync("Role name must be longer than 3 characters");
+            
+            if (updateObject.Description is not null && updateObject.Description.Length < 3)
+                return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
+
+            // If we are changing the name we need to verify there isn't already a role with the same name as the update
+            if (roleToChange.Data!.Name != updateObject.Name)
+            {
+                // We don't allow default role names to change to keep our sanity and enforce Admin, Moderator & Default role intent
+                if (RoleConstants.GetUnchangeableRoleNames().Contains(roleToChange.Data.Name))
+                    return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
+                
+                var existingRoleWithName = await _roleRepository.GetByNameAsync(updateObject.Name!);
+                if (!existingRoleWithName.Success)
+                    return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
+                
+                if (existingRoleWithName.Result is not null)
+                    return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
+            }
 
             var updateRequest = await _roleRepository.UpdateAsync(updateObject, modifyingUserId);
             if (!updateRequest.Success)
@@ -245,6 +277,13 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            var roleUserCount = await GetUsersForRole(id);
+            if (!roleUserCount.Succeeded)
+                return await Result.FailAsync(roleUserCount.Messages);
+
+            if (roleUserCount.Data.Any())
+                return await Result.FailAsync("Roles that contain users cannot be deleted, please remove all users first");
+
             var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
             if (!deleteRequest.Success)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);

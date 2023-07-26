@@ -169,11 +169,9 @@ public class SqlDatabaseSeederService : IHostedService
         var createdRole = await _roleRepository.CreateAsync(new AppRoleCreate()
         {
             Name = roleName,
-            NormalizedName = roleName.NormalizeForDatabase(),
             Description = roleDescription,
             CreatedOn = DateTime.Now,
-            CreatedBy = _systemUser.Id,
-            LastModifiedBy = Guid.Empty
+            CreatedBy = _systemUser.Id
         }, _systemUser.Id);
         _logger.Information("Created missing {RoleName} role with id: {RoleId}", roleName, createdRole.Result);
 

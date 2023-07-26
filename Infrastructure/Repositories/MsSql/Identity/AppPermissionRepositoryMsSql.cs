@@ -9,6 +9,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
@@ -24,15 +25,17 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
     private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
+    private readonly IRunningServerState _serverState;
 
     public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime,
-        IAuditTrailsRepository auditRepository, ISerializerService serializer)
+        IAuditTrailsRepository auditRepository, ISerializerService serializer, IRunningServerState serverState)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _auditRepository = auditRepository;
         _serializer = serializer;
+        _serverState = serverState;
     }
 
     private void UpdateAuditing(AppPermissionCreate createPermission, Guid modifyingUserId)
@@ -372,12 +375,16 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
                 if (foundRole is null) throw new Exception("RoleId provided is invalid");
             }
             
-            // If a user doesn't have a permission they also shouldn't be able to add/remove that permission to/from other users
-            var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, createObject.ClaimValue);
-            if (!invokingUserHasRequestingPermission.Result)
+            // If the user is the system user they have full reign so we let them past the permission validation
+            if (modifyingUserId != _serverState.SystemUserId)
             {
-                actionReturn.Fail(ErrorMessageConstants.CannotAdministrateMissingPermission);
-                return actionReturn;
+                // If a user doesn't have a permission they also shouldn't be able to add/remove that permission to/from other users
+                var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, createObject.ClaimValue);
+                if (!invokingUserHasRequestingPermission.Result)
+                {
+                    actionReturn.Fail(ErrorMessageConstants.CannotAdministrateMissingPermission);
+                    return actionReturn;
+                }
             }
 
             UpdateAuditing(createObject, modifyingUserId);

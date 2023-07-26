@@ -10,6 +10,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
@@ -24,15 +25,17 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
     private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
+    private readonly IRunningServerState _serverState;
 
     public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository,
-        ISerializerService serializer)
+        ISerializerService serializer, IRunningServerState serverState)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _auditRepository = auditRepository;
         _serializer = serializer;
+        _serverState = serverState;
     }
 
     private void UpdateAuditing(AppRoleCreate createRole, Guid modifyingUserId)
@@ -168,24 +171,6 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<AppRoleDb>> GetByNormalizedNameAsync(string normalizedRoleName)
-    {
-        DatabaseActionResult<AppRoleDb> actionReturn = new();
-
-        try
-        {
-            var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
-                AppRolesMsSql.GetByNormalizedName, new {NormalizedName = normalizedRoleName})).FirstOrDefault();
-            actionReturn.Succeed(foundRole!);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, AppRolesMsSql.GetByNormalizedName.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText)
     {
         DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
@@ -223,12 +208,20 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
+    // TODO: Move modifyingUserId & Administrative validation up to the services, repositories should only contain database interactions
     private async Task<DatabaseActionResult> ValidateAdministrativeRoleAction(Guid roleId, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
         
         try
         {
+            // If the user is the system user they have full reign so we let them past the role validation
+            if (modifyingUserId == _serverState.SystemUserId)
+            {
+                actionReturn.Succeed();
+                return actionReturn;
+            }
+            
             var modifyingRole = await GetByIdAsync(roleId);
             if (!modifyingRole.Success || modifyingRole.Result is null)
             {
@@ -273,6 +266,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
+    // TODO: Refactor repositories - they should only contain database interactions | All business logic should go into the services
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject, Guid modifyingUserId)
     {
         DatabaseActionResult<Guid> actionReturn = new();
@@ -333,7 +327,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             // Update role w/ a property that is modified so we get the last updated on/by for the deleting user
             roleUpdate.LastModifiedBy = modifyingUserId;
             await UpdateAsync(roleUpdate, modifyingUserId);
-            await _database.SaveData(AppRolesMsSql.Delete, new {Id = id, DeletedOn = _dateTime.NowDatabaseTime});
+            await _database.SaveData(AppRolesMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {

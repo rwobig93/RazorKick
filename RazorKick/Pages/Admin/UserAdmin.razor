@@ -9,47 +9,45 @@
     <MudTable ServerData="@(new Func<TableState, Task<TableData<AppUserSlim>>>(ServerReload))" MultiSelection="@_allowUserSelection"
               @bind-SelectedItems="_selectedItems" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table" >
         <ToolBarContent>
-            <MudContainer Class="d-flex flex-wrap gap-4">
-                <MudText Typo="Typo.h6">Users</MudText>
-                <MudSpacer/>
-                @if (_canEnableUsers || _canDisableUsers || _canResetPasswords)
-                {
-                    <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                             IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
-                        @if (_canEnableUsers)
-                        {
-                            <MudMenuItem IconColor="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="EnableAccounts"
-                                         Icon="@Icons.Material.Filled.LockOpen">Enable</MudMenuItem>
-                        }
-                        @if (_canDisableUsers)
-                        {
-                            <MudMenuItem IconColor="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="DisableAccounts"
-                                         Icon="@Icons.Material.Filled.Lock">Disable</MudMenuItem>
-                        }
-                        @if (_canResetPasswords)
-                        {
-                            <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="ForcePasswordResets"
-                                         Icon="@Icons.Material.Filled.LockReset">Reset Password</MudMenuItem>
-                        }
-                    </MudMenu>
-                }
-                @if (_canAdminServiceAccounts)
-                {
-                    <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(CreateServiceAccount)" Variant="Variant.Outlined"
-                               EndIcon="@Icons.Material.Filled.Add">Create Service Account</MudButton>
-                }
-                <MudSpacer/>
-                <MudMenu Label="Filters" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                         IconColor="Color.Primary" Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" Class="d-flex flex-column">
-                    <MudCheckBox @bind-Checked="_filterLockedOut" Label="Locked Out" Color="Color.Secondary" Class="d-flex me-4"/>
-                    <MudCheckBox @bind-Checked="_filterDisabled" Label="Disabled" Color="Color.Primary" Class="d-flex me-4"/>
+            <MudText Typo="Typo.h6">Users</MudText>
+            <MudSpacer/>
+            @if (_canEnableUsers || _canDisableUsers || _canResetPasswords)
+            {
+                <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                    @if (_canEnableUsers)
+                    {
+                        <MudMenuItem IconColor="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="EnableAccounts"
+                                     Icon="@Icons.Material.Filled.LockOpen">Enable</MudMenuItem>
+                    }
+                    @if (_canDisableUsers)
+                    {
+                        <MudMenuItem IconColor="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="DisableAccounts"
+                                     Icon="@Icons.Material.Filled.Lock">Disable</MudMenuItem>
+                    }
+                    @if (_canResetPasswords)
+                    {
+                        <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="ForcePasswordResets"
+                                     Icon="@Icons.Material.Filled.LockReset">Reset Password</MudMenuItem>
+                    }
                 </MudMenu>
-                <MudSpacer/>
-                <MudTextField T="string" ValueChanged="@(SearchText)" Placeholder="Search" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
-                <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(ReloadSearch)" Variant="Variant.Outlined">Search</MudButton>
-                <MudButton Color="Color.Warning" Size="Size.Small" OnClick="@(ClearSearch)" Variant="Variant.Outlined">Reset</MudButton>
-            </MudContainer>
+            }
+            @if (_canAdminServiceAccounts)
+            {
+                <MudButton Color="Color.Success" OnClick="@(CreateServiceAccount)" Variant="Variant.Outlined"
+                           EndIcon="@Icons.Material.Filled.Add">Create Service Account</MudButton>
+            }
+            <MudSpacer/>
+            <MudMenu Label="Filters" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     IconColor="Color.Primary" Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" Class="d-flex flex-column">
+                <MudCheckBox @bind-Checked="_filterLockedOut" Label="Locked Out" Color="Color.Secondary" Class="d-flex me-4"/>
+                <MudCheckBox @bind-Checked="_filterDisabled" Label="Disabled" Color="Color.Primary" Class="d-flex me-4"/>
+            </MudMenu>
+            <MudSpacer/>
+            <MudTextField T="string" ValueChanged="@(SearchText)" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            <MudButton Color="Color.Success" OnClick="@(ReloadSearch)" Variant="Variant.Outlined">Search</MudButton>
+            <MudButton Color="Color.Warning" OnClick="@(ClearSearch)" Variant="Variant.Outlined">Reset</MudButton>
         </ToolBarContent>
         <HeaderContent>
             <MudTh></MudTh>
