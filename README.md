@@ -6,7 +6,7 @@
 # Clone the repo
 
 ```shell
-git clone https://github.com/rwobig93/TestBlazorServer.git
+git clone https://github.com/rwobig93/RazorKick.git
 ```
 
 ## Solution Structure Layout

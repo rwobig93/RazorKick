@@ -359,5 +359,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/.idea/.idea.TestBlazorServer/.idea/discord.xml
-/TestBlazorServer.sln.DotSettings
+/.idea/.idea.RazorKick/.idea/discord.xml
+/RazorKick.sln.DotSettings

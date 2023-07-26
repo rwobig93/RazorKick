@@ -7,7 +7,7 @@ public class AppConfiguration : IAppSettingsSection
 {
     public const string SectionName = "General";
     
-    public string ApplicationName { get; set; } = "TestBlazorServer";
+    public string ApplicationName { get; set; } = "RazorKick";
     
     [Url]
     public string BaseUrl { get; init; } = "https://localhost:9500/";

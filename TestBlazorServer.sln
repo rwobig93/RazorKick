@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestBlazorServerApp", "TestBlazorServerApp\TestBlazorServerApp.csproj", "{344DAC9D-40E2-4CE6-A68F-C3EC69004A86}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RazorKick", "RazorKick\RazorKick.csproj", "{344DAC9D-40E2-4CE6-A68F-C3EC69004A86}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{123BD245-D93E-4837-B0C4-BFBA6886CC5D}"
 EndProject
