@@ -356,6 +356,7 @@ public partial class SecuritySettings
 
     private async Task UpdateApiToken()
     {
+        if (!_canGenerateApiTokens) return;
         if (_selectedApiTokens.Count != 1) return;
         
         var dialogParameters = new DialogParameters() {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
@@ -368,6 +369,8 @@ public partial class SecuritySettings
 
     private async Task DeleteApiTokens()
     {
+        if (!_canGenerateApiTokens) return;
+        
         var tokensList = _selectedApiTokens.Select(x => $"Token: [{x.Value[^4..]}] {x.Description}").ToArray();
         
         var dialogParameters = new DialogParameters()

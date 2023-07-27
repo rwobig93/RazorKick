@@ -2,9 +2,12 @@
     <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.AccountSettings)">
         General
     </MudButton>
-    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Themes)">
-        Themes
-    </MudButton>
+    @if (_canEditTheme)
+    {
+        <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Themes)">
+            Themes
+        </MudButton>
+    }
     <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Security)">
         Security
     </MudButton>

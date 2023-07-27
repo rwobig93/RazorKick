@@ -25,13 +25,13 @@ public partial class RolePermissionDialog
     {
         if (firstRender)
         {
-            await GetCurrentUserPermissions();
+            await GetPermissions();
             await GetPermissionLists();
             StateHasChanged();
         }
     }
 
-    private async Task GetCurrentUserPermissions()
+    private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
@@ -93,6 +93,8 @@ public partial class RolePermissionDialog
 
     private void AddPermissions()
     {
+        if (!_canAddPermissions) return;
+        
         foreach (var permission in _addPermissions)
         {
             _availablePermissions.Remove(permission);
@@ -106,6 +108,8 @@ public partial class RolePermissionDialog
 
     private void RemovePermissions()
     {
+        if (!_canRemovePermissions) return;
+        
         foreach (var permission in _removePermissions)
         {
             _assignedPermissions.Remove(permission);
@@ -119,6 +123,8 @@ public partial class RolePermissionDialog
     
     private async Task Save()
     {
+        if (!_canAddPermissions && !_canRemovePermissions) return;
+        
         var currentPermissions = await PermissionService.GetAllForRoleAsync(RoleId);
         if (!currentPermissions.Succeeded)
         {

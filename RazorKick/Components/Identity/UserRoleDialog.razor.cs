@@ -69,6 +69,8 @@ public partial class UserRoleDialog
 
     private void AddRoles()
     {
+        if (!_canAddRoles) return;
+        
         foreach (var role in _addRoles)
         {
             _availableRoles.Remove(role);
@@ -78,6 +80,8 @@ public partial class UserRoleDialog
 
     private void RemoveRoles()
     {
+        if (!_canRemoveRoles) return;
+        
         foreach (var role in _removeRoles)
         {
             _assignedRoles.Remove(role);
@@ -87,6 +91,8 @@ public partial class UserRoleDialog
     
     private async Task Save()
     {
+        if (!_canAddRoles && !_canRemoveRoles) return;
+        
         var currentRoles = await RoleService.GetRolesForUser(UserId);
         if (!currentRoles.Succeeded)
         {

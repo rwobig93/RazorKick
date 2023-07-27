@@ -93,6 +93,8 @@ public partial class UserPermissionDialog
 
     private void AddPermissions()
     {
+        if (!_canAddPermissions) return;
+        
         foreach (var permission in _addPermissions)
         {
             _availablePermissions.Remove(permission);
@@ -106,6 +108,8 @@ public partial class UserPermissionDialog
 
     private void RemovePermissions()
     {
+        if (!_canRemovePermissions) return;
+        
         foreach (var permission in _removePermissions)
         {
             _assignedPermissions.Remove(permission);
@@ -119,6 +123,8 @@ public partial class UserPermissionDialog
     
     private async Task Save()
     {
+        if (!_canAddPermissions && !_canRemovePermissions) return;
+        
         var currentPermissions = await PermissionService.GetAllDirectForUserAsync(UserId);
         if (!currentPermissions.Succeeded)
         {

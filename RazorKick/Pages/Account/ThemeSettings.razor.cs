@@ -1,4 +1,6 @@
-﻿using Application.Mappers.Identity;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
+using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
@@ -17,6 +19,7 @@ public partial class ThemeSettings
     private AppUserFull CurrentUser { get; set; } = new();
     private AppThemeCustom _editingTheme = AppThemeCustom.GetExampleCustomOne();
     private AppThemeId _editingThemeId = AppThemeId.CustomOne;
+    private bool _canEditTheme;
     
     private MudColor _editThemePrimaryColor = new("#FFFFFF");
     private MudColor _editThemeSecondaryColor = new("#FFFFFF");
@@ -33,6 +36,7 @@ public partial class ThemeSettings
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
             await GetPreferences();
         }
     }
@@ -44,6 +48,12 @@ public partial class ThemeSettings
             return;
 
         CurrentUser = (await UserService.GetByIdFullAsync((Guid) userId)).Data!;
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Preferences.ChangeTheme);
     }
 
     private async Task GetPreferences()

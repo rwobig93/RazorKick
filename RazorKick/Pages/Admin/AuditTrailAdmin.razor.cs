@@ -83,6 +83,8 @@ public partial class AuditTrailAdmin
 
     private async Task ExportToExcel()
     {
+        if (!_canExportTrails) return;
+        
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             _pagedData, dataMapping: new Dictionary<string, Func<AuditTrailSlim, object>>
         {

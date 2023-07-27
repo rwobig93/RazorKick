@@ -29,12 +29,15 @@ public partial class ServiceAccountAdminDialog
     private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
     private bool _creatingServiceAccount;
 
+    private bool _canAdminServiceAccounts;
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
             await GetServiceAccount();
             ValidateActionState();
             StateHasChanged();
@@ -48,6 +51,12 @@ public partial class ServiceAccountAdminDialog
             return;
 
         _currentUser = foundUser;
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.ServiceAccounts.Admin);
     }
 
     private async Task GetServiceAccount()
@@ -147,6 +156,8 @@ public partial class ServiceAccountAdminDialog
     
     private async Task Save()
     {
+        if (!_canAdminServiceAccounts) return;
+        
         if (!RequirementsAreMet()) return;
 
         _serviceUser.AccountType = AccountType.Service;

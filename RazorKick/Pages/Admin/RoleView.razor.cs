@@ -170,7 +170,6 @@ public partial class RoleView
 
     private async Task DeleteRole()
     {
-        // TODO: Add easy validation against permission for each action on all admin pages
         if (!_canDeleteRole) return;
         
         var dialogParameters = new DialogParameters()

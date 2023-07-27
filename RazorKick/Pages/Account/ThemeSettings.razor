@@ -1,8 +1,9 @@
 ﻿@using RazorKick.Components.Account
 @using Domain.Enums.Identity
+@using Application.Constants.Identity
 
 @attribute [Route(AppRouteConstants.Account.Themes)]
-@attribute [Authorize]
+@attribute [Authorize(PermissionConstants.Preferences.ChangeTheme)]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <AccountSettingsNavBar/>

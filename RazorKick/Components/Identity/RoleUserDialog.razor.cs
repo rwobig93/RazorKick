@@ -70,6 +70,8 @@ public partial class RoleUserDialog
 
     private void AddUsers()
     {
+        if (!_canAddRoles) return;
+        
         foreach (var user in _addUsers)
         {
             _availableUsers.Remove(user);
@@ -79,6 +81,8 @@ public partial class RoleUserDialog
 
     private void RemoveUsers()
     {
+        if (!_canRemoveRoles) return;
+        
         foreach (var user in _removeUsers)
         {
             _assignedUsers.Remove(user);
@@ -88,6 +92,8 @@ public partial class RoleUserDialog
     
     private async Task Save()
     {
+        if (!_canAddRoles && !_canRemoveRoles) return;
+        
         var currentUsers = await RoleService.GetUsersForRole(RoleId);
         if (!currentUsers.Succeeded)
         {

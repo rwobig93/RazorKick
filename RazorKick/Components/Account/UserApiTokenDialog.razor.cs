@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.Identity.UserExtensions;
 using Domain.Enums.Identity;
 
@@ -17,6 +18,8 @@ public partial class UserApiTokenDialog
     private Guid _currentUserId = Guid.Empty;
     private UserApiTokenTimeframe _tokenTimeframe = UserApiTokenTimeframe.OneYear;
     private AppUserExtendedAttributeSlim _apiToken = new();
+
+    private bool _canGenerateTokens;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -24,6 +27,7 @@ public partial class UserApiTokenDialog
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
             await ValidateTokenAction();
             StateHasChanged();
         }
@@ -38,8 +42,16 @@ public partial class UserApiTokenDialog
         _currentUserId = Guid.Parse(foundUserId.ToString()!);
     }
 
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canGenerateTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
+    }
+
     private async Task ValidateTokenAction()
     {
+        if (!_canGenerateTokens) return;
+        
         var existingTokenRequest = await UserService.GetExtendedAttributeByIdAsync(ApiTokenId);
         if (!existingTokenRequest.Succeeded || existingTokenRequest.Data is null)
         {
@@ -59,6 +71,8 @@ public partial class UserApiTokenDialog
 
     private async Task Save()
     {
+        if (!_canGenerateTokens) return;
+
         // Creating a new token
         if (_creatingNewToken)
         {

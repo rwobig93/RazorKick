@@ -108,6 +108,8 @@ public partial class UserView
     
     private async Task Save()
     {
+        if (!_canEditUsers) return;
+        
         var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate());
         if (!updateResult.Succeeded)
         {

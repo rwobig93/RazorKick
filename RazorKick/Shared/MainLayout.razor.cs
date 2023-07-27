@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Security.Principal;
 using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Lifecycle;
@@ -29,6 +30,7 @@ public partial class MainLayout
 
     private AppUserFull UserFull { get; set; } = new();
     private bool _settingsDrawerOpen;
+    private bool _canEditTheme;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -36,6 +38,7 @@ public partial class MainLayout
         {
             await ValidateAuthSession();
             await GetCurrentUser();
+            await GetPermissions();
             await GetPreferences();
             StateHasChanged();
         }
@@ -52,6 +55,12 @@ public partial class MainLayout
         {
             // Failure occurred, user is unauthenticated or token has expired and will be handled by the permission auth handler
         }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Preferences.ChangeTheme);
     }
 
     private async Task ValidateAuthSession()

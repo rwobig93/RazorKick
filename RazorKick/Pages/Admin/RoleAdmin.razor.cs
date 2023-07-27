@@ -73,6 +73,8 @@ public partial class RoleAdmin
 
     private async Task CreateRole()
     {
+        if (!_canCreateRoles) return;
+        
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createRoleDialog = await DialogService.Show<RoleCreateDialog>("Create New Role", dialogOptions).Result;
         if (createRoleDialog.Canceled)

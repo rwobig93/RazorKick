@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.Identity.Role;
 
 namespace RazorKick.Components.Identity;
@@ -11,12 +12,15 @@ public partial class RoleCreateDialog
 
     private Guid _currentUserId;
     private AppRoleCreate _newRole = new();
+
+    private bool _canCreateRoles;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetCurrentUser();
+            await GetPermissions();
             StateHasChanged();
         }
     }
@@ -25,9 +29,17 @@ public partial class RoleCreateDialog
     {
         _currentUserId = (await CurrentUserService.GetCurrentUserId()).GetFromNullable();
     }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Create);
+    }
     
     private async Task Save()
     {
+        if (!_canCreateRoles) return;
+        
         var createRoleRequest = await RoleService.CreateAsync(_newRole, _currentUserId);
         if (!createRoleRequest.Succeeded)
         {

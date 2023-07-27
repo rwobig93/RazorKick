@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
+using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Models.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Identity;
@@ -25,11 +27,13 @@ public partial class SettingsMenu
     [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
 
     private string _clientTimeZone = "GMT";
+    private bool _canEditTheme;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await GetPermissions();
             await GetClientTimezone();
             StateHasChanged();
             await Task.CompletedTask;
@@ -39,6 +43,12 @@ public partial class SettingsMenu
     private static bool IsUserAuthenticated(ClaimsPrincipal? principal)
     {
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Preferences.ChangeTheme);
     }
 
     private string GetCurrentThemeName()
@@ -62,6 +72,8 @@ public partial class SettingsMenu
 
     private async Task ChangeThemeOnLayout(AppTheme theme)
     {
+        if (!_canEditTheme) return;
+        
         await ThemeChanged.InvokeAsync(theme);
         StateHasChanged();
     }
