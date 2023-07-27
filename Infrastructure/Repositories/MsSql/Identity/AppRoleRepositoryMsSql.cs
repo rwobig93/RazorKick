@@ -223,7 +223,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             }
             
             var modifyingRole = await GetByIdAsync(roleId);
-            if (!modifyingRole.Success || modifyingRole.Result is null)
+            if (!modifyingRole.Succeeded || modifyingRole.Result is null)
             {
                 actionReturn.Fail(ErrorMessageConstants.GenericNotFound);
                 return actionReturn;
@@ -320,7 +320,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         try
         {
             var foundRole = await GetByIdAsync(id);
-            if (!foundRole.Success || foundRole.Result is null)
+            if (!foundRole.Succeeded || foundRole.Result is null)
                 throw new Exception(foundRole.ErrorMessage);
             var roleUpdate = foundRole.Result.ToUpdate();
             
@@ -418,7 +418,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         try
         {
             var isValidAdminAction = await ValidateAdministrativeRoleAction(roleId, modifyingUserId);
-            if (!isValidAdminAction.Success)
+            if (!isValidAdminAction.Succeeded)
             {
                 actionReturn.Fail(isValidAdminAction.ErrorMessage);
                 return actionReturn;
@@ -442,7 +442,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         try
         {
             var isValidAdminAction = await ValidateAdministrativeRoleAction(roleId, modifyingUserId);
-            if (!isValidAdminAction.Success)
+            if (!isValidAdminAction.Succeeded)
             {
                 actionReturn.Fail(isValidAdminAction.ErrorMessage);
                 return actionReturn;

@@ -436,7 +436,7 @@
             <param name="auditService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Constants.Identity.PermissionConstants.GetAllPermissions">
+        <member name="M:Application.Helpers.Identity.PermissionHelpers.GetAllBuiltInPermissions">
             <summary>
             Returns a list of all native permissions values
             </summary>

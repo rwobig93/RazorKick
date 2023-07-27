@@ -140,7 +140,7 @@ public class AppAccountService : IAppAccountService
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
         
         // Generate and register client id as a successful login with user+pass, only registered client id's can re-auth w/ refresh tokens
@@ -154,7 +154,7 @@ public class AppAccountService : IAppAccountService
             Description = ""
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        if (!addAttributeRequest.Success)
+        if (!addAttributeRequest.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(addAttributeRequest.ErrorMessage);
 
         // Generate the JWT and return
@@ -186,7 +186,7 @@ public class AppAccountService : IAppAccountService
     {
         var existingProviderRequest = 
             await _userRepository.GetExtendedAttributeByTypeAndValueAsync(ExtendedAttributeType.ExternalAuthLogin, externalId);
-        if (!existingProviderRequest.Success || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
+        if (!existingProviderRequest.Succeeded || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
             return await Result<AppUserExtendedAttributeSlim>.FailAsync(ErrorMessageConstants.ExternalAuthNotLinked);
 
         var matchingAuthBinding = existingProviderRequest.Result.First();
@@ -235,7 +235,7 @@ public class AppAccountService : IAppAccountService
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
         
         // Generate and register client id as a successful login with user+pass, only registered client id's can re-auth w/ refresh tokens
@@ -249,7 +249,7 @@ public class AppAccountService : IAppAccountService
             Description = ""
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        if (!addAttributeRequest.Success)
+        if (!addAttributeRequest.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(addAttributeRequest.ErrorMessage);
 
         // Generate the JWT and return
@@ -324,7 +324,7 @@ public class AppAccountService : IAppAccountService
     {
         var userApiTokensRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
             userSecurity.Id, ExtendedAttributeType.UserApiToken, tokenRequest.Password);
-        if (!userApiTokensRequest.Success || userApiTokensRequest.Result is null || !userApiTokensRequest.Result.Any())
+        if (!userApiTokensRequest.Succeeded || userApiTokensRequest.Result is null || !userApiTokensRequest.Result.Any())
         {
             userSecurity.BadPasswordAttempts += 1;
             userSecurity.LastBadPassword = _dateTime.NowDatabaseTime;
@@ -345,7 +345,7 @@ public class AppAccountService : IAppAccountService
         userSecurity.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
@@ -378,7 +378,7 @@ public class AppAccountService : IAppAccountService
         userSecurity.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
@@ -473,7 +473,7 @@ public class AppAccountService : IAppAccountService
         // Validate the provided client id has been registered, if not this client can't use a refresh token
         var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
             user.Id, ExtendedAttributeType.UserClientId, localStorage.ClientId);
-        if (!clientIdRequest.Success || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
+        if (!clientIdRequest.Succeeded || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.TokenInvalidError);
         
         if (!JwtHelpers.IsJwtValid(localStorage.RefreshToken, _securityConfig, _appConfig))
@@ -562,7 +562,7 @@ public class AppAccountService : IAppAccountService
         };
         
         var createUserResult = await CreateAsync(newUser, registerRequest.Password);
-        if (!createUserResult.Success)
+        if (!createUserResult.Succeeded)
             return await Result.FailAsync(createUserResult.ErrorMessage);
 
         var caveatMessage = "";
@@ -570,7 +570,7 @@ public class AppAccountService : IAppAccountService
         var defaultRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.DefaultName)).Result;
         var addToRoleResult = await _roleRepository.AddUserToRoleAsync(
             createUserResult.Result, defaultRole!.Id, _serverState.SystemUserId);
-        if (!addToRoleResult.Success)
+        if (!addToRoleResult.Succeeded)
             caveatMessage = $",{Environment.NewLine} Default permissions could not be added to this account, " +
                             $"please contact the administrator for assistance";
 
@@ -615,7 +615,7 @@ public class AppAccountService : IAppAccountService
             Description = ""
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        if (!addAttributeRequest.Success)
+        if (!addAttributeRequest.Succeeded)
             return await Result<string>.FailAsync(addAttributeRequest.ErrorMessage);
 
         return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode));
@@ -676,11 +676,11 @@ public class AppAccountService : IAppAccountService
         userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result<string>.FailAsync(updateSecurity.ErrorMessage);
 
         var confirmEmail = await _userRepository.UpdateAsync(userSecurity.ToUserUpdate());
-        if (!confirmEmail.Success)
+        if (!confirmEmail.Succeeded)
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         await _userRepository.RemoveExtendedAttributeAsync(previousConfirmation.Id);
@@ -691,7 +691,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> InitiateEmailChange(Guid userId, string newEmail)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         if (!AccountHelpers.IsValidEmailAddress(newEmail))
@@ -737,7 +737,7 @@ public class AppAccountService : IAppAccountService
         try
         {
             var userSecurityRequest = await _userRepository.GetByIdSecurityAsync(userId);
-            if (!userSecurityRequest.Success || userSecurityRequest.Result is null)
+            if (!userSecurityRequest.Succeeded || userSecurityRequest.Result is null)
                 return await Result.FailAsync(userSecurityRequest.ErrorMessage);
             
             var passwordMeetsRequirements = await PasswordMeetsRequirements(newPassword);
@@ -754,7 +754,7 @@ public class AppAccountService : IAppAccountService
             securityUpdate.PasswordHash = hash;
             
             var securityResult = await _userRepository.UpdateSecurityAsync(securityUpdate);
-            if (!securityResult.Success)
+            if (!securityResult.Succeeded)
                 return await Result.FailAsync(securityResult.ErrorMessage);
 
             var userUpdate = userSecurityRequest.Result.ToUpdate();
@@ -762,7 +762,7 @@ public class AppAccountService : IAppAccountService
             userUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
             
             var userResult = await _userRepository.UpdateAsync(userUpdate);
-            if (!userResult.Success)
+            if (!userResult.Succeeded)
                 return await Result.FailAsync(userResult.ErrorMessage);
             
             return await Result.SuccessAsync();
@@ -792,7 +792,7 @@ public class AppAccountService : IAppAccountService
     {
         var foundUser = (await _userRepository.GetByEmailAsync(forgotRequest.Email!)).Result;
         if (foundUser is null)
-            return await Result.FailAsync(ErrorMessageConstants.GenericError);
+            return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
 
         if (!foundUser.EmailConfirmed)
             return await Result.FailAsync(ErrorMessageConstants.EmailNotConfirmedError);
@@ -839,14 +839,14 @@ public class AppAccountService : IAppAccountService
     {
         var foundUser = (await _userRepository.GetByIdAsync(userId)).Result;
         if (foundUser is null)
-            return await Result.FailAsync(ErrorMessageConstants.GenericError);
+            return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
 
         var previousResets =
             (await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUser.Id, ExtendedAttributeType.PasswordResetToken)).Result;
         var previousReset = previousResets?.FirstOrDefault();
         
         if (previousReset is null)
-            return await Result.FailAsync(ErrorMessageConstants.GenericError);
+            return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
         if (password != confirmPassword)
             return await Result.FailAsync(ErrorMessageConstants.PasswordsNoMatchError);
         if (confirmationCode != previousReset.Value)
@@ -867,7 +867,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate)
     {
         var updateRequest = await _userRepository.UpdatePreferences(userId, preferenceUpdate);
-        if (!updateRequest.Success)
+        if (!updateRequest.Succeeded)
             return await Result.FailAsync($"Failure occurred attempting to update preferences: {updateRequest.ErrorMessage}");
 
         return await Result.SuccessAsync("Preferences updated successfully");
@@ -876,7 +876,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId)
     {
         var preferences = await _userRepository.GetPreferences(userId);
-        if (!preferences.Success)
+        if (!preferences.Succeeded)
             return await Result<AppUserPreferenceFull>.FailAsync($"Failure occurred getting preferences: {preferences.ErrorMessage}");
 
         if (preferences.Result is null)
@@ -894,19 +894,19 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> ForceUserLogin(Guid userId)
     {
         var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
-        if (!userSecurity.Success || userSecurity.Result is null)
+        if (!userSecurity.Succeeded || userSecurity.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         // Update account auth state to indicate login is required
         userSecurity.Result.AuthState = AuthState.LoginRequired;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
         
         // Grab all registered client id's for the user account
         var userClientIdRequest =
             await _userRepository.GetUserExtendedAttributesByTypeAsync(userSecurity.Result.Id, ExtendedAttributeType.UserClientId);
-        if (!userClientIdRequest.Success)
+        if (!userClientIdRequest.Succeeded)
             return await Result.FailAsync(userClientIdRequest.ErrorMessage);
 
         var messages = new List<string>();
@@ -919,7 +919,7 @@ public class AppAccountService : IAppAccountService
             foreach (var clientId in userClientIds)
             {
                 var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(clientId.Id);
-                if (!removeRequest.Success)
+                if (!removeRequest.Succeeded)
                     messages.Add(removeRequest.ErrorMessage);
             }
         }
@@ -933,7 +933,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> ForceUserPasswordReset(Guid userId)
     {
         var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
-        if (!userSecurity.Success)
+        if (!userSecurity.Succeeded)
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         var forceLoginRequest = await ForceUserLogin(userId);
@@ -947,13 +947,13 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
     {
         var userSecurity = await _userRepository.GetSecurityAsync(userId);
-        if (!userSecurity.Success || userSecurity.Result is null)
+        if (!userSecurity.Succeeded || userSecurity.Result is null)
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result.TwoFactorEnabled = enabled;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync();
@@ -962,13 +962,13 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> SetTwoFactorKey(Guid userId, string key)
     {
         var userSecurity = await _userRepository.GetSecurityAsync(userId);
-        if (!userSecurity.Success || userSecurity.Result is null)
+        if (!userSecurity.Succeeded || userSecurity.Result is null)
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result.TwoFactorKey = key;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync();
@@ -1081,7 +1081,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> SetAuthState(Guid userId, AuthState authState)
     {
         var userSecurity = await _userRepository.GetSecurityAsync(userId);
-        if (!userSecurity.Success || userSecurity.Result is null)
+        if (!userSecurity.Succeeded || userSecurity.Result is null)
             return await Result.FailAsync(userSecurity.ErrorMessage);
 
         userSecurity.Result.AuthState = authState;
@@ -1090,7 +1090,7 @@ public class AppAccountService : IAppAccountService
             userSecurity.Result.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToUpdate());
-        if (!updateSecurity.Success)
+        if (!updateSecurity.Succeeded)
             return await Result.FailAsync(updateSecurity.ErrorMessage);
 
         return await Result.SuccessAsync($"User account successfully set: {userSecurity.Result.AuthState.ToString()}");
@@ -1099,7 +1099,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe, string description)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         var userApiToken = UrlHelpers.GenerateToken(_securityConfig.UserApiTokenSizeInBytes);
@@ -1114,7 +1114,7 @@ public class AppAccountService : IAppAccountService
             Description = description
         };
         var addRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        if (!addRequest.Success)
+        if (!addRequest.Succeeded)
             return await Result.FailAsync(addRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
@@ -1123,12 +1123,12 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> DeleteUserApiToken(Guid userId, string value)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         var apiTokenRequest = 
             await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(userId, ExtendedAttributeType.UserApiToken, value);
-        if (!apiTokenRequest.Success || apiTokenRequest.Result is null || !apiTokenRequest.Result.Any())
+        if (!apiTokenRequest.Succeeded || apiTokenRequest.Result is null || !apiTokenRequest.Result.Any())
             return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
 
         var apiToken = apiTokenRequest.Result.FirstOrDefault();
@@ -1139,7 +1139,7 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
         
         var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(apiToken.Id);
-        if (!removeRequest.Success)
+        if (!removeRequest.Succeeded)
             return await Result.FailAsync(removeRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
@@ -1148,12 +1148,12 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> DeleteAllUserApiTokens(Guid userId)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
         
         var existingTokenRequest =
             await _userRepository.GetUserExtendedAttributesByTypeAsync(foundUserRequest.Result.Id, ExtendedAttributeType.UserApiToken);
-        if (!existingTokenRequest.Success)
+        if (!existingTokenRequest.Succeeded)
             return await Result.FailAsync(existingTokenRequest.ErrorMessage);
 
         var errorMessages = new List<string>();
@@ -1164,7 +1164,7 @@ public class AppAccountService : IAppAccountService
             foreach (var token in existingTokens)
             {
                 var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(token.Id);
-                if (!removeRequest.Success)
+                if (!removeRequest.Succeeded)
                     errorMessages.Add(removeRequest.ErrorMessage);
             }
         }
@@ -1178,7 +1178,7 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> SetExternalAuthProvider(Guid userId, ExternalAuthProvider provider, string externalId)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         // We should only have one provider binding per account, we'll just wipe out any that exist just in case
@@ -1192,7 +1192,7 @@ public class AppAccountService : IAppAccountService
             Description = provider.ToString(),
             Type = ExtendedAttributeType.ExternalAuthLogin
         });
-        if (!createAuthRequest.Success)
+        if (!createAuthRequest.Succeeded)
             return await Result.FailAsync(createAuthRequest.ErrorMessage);
 
         return await Result.SuccessAsync($"Successfully bound provider {provider.ToString()} to the account");
@@ -1201,12 +1201,12 @@ public class AppAccountService : IAppAccountService
     public async Task<IResult> RemoveExternalAuthProvider(Guid userId, ExternalAuthProvider provider)
     {
         var foundUserRequest = await _userRepository.GetByIdAsync(userId);
-        if (!foundUserRequest.Success || foundUserRequest.Result is null)
+        if (!foundUserRequest.Succeeded || foundUserRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
 
         var existingProviderRequest = 
             await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.ExternalAuthLogin);
-        if (!existingProviderRequest.Success || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
+        if (!existingProviderRequest.Succeeded || existingProviderRequest.Result is null || !existingProviderRequest.Result.Any())
             return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
 
         var errorMessages = new List<string>();
@@ -1217,7 +1217,7 @@ public class AppAccountService : IAppAccountService
                 continue;
 
             var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(authEntry.Id);
-            if (!removeRequest.Success)
+            if (!removeRequest.Succeeded)
                 errorMessages.Add(removeRequest.ErrorMessage);
         }
 

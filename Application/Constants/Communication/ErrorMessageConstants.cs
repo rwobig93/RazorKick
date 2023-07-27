@@ -3,7 +3,7 @@
 public static class ErrorMessageConstants
 {
     // General / Generic Errors
-    public const string GenericError = "An internal server error occurred, please contact the administrator";
+    public const string GenericErrorContactAdmin = "An internal server error occurred, please contact the administrator";
     public const string InvalidValueError = "The value provided was invalid, please try again";
     public const string GenericNotFound = "Was unable to find that resource, it doesn't exist";
     

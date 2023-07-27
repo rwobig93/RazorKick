@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Lifecycle;
 using Application.Models.Lifecycle;
+using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Enums.Database;
@@ -50,6 +51,21 @@ public static class AuditHelpers
         ISerializerService serializer, string tableName, Guid recordId, Dictionary<string, string> log)
     {
         await auditService.CreateAsync(new AuditTrailCreate
+        {
+            TableName = tableName,
+            RecordId = recordId,
+            ChangedBy = serverState.SystemUserId,
+            Timestamp = dateTime.NowDatabaseTime,
+            Action = DatabaseActionType.Troubleshooting,
+            Before = serializer.Serialize(new Dictionary<string, string>()),
+            After = serializer.Serialize(log)
+        });
+    }
+
+    public static async Task CreateTroubleshootLog(this IAuditTrailsRepository auditRepository, IRunningServerState serverState,
+        IDateTimeService dateTime, ISerializerService serializer, string tableName, Guid recordId, Dictionary<string, string> log)
+    {
+        await auditRepository.CreateAsync(new AuditTrailCreate
         {
             TableName = tableName,
             RecordId = recordId,

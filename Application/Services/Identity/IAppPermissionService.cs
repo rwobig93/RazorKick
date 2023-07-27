@@ -5,8 +5,9 @@ namespace Application.Services.Identity;
 
 public interface IAppPermissionService
 {
-    Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAsync();
-    Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailablePermissionsAsync();
+    Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedAsync();
+    Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchAsync(string searchTerm);
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();

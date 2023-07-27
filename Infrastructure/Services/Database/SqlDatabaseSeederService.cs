@@ -70,23 +70,23 @@ public class SqlDatabaseSeederService : IHostedService
     {
         var adminRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.AdminName, RoleConstants.DefaultRoles.AdminDescription);
-        if (adminRole.Success)
-            await EnforcePermissionsForRole(adminRole.Result!.Id, PermissionConstants.GetAllPermissions());
+        if (adminRole.Succeeded)
+            await EnforcePermissionsForRole(adminRole.Result!.Id, PermissionHelpers.GetAllBuiltInPermissions());
         
         var moderatorRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.ModeratorName, RoleConstants.DefaultRoles.ModeratorDescription);
-        if (moderatorRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
-            await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionConstants.GetModeratorRolePermissions());
+        if (moderatorRole.Succeeded && _lifecycleConfig.EnforceDefaultRolePermissions)
+            await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionHelpers.GetModeratorRolePermissions());
         
         var serviceAccountRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.ServiceAccountName, RoleConstants.DefaultRoles.ServiceAccountDescription);
-        if (serviceAccountRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
-            await EnforcePermissionsForRole(serviceAccountRole.Result!.Id, PermissionConstants.GetServiceAccountRolePermissions());
+        if (serviceAccountRole.Succeeded && _lifecycleConfig.EnforceDefaultRolePermissions)
+            await EnforcePermissionsForRole(serviceAccountRole.Result!.Id, PermissionHelpers.GetServiceAccountRolePermissions());
 
         var defaultRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.DefaultName, RoleConstants.DefaultRoles.DefaultDescription);
-        if (defaultRole.Success && _lifecycleConfig.EnforceDefaultRolePermissions)
-            await EnforcePermissionsForRole(defaultRole.Result!.Id, PermissionConstants.GetDefaultRolePermissions());
+        if (defaultRole.Succeeded && _lifecycleConfig.EnforceDefaultRolePermissions)
+            await EnforcePermissionsForRole(defaultRole.Result!.Id, PermissionHelpers.GetDefaultRolePermissions());
     }
 
     private async Task SeedDatabaseUsers()
@@ -97,7 +97,7 @@ public class SqlDatabaseSeederService : IHostedService
         var adminUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AdminUsername, UserConstants.DefaultUsers.AdminFirstName, UserConstants.DefaultUsers.AdminLastName,
             UserConstants.DefaultUsers.AdminEmail, UserConstants.DefaultUsers.AdminPassword);
-        if (adminUser.Success)
+        if (adminUser.Succeeded)
             await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
 
         if (_lifecycleConfig.EnforceTestAccounts)
@@ -105,27 +105,27 @@ public class SqlDatabaseSeederService : IHostedService
             var moderatorUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,
                 UserConstants.DefaultUsers.ModeratorLastName, UserConstants.DefaultUsers.ModeratorEmail, UserConstants.DefaultUsers.ModeratorPassword);
-            if (moderatorUser.Success)
+            if (moderatorUser.Succeeded)
                 await EnforceRolesForUser(moderatorUser.Result!.Id, RoleConstants.GetModeratorRoleNames());
             
             var basicUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.BasicUsername, UserConstants.DefaultUsers.BasicFirstName, UserConstants.DefaultUsers.BasicLastName,
                 UserConstants.DefaultUsers.BasicEmail, UserConstants.DefaultUsers.BasicPassword);
-            if (basicUser.Success)
+            if (basicUser.Succeeded)
                 await EnforceRolesForUser(basicUser.Result!.Id, RoleConstants.GetDefaultRoleNames());
         }
         
         var anonymousUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AnonymousUsername, UserConstants.DefaultUsers.AnonymousFirstName,
             UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
-        if (anonymousUser.Success)
+        if (anonymousUser.Succeeded)
             await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
     }
 
     private async Task SeedServerStateRecords()
     {
         var existingStateRecord = await _serverStateRepository.GetByVersion(_serverState.ApplicationVersion);
-        if (!existingStateRecord.Success)
+        if (!existingStateRecord.Succeeded)
         {
             _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
             return;
@@ -143,7 +143,7 @@ public class SqlDatabaseSeederService : IHostedService
         {
             AppVersion = _serverState.ApplicationVersion.ToString()
         });
-        if (!createRecordRequest.Success)
+        if (!createRecordRequest.Succeeded)
         {
             _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
             return;
@@ -161,7 +161,7 @@ public class SqlDatabaseSeederService : IHostedService
     private async Task<DatabaseActionResult<AppRoleDb>> CreateOrGetSeedRole(string roleName, string roleDescription)
     {
         var existingRole = await _roleRepository.GetByNameAsync(roleName);
-        if (!existingRole.Success)
+        if (!existingRole.Succeeded)
             return existingRole;
         if (existingRole.Result is not null)
             return existingRole;
@@ -189,8 +189,8 @@ public class SqlDatabaseSeederService : IHostedService
             var convertedPermission = permission.ToAppPermissionCreate();
             convertedPermission.RoleId = roleId;
             convertedPermission.CreatedBy = _systemUser.Id;
-            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission, _systemUser.Id);
-            if (!addedPermission.Success)
+            var addedPermission = await _permissionRepository.CreateAsync(convertedPermission);
+            if (!addedPermission.Succeeded)
             {
                 _logger.Error("Failed to enforce permission {PermissionValue} on role {RoleId}: {ErrorMessage}",
                     permission, roleId, addedPermission.ErrorMessage);
@@ -206,7 +206,7 @@ public class SqlDatabaseSeederService : IHostedService
         string userPassword)
     {
         var existingUser = await _userRepository.GetByUsernameAsync(userName);
-        if (!existingUser.Success)
+        if (!existingUser.Succeeded)
         {
             _logger.Error("Failed to seed user in database: {UserName} => {ErrorMessage}", userName, existingUser.ErrorMessage);
             return existingUser;
@@ -271,7 +271,7 @@ public class SqlDatabaseSeederService : IHostedService
             return;
         
         var updatedId = await _userRepository.SetUserId(currentId, Guid.Empty);
-        if (!updatedId.Success)
+        if (!updatedId.Succeeded)
         {
             _logger.Error("Failed to set Anonymous UserId to Empty Guid: {ErrorMessage}", updatedId.ErrorMessage);
             return;

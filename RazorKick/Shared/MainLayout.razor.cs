@@ -170,6 +170,8 @@ public partial class MainLayout
 
     private async Task ChangeTheme(AppTheme theme)
     {
+        if (!_canEditTheme) return;
+        
         try
         {
             _userPreferences.ThemePreference = theme.Id;

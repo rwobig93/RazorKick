@@ -90,6 +90,7 @@ public partial class UserView
         }
     }
 
+    // TODO: Add admin rights to service accounts if the dynamic permission has been assigned
     private async Task GetPermissions()
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;

@@ -10,7 +10,11 @@ namespace Application.Repositories.Identity;
 public interface IAppUserRepository
 {
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync();
+    Task<DatabaseActionResult<IEnumerable<AppUserServicePermissionDb>>> GetAllServiceAccountsForPermissionsAsync();
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllServiceAccountsPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllDisabledPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllLockedOutPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppUserFullDb?>> GetByIdFullAsync(Guid id);

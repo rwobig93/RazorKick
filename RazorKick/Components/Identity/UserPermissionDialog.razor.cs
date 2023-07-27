@@ -62,9 +62,14 @@ public partial class UserPermissionDialog
 
         if (_canAddPermissions)
         {
-            var allPermissions = PermissionConstants.GetAllPermissions().ToAppPermissionCreates();
+            var allPermissions = await PermissionService.GetAllAvailablePermissionsAsync();
+            if (!allPermissions.Succeeded)
+            {
+                allPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
 
-            _availablePermissions = allPermissions
+            _availablePermissions = allPermissions.Data
                 .Except(userPermissions.Data.ToCreates(), new PermissionCreateComparer())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)

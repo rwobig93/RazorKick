@@ -20,6 +20,9 @@ public interface IAppRoleService
     Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, Guid roleId);
     Task<IResult<bool>> IsUserInRoleAsync(Guid userId, string roleName);
+    Task<IResult<bool>> IsUserAdminAsync(Guid userId);
+    Task<IResult<bool>> IsUserModeratorAsync(Guid userId);
+    Task<IResult<bool>> IsUserAdminOrModeratorAsync(Guid userId);
     Task<IResult> AddUserToRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
     Task<IResult> RemoveUserFromRoleAsync(Guid userId, Guid roleId, Guid modifyingUserId);
     Task<IResult<IEnumerable<AppRoleSlim>>> GetRolesForUser(Guid userId);

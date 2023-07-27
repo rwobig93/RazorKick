@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
-using Application.Constants.Identity;
 using Application.Filters;
 using Application.Helpers.Auth;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Models.Web;
@@ -191,7 +191,7 @@ public static class DependencyInjection
         services.AddAuthorization(options =>
         {
             // Enumerate permissions and create claim policies for them
-            foreach (var permission in PermissionConstants.GetAllPermissions())
+            foreach (var permission in PermissionHelpers.GetAllBuiltInPermissions())
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim(
                     ApplicationClaimTypes.Permission, permission));

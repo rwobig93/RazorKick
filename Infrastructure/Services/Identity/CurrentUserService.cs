@@ -52,7 +52,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToBasicResponse();
+        return !foundUser.Succeeded ? null : foundUser.Result!.ToBasicResponse();
     }
 
     public async Task<AppUserFull?> GetCurrentUserFull()
@@ -62,7 +62,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToUserFull();
+        return !foundUser.Succeeded ? null : foundUser.Result!.ToUserFull();
     }
 
     public async Task<AppUserSecurityFull?> GetCurrentUserSecurityFull()
@@ -72,7 +72,7 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdSecurityAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToUserSecurityFull();
+        return !foundUser.Succeeded ? null : foundUser.Result!.ToUserSecurityFull();
     }
 
     public async Task<AppUserDb?> GetCurrentUserDb()
@@ -82,6 +82,6 @@ public class CurrentUserService : ICurrentUserService
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
-        return !foundUser.Success ? null : foundUser.Result!.ToUserDb();
+        return !foundUser.Succeeded ? null : foundUser.Result!.ToUserDb();
     }
 }

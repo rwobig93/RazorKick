@@ -111,6 +111,24 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppUserServicePermissionDb>>> GetAllServiceAccountsForPermissionsAsync()
+    {
+        DatabaseActionResult<IEnumerable<AppUserServicePermissionDb>> actionReturn = new();
+
+        try
+        {
+            var allUsers = await _database.LoadData<AppUserServicePermissionDb, dynamic>(
+                AppUsersMsSql.GetAllServiceAccountsForPermissions, new { });
+            actionReturn.Succeed(allUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllServiceAccountsForPermissions.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
@@ -125,6 +143,63 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppUsersMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllServiceAccountsPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allServiceAccounts = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetAllServiceAccountsPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allServiceAccounts);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllServiceAccountsPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllDisabledPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allDisabledUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetAllDisabledPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allDisabledUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllDisabledPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllLockedOutPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allLockedOutUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppUsersMsSql.GetAllLockedOutPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allLockedOutUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppUsersMsSql.GetAllLockedOutPaginated.Path, ex.Message);
         }
 
         return actionReturn;
@@ -399,7 +474,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             modifyingUser ??= Guid.Empty;
 
             var foundUser = await GetByIdAsync(userId);
-            if (!foundUser.Success || foundUser.Result is null)
+            if (!foundUser.Succeeded || foundUser.Result is null)
                 throw new Exception(foundUser.ErrorMessage);
             var userUpdate = foundUser.Result.ToUpdate();
             

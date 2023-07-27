@@ -29,7 +29,7 @@ public partial class ForgotPasswordDialog
         var emailExists = await DoesEmailExist();
         if (!emailExists)
         {
-            Snackbar.Add(ErrorMessageConstants.GenericError);
+            Snackbar.Add(ErrorMessageConstants.GenericErrorContactAdmin);
             PageIsLoading = false;
             return;
         }

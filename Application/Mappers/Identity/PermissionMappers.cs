@@ -4,6 +4,8 @@ using Application.Models.Identity.Permission;
 using Application.Requests.Identity.Permission;
 using Application.Responses.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
+using Domain.Models.Identity;
 
 namespace Application.Mappers.Identity;
 
@@ -149,10 +151,36 @@ public static class PermissionMappers
         };
     }
 
+    public static AppPermissionCreate ToDynamicPermissionCreate(this AppUserServicePermissionDb serviceAccount, DynamicPermissionLevel permissionLevel)
+    {
+        return new AppPermissionCreate
+        {
+            RoleId = GuidHelpers.GetMax(),
+            UserId = GuidHelpers.GetMax(),
+            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimValue = $"Dynamic.{DynamicPermissionGroup.ServiceAccounts.ToString()}.{serviceAccount.Id}.{permissionLevel.ToString()}",
+            Group = DynamicPermissionGroup.ServiceAccounts.ToString(),
+            Name = serviceAccount.Username,
+            Access = permissionLevel.ToString(),
+            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {permissionLevel.ToString()}",
+            CreatedBy = Guid.Empty,
+            CreatedOn = DateTime.Now,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        };
+    }
+
+    public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<AppUserServicePermissionDb> serviceAccounts,
+        DynamicPermissionLevel permissionLevel)
+    {
+        return serviceAccounts.Select(x => x.ToDynamicPermissionCreate(permissionLevel)).ToList();
+    }
+
     public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<string> permissionValues)
     {
         return permissionValues.Select(x => x.ToAppPermissionCreate()).ToList();
     }
+    
     public static AppPermissionSlim ToSlim(this AppPermissionDb appPermissionDb)
     {
         return new AppPermissionSlim

@@ -53,7 +53,7 @@ public class AppUserService : IAppUserService
         try
         {
             var users = await _userRepository.GetAllAsync();
-            if (!users.Success)
+            if (!users.Succeeded)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
 
             return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(users.Result!.ToSlims());
@@ -69,7 +69,7 @@ public class AppUserService : IAppUserService
         try
         {
             var users = await _userRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!users.Success)
+            if (!users.Succeeded)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
 
             return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(users.Result!.ToSlims());
@@ -85,7 +85,7 @@ public class AppUserService : IAppUserService
         try
         {
             var userCount = await _userRepository.GetCountAsync();
-            if (!userCount.Success)
+            if (!userCount.Succeeded)
                 return await Result<int>.FailAsync(userCount.ErrorMessage);
 
             return await Result<int>.SuccessAsync(userCount.Result);
@@ -101,7 +101,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByIdAsync(userId);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
 
             return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
@@ -117,7 +117,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByIdFullAsync(userId);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 
             return await ConvertToFullAsync(foundUser.Result);
@@ -133,7 +133,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByIdSecurityAsync(userId);
-            if (!foundUser.Success || foundUser.Result is null)
+            if (!foundUser.Succeeded || foundUser.Result is null)
                 return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
 
             return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToUserSecurityFull());
@@ -149,7 +149,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByUsernameAsync(username);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
 
             return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
@@ -165,7 +165,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByUsernameFullAsync(username);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 
             if (foundUser.Result is null)
@@ -184,7 +184,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByUsernameSecurityAsync(username);
-            if (!foundUser.Success || foundUser.Result is null)
+            if (!foundUser.Succeeded || foundUser.Result is null)
                 return await Result<AppUserSecurityFull?>.FailAsync(foundUser.ErrorMessage);
 
             return await Result<AppUserSecurityFull?>.SuccessAsync(foundUser.Result.ToUserSecurityFull());
@@ -200,7 +200,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByEmailAsync(email);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserSlim?>.FailAsync(foundUser.ErrorMessage);
 
             return await Result<AppUserSlim?>.SuccessAsync(foundUser.Result?.ToSlim());
@@ -216,7 +216,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundUser = await _userRepository.GetByEmailFullAsync(email);
-            if (!foundUser.Success)
+            if (!foundUser.Succeeded)
                 return await Result<AppUserFull?>.FailAsync(foundUser.ErrorMessage);
 
             return await ConvertToFullAsync(foundUser.Result);
@@ -232,7 +232,7 @@ public class AppUserService : IAppUserService
         try
         {
             var updateUser = await _userRepository.UpdateAsync(updateObject);
-            if (!updateUser.Success)
+            if (!updateUser.Succeeded)
                 return await Result.FailAsync(updateUser.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -248,7 +248,7 @@ public class AppUserService : IAppUserService
         try
         {
             var deleteUser = await _userRepository.DeleteAsync(userId, Guid.Empty);
-            if (!deleteUser.Success)
+            if (!deleteUser.Succeeded)
                 return await Result.FailAsync(deleteUser.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -264,7 +264,7 @@ public class AppUserService : IAppUserService
         try
         {
             var searchResult = await _userRepository.SearchAsync(searchText);
-            if (!searchResult.Success)
+            if (!searchResult.Succeeded)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 
             var results = (searchResult.Result?.ToSlims() ?? new List<AppUserSlim>())
@@ -283,7 +283,7 @@ public class AppUserService : IAppUserService
         try
         {
             var searchResult = await _userRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!searchResult.Success)
+            if (!searchResult.Succeeded)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
 
             return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(searchResult.Result?.ToSlims() ?? new List<AppUserSlim>());
@@ -310,7 +310,7 @@ public class AppUserService : IAppUserService
             }
             
             var createUser = await _userRepository.CreateAsync(createObject);
-            if (!createUser.Success)
+            if (!createUser.Succeeded)
                 return await Result<Guid>.FailAsync(createUser.ErrorMessage);
 
             return await Result<Guid>.SuccessAsync(createUser.Result);
@@ -326,7 +326,7 @@ public class AppUserService : IAppUserService
         try
         {
             var addRequest = await _userRepository.AddExtendedAttributeAsync(addAttribute);
-            if (!addRequest.Success)
+            if (!addRequest.Succeeded)
                 return await Result<Guid>.FailAsync(addRequest.ErrorMessage);
 
             return await Result<Guid>.SuccessAsync(addRequest.Result);
@@ -342,7 +342,7 @@ public class AppUserService : IAppUserService
         try
         {
             var updateRequest = await _userRepository.UpdateExtendedAttributeAsync(attributeId, value, description);
-            if (!updateRequest.Success)
+            if (!updateRequest.Succeeded)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -358,7 +358,7 @@ public class AppUserService : IAppUserService
         try
         {
             var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(attributeId);
-            if (!removeRequest.Success)
+            if (!removeRequest.Succeeded)
                 return await Result.FailAsync(removeRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -374,7 +374,7 @@ public class AppUserService : IAppUserService
         try
         {
             var updateRequest = await _userRepository.UpdatePreferences(userId, preferenceUpdate);
-            if (!updateRequest.Success)
+            if (!updateRequest.Succeeded)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -390,7 +390,7 @@ public class AppUserService : IAppUserService
         try
         {
             var preferenceRequest = await _userRepository.GetPreferences(userId);
-            if (!preferenceRequest.Success)
+            if (!preferenceRequest.Succeeded)
                 return await Result<AppUserPreferenceFull?>.FailAsync(preferenceRequest.ErrorMessage);
 
             var preferencesFull = preferenceRequest.Result?.ToFull();
@@ -414,7 +414,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetExtendedAttributeByIdAsync(attributeId);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<AppUserExtendedAttributeSlim?>.FailAsync(getRequest.ErrorMessage);
 
             return await Result<AppUserExtendedAttributeSlim?>.SuccessAsync(getRequest.Result?.ToSlim());
@@ -430,7 +430,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, type);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -448,7 +448,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetUserExtendedAttributesByNameAsync(userId, name);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -466,7 +466,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetAllUserExtendedAttributesAsync(userId);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -484,7 +484,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetAllExtendedAttributesByTypeAsync(type);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -502,7 +502,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetAllExtendedAttributesByNameAsync(name);
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -520,7 +520,7 @@ public class AppUserService : IAppUserService
         try
         {
             var getRequest = await _userRepository.GetAllExtendedAttributesAsync();
-            if (!getRequest.Success)
+            if (!getRequest.Succeeded)
                 return await Result<IEnumerable<AppUserExtendedAttributeSlim>>.FailAsync(getRequest.ErrorMessage);
 
             var attributes = getRequest.Result?.ToSlims() ?? new List<AppUserExtendedAttributeSlim>();
@@ -538,7 +538,7 @@ public class AppUserService : IAppUserService
         try
         {
             var foundSecurity = await _userRepository.GetSecurityAsync(userId);
-            if (!foundSecurity.Success)
+            if (!foundSecurity.Succeeded)
                 return await Result<AppUserSecurityAttributeInfo?>.FailAsync(foundSecurity.ErrorMessage);
 
             return await Result<AppUserSecurityAttributeInfo?>.SuccessAsync(foundSecurity.Result?.ToInfo());

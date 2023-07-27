@@ -1,20 +1,11 @@
-﻿using Application.Constants.Communication;
-using Application.Database.MsSql.Identity;
+﻿using Application.Database.MsSql.Identity;
 using Application.Database.MsSql.Shared;
-using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
-using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
-using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
-using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Lifecycle;
-using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Models.Database;
-using Domain.Models.Identity;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
 
@@ -22,64 +13,11 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
-    private readonly IDateTimeService _dateTime;
-    private readonly IAuditTrailsRepository _auditRepository;
-    private readonly ISerializerService _serializer;
-    private readonly IRunningServerState _serverState;
 
-    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime,
-        IAuditTrailsRepository auditRepository, ISerializerService serializer, IRunningServerState serverState)
+    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger)
     {
         _database = database;
         _logger = logger;
-        _dateTime = dateTime;
-        _auditRepository = auditRepository;
-        _serializer = serializer;
-        _serverState = serverState;
-    }
-
-    private void UpdateAuditing(AppPermissionCreate createPermission, Guid modifyingUserId)
-    {
-        try
-        {
-            createPermission.CreatedBy = modifyingUserId;
-            createPermission.CreatedOn = _dateTime.NowDatabaseTime;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error("Failure occurred attempting to create auditing object: [{TableName}][{ObjectName}] :: {ErrorMessage}", 
-                AppPermissionsMsSql.Table.TableName, createPermission.Name, ex.Message);
-        }
-    }
-
-    private async Task UpdateAuditing(AppPermissionUpdate updatePermission, Guid modifyingUserId)
-    {
-        try
-        {
-            // Get current state for diff comparision
-            var currentPermissionState = await GetByIdAsync(updatePermission.Id);
-            var auditDiff = AuditHelpers.GetAuditDiff(currentPermissionState.Result!.ToUpdate(), updatePermission);
-            
-            updatePermission.LastModifiedBy = modifyingUserId;
-            updatePermission.LastModifiedOn = _dateTime.NowDatabaseTime;
-
-            // If no changes were detected for before and after we won't create an audit trail
-            if (auditDiff.Before.Keys.Count > 0 && auditDiff.After.Count > 0)
-                await _auditRepository.CreateAsync(new AuditTrailCreate
-                {
-                    TableName = AppPermissionsMsSql.Table.TableName,
-                    RecordId = updatePermission.Id,
-                    ChangedBy = ((Guid)updatePermission.LastModifiedBy!),
-                    Action = DatabaseActionType.Update,
-                    Before = _serializer.Serialize(auditDiff.Before),
-                    After = _serializer.Serialize(auditDiff.After)
-                });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error("Failure occurred attempting to update auditing object: [{TableName}][{ObjectId}] :: {ErrorMessage}", 
-                AppPermissionsMsSql.Table.TableName, updatePermission.Id, ex.Message);
-        }
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -334,7 +272,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             foreach (var role in roles)
             {
                 var rolePermissions = await GetAllForRoleAsync(role.Id);
-                if (rolePermissions.Success)
+                if (rolePermissions.Succeeded)
                     allPermissions.AddRange(rolePermissions.Result!);
             }
 
@@ -348,57 +286,13 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AppPermissionCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
-            if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
-                throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
-            if (createObject.UserId == GuidHelpers.GetMax() && createObject.RoleId == GuidHelpers.GetMax())
-                throw new Exception("UserId & RoleId cannot be empty, please provide a valid Id");
-            if (createObject.UserId != GuidHelpers.GetMax() && createObject.RoleId != GuidHelpers.GetMax())
-                throw new Exception("Each permission assignment request can only be made for a User or Role, not both at the same time");
-
-            if (createObject.UserId != GuidHelpers.GetMax())
-            {
-                var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
-                    AppUsersMsSql.GetById, new {Id = createObject.UserId})).FirstOrDefault();
-                if (foundUser is null) throw new Exception("UserId provided is invalid");
-            }
-            
-            if (createObject.RoleId != GuidHelpers.GetMax())
-            {
-                var foundRole = (await _database.LoadData<AppRoleDb, dynamic>(
-                    AppRolesMsSql.GetById, new {Id = createObject.RoleId})).FirstOrDefault();
-                if (foundRole is null) throw new Exception("RoleId provided is invalid");
-            }
-            
-            // If the user is the system user they have full reign so we let them past the permission validation
-            if (modifyingUserId != _serverState.SystemUserId)
-            {
-                // If a user doesn't have a permission they also shouldn't be able to add/remove that permission to/from other users
-                var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, createObject.ClaimValue);
-                if (!invokingUserHasRequestingPermission.Result)
-                {
-                    actionReturn.Fail(ErrorMessageConstants.CannotAdministrateMissingPermission);
-                    return actionReturn;
-                }
-            }
-
-            UpdateAuditing(createObject, modifyingUserId);
             var createdId = await _database.SaveDataReturnId(AppPermissionsMsSql.Insert, createObject);
-
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppPermissionsMsSql.Table.TableName,
-                RecordId = createdId,
-                ChangedBy = (createObject.CreatedBy),
-                Action = DatabaseActionType.Create,
-                After = _serializer.Serialize(createObject)
-            });
-            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -409,13 +303,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> UpdateAsync(AppPermissionUpdate updateObject)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await UpdateAuditing(updateObject, modifyingUserId);
             await _database.SaveData(AppPermissionsMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
@@ -427,39 +320,13 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundPermission = await GetByIdAsync(id);
-            if (!foundPermission.Success || foundPermission.Result?.ClaimValue is null)
-                throw new Exception(foundPermission.ErrorMessage);
-            var permissionUpdate = foundPermission.Result.ToUpdate();
-            
-            var invokingUserHasRequestingPermission =
-                await UserIncludingRolesHasPermission(modifyingUserId, foundPermission.Result.ClaimValue);
-            if (!invokingUserHasRequestingPermission.Result)
-            {
-                actionReturn.Fail(ErrorMessageConstants.CannotAdministrateMissingPermission);
-                return actionReturn;
-            }
-            
-            // Update permission w/ a property that is modified so we get the last updated on/by for the deleting user
-            permissionUpdate.LastModifiedBy = modifyingUserId;
-            await UpdateAuditing(permissionUpdate, modifyingUserId);
             await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
-
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppPermissionsMsSql.Table.TableName,
-                RecordId = id,
-                ChangedBy = ((Guid)permissionUpdate.LastModifiedBy!),
-                Action = DatabaseActionType.Delete,
-                Before = _serializer.Serialize(permissionUpdate)
-            });
-
             actionReturn.Succeed();
         }
         catch (Exception ex)

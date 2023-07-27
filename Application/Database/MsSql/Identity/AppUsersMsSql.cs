@@ -71,6 +71,20 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
+    public static readonly MsSqlStoredProcedure GetAllServiceAccountsForPermissions = new()
+    {
+        Table = Table,
+        Action = "GetAllServiceAccountsForPermissions",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllServiceAccountsForPermissions]
+            AS
+            begin
+                SELECT u.Id, u.Username
+                FROM dbo.[{Table.TableName}] u
+                WHERE u.IsDeleted = 0 AND u.AccountType = 1;
+            end"
+    };
+
     public static readonly MsSqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
@@ -86,6 +100,63 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0
+                ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllServiceAccountsPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllServiceAccountsPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllServiceAccountsPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.IsDeleted = 0 AND u.AccountType = 1
+                ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllDisabledPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllDisabledPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllDisabledPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.IsDeleted = 0 AND s.AuthState = 1
+                ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
+
+    public static readonly MsSqlStoredProcedure GetAllLockedOutPaginated = new()
+    {
+        Table = Table,
+        Action = "GetAllLockedOutPaginated",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllLockedOutPaginated]
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
+                FROM dbo.[{Table.TableName}] u
+                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.IsDeleted = 0 AND s.AuthState = 3
                 ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

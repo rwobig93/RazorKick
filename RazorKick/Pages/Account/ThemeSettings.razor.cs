@@ -88,6 +88,8 @@ public partial class ThemeSettings
 
     private async Task SavePreferences()
     {
+        if (!_canEditTheme) return;
+        
         var updatePreferences = _userPreferences.ToUpdate();
         var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
         if (!requestResult.Succeeded)
@@ -103,6 +105,8 @@ public partial class ThemeSettings
 
     private void ResetSelectedThemeToDefault()
     {
+        if (!_canEditTheme) return;
+        
         switch (_editingThemeId)
         {
             case AppThemeId.CustomOne:
@@ -114,6 +118,10 @@ public partial class ThemeSettings
             case AppThemeId.CustomThree:
                 _userPreferences.CustomThemeThree = AppThemeCustom.GetExampleCustomThree();
                 break;
+            case AppThemeId.Dark:
+            case AppThemeId.Darker:
+            case AppThemeId.Hacker:
+            case AppThemeId.Bright:
             default:
                 throw new ArgumentOutOfRangeException(nameof(_editingThemeId));
         }

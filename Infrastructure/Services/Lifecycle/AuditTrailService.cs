@@ -52,7 +52,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.GetAllWithUsersAsync();
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrails = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -70,7 +70,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.GetAllPaginatedWithUsersAsync(pageNumber, pageSize);
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrails = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -88,7 +88,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrailCount = await _auditRepository.GetCountAsync();
-            if (!auditTrailCount.Success)
+            if (!auditTrailCount.Succeeded)
                 return await Result<int>.FailAsync(auditTrailCount.ErrorMessage);
 
             return await Result<int>.SuccessAsync(auditTrailCount.Result);
@@ -104,7 +104,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrail = await _auditRepository.GetByIdWithUserAsync(id);
-            if (!auditTrail.Success)
+            if (!auditTrail.Succeeded)
                 return await Result<AuditTrailSlim?>.FailAsync(auditTrail.ErrorMessage);
 
             var convertedAuditTrail = ConvertToSlim(auditTrail.Result!);
@@ -122,7 +122,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.GetByChangedByIdAsync(id);
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -140,7 +140,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.GetByRecordIdAsync(id);
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -158,7 +158,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var createTrail = await _auditRepository.CreateAsync(createObject, systemUpdate);
-            if (!createTrail.Success)
+            if (!createTrail.Succeeded)
                 return await Result<Guid>.FailAsync(createTrail.ErrorMessage);
 
             return await Result<Guid>.SuccessAsync(createTrail.Result);
@@ -174,7 +174,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.SearchWithUserAsync(searchText);
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -192,7 +192,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var auditTrails = await _auditRepository.SearchPaginatedWithUserAsync(searchText, pageNumber, pageSize);
-            if (!auditTrails.Success)
+            if (!auditTrails.Succeeded)
                 return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
 
             var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
@@ -210,7 +210,7 @@ public class AuditTrailService : IAuditTrailService
         try
         {
             var deleteTrails = await _auditRepository.DeleteOld(olderThan);
-            if (!deleteTrails.Success)
+            if (!deleteTrails.Succeeded)
                 return await Result<int>.FailAsync(deleteTrails.ErrorMessage);
             
             switch (deleteTrails.Result)

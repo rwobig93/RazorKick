@@ -65,7 +65,7 @@ public class JobManager : IJobManager
             return;
 
         var allLockedOutUsers = await _userRepository.GetAllLockedOutAsync();
-        if (!allLockedOutUsers.Success || allLockedOutUsers.Result is null)
+        if (!allLockedOutUsers.Succeeded || allLockedOutUsers.Result is null)
         {
             _logger.Error("Failed to get locked out users: {Error}", allLockedOutUsers.ErrorMessage);
             return;

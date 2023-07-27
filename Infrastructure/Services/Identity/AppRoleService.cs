@@ -26,7 +26,7 @@ public class AppRoleService : IAppRoleService
         var fullRole = roleDb.ToFull();
 
         var foundUsers = await _roleRepository.GetUsersForRole(roleDb.Id);
-        if (!foundUsers.Success)
+        if (!foundUsers.Succeeded)
             return await Result<AppRoleFull?>.FailAsync(foundUsers.ErrorMessage);
             
         fullRole.Users = (foundUsers.Result?.ToSlims() ?? new List<AppUserSlim>())
@@ -34,7 +34,7 @@ public class AppRoleService : IAppRoleService
             .ToList();
 
         var foundPermissions = await _permissionRepository.GetAllForRoleAsync(roleDb.Id);
-        if (!foundPermissions.Success)
+        if (!foundPermissions.Succeeded)
             return await Result<AppRoleFull?>.FailAsync(foundPermissions.ErrorMessage);
             
         fullRole.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
@@ -51,7 +51,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roles = await _roleRepository.GetAllAsync();
-            if (!roles.Success)
+            if (!roles.Succeeded)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(roles.ErrorMessage);
 
             return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(roles.Result?.ToSlims() ?? new List<AppRoleSlim>());
@@ -67,7 +67,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roles = await _roleRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!roles.Success)
+            if (!roles.Succeeded)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(roles.ErrorMessage);
 
             return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(roles.Result?.ToSlims() ?? new List<AppRoleSlim>());
@@ -83,7 +83,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roleCount = await _roleRepository.GetCountAsync();
-            if (!roleCount.Success)
+            if (!roleCount.Succeeded)
                 return await Result<int>.FailAsync(roleCount.ErrorMessage);
 
             return await Result<int>.SuccessAsync(roleCount.Result);
@@ -99,7 +99,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var foundRole = await _roleRepository.GetByIdAsync(roleId);
-            if (!foundRole.Success)
+            if (!foundRole.Succeeded)
                 return await Result<AppRoleSlim?>.FailAsync(foundRole.ErrorMessage);
 
             return await Result<AppRoleSlim?>.SuccessAsync(foundRole.Result?.ToSlim());
@@ -115,7 +115,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var foundRole = await _roleRepository.GetByIdAsync(roleId);
-            if (!foundRole.Success)
+            if (!foundRole.Succeeded)
                 return await Result<AppRoleFull?>.FailAsync(foundRole.ErrorMessage);
 
             if (foundRole.Result is null)
@@ -134,7 +134,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var foundRole = await _roleRepository.GetByNameAsync(roleName);
-            if (!foundRole.Success)
+            if (!foundRole.Succeeded)
                 return await Result<AppRoleSlim?>.FailAsync(foundRole.ErrorMessage);
 
             if (foundRole.Result is null)
@@ -153,7 +153,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var foundRole = await _roleRepository.GetByNameAsync(roleName);
-            if (!foundRole.Success)
+            if (!foundRole.Succeeded)
                 return await Result<AppRoleFull?>.FailAsync(foundRole.ErrorMessage);
             
             if (foundRole.Result is null)
@@ -172,7 +172,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var searchResult = await _roleRepository.SearchAsync(searchText);
-            if (!searchResult.Success)
+            if (!searchResult.Succeeded)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(searchResult.ErrorMessage);
 
             var results = (searchResult.Result?.ToSlims() ?? new List<AppRoleSlim>())
@@ -191,7 +191,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var searchResult = await _roleRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!searchResult.Success)
+            if (!searchResult.Succeeded)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(searchResult.ErrorMessage);
 
             var results = (searchResult.Result?.ToSlims() ?? new List<AppRoleSlim>())
@@ -216,14 +216,14 @@ public class AppRoleService : IAppRoleService
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
 
             var existingRoleWithName = await _roleRepository.GetByNameAsync(createObject.Name);
-            if (!existingRoleWithName.Success)
+            if (!existingRoleWithName.Succeeded)
                 return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
             
             if (existingRoleWithName.Result is not null)
                 return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
 
             var createRequest = await _roleRepository.CreateAsync(createObject, modifyingUserId);
-            if (!createRequest.Success)
+            if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
 
             return await Result<Guid>.SuccessAsync(createRequest.Result);
@@ -254,7 +254,7 @@ public class AppRoleService : IAppRoleService
                     return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
                 
                 var existingRoleWithName = await _roleRepository.GetByNameAsync(updateObject.Name!);
-                if (!existingRoleWithName.Success)
+                if (!existingRoleWithName.Succeeded)
                     return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
                 
                 if (existingRoleWithName.Result is not null)
@@ -262,7 +262,7 @@ public class AppRoleService : IAppRoleService
             }
 
             var updateRequest = await _roleRepository.UpdateAsync(updateObject, modifyingUserId);
-            if (!updateRequest.Success)
+            if (!updateRequest.Succeeded)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -285,7 +285,7 @@ public class AppRoleService : IAppRoleService
                 return await Result.FailAsync("Roles that contain users cannot be deleted, please remove all users first");
 
             var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
-            if (!deleteRequest.Success)
+            if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -301,7 +301,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, roleId);
-            if (!roleCheck.Success)
+            if (!roleCheck.Succeeded)
                 return await Result<bool>.FailAsync(roleCheck.ErrorMessage);
 
             return await Result<bool>.SuccessAsync(roleCheck.Result);
@@ -317,10 +317,65 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, roleName);
-            if (!roleCheck.Success)
+            if (!roleCheck.Succeeded)
                 return await Result<bool>.FailAsync(roleCheck.ErrorMessage);
 
             return await Result<bool>.SuccessAsync(roleCheck.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<bool>> IsUserAdminAsync(Guid userId)
+    {
+        try
+        {
+            var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.AdminName);
+            if (!roleCheck.Succeeded)
+                return await Result<bool>.FailAsync(roleCheck.ErrorMessage);
+
+            return await Result<bool>.SuccessAsync(roleCheck.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<bool>> IsUserModeratorAsync(Guid userId)
+    {
+        try
+        {
+            var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.ModeratorName);
+            if (!roleCheck.Succeeded)
+                return await Result<bool>.FailAsync(roleCheck.ErrorMessage);
+
+            return await Result<bool>.SuccessAsync(roleCheck.Result);
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<bool>> IsUserAdminOrModeratorAsync(Guid userId)
+    {
+        try
+        {
+            var adminRoleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.AdminName);
+            if (!adminRoleCheck.Succeeded)
+                return await Result<bool>.FailAsync(adminRoleCheck.ErrorMessage);
+
+            if (adminRoleCheck.Result)
+                return await Result<bool>.SuccessAsync(adminRoleCheck.Result);
+            
+            var modRoleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.ModeratorName);
+            if (!modRoleCheck.Succeeded)
+                return await Result<bool>.FailAsync(modRoleCheck.ErrorMessage);
+            
+            return await Result<bool>.SuccessAsync(modRoleCheck.Result);
         }
         catch (Exception ex)
         {
@@ -333,7 +388,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var userAdd = await _roleRepository.AddUserToRoleAsync(userId, roleId, modifyingUserId);
-            if (!userAdd.Success)
+            if (!userAdd.Succeeded)
                 return await Result.FailAsync(userAdd.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -349,7 +404,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var userRemove = await _roleRepository.RemoveUserFromRoleAsync(userId, roleId, modifyingUserId);
-            if (!userRemove.Success)
+            if (!userRemove.Succeeded)
                 return await Result.FailAsync(userRemove.ErrorMessage);
 
             return await Result.SuccessAsync();
@@ -365,7 +420,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var rolesRequest = await _roleRepository.GetRolesForUser(userId);
-            if (!rolesRequest.Success)
+            if (!rolesRequest.Succeeded)
                 return await Result<IEnumerable<AppRoleSlim>>.FailAsync(rolesRequest.ErrorMessage);
 
             var roles = (rolesRequest.Result?.ToSlims() ?? new List<AppRoleSlim>())
@@ -384,7 +439,7 @@ public class AppRoleService : IAppRoleService
         try
         {
             var rolesRequest = await _roleRepository.GetUsersForRole(roleId);
-            if (!rolesRequest.Success)
+            if (!rolesRequest.Succeeded)
                 return await Result<IEnumerable<AppUserSlim>>.FailAsync(rolesRequest.ErrorMessage);
 
             var users = (rolesRequest.Result?.ToSlims() ?? new List<AppUserSlim>())

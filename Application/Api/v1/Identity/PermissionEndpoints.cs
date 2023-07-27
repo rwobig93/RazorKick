@@ -52,7 +52,7 @@ public static class PermissionEndpoints
     {
         try
         {
-            var allPermissions = await permissionService.GetAllAsync();
+            var allPermissions = await permissionService.GetAllAssignedAsync();
             if (!allPermissions.Succeeded)
                 return await Result<List<PermissionResponse>>.FailAsync(allPermissions.Messages);
 

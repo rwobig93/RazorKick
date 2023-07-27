@@ -3,23 +3,23 @@ namespace Domain.Models.Database;
 
 public class DatabaseActionResult
 {
-    public bool Success { get; private set; }
+    public bool Succeeded { get; private set; }
     public string ErrorMessage { get; private set; } = "";
 
     public void Succeed()
     {
-        Success = true;
+        Succeeded = true;
     }
 
     public void Fail(string errorMessage)
     {
-        Success = false;
+        Succeeded = false;
         ErrorMessage = errorMessage;
     }
 
     public void FailLog(ILogger logger, string pathOrAggregateId, string errorMessage)
     {
-        Success = false;
+        Succeeded = false;
         ErrorMessage = errorMessage;
         logger.Error("DB Action Fail: [{SqlPathOrAggId}]: {ErrorMessage}", pathOrAggregateId, errorMessage);
     }
