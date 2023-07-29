@@ -1,6 +1,6 @@
-namespace Application.Database.MsSql;
+namespace Application.Database;
 
-public interface ISqlEnforcedEntityMsSql
+public interface ISqlEnforcedEntity
 {
     // Any class inheriting this interface will be enforced in the targeted database instance
     // The below method also needs to be the following w/ the correct class name on any inheriting class:

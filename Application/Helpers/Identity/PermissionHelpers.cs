@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 
 namespace Application.Helpers.Identity;
 
@@ -15,6 +16,11 @@ public static class PermissionHelpers
             return null;
         
         return $"Permissions.{permissionGroup}.{permissionName}.{permissionAccess}";
+    }
+
+    public static string GetClaimValueFromServiceAccount(Guid accountId, DynamicPermissionGroup permissionGroup, DynamicPermissionLevel permissionLevel)
+    {
+        return $"Dynamic.{permissionGroup.ToString()}.{accountId.ToString()}.{permissionLevel.ToString()}";
     }
 
     public static string GetGroupFromValue(string permissionValue) => permissionValue.Split('.')[1];

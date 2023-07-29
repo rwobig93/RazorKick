@@ -1,12 +1,14 @@
+using Application.Database;
+using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Identity;
+namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
+public class AppPermissionsTableMsSql : IAppPermissionsTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
         TableName = "AppPermissions",
@@ -31,7 +33,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Delete = new()
+    public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
         Action = "Delete",
@@ -46,7 +48,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteForUser = new()
+    public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
         Action = "DeleteForUser",
@@ -61,7 +63,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteForRole = new()
+    public static readonly SqlStoredProcedure DeleteForRole = new()
     {
         Table = Table,
         Action = "DeleteForRole",
@@ -76,7 +78,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -89,7 +91,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    public static readonly SqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
         Action = "GetAllPaginated",
@@ -105,7 +107,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -121,7 +123,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByName = new()
+    public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
         Action = "GetByName",
@@ -137,7 +139,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByGroup = new()
+    public static readonly SqlStoredProcedure GetByGroup = new()
     {
         Table = Table,
         Action = "GetByGroup",
@@ -152,7 +154,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByAccess = new()
+    public static readonly SqlStoredProcedure GetByAccess = new()
     {
         Table = Table,
         Action = "GetByAccess",
@@ -167,7 +169,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByRoleId = new()
+    public static readonly SqlStoredProcedure GetByRoleId = new()
     {
         Table = Table,
         Action = "GetByRoleId",
@@ -182,7 +184,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByRoleIdAndValue = new()
+    public static readonly SqlStoredProcedure GetByRoleIdAndValue = new()
     {
         Table = Table,
         Action = "GetByRoleIdAndValue",
@@ -198,7 +200,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByUserId = new()
+    public static readonly SqlStoredProcedure GetByUserId = new()
     {
         Table = Table,
         Action = "GetByUserId",
@@ -213,7 +215,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByUserIdAndValue = new()
+    public static readonly SqlStoredProcedure GetByUserIdAndValue = new()
     {
         Table = Table,
         Action = "GetByUserIdAndValue",
@@ -229,7 +231,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -257,7 +259,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Search = new()
+    public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
         Action = "Search",
@@ -277,7 +279,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
         Action = "SearchPaginated",
@@ -300,7 +302,7 @@ public class AppPermissionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Update = new()
+    public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
         Action = "Update",

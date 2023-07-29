@@ -1,13 +1,15 @@
+using Application.Database;
+using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Identity;
+namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUsersMsSql : ISqlEnforcedEntityMsSql
+public class AppUsersTableMsSql : IAppUsersTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersTableMsSql).GetDbScriptsFromClass();
     
     // TODO: Implement database migration framework
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
         TableName = "AppUsers",
@@ -39,7 +41,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Delete = new()
+    public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
         Action = "Delete",
@@ -55,7 +57,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -66,12 +68,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllServiceAccountsForPermissions = new()
+    public static readonly SqlStoredProcedure GetAllServiceAccountsForPermissions = new()
     {
         Table = Table,
         Action = "GetAllServiceAccountsForPermissions",
@@ -85,7 +87,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    public static readonly SqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
         Action = "GetAllPaginated",
@@ -98,13 +100,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0
                 ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllServiceAccountsPaginated = new()
+    public static readonly SqlStoredProcedure GetAllServiceAccountsPaginated = new()
     {
         Table = Table,
         Action = "GetAllServiceAccountsPaginated",
@@ -117,13 +119,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0 AND u.AccountType = 1
                 ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllDisabledPaginated = new()
+    public static readonly SqlStoredProcedure GetAllDisabledPaginated = new()
     {
         Table = Table,
         Action = "GetAllDisabledPaginated",
@@ -136,13 +138,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0 AND s.AuthState = 1
                 ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllLockedOutPaginated = new()
+    public static readonly SqlStoredProcedure GetAllLockedOutPaginated = new()
     {
         Table = Table,
         Action = "GetAllLockedOutPaginated",
@@ -155,13 +157,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0 AND s.AuthState = 3
                 ORDER BY u.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllDeleted = new()
+    public static readonly SqlStoredProcedure GetAllDeleted = new()
     {
         Table = Table,
         Action = "GetAllDeleted",
@@ -175,7 +177,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllLockedOut = new()
+    public static readonly SqlStoredProcedure GetAllLockedOut = new()
     {
         Table = Table,
         Action = "GetAllLockedOut",
@@ -186,12 +188,12 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.IsDeleted = 0 AND s.AuthState = 3;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByEmail = new()
+    public static readonly SqlStoredProcedure GetByEmail = new()
     {
         Table = Table,
         Action = "GetByEmail",
@@ -202,13 +204,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Email = @Email AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByEmailFull = new()
+    public static readonly SqlStoredProcedure GetByEmailFull = new()
     {
         Table = Table,
         Action = "GetByEmailFull",
@@ -219,15 +221,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, r.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
-                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserRoleJunctionsTableMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Email = @Email AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -238,13 +240,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT TOP 1 u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByIdSecurity = new()
+    public static readonly SqlStoredProcedure GetByIdSecurity = new()
     {
         Table = Table,
         Action = "GetByIdSecurity",
@@ -256,13 +258,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByIdFull = new()
+    public static readonly SqlStoredProcedure GetByIdFull = new()
     {
         Table = Table,
         Action = "GetByIdFull",
@@ -273,15 +275,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, s.AuthState as AuthState, r.*
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
-                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
-                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                JOIN dbo.[{AppUserRoleJunctionsTableMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = ur.RoleId
                 WHERE u.Id = @Id AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end;"
     };
 
-    public static readonly MsSqlStoredProcedure GetByUsername = new()
+    public static readonly SqlStoredProcedure GetByUsername = new()
     {
         Table = Table,
         Action = "GetByUsername",
@@ -292,13 +294,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Username = @Username AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByUsernameFull = new()
+    public static readonly SqlStoredProcedure GetByUsernameFull = new()
     {
         Table = Table,
         Action = "GetByUsernameFull",
@@ -309,15 +311,15 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, r.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserRoleJunctionsMsSql.Table.TableName}] ur ON u.Id = ur.UserId
-                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                JOIN dbo.[{AppUserRoleJunctionsTableMsSql.Table.TableName}] ur ON u.Id = ur.UserId
+                JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
                 WHERE u.Username = @Username AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByUsernameSecurity = new()
+    public static readonly SqlStoredProcedure GetByUsernameSecurity = new()
     {
         Table = Table,
         Action = "GetByUsernameSecurity",
@@ -329,13 +331,13 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
                 SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.Username = @Username AND u.IsDeleted = 0
                 ORDER BY u.Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -368,7 +370,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Search = new()
+    public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
         Action = "Search",
@@ -379,7 +381,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.FirstName LIKE '%' + @SearchTerm + '%'
                     OR u.LastName LIKE '%' + @SearchTerm + '%'
                     OR u.Email LIKE '%' + @SearchTerm + '%'
@@ -389,7 +391,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
         Action = "SearchPaginated",
@@ -402,7 +404,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
-                JOIN dbo.[{AppUserSecurityAttributesMsSql.Table.TableName}] s ON s.OwnerId = u.Id
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.FirstName LIKE '%' + @SearchTerm + '%'
                     OR u.LastName LIKE '%' + @SearchTerm + '%'
                     OR u.Email LIKE '%' + @SearchTerm + '%'
@@ -412,7 +414,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Update = new()
+    public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
         Action = "Update",
@@ -447,7 +449,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SetUserId = new()
+    public static readonly SqlStoredProcedure SetUserId = new()
     {
         Table = Table,
         Action = "SetUserId",
@@ -464,7 +466,7 @@ public class AppUsersMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SetCreatedById = new()
+    public static readonly SqlStoredProcedure SetCreatedById = new()
     {
         Table = Table,
         Action = "SetCreatedById",

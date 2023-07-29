@@ -1,12 +1,14 @@
+using Application.Database;
+using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Identity;
+namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
+public class AppUserExtendedAttributesTableMsSql : IAppUserExtendedAttributesTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserExtendedAttributesMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserExtendedAttributesTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
         TableName = "AppUserExtendedAttributes",
@@ -24,7 +26,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Delete = new()
+    public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
         Action = "Delete",
@@ -39,7 +41,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteAllForOwner = new()
+    public static readonly SqlStoredProcedure DeleteAllForOwner = new()
     {
         Table = Table,
         Action = "DeleteAllForOwner",
@@ -54,7 +56,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -70,7 +72,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByOwnerId = new()
+    public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
         Action = "GetByOwnerId",
@@ -85,7 +87,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByName = new()
+    public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
         Action = "GetByName",
@@ -100,7 +102,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByTypeAndValue = new()
+    public static readonly SqlStoredProcedure GetByTypeAndValue = new()
     {
         Table = Table,
         Action = "GetByTypeAndValue",
@@ -117,7 +119,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByTypeAndValueForOwner = new()
+    public static readonly SqlStoredProcedure GetByTypeAndValueForOwner = new()
     {
         Table = Table,
         Action = "GetByTypeAndValueForOwner",
@@ -135,7 +137,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -148,7 +150,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAllOfType = new()
+    public static readonly SqlStoredProcedure GetAllOfType = new()
     {
         Table = Table,
         Action = "GetAllOfType",
@@ -163,7 +165,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAllOfTypeForOwner = new()
+    public static readonly SqlStoredProcedure GetAllOfTypeForOwner = new()
     {
         Table = Table,
         Action = "GetAllOfTypeForOwner",
@@ -179,7 +181,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAllOfNameForOwner = new()
+    public static readonly SqlStoredProcedure GetAllOfNameForOwner = new()
     {
         Table = Table,
         Action = "GetAllOfNameForOwner",
@@ -195,7 +197,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -214,7 +216,7 @@ public class AppUserExtendedAttributesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Update = new()
+    public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
         Action = "Update",

@@ -21,7 +21,7 @@ else
                        OnClick="ToggleEditMode">@_editButtonText
             </MudButton>
         }
-        @if (_canAdminServiceAccounts && _viewingUser.AccountType == AccountType.Service)
+        @if (_canAdminServiceAccount && _viewingUser.AccountType == AccountType.Service)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                        OnClick="EditServiceAccount">Edit Service Account

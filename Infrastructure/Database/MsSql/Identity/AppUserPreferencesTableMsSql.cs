@@ -1,12 +1,14 @@
+using Application.Database;
+using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Identity;
+namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
+public class AppUserPreferencesTableMsSql : IAppUserPreferencesTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserPreferencesMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserPreferencesTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
         TableName = "AppUserPreferences",
@@ -25,7 +27,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Delete = new()
+    public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
         Action = "Delete",
@@ -40,7 +42,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteForUser = new()
+    public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
         Action = "DeleteForUser",
@@ -55,7 +57,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -68,7 +70,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -84,7 +86,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByOwnerId = new()
+    public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
         Action = "GetByOwnerId",
@@ -99,7 +101,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -119,7 +121,7 @@ public class AppUserPreferencesMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Update = new()
+    public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
         Action = "Update",

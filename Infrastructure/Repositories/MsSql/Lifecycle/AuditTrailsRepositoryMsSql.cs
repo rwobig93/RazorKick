@@ -1,6 +1,4 @@
 ﻿using System.Globalization;
-using Application.Database.MsSql.Lifecycle;
-using Application.Database.MsSql.Shared;
 using Application.Helpers.Runtime;
 using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
@@ -11,6 +9,8 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
+using Infrastructure.Database.MsSql.Lifecycle;
+using Infrastructure.Database.MsSql.Shared;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.MsSql.Lifecycle;
@@ -39,12 +39,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
 
         try
         {
-            var allAuditTrails = await _database.LoadData<AuditTrailDb, dynamic>(AuditTrailsMsSql.GetAll, new { });
+            var allAuditTrails = await _database.LoadData<AuditTrailDb, dynamic>(AuditTrailsTableMsSql.GetAll, new { });
             actionReturn.Succeed(allAuditTrails);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -57,12 +57,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var allAuditTrails = await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                AuditTrailsMsSql.GetAllWithUsers, new { });
+                AuditTrailsTableMsSql.GetAllWithUsers, new { });
             actionReturn.Succeed(allAuditTrails);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetAllWithUsers.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetAllWithUsers.Path, ex.Message);
         }
 
         return actionReturn;
@@ -76,12 +76,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         {
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var allAuditTrails = await _database.LoadData<AuditTrailDb, dynamic>(
-                AuditTrailsMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                AuditTrailsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
             actionReturn.Succeed(allAuditTrails);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetAllPaginated.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetAllPaginated.Path, ex.Message);
         }
 
         return actionReturn;
@@ -95,12 +95,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         {
             var offset = (pageNumber - 1) * pageSize;
             var allAuditTrails = await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                AuditTrailsMsSql.GetAllPaginatedWithUsers, new {Offset =  offset, PageSize = pageSize});
+                AuditTrailsTableMsSql.GetAllPaginatedWithUsers, new {Offset =  offset, PageSize = pageSize});
             actionReturn.Succeed(allAuditTrails);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetAllPaginatedWithUsers.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetAllPaginatedWithUsers.Path, ex.Message);
         }
 
         return actionReturn;
@@ -113,12 +113,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                GeneralMsSql.GetRowCount, new {AuditTrailsMsSql.Table.TableName})).FirstOrDefault();
+                GeneralTableMsSql.GetRowCount, new {AuditTrailsTableMsSql.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, GeneralMsSql.GetRowCount.Path, ex.Message);
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -131,12 +131,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var foundAuditTrail = (await _database.LoadData<AuditTrailDb, dynamic>(
-                AuditTrailsMsSql.GetById, new {Id = id})).FirstOrDefault();
+                AuditTrailsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundAuditTrail!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -149,12 +149,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var foundAuditTrail = (await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                AuditTrailsMsSql.GetByIdWithUser, new {Id = id})).FirstOrDefault();
+                AuditTrailsTableMsSql.GetByIdWithUser, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundAuditTrail!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetByIdWithUser.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetByIdWithUser.Path, ex.Message);
         }
 
         return actionReturn;
@@ -167,12 +167,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var foundAuditTrail = (await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                AuditTrailsMsSql.GetByChangedBy, new {UserId = id}));
+                AuditTrailsTableMsSql.GetByChangedBy, new {UserId = id}));
             actionReturn.Succeed(foundAuditTrail);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetByChangedBy.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetByChangedBy.Path, ex.Message);
         }
 
         return actionReturn;
@@ -185,12 +185,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var foundAuditTrail = (await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                AuditTrailsMsSql.GetByRecordId, new {RecordId = id}));
+                AuditTrailsTableMsSql.GetByRecordId, new {RecordId = id}));
             actionReturn.Succeed(foundAuditTrail);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.GetByRecordId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.GetByRecordId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -212,12 +212,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
 
             createObject.Timestamp = _dateTime.NowDatabaseTime;
             
-            var createdId = await _database.SaveDataReturnId(AuditTrailsMsSql.Insert, createObject);
+            var createdId = await _database.SaveDataReturnId(AuditTrailsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -230,12 +230,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var searchResults =
-                await _database.LoadData<AuditTrailDb, dynamic>(AuditTrailsMsSql.Search, new { SearchTerm = searchText });
+                await _database.LoadData<AuditTrailDb, dynamic>(AuditTrailsTableMsSql.Search, new { SearchTerm = searchText });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.Search.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.Search.Path, ex.Message);
         }
 
         return actionReturn;
@@ -250,12 +250,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var searchResults =
                 await _database.LoadData<AuditTrailDb, dynamic>(
-                    AuditTrailsMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                    AuditTrailsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchPaginated.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;
@@ -270,12 +270,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var searchResults =
                 await _database.LoadData<AuditTrailWithUserDb, dynamic>(
-                    AuditTrailsMsSql.SearchPaginatedWithUser, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                    AuditTrailsTableMsSql.SearchPaginatedWithUser, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchPaginatedWithUser.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.SearchPaginatedWithUser.Path, ex.Message);
         }
 
         return actionReturn;
@@ -288,12 +288,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             var searchResults =
-                await _database.LoadData<AuditTrailWithUserDb, dynamic>(AuditTrailsMsSql.SearchWithUser, new { SearchTerm = searchText });
+                await _database.LoadData<AuditTrailWithUserDb, dynamic>(AuditTrailsTableMsSql.SearchWithUser, new { SearchTerm = searchText });
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.SearchWithUser.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.SearchWithUser.Path, ex.Message);
         }
 
         return actionReturn;
@@ -315,12 +315,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
                 _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
             };
 
-            var rowsDeleted = await _database.SaveData(AuditTrailsMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
+            var rowsDeleted = await _database.SaveData(AuditTrailsTableMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AuditTrailsMsSql.DeleteOlderThan.Path, ex.Message);
+            actionReturn.FailLog(_logger, AuditTrailsTableMsSql.DeleteOlderThan.Path, ex.Message);
         }
 
         return actionReturn;

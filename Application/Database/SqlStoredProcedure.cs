@@ -1,13 +1,13 @@
 using Application.Models.Database;
 
-namespace Application.Database.MsSql;
+namespace Application.Database;
 
-public class MsSqlStoredProcedure : ISqlDatabaseScript
+public class SqlStoredProcedure : ISqlDatabaseScript
 {
-    public MsSqlTable Table { get; set; } = new();
-    public string Action { get; set; } = "";
+    public SqlTable Table { get; set; } = null!;
+    public string Action { get; set; } = null!;
     public DbResourceType Type => DbResourceType.StoredProcedure;
-    public string SqlStatement { get; set; } = "";
+    public string SqlStatement { get; set; } = null!;
     public int EnforcementOrder { get; init; } = 9;
     public string Path => $"sp{Table.TableName}_{Action}";
     public string FriendlyName => Path;

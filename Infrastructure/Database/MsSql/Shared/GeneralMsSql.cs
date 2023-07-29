@@ -1,14 +1,16 @@
+using Application.Database;
+using Application.Database.Tables.Shared;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Shared;
+namespace Infrastructure.Database.MsSql.Shared;
 
-public class GeneralMsSql : ISqlEnforcedEntityMsSql
+public class GeneralTableMsSql : IGeneralTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GeneralMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GeneralTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlStoredProcedure GetRowCount = new()
+    public static readonly SqlStoredProcedure GetRowCount = new()
     {
-        Table = new MsSqlTable() { TableName = "General" },
+        Table = new SqlTable() { TableName = "General" },
         Action = "GetRowCount",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spGeneral_GetRowCount]
@@ -22,9 +24,9 @@ public class GeneralMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure VerifyConnectivity = new()
+    public static readonly SqlStoredProcedure VerifyConnectivity = new()
     {
-        Table = new MsSqlTable() { TableName = "General" },
+        Table = new SqlTable() { TableName = "General" },
         Action = "VerifyConnectivity",
         SqlStatement = @"
             CREATE OR ALTER PROCEDURE [dbo].[spGeneral_VerifyConnectivity]

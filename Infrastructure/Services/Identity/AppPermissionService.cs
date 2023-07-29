@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
-using Application.Database.MsSql.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
@@ -15,6 +14,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
+using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Services.Identity;
 
@@ -414,7 +414,7 @@ public class AppPermissionService : IAppPermissionService
 
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
-                TableName = AppPermissionsMsSql.Table.TableName,
+                TableName = AppPermissionsTableMsSql.Table.TableName,
                 RecordId = createRequest.Result,
                 ChangedBy = (createObject.CreatedBy),
                 Action = DatabaseActionType.Create,
@@ -461,7 +461,7 @@ public class AppPermissionService : IAppPermissionService
             
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
-                TableName = AppPermissionsMsSql.Table.TableName,
+                TableName = AppPermissionsTableMsSql.Table.TableName,
                 RecordId = foundPermission.Result.Id,
                 ChangedBy = modifyingUserId,
                 Action = DatabaseActionType.Update,
@@ -494,7 +494,7 @@ public class AppPermissionService : IAppPermissionService
             
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
-                TableName = AppPermissionsMsSql.Table.TableName,
+                TableName = AppPermissionsTableMsSql.Table.TableName,
                 RecordId = foundPermission.Result.Id,
                 ChangedBy = modifyingUserId,
                 Action = DatabaseActionType.Delete,

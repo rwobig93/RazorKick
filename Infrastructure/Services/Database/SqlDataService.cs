@@ -1,7 +1,6 @@
 using System.Data;
 using System.Data.SqlClient;
 using Application.Database;
-using Application.Database.MsSql;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Settings.AppSettings;
@@ -10,12 +9,12 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Database;
 
-public class SqlDataServiceMsSql : ISqlDataService
+public class SqlDataService : ISqlDataService
 {
     private readonly DatabaseConfiguration _dbConfig;
     private readonly ILogger _logger;
 
-    public SqlDataServiceMsSql(IOptions<DatabaseConfiguration> dbConfig, ILogger logger)
+    public SqlDataService(IOptions<DatabaseConfiguration> dbConfig, ILogger logger)
     {
         _dbConfig = dbConfig.Value;
         _logger = logger;
@@ -73,7 +72,7 @@ public class SqlDataServiceMsSql : ISqlDataService
     private void EnforceDatabaseEntities()
     {
         // Gather inheriting classes
-        var entitiesToBeEnforced = typeof(ISqlEnforcedEntityMsSql).GetImplementingTypes<ISqlEnforcedEntityMsSql>();
+        var entitiesToBeEnforced = typeof(ISqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>();
         var databaseScripts = new List<ISqlDatabaseScript>();
         
         // Gather static Database Scripts from inheriting classes

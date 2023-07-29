@@ -1,12 +1,14 @@
+using Application.Database;
+using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Identity;
+namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
+public class AppUserRoleJunctionsTableMsSql : IAppUserRoleJunctionsTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserRoleJunctionsMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserRoleJunctionsTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
         TableName = "AppUserRoleJunctions",
@@ -25,7 +27,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Delete = new()
+    public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
         Action = "Delete",
@@ -42,7 +44,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteForUser = new()
+    public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
         Action = "DeleteForUser",
@@ -57,7 +59,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteForRole = new()
+    public static readonly SqlStoredProcedure DeleteForRole = new()
     {
         Table = Table,
         Action = "DeleteForRole",
@@ -72,7 +74,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -85,7 +87,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetByUserRoleId = new()
+    public static readonly SqlStoredProcedure GetByUserRoleId = new()
     {
         Table = Table,
         Action = "GetByUserRoleId",
@@ -103,7 +105,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetRolesOfUser = new()
+    public static readonly SqlStoredProcedure GetRolesOfUser = new()
     {
         Table = Table,
         Action = "GetRolesOfUser",
@@ -114,12 +116,12 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT r.*
                 FROM dbo.[{Table.TableName}] ur
-                JOIN dbo.[{AppRolesMsSql.Table.TableName}] r ON r.Id = ur.RoleId
+                JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = ur.RoleId
                 WHERE ur.UserId = @UserId;
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetUsersOfRole = new()
+    public static readonly SqlStoredProcedure GetUsersOfRole = new()
     {
         Table = Table,
         Action = "GetUsersOfRole",
@@ -130,12 +132,12 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT u.*
                 FROM dbo.[{Table.TableName}] ur
-                JOIN dbo.[{AppUsersMsSql.Table.TableName}] u ON u.Id = ur.UserId
+                JOIN dbo.[{AppUsersTableMsSql.Table.TableName}] u ON u.Id = ur.UserId
                 WHERE ur.RoleId = @RoleId;
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -150,7 +152,7 @@ public class AppUserRoleJunctionsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure Search = new()
+    public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
         Action = "Search",

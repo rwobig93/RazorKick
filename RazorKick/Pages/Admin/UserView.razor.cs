@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
@@ -38,7 +39,7 @@ public partial class UserView
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
     private bool _canViewExtendedAttrs;
-    private bool _canAdminServiceAccounts;
+    private bool _canAdminServiceAccount;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -90,7 +91,6 @@ public partial class UserView
         }
     }
 
-    // TODO: Add admin rights to service accounts if the dynamic permission has been assigned
     private async Task GetPermissions()
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
@@ -104,7 +104,14 @@ public partial class UserView
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
         _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
-        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
+        if (_viewingUser.AccountType != AccountType.Service) return;
+        
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
+        if (_canAdminServiceAccount) return;
+
+        // If not a service account admin check if the user has a dynamic permission to administrate this service account
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionHelpers.GetClaimValueFromServiceAccount(
+            _viewingUser.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin));
     }
     
     private async Task Save()
@@ -193,7 +200,7 @@ public partial class UserView
     {
         if (_viewingUser.AccountType != AccountType.Service) return;
         
-        if (!_canAdminServiceAccounts)
+        if (!_canAdminServiceAccount)
         {
             Snackbar.Add("You don't have permission to edit service accounts, how'd you initiate this request!?", Severity.Error);
             return;

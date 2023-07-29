@@ -1,5 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using Application.Database.Tables.Identity;
+using Application.Database.Tables.Lifecycle;
+using Application.Database.Tables.Shared;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
@@ -20,6 +23,9 @@ using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Infrastructure.Database.MsSql.Identity;
+using Infrastructure.Database.MsSql.Lifecycle;
+using Infrastructure.Database.MsSql.Shared;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
@@ -58,7 +64,6 @@ public static class DependencyInjection
         builder.Services.AddSettingsConfiguration(builder.Configuration);
         builder.Services.AddSystemServices(builder.Configuration);
 
-        builder.Services.AddRepositories(builder.Configuration);
         builder.Services.AddApplicationServices();
 
         builder.Services.AddApiServices();
@@ -118,8 +123,6 @@ public static class DependencyInjection
                     // Need to add database support for application before we can fully support Postgresql
                     x.UsePostgreSqlStorage(databaseSettings.Core);
                     throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
-                case DatabaseProviderType.MySql:
-                    throw new Exception("MySql Database Provider isn't supported, please enter a supported provider in appsettings.json!");
                 default:
                     throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             }
@@ -203,32 +206,6 @@ public static class DependencyInjection
         });
     }
 
-    private static void AddMsSqlRepositories(this IServiceCollection services)
-    {
-        services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
-        services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
-        services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
-        services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
-        services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
-    }
-
-    private static void AddRepositories(this IServiceCollection services, IConfiguration configuration)
-    {
-        var databaseProvider = configuration.GetDatabaseSettings().Provider;
-        switch (databaseProvider)
-        {
-            case DatabaseProviderType.MsSql:
-                services.AddMsSqlRepositories();
-                break;
-            case DatabaseProviderType.Postgresql:
-                throw new NotSupportedException("Postgres hasn't been implemented yet, please use a supported Database provider");
-            case DatabaseProviderType.MySql:
-                throw new NotSupportedException("MySql hasn't been implemented yet, please use a supported Database provider");
-            default:
-                throw new NotSupportedException("You entered an unsupported database provider, please enter a supported one");
-        }
-    }
-
     private static void AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
@@ -309,18 +286,34 @@ public static class DependencyInjection
 
     private static void AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // At some point we should add more sql support, currently we only support MsSql
-        //  the framework is in place, just need to write the database classes in Application.Database
+        // Add core SQL database service
+        services.AddSingleton<ISqlDataService, SqlDataService>();
+        
+        // Add repositories
+        services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+        services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+        services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+        services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
+        services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
+        
+        // Add tables based on the desired database provider
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
         {
             case DatabaseProviderType.MsSql:
-                services.AddSingleton<ISqlDataService, SqlDataServiceMsSql>();
+                services.AddSingleton<IGeneralTable, GeneralTableMsSql>();
+                services.AddSingleton<IAppUsersTable, AppUsersTableMsSql>();
+                services.AddSingleton<IAppUserSecurityAttributesTable, AppUserSecurityAttributesTableMsSql>();
+                services.AddSingleton<IAppUserExtendedAttributesTable, AppUserExtendedAttributesTableMsSql>();
+                services.AddSingleton<IAppUserPreferencesTable, AppUserPreferencesTableMsSql>();
+                services.AddSingleton<IAppRolesTable, AppRolesTableMsSql>();
+                services.AddSingleton<IAppUserRoleJunctionsTable, AppUserRoleJunctionsTableMsSql>();
+                services.AddSingleton<IAppPermissionsTable, AppPermissionsTableMsSql>();
+                services.AddSingleton<IAuditTrailsTable, AuditTrailsTableMsSql>();
+                services.AddSingleton<IServerStateRecordsTable, ServerStateRecordsTableMsSql>();
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
-            case DatabaseProviderType.MySql:
-                throw new Exception("MySql Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             default:
                 throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
         }

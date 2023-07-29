@@ -1,11 +1,11 @@
-﻿using Application.Database.MsSql.Lifecycle;
-using Application.Database.MsSql.Shared;
-using Application.Models.Lifecycle;
+﻿using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Models.Database;
+using Infrastructure.Database.MsSql.Lifecycle;
+using Infrastructure.Database.MsSql.Shared;
 
 namespace Infrastructure.Repositories.MsSql.Lifecycle;
 
@@ -29,12 +29,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var allStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsMsSql.GetAll, new { });
+                ServerStateRecordsTableMsSql.GetAll, new { });
             actionReturn.Succeed(allStateRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -47,12 +47,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var foundStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsMsSql.GetAllBeforeDate, new {OlderThan = olderThan});
+                ServerStateRecordsTableMsSql.GetAllBeforeDate, new {OlderThan = olderThan});
             actionReturn.Succeed(foundStateRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.GetAllBeforeDate.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetAllBeforeDate.Path, ex.Message);
         }
 
         return actionReturn;
@@ -65,12 +65,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var foundStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsMsSql.GetAllAfterDate, new {NewerThan = newerThan});
+                ServerStateRecordsTableMsSql.GetAllAfterDate, new {NewerThan = newerThan});
             actionReturn.Succeed(foundStateRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.GetAllAfterDate.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetAllAfterDate.Path, ex.Message);
         }
 
         return actionReturn;
@@ -83,12 +83,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                GeneralMsSql.GetRowCount, new {ServerStateRecordsMsSql.Table.TableName})).FirstOrDefault();
+                GeneralTableMsSql.GetRowCount, new {ServerStateRecordsTableMsSql.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, GeneralMsSql.GetRowCount.Path, ex.Message);
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -101,12 +101,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var foundServerState = (await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsMsSql.GetById, new {Id = id})).FirstOrDefault();
+                ServerStateRecordsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundServerState!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -119,12 +119,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             var foundStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsMsSql.GetByVersion, new {Version = version.ToString()});
+                ServerStateRecordsTableMsSql.GetByVersion, new {Version = version.ToString()});
             actionReturn.Succeed(foundStateRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.GetByVersion.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetByVersion.Path, ex.Message);
         }
 
         return actionReturn;
@@ -138,12 +138,12 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         {
             createRecord.Timestamp = _dateTime.NowDatabaseTime;
             
-            var createdId = await _database.SaveDataReturnId(ServerStateRecordsMsSql.Insert, createRecord);
+            var createdId = await _database.SaveDataReturnId(ServerStateRecordsTableMsSql.Insert, createRecord);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsMsSql.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;

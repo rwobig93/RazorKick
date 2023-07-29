@@ -1,12 +1,14 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Database;
+using Application.Database.Tables.Lifecycle;
+using Application.Helpers.Runtime;
 
-namespace Application.Database.MsSql.Lifecycle;
+namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
+public class ServerStateRecordsTableMsSql : IServerStateRecordsTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ServerStateRecordsMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ServerStateRecordsTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         TableName = "ServerStateRecords",
         SqlStatement = @"
@@ -20,7 +22,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -34,7 +36,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllBeforeDate = new()
+    public static readonly SqlStoredProcedure GetAllBeforeDate = new()
     {
         Table = Table,
         Action = "GetAllBeforeDate",
@@ -50,7 +52,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllAfterDate = new()
+    public static readonly SqlStoredProcedure GetAllAfterDate = new()
     {
         Table = Table,
         Action = "GetAllAfterDate",
@@ -66,7 +68,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -82,7 +84,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByVersion = new()
+    public static readonly SqlStoredProcedure GetByVersion = new()
     {
         Table = Table,
         Action = "GetByVersion",
@@ -98,7 +100,7 @@ public class ServerStateRecordsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",

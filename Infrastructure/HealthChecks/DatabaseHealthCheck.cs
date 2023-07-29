@@ -1,5 +1,5 @@
-﻿using Application.Database.MsSql.Shared;
-using Application.Services.Database;
+﻿using Application.Services.Database;
+using Infrastructure.Database.MsSql.Shared;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Infrastructure.HealthChecks;
@@ -19,7 +19,7 @@ public class DatabaseHealthCheck : IHealthCheck
     {
         try
         {
-            await _database.LoadData<int, dynamic>(GeneralMsSql.VerifyConnectivity, new { }, timeoutSeconds: 2);
+            await _database.LoadData<int, dynamic>(GeneralTableMsSql.VerifyConnectivity, new { }, timeoutSeconds: 2);
             return HealthCheckResult.Healthy();
         }
         catch (Exception ex)

@@ -1,13 +1,15 @@
-﻿using Application.Database.MsSql.Identity;
+﻿using Application.Database;
+using Application.Database.Tables.Lifecycle;
 using Application.Helpers.Runtime;
+using Infrastructure.Database.MsSql.Identity;
 
-namespace Application.Database.MsSql.Lifecycle;
+namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
+public class AuditTrailsTableMsSql : IAuditTrailsTable
 {
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrailsMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrailsTableMsSql).GetDbScriptsFromClass();
 
-    public static readonly MsSqlTable Table = new()
+    public static readonly SqlTable Table = new()
     {
         TableName = "AuditTrails",
         SqlStatement = @"
@@ -26,7 +28,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAll = new()
+    public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
         Action = "GetAll",
@@ -40,7 +42,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAllWithUsers = new()
+    public static readonly SqlStoredProcedure GetAllWithUsers = new()
     {
         Table = Table,
         Action = "GetAllWithUsers",
@@ -50,12 +52,12 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetAllPaginated = new()
+    public static readonly SqlStoredProcedure GetAllPaginated = new()
     {
         Table = Table,
         Action = "GetAllPaginated",
@@ -71,7 +73,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure GetAllPaginatedWithUsers = new()
+    public static readonly SqlStoredProcedure GetAllPaginatedWithUsers = new()
     {
         Table = Table,
         Action = "GetAllPaginatedWithUsers",
@@ -83,12 +85,12 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetById = new()
+    public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
         Action = "GetById",
@@ -104,7 +106,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByIdWithUser = new()
+    public static readonly SqlStoredProcedure GetByIdWithUser = new()
     {
         Table = Table,
         Action = "GetByIdWithUser",
@@ -115,13 +117,13 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT TOP 1 a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.Id = @Id
                 ORDER BY Id;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByChangedBy = new()
+    public static readonly SqlStoredProcedure GetByChangedBy = new()
     {
         Table = Table,
         Action = "GetByChangedBy",
@@ -132,13 +134,13 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.ChangedBy = @UserId
                 ORDER BY Timestamp DESC;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure GetByRecordId = new()
+    public static readonly SqlStoredProcedure GetByRecordId = new()
     {
         Table = Table,
         Action = "GetByRecordId",
@@ -149,13 +151,13 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             begin
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.RecordId = @RecordId
                 ORDER BY Timestamp DESC;
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Insert = new()
+    public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
         Action = "Insert",
@@ -176,7 +178,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure Search = new()
+    public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
         Action = "Search",
@@ -198,7 +200,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SearchPaginated = new()
+    public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
         Action = "SearchPaginated",
@@ -222,7 +224,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SearchWithUser = new()
+    public static readonly SqlStoredProcedure SearchWithUser = new()
     {
         Table = Table,
         Action = "SearchWithUser",
@@ -235,7 +237,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
                     OR Action LIKE '%' + @SearchTerm + '%'
@@ -245,7 +247,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
 
-    public static readonly MsSqlStoredProcedure SearchPaginatedWithUser = new()
+    public static readonly SqlStoredProcedure SearchPaginatedWithUser = new()
     {
         Table = Table,
         Action = "SearchPaginatedWithUser",
@@ -260,7 +262,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
                 
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersMsSql.Table.TableName} u ON a.ChangedBy = u.Id
+                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
                     OR Action LIKE '%' + @SearchTerm + '%'
@@ -270,7 +272,7 @@ public class AuditTrailsMsSql : ISqlEnforcedEntityMsSql
             end"
     };
     
-    public static readonly MsSqlStoredProcedure DeleteOlderThan = new()
+    public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {
         Table = Table,
         Action = "DeleteOlderThan",

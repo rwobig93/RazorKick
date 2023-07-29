@@ -1,11 +1,11 @@
 using Application.Models.Database;
 
-namespace Application.Database.MsSql;
+namespace Application.Database;
 
-public class MsSqlTable : ISqlDatabaseScript
+public class SqlTable : ISqlDatabaseScript
 {
-    public string TableName { get; set; } = "";
-    public string SqlStatement { get; set; } = "";
+    public string TableName { get; set; } = null!;
+    public string SqlStatement { get; set; } = null!;
     public string FriendlyName => TableName;
     public DbResourceType Type => DbResourceType.Table;
     public string Path => TableName;

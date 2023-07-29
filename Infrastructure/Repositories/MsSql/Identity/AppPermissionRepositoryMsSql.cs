@@ -1,11 +1,12 @@
-﻿using Application.Database.MsSql.Identity;
-using Application.Database.MsSql.Shared;
+﻿using Application.Database.Tables.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Repositories.Identity;
 using Application.Services.Database;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
+using Infrastructure.Database.MsSql.Identity;
+using Infrastructure.Database.MsSql.Shared;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
 
@@ -13,11 +14,15 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
+    
+    // TODO: Find a way to implement the static table injections into the repositories
+    private readonly IAppPermissionsTable _permissionsTable;
 
-    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger)
+    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IAppPermissionsTable permissionsTable)
     {
         _database = database;
         _logger = logger;
+        _permissionsTable = permissionsTable;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -26,12 +31,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(AppPermissionsMsSql.GetAll, new { });
+            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(AppPermissionsTableMsSql.GetAll, new { });
             actionReturn.Succeed(allPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetAll.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetAll.Path, ex.Message);
         }
 
         return actionReturn;
@@ -45,12 +50,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         {
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                AppPermissionsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
             actionReturn.Succeed(allPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetAllPaginated.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetAllPaginated.Path, ex.Message);
         }
 
         return actionReturn;
@@ -63,12 +68,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var searchResults = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.Search, new {SearchTerm = searchTerm});
+                AppPermissionsTableMsSql.Search, new {SearchTerm = searchTerm});
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.Search.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.Search.Path, ex.Message);
         }
 
         return actionReturn;
@@ -82,12 +87,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         {
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var searchResults = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.SearchPaginated, new {SearchTerm = searchTerm, Offset =  offset, PageSize = pageSize});
+                AppPermissionsTableMsSql.SearchPaginated, new {SearchTerm = searchTerm, Offset =  offset, PageSize = pageSize});
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.SearchPaginated.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;
@@ -100,12 +105,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
-                GeneralMsSql.GetRowCount, new {AppPermissionsMsSql.Table.TableName})).FirstOrDefault();
+                GeneralTableMsSql.GetRowCount, new {AppPermissionsTableMsSql.Table.TableName})).FirstOrDefault();
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, GeneralMsSql.GetRowCount.Path, ex.Message);
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
         }
 
         return actionReturn;
@@ -118,12 +123,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetById, new {Id = id})).FirstOrDefault();
+                AppPermissionsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
             actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetById.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetById.Path, ex.Message);
         }
 
         return actionReturn;
@@ -136,12 +141,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByUserIdAndValue, new {UserId = userId, ClaimValue = claimValue})).FirstOrDefault();
+                AppPermissionsTableMsSql.GetByUserIdAndValue, new {UserId = userId, ClaimValue = claimValue})).FirstOrDefault();
             actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByUserIdAndValue.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByUserIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -154,12 +159,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = claimValue})).FirstOrDefault();
+                AppPermissionsTableMsSql.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = claimValue})).FirstOrDefault();
             actionReturn.Succeed(foundPermission!);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByRoleIdAndValue.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByRoleIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -172,12 +177,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByName, new {Name = roleName});
+                AppPermissionsTableMsSql.GetByName, new {Name = roleName});
             actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByName.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByName.Path, ex.Message);
         }
 
         return actionReturn;
@@ -190,12 +195,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByGroup, new {Group = groupName});
+                AppPermissionsTableMsSql.GetByGroup, new {Group = groupName});
             actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByGroup.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByGroup.Path, ex.Message);
         }
 
         return actionReturn;
@@ -208,12 +213,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByAccess, new {Access = accessName});
+                AppPermissionsTableMsSql.GetByAccess, new {Access = accessName});
             actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByAccess.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByAccess.Path, ex.Message);
         }
 
         return actionReturn;
@@ -226,12 +231,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByRoleId, new {RoleId = roleId});
+                AppPermissionsTableMsSql.GetByRoleId, new {RoleId = roleId});
             actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByRoleId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByRoleId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -244,12 +249,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByUserId, new {UserId = userId});
+                AppPermissionsTableMsSql.GetByUserId, new {UserId = userId});
             actionReturn.Succeed(foundPermissions);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByUserId.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByUserId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -264,11 +269,11 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             List<AppPermissionDb> allPermissions = new();
 
             var userPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByUserId, new {UserId = userId});
+                AppPermissionsTableMsSql.GetByUserId, new {UserId = userId});
             allPermissions.AddRange(userPermissions);
 
             var roles = await _database.LoadData<AppRoleDb, dynamic>(
-                AppUserRoleJunctionsMsSql.GetRolesOfUser, new {UserId = userId});
+                AppUserRoleJunctionsTableMsSql.GetRolesOfUser, new {UserId = userId});
             foreach (var role in roles)
             {
                 var rolePermissions = await GetAllForRoleAsync(role.Id);
@@ -292,12 +297,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            var createdId = await _database.SaveDataReturnId(AppPermissionsMsSql.Insert, createObject);
+            var createdId = await _database.SaveDataReturnId(AppPermissionsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.Insert.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.Insert.Path, ex.Message);
         }
 
         return actionReturn;
@@ -309,12 +314,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            await _database.SaveData(AppPermissionsMsSql.Update, updateObject);
+            await _database.SaveData(AppPermissionsTableMsSql.Update, updateObject);
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.Update.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.Update.Path, ex.Message);
         }
 
         return actionReturn;
@@ -326,12 +331,12 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            await _database.SaveData(AppPermissionsMsSql.Delete, new {Id = id});
+            await _database.SaveData(AppPermissionsTableMsSql.Delete, new {Id = id});
             actionReturn.Succeed();
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.Delete.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
@@ -344,13 +349,13 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByUserIdAndValue, new {UserId = userId, ClaimValue = permissionValue})).FirstOrDefault();
+                AppPermissionsTableMsSql.GetByUserIdAndValue, new {UserId = userId, ClaimValue = permissionValue})).FirstOrDefault();
             var hasPermission = foundPermission is not null;
             actionReturn.Succeed(hasPermission);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByUserIdAndValue.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByUserIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
@@ -381,13 +386,13 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = (await _database.LoadData<AppPermissionDb, dynamic>(
-                AppPermissionsMsSql.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = permissionValue})).FirstOrDefault();
+                AppPermissionsTableMsSql.GetByRoleIdAndValue, new {RoleId = roleId, ClaimValue = permissionValue})).FirstOrDefault();
             var hasPermission = foundPermission is not null;
             actionReturn.Succeed(hasPermission);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, AppPermissionsMsSql.GetByRoleIdAndValue.Path, ex.Message);
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByRoleIdAndValue.Path, ex.Message);
         }
 
         return actionReturn;
