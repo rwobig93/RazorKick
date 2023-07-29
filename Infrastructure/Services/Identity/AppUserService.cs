@@ -8,6 +8,7 @@ using Application.Services.Identity;
 using Application.Services.System;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
+using Microsoft.Extensions.FileProviders;
 
 namespace Infrastructure.Services.Identity;
 
@@ -227,7 +228,7 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false)
+    public async Task<IResult> UpdateAsync(AppUserUpdate updateObject, Guid modifyingUserId)
     {
         try
         {
@@ -243,11 +244,15 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult> DeleteAsync(Guid userId)
+    public async Task<IResult> DeleteAsync(Guid userId, Guid modifyingUserId)
     {
         try
         {
-            var deleteUser = await _userRepository.DeleteAsync(userId, Guid.Empty);
+            var foundUser = await GetByIdAsync(userId);
+            if (!foundUser.Succeeded || foundUser.Data is null)
+                return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+            
+            var deleteUser = await _userRepository.DeleteAsync(userId, modifyingUserId);
             if (!deleteUser.Succeeded)
                 return await Result.FailAsync(deleteUser.ErrorMessage);
 
@@ -294,7 +299,7 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false)
+    public async Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, Guid modifyingUserId)
     {
         try
         {
@@ -308,6 +313,8 @@ public class AppUserService : IAppUserService
             {
                 return await Result<Guid>.FailAsync(string.Format($"Username {createObject.Username} is already in use, please try again"));
             }
+
+            createObject.CreatedBy = modifyingUserId;
             
             var createUser = await _userRepository.CreateAsync(createObject);
             if (!createUser.Succeeded)

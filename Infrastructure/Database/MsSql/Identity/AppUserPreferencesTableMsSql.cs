@@ -1,21 +1,23 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppUserPreferencesTableMsSql : IAppUserPreferencesTable
 {
+    private const string TableName = "AppUserPreferences";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserPreferencesTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
-        TableName = "AppUserPreferences",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUserPreferences]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppUserPreferences](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NULL,
                     [ThemePreference] INT NULL,

@@ -1,19 +1,21 @@
 using Application.Database;
-using Application.Database.Tables.Shared;
+using Application.Database.Shared;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Shared;
 
 public class GeneralTableMsSql : IGeneralTable
 {
+    private const string TableName = "General";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GeneralTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlStoredProcedure GetRowCount = new()
     {
-        Table = new SqlTable() { TableName = "General" },
+        Table = new SqlTable() { TableName = TableName },
         Action = "GetRowCount",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spGeneral_GetRowCount]
+        SqlStatement = $@"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{TableName}_GetRowCount]
                 @TableName NVARCHAR(50)
             AS
             begin
@@ -26,10 +28,10 @@ public class GeneralTableMsSql : IGeneralTable
     
     public static readonly SqlStoredProcedure VerifyConnectivity = new()
     {
-        Table = new SqlTable() { TableName = "General" },
+        Table = new SqlTable() { TableName = TableName },
         Action = "VerifyConnectivity",
-        SqlStatement = @"
-            CREATE OR ALTER PROCEDURE [dbo].[spGeneral_VerifyConnectivity]
+        SqlStatement = $@"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{TableName}_VerifyConnectivity]
             AS
             begin
                 SELECT 1;

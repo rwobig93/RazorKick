@@ -1,21 +1,23 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppUserRoleJunctionsTableMsSql : IAppUserRoleJunctionsTable
 {
+    private const string TableName = "AppUserRoleJunctions";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserRoleJunctionsTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
-        TableName = "AppUserRoleJunctions",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUserRoleJunctions]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppUserRoleJunctions](
+                CREATE TABLE [dbo].[{TableName}](
                     [UserId] UNIQUEIDENTIFIER NOT NULL,
                     [RoleId] UNIQUEIDENTIFIER NOT NULL,
                     CONSTRAINT User_Role_PK PRIMARY KEY (UserId, RoleId),

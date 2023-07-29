@@ -19,11 +19,11 @@ public interface IAppUserService
     Task<IResult<AppUserSecurityFull?>> GetByUsernameSecurityFullAsync(string username);
     Task<IResult<AppUserSlim?>> GetByEmailAsync(string email);
     Task<IResult<AppUserFull?>> GetByEmailFullAsync(string email);
-    Task<IResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
-    Task<IResult> DeleteAsync(Guid userId);
+    Task<IResult> UpdateAsync(AppUserUpdate updateObject, Guid modifyingUserId);
+    Task<IResult> DeleteAsync(Guid userId, Guid modifyingUserId);
     Task<IResult<IEnumerable<AppUserSlim>>> SearchAsync(string searchText);
     Task<IResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
-    Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
+    Task<IResult<Guid>> CreateAsync(AppUserCreate createObject, Guid modifyingUserId);
     Task<IResult<Guid>> AddExtendedAttributeAsync(AppUserExtendedAttributeCreate addAttribute);
     Task<IResult> UpdateExtendedAttributeAsync(Guid attributeId, string? value, string? description);
     Task<IResult> RemoveExtendedAttributeAsync(Guid attributeId);

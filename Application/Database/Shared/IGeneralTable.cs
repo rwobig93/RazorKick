@@ -1,4 +1,4 @@
-namespace Application.Database.Tables.Shared;
+namespace Application.Database.Shared;
 
 public interface IGeneralTable : ISqlEnforcedEntity
 {

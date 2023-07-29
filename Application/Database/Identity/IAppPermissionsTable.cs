@@ -1,4 +1,4 @@
-namespace Application.Database.Tables.Identity;
+namespace Application.Database.Identity;
 
 public interface IAppPermissionsTable : ISqlEnforcedEntity
 {

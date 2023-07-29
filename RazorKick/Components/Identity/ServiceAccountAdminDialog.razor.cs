@@ -168,7 +168,7 @@ public partial class ServiceAccountAdminDialog
             _serviceUser.Email = $"{Guid.NewGuid()}@Service.Account";
             _serviceUser.EmailConfirmed = true;
             _serviceUser.AuthState = AuthState.Enabled;
-            var createUserRequest = await UserService.CreateAsync(_serviceUser.ToCreate());
+            var createUserRequest = await UserService.CreateAsync(_serviceUser.ToCreate(), _currentUser.Id);
             if (!createUserRequest.Succeeded)
             {
                 createUserRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -215,7 +215,7 @@ public partial class ServiceAccountAdminDialog
         if (_creatingServiceAccount) return;
 
         _serviceUser.LastModifiedBy = _currentUser.Id;
-        var updateAccountRequest = await UserService.UpdateAsync(_serviceUser.ToUserUpdate());
+        var updateAccountRequest = await UserService.UpdateAsync(_serviceUser.ToUserUpdate(), _currentUser.Id);
         if (!updateAccountRequest.Succeeded)
         {
             updateAccountRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

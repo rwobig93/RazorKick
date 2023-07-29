@@ -153,11 +153,11 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(AuditTrailCreate createObject, bool systemUpdate = false)
+    public async Task<IResult<Guid>> CreateAsync(AuditTrailCreate createObject)
     {
         try
         {
-            var createTrail = await _auditRepository.CreateAsync(createObject, systemUpdate);
+            var createTrail = await _auditRepository.CreateAsync(createObject);
             if (!createTrail.Succeeded)
                 return await Result<Guid>.FailAsync(createTrail.ErrorMessage);
 

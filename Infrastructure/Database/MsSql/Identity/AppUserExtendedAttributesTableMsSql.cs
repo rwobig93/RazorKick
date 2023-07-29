@@ -1,21 +1,23 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppUserExtendedAttributesTableMsSql : IAppUserExtendedAttributesTable
 {
+    private const string TableName = "AppUserExtendedAttributes";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserExtendedAttributesTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
-        TableName = "AppUserExtendedAttributes",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUserExtendedAttributes]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppUserExtendedAttributes](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(256) NOT NULL,

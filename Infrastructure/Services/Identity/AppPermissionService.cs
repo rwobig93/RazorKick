@@ -23,21 +23,17 @@ public class AppPermissionService : IAppPermissionService
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
-    private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
     private readonly IDateTimeService _dateTimeService;
-    private readonly ISerializerService _serializer;
 
-    public AppPermissionService(IAppPermissionRepository permissionRepository, IAppUserRepository userRepository, IAuditTrailsRepository auditRepository,
-        IAppRoleRepository roleRepository, IRunningServerState serverState, IDateTimeService dateTimeService, ISerializerService serializerService)
+    public AppPermissionService(IAppPermissionRepository permissionRepository, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
+        IRunningServerState serverState, IDateTimeService dateTimeService)
     {
         _permissionRepository = permissionRepository;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
-        _auditRepository = auditRepository;
         _serverState = serverState;
         _dateTimeService = dateTimeService;
-        _serializer = serializerService;
     }
 
     private async Task<bool> IsUserAdmin(Guid userId)
@@ -50,6 +46,30 @@ public class AppPermissionService : IAppPermissionService
     {
         var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.ModeratorName);
         return roleCheck.Result;
+    }
+
+    private async Task<bool> CanUserDoThisAction(Guid modifyingUserId, string claimValue)
+    {
+        // If the user is the system user they have full reign so we let them past the permission validation
+        if (modifyingUserId == _serverState.SystemUserId) return true;
+        
+        // If the user is an admin we let them do whatever they want
+        var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
+        if (modifyingUserIsAdmin)
+            return true;
+
+        // If the permission is a dynamic permission and the user is a moderator they can administrate the permission
+        if (claimValue.StartsWith("Dynamic."))
+        {
+            var modifyingUserIsModerator = await IsUserModerator(modifyingUserId);
+            if (modifyingUserIsModerator)
+                return true;
+        }
+        
+        // If a user has the permission and they've been given access to add/remove permissions then they are good to go,
+        //    otherwise they can't add/remove a permission they themselves don't have
+        var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, claimValue);
+        return invokingUserHasRequestingPermission.Data;
     }
 
     public async Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailablePermissionsAsync()
@@ -353,30 +373,6 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    private async Task<bool> CanUserDoThisAction(Guid modifyingUserId, string claimValue)
-    {
-        // If the user is the system user they have full reign so we let them past the permission validation
-        if (modifyingUserId == _serverState.SystemUserId) return true;
-        
-        // If the user is an admin we let them do whatever they want
-        var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
-        if (modifyingUserIsAdmin)
-            return true;
-
-        // If the permission is a dynamic permission and the user is a moderator they can administrate the permission
-        if (claimValue.StartsWith("Dynamic."))
-        {
-            var modifyingUserIsModerator = await IsUserModerator(modifyingUserId);
-            if (modifyingUserIsModerator)
-                return true;
-        }
-        
-        // If a user has the permission and they've been given access to add/remove permissions then they are good to go,
-        //    otherwise they can't add/remove a permission they themselves don't have
-        var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, claimValue);
-        return invokingUserHasRequestingPermission.Data;
-    }
-
     public async Task<IResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
     {
         try
@@ -411,15 +407,6 @@ public class AppPermissionService : IAppPermissionService
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
-
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppPermissionsTableMsSql.Table.TableName,
-                RecordId = createRequest.Result,
-                ChangedBy = (createObject.CreatedBy),
-                Action = DatabaseActionType.Create,
-                After = _serializer.Serialize(createObject)
-            });
             
             return await Result<Guid>.SuccessAsync(createRequest.Result);
         }
@@ -441,32 +428,12 @@ public class AppPermissionService : IAppPermissionService
             if (!userCanDoAction)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateMissingPermission);
 
+            updateObject.LastModifiedBy = modifyingUserId;
+            updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+
             var updateRequest = await _permissionRepository.UpdateAsync(updateObject);
             if (!updateRequest.Succeeded)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
-            
-            var permissionAfterUpdate = await _permissionRepository.GetByIdAsync(foundPermission.Result.Id);
-            if (!permissionAfterUpdate.Succeeded || permissionAfterUpdate.Result is null)
-            {
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, _serializer, "PermissionUpdate",
-                    foundPermission.Result.Id, new Dictionary<string, string>()
-                    {
-                        {"PermissionValue", foundPermission.Result.ClaimValue},
-                        {"ModifyingUserId", modifyingUserId.ToString()},
-                        {"Details", "Was unable to retrieve updated permission"},
-                        {"Error", permissionAfterUpdate.ErrorMessage}
-                    });
-                return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
-            }
-            
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppPermissionsTableMsSql.Table.TableName,
-                RecordId = foundPermission.Result.Id,
-                ChangedBy = modifyingUserId,
-                Action = DatabaseActionType.Update,
-                Before = _serializer.Serialize(permissionAfterUpdate.Result.ToSlim())
-            });
 
             return await Result.SuccessAsync();
         }
@@ -488,18 +455,9 @@ public class AppPermissionService : IAppPermissionService
             if (!userCanDoAction)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateMissingPermission);
             
-            var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id);
+            var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id, modifyingUserId);
             if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
-            
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppPermissionsTableMsSql.Table.TableName,
-                RecordId = foundPermission.Result.Id,
-                ChangedBy = modifyingUserId,
-                Action = DatabaseActionType.Delete,
-                Before = _serializer.Serialize(foundPermission.Result.ToSlim())
-            });
 
             return await Result.SuccessAsync();
         }

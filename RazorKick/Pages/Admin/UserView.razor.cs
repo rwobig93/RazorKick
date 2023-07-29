@@ -118,7 +118,7 @@ public partial class UserView
     {
         if (!_canEditUsers) return;
         
-        var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate());
+        var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate(), CurrentUserService.GetIdFromPrincipal(_currentUser));
         if (!updateResult.Succeeded)
         {
             updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

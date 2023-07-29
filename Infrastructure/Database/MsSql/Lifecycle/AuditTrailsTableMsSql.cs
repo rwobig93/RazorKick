@@ -1,5 +1,5 @@
 ﻿using Application.Database;
-using Application.Database.Tables.Lifecycle;
+using Application.Database.Lifecycle;
 using Application.Helpers.Runtime;
 using Infrastructure.Database.MsSql.Identity;
 
@@ -7,15 +7,17 @@ namespace Infrastructure.Database.MsSql.Lifecycle;
 
 public class AuditTrailsTableMsSql : IAuditTrailsTable
 {
+    private const string TableName = "AuditTrails";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrailsTableMsSql).GetDbScriptsFromClass();
 
     public static readonly SqlTable Table = new()
     {
-        TableName = "AuditTrails",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AuditTrails]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AuditTrails](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [TableName] NVARCHAR(100) NOT NULL,
                     [RecordId] UNIQUEIDENTIFIER NOT NULL,

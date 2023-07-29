@@ -3,15 +3,12 @@ using Application.Helpers.Runtime;
 using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Identity;
-using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.Lifecycle;
 using Infrastructure.Database.MsSql.Shared;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Repositories.MsSql.Lifecycle;
 
@@ -20,17 +17,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
-    private readonly IServiceScopeFactory _scopeFactory;
 
-    public AuditTrailsRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IRunningServerState serverState,
-        IServiceScopeFactory scopeFactory)
+    public AuditTrailsRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _serverState = serverState;
-        _scopeFactory = scopeFactory;
     }
     
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllAsync()
@@ -196,20 +188,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(AuditTrailCreate createObject, bool systemUpdate = false)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(AuditTrailCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
-            if (createObject.ChangedBy == Guid.Empty)
-            {
-                await using var scope = _scopeFactory.CreateAsyncScope();
-                var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
-                var currentUserId = systemUpdate ? _serverState.SystemUserId : await currentUserService.GetCurrentUserId();
-                createObject.ChangedBy = currentUserId ?? Guid.Empty;
-            }
-
             createObject.Timestamp = _dateTime.NowDatabaseTime;
             
             var createdId = await _database.SaveDataReturnId(AuditTrailsTableMsSql.Insert, createObject);

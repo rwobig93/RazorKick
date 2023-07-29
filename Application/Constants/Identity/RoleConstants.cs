@@ -2,6 +2,8 @@
 
 public static class RoleConstants
 {
+    public const int RoleNameMinimumLength = 3;
+    
     public static class DefaultRoles
     {
         public const string AdminName = "Admin";
@@ -17,7 +19,7 @@ public static class RoleConstants
         public const string DefaultDescription = "Default role with base permissions, granted to every account by default";
     }
 
-    public static List<string> GetUnchangeableRoleNames()
+    public static List<string> GetRequiredRoleNames()
     {
         return new List<string>()
         {

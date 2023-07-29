@@ -12,7 +12,7 @@ public class AppUserCreate
     public string? FirstName { get; set; } = "";
     public string? LastName { get; set; } = "";
     public string? ProfilePictureDataUrl { get; set; } = "";
-    public Guid? CreatedBy { get; set; }
+    public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.Now;
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; } = DateTime.Now;

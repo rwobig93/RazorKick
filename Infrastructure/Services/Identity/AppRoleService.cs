@@ -1,4 +1,5 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
@@ -6,6 +7,8 @@ using Application.Models.Identity.User;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 
 namespace Infrastructure.Services.Identity;
@@ -14,11 +17,16 @@ public class AppRoleService : IAppRoleService
 {
     private readonly IAppRoleRepository _roleRepository;
     private readonly IAppPermissionRepository _permissionRepository;
+    private readonly IRunningServerState _serverState;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppRoleService(IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository)
+    public AppRoleService(IAppRoleRepository roleRepository, IAppPermissionRepository permissionRepository, IRunningServerState serverState,
+        IDateTimeService dateTimeService)
     {
         _roleRepository = roleRepository;
         _permissionRepository = permissionRepository;
+        _serverState = serverState;
+        _dateTimeService = dateTimeService;
     }
 
     private async Task<IResult<AppRoleFull?>> ConvertToFullAsync(AppRoleDb roleDb)
@@ -44,6 +52,34 @@ public class AppRoleService : IAppRoleService
             .ToList();
 
         return await Result<AppRoleFull?>.SuccessAsync(fullRole);
+    }
+
+    private async Task<bool> IsUserAdmin(Guid userId)
+    {
+        var roleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.AdminName);
+        return roleCheck.Result;
+    }
+
+    private async Task<bool> CanUserDoThisAction(Guid modifyingUserId, Guid roleId)
+    {
+        // If the user is the system user they have full reign so we let them past the permission validation
+        if (modifyingUserId == _serverState.SystemUserId) return true;
+        
+        // If the user is an admin we let them do whatever they want
+        var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
+        if (modifyingUserIsAdmin)
+            return true;
+
+        var modifyingRole = await GetByIdAsync(roleId);
+        if (!modifyingRole.Succeeded || modifyingRole.Data is null)
+            return false;
+
+        // If user isn't admin then they can't modify administrative roles
+        if (modifyingRole.Data.Name is RoleConstants.DefaultRoles.AdminName or RoleConstants.DefaultRoles.ModeratorName)
+            return false;
+
+        // We are assuming permission to edit roles is already verified so we let all other actions be allowed
+        return true;
     }
 
     public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllAsync()
@@ -209,8 +245,8 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            if (createObject.Name.Length < 3)
-                return await Result<Guid>.FailAsync("Role name must be longer than 3 characters");
+            if (createObject.Name.Length < RoleConstants.RoleNameMinimumLength)
+                return await Result<Guid>.FailAsync($"Role name must be longer than {RoleConstants.RoleNameMinimumLength} characters");
             
             if (string.IsNullOrWhiteSpace(createObject.Description))
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
@@ -222,7 +258,10 @@ public class AppRoleService : IAppRoleService
             if (existingRoleWithName.Result is not null)
                 return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
 
-            var createRequest = await _roleRepository.CreateAsync(createObject, modifyingUserId);
+            createObject.CreatedBy = modifyingUserId;
+            createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
+            
+            var createRequest = await _roleRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
 
@@ -240,17 +279,17 @@ public class AppRoleService : IAppRoleService
         {
             var roleToChange = await GetByIdAsync(updateObject.Id);
             
-            if (updateObject.Name is not null && updateObject.Name.Length < 3)
-                return await Result<Guid>.FailAsync("Role name must be longer than 3 characters");
+            if (updateObject.Name is not null && updateObject.Name.Length < RoleConstants.RoleNameMinimumLength)
+                return await Result<Guid>.FailAsync($"Role name must be longer than {RoleConstants.RoleNameMinimumLength} characters");
             
-            if (updateObject.Description is not null && updateObject.Description.Length < 3)
+            if (string.IsNullOrWhiteSpace(updateObject.Description))
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
 
             // If we are changing the name we need to verify there isn't already a role with the same name as the update
             if (roleToChange.Data!.Name != updateObject.Name)
             {
                 // We don't allow default role names to change to keep our sanity and enforce Admin, Moderator & Default role intent
-                if (RoleConstants.GetUnchangeableRoleNames().Contains(roleToChange.Data.Name))
+                if (RoleConstants.GetRequiredRoleNames().Contains(roleToChange.Data.Name))
                     return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
                 
                 var existingRoleWithName = await _roleRepository.GetByNameAsync(updateObject.Name!);
@@ -261,7 +300,14 @@ public class AppRoleService : IAppRoleService
                     return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
             }
 
-            var updateRequest = await _roleRepository.UpdateAsync(updateObject, modifyingUserId);
+            var canUserDoThisAction = await CanUserDoThisAction(modifyingUserId, updateObject.Id);
+            if (!canUserDoThisAction)
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateAdminRole);
+
+            updateObject.LastModifiedBy = modifyingUserId;
+            updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+
+            var updateRequest = await _roleRepository.UpdateAsync(updateObject);
             if (!updateRequest.Succeeded)
                 return await Result.FailAsync(updateRequest.ErrorMessage);
 
@@ -277,6 +323,10 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            var foundRole = await GetByIdAsync(id);
+            if (!foundRole.Succeeded || foundRole.Data is null)
+                return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+
             var roleUserCount = await GetUsersForRole(id);
             if (!roleUserCount.Succeeded)
                 return await Result.FailAsync(roleUserCount.Messages);
@@ -284,6 +334,9 @@ public class AppRoleService : IAppRoleService
             if (roleUserCount.Data.Any())
                 return await Result.FailAsync("Roles that contain users cannot be deleted, please remove all users first");
 
+            if (RoleConstants.GetRequiredRoleNames().Contains(foundRole.Data.Name))
+                return await Result.FailAsync("The role you are attempting to delete is a built-in role and cannot be deleted");
+            
             var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
             if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);

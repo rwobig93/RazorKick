@@ -1,4 +1,4 @@
-namespace Application.Database.Tables.Lifecycle;
+namespace Application.Database.Lifecycle;
 
 public interface IServerStateRecordsTable : ISqlEnforcedEntity
 {

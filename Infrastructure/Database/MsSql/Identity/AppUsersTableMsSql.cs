@@ -1,22 +1,24 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppUsersTableMsSql : IAppUsersTable
 {
+    private const string TableName = "AppUsers";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersTableMsSql).GetDbScriptsFromClass();
     
     // TODO: Implement database migration framework
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
-        TableName = "AppUsers",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppUsers]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppUsers](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Username] NVARCHAR(256) NOT NULL,
                     [Email] NVARCHAR(256) NOT NULL,

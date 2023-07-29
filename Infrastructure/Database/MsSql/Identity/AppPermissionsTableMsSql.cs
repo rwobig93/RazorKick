@@ -1,21 +1,23 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppPermissionsTableMsSql : IAppPermissionsTable
 {
+    private const string TableName = "AppPermissions";
+    
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
-        TableName = "AppPermissions",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppPermissions]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppPermissions](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [RoleId] UNIQUEIDENTIFIER NULL,
                     [UserId] UNIQUEIDENTIFIER NULL,

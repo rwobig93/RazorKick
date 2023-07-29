@@ -24,9 +24,9 @@ public interface IAppUserRepository
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByUsernameSecurityAsync(string username);
     Task<DatabaseActionResult<AppUserSecurityDb>> GetByEmailAsync(string email);
     Task<DatabaseActionResult<AppUserFullDb>> GetByEmailFullAsync(string email);
-    Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject, bool systemUpdate = false);
-    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid? modifyingUser);
+    Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject);
+    Task<DatabaseActionResult> UpdateAsync(AppUserUpdate updateObject);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<DatabaseActionResult<Guid>> SetUserId(Guid currentId, Guid newId);
     Task<DatabaseActionResult> SetCreatedById(Guid userId, Guid createdById);
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText);

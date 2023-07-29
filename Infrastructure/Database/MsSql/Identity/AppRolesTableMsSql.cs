@@ -1,21 +1,23 @@
 using Application.Database;
-using Application.Database.Tables.Identity;
+using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
 public class AppRolesTableMsSql : IAppRolesTable
 {
+    private const string TableName = "AppRoles";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppRolesTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
-        TableName = "AppRoles",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[AppRoles]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[AppRoles](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [Name] NVARCHAR(256) NOT NULL,
                     [Description] NVARCHAR(4000) NOT NULL,

@@ -44,7 +44,7 @@ public partial class AccountSettings
     private async Task UpdateAccount()
     {
         var updatedAccount = CurrentUser.ToUpdate();
-        var requestResult = await UserService.UpdateAsync(updatedAccount);
+        var requestResult = await UserService.UpdateAsync(updatedAccount, CurrentUser.Id);
         if (!requestResult.Succeeded)
         {
             requestResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

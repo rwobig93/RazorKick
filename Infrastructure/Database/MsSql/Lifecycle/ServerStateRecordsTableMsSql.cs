@@ -1,20 +1,22 @@
 ﻿using Application.Database;
-using Application.Database.Tables.Lifecycle;
+using Application.Database.Lifecycle;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
 public class ServerStateRecordsTableMsSql : IServerStateRecordsTable
 {
+    private const string TableName = "ServerStateRecords";
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ServerStateRecordsTableMsSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
-        TableName = "ServerStateRecords",
-        SqlStatement = @"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[ServerStateRecords]'))
+        TableName = TableName,
+        SqlStatement = $@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
-                CREATE TABLE [dbo].[ServerStateRecords](
+                CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [AppVersion] NVARCHAR(128) NOT NULL,
                     [Timestamp] DATETIME2 NOT NULL

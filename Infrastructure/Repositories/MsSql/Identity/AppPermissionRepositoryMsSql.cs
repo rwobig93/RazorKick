@@ -1,9 +1,13 @@
-﻿using Application.Database.Tables.Identity;
-using Application.Helpers.Runtime;
+﻿using Application.Helpers.Runtime;
+using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
+using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Database;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.Identity;
 using Infrastructure.Database.MsSql.Shared;
@@ -14,15 +18,15 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
-    
-    // TODO: Find a way to implement the static table injections into the repositories
-    private readonly IAppPermissionsTable _permissionsTable;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ISerializerService _serializer;
 
-    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IAppPermissionsTable permissionsTable)
+    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository, ISerializerService serializer)
     {
         _database = database;
         _logger = logger;
-        _permissionsTable = permissionsTable;
+        _auditRepository = auditRepository;
+        _serializer = serializer;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -31,7 +35,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(AppPermissionsTableMsSql.GetAll, new { });
+            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsTableMsSql.GetAll, new { });
             actionReturn.Succeed(allPermissions);
         }
         catch (Exception ex)
@@ -298,6 +303,18 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(AppPermissionsTableMsSql.Insert, createObject);
+
+            var createdPermission = await GetByIdAsync(createdId);
+
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppPermissionsTableMsSql.Table.TableName,
+                RecordId = createdId,
+                ChangedBy = createObject.CreatedBy,
+                Action = DatabaseActionType.Create,
+                After = _serializer.Serialize(createdPermission.Result)
+            });
+            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -314,7 +331,22 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
+            var foundPermission = await GetByIdAsync(updateObject.Id);
+            
             await _database.SaveData(AppPermissionsTableMsSql.Update, updateObject);
+
+            var foundPermissionAfterUpdate = await GetByIdAsync(updateObject.Id);
+            
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppPermissionsTableMsSql.Table.TableName,
+                RecordId = updateObject.Id,
+                ChangedBy = updateObject.LastModifiedBy.GetFromNullable(),
+                Action = DatabaseActionType.Update,
+                Before = _serializer.Serialize(foundPermission.Result!.ToSlim()),
+                After = _serializer.Serialize(foundPermissionAfterUpdate.Result!.ToSlim())
+            });
+            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -325,13 +357,25 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
+            var foundPermission = await GetByIdAsync(id);
+            
             await _database.SaveData(AppPermissionsTableMsSql.Delete, new {Id = id});
+            
+            await _auditRepository.CreateAsync(new AuditTrailCreate
+            {
+                TableName = AppPermissionsTableMsSql.Table.TableName,
+                RecordId = foundPermission.Result!.Id,
+                ChangedBy = modifyingUserId,
+                Action = DatabaseActionType.Delete,
+                Before = _serializer.Serialize(foundPermission.Result!.ToSlim())
+            });
+            
             actionReturn.Succeed();
         }
         catch (Exception ex)

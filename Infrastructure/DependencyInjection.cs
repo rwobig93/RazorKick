@@ -1,8 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
-using Application.Database.Tables.Identity;
-using Application.Database.Tables.Lifecycle;
-using Application.Database.Tables.Shared;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
@@ -23,9 +20,6 @@ using Blazored.LocalStorage;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.PostgreSql;
-using Infrastructure.Database.MsSql.Identity;
-using Infrastructure.Database.MsSql.Lifecycle;
-using Infrastructure.Database.MsSql.Shared;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
@@ -289,28 +283,16 @@ public static class DependencyInjection
         // Add core SQL database service
         services.AddSingleton<ISqlDataService, SqlDataService>();
         
-        // Add repositories
-        services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
-        services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
-        services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
-        services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
-        services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
-        
-        // Add tables based on the desired database provider
+        // Add repositories based on the desired database provider
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
         {
             case DatabaseProviderType.MsSql:
-                services.AddSingleton<IGeneralTable, GeneralTableMsSql>();
-                services.AddSingleton<IAppUsersTable, AppUsersTableMsSql>();
-                services.AddSingleton<IAppUserSecurityAttributesTable, AppUserSecurityAttributesTableMsSql>();
-                services.AddSingleton<IAppUserExtendedAttributesTable, AppUserExtendedAttributesTableMsSql>();
-                services.AddSingleton<IAppUserPreferencesTable, AppUserPreferencesTableMsSql>();
-                services.AddSingleton<IAppRolesTable, AppRolesTableMsSql>();
-                services.AddSingleton<IAppUserRoleJunctionsTable, AppUserRoleJunctionsTableMsSql>();
-                services.AddSingleton<IAppPermissionsTable, AppPermissionsTableMsSql>();
-                services.AddSingleton<IAuditTrailsTable, AuditTrailsTableMsSql>();
-                services.AddSingleton<IServerStateRecordsTable, ServerStateRecordsTableMsSql>();
+                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
+                services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
