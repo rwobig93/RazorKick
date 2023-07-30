@@ -162,7 +162,7 @@ public static class PermissionMappers
             Group = DynamicPermissionGroup.ServiceAccounts.ToString(),
             Name = serviceAccount.Username,
             Access = permissionLevel.ToString(),
-            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {permissionLevel.ToString()}",
+            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {serviceAccount.Id}",
             CreatedBy = Guid.Empty,
             CreatedOn = DateTime.Now,
             LastModifiedBy = null,

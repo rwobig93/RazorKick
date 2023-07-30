@@ -20,13 +20,16 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
     private readonly ILogger _logger;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository, ISerializerService serializer)
+    public AppPermissionRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository,
+        ISerializerService serializer, IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
         _auditRepository = auditRepository;
         _serializer = serializer;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync()
@@ -229,6 +232,24 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllByClaimValueAsync(string claimValue)
+    {
+        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+
+        try
+        {
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsTableMsSql.GetByClaimValue, new {ClaimValue = claimValue});
+            actionReturn.Succeed(foundPermissions);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByClaimValue.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllForRoleAsync(Guid roleId)
     {
         DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
@@ -282,8 +303,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             foreach (var role in roles)
             {
                 var rolePermissions = await GetAllForRoleAsync(role.Id);
-                if (rolePermissions.Succeeded)
-                    allPermissions.AddRange(rolePermissions.Result!);
+                if (rolePermissions is {Succeeded: true, Result: not null})
+                    allPermissions.AddRange(rolePermissions.Result);
             }
 
             actionReturn.Succeed(allPermissions);
@@ -302,6 +323,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
+            createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
+            
             var createdId = await _database.SaveDataReturnId(AppPermissionsTableMsSql.Insert, createObject);
 
             var createdPermission = await GetByIdAsync(createdId);
@@ -332,6 +355,8 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = await GetByIdAsync(updateObject.Id);
+
+            updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
             
             await _database.SaveData(AppPermissionsTableMsSql.Update, updateObject);
 

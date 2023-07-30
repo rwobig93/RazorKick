@@ -176,7 +176,6 @@ public partial class UserAdmin
 
     private async Task CreateServiceAccount()
     {
-        // TODO: Add service account permission binding to role/permission so that users/roles can own their service accounts and change pass's
         if (!_canAdminServiceAccounts)
         {
             Snackbar.Add("You don't have permission to create accounts, how'd you initiate this request!?", Severity.Error);

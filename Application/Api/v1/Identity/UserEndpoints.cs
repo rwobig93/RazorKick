@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Web;
@@ -256,9 +257,11 @@ public static class UserEndpoints
     {
         try
         {
+            var currentUserId = await currentUserService.GetCurrentUserId();
+            
             var createRequest = userRequest.ToCreateObject();
 
-            return await userService.CreateAsync(createRequest);
+            return await userService.CreateAsync(createRequest, currentUserId.GetFromNullable());
         }
         catch (Exception ex)
         {
@@ -278,7 +281,9 @@ public static class UserEndpoints
     {
         try
         {
-            var updateRequest = await userService.UpdateAsync(userRequest.ToUpdate());
+            var currentUserId = await currentUserService.GetCurrentUserId();
+
+            var updateRequest = await userService.UpdateAsync(userRequest.ToUpdate(), currentUserId.GetFromNullable());
             if (!updateRequest.Succeeded) return updateRequest;
             return await Result.SuccessAsync("Successfully updated user!");
         }
@@ -293,13 +298,16 @@ public static class UserEndpoints
     /// </summary>
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="userService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(Policy = PermissionConstants.Users.Delete)]
-    private static async Task<IResult> DeleteUser(Guid userId, IAppUserService userService)
+    private static async Task<IResult> DeleteUser(Guid userId, IAppUserService userService, ICurrentUserService currentUserService)
     {
         try
         {
-            var deleteRequest = await userService.DeleteAsync(userId);
+            var currentUserId = await currentUserService.GetCurrentUserId();
+
+            var deleteRequest = await userService.DeleteAsync(userId, currentUserId.GetFromNullable());
             if (!deleteRequest.Succeeded) return deleteRequest;
             return await Result.SuccessAsync("Successfully deleted user!");
         }

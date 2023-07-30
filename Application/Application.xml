@@ -338,12 +338,13 @@
             <param name="currentUserService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.DeleteUser(System.Guid,Application.Services.Identity.IAppUserService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.DeleteUser(System.Guid,Application.Services.Identity.IAppUserService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete the specified user account
             </summary>
             <param name="userId">GUID ID of the user</param>
             <param name="userService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
         </member>
         <member name="M:Application.Api.v1.Identity.UserEndpoints.ResetPassword(System.Guid,Application.Services.Identity.IAppAccountService)">

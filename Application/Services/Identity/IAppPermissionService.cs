@@ -17,6 +17,7 @@ public interface IAppPermissionService
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllByRoleNameAsync(string roleName);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllByGroupAsync(string groupName);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllByAccessAsync(string accessName);
+    Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllByClaimValueAsync(string claimValue);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllForRoleAsync(Guid roleId);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllDirectForUserAsync(Guid userId);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllIncludingRolesForUserAsync(Guid userId);

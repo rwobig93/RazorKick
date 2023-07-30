@@ -26,6 +26,7 @@ using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Enums.Integration;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using Hangfire;
@@ -151,6 +152,7 @@ public class AppAccountService : IAppAccountService
             Name = "FullLoginClientId",
             Type = ExtendedAttributeType.UserClientId,
             Value = clientId,
+            // TODO: Add indicator to description for permission changes to force a re-authentication w/ a refresh token
             Description = ""
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
@@ -655,7 +657,7 @@ public class AppAccountService : IAppAccountService
         
         if (previousConfirmation.Value != confirmationCode)
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", userSecurity.Id,
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, userSecurity.Id,
                 new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
@@ -705,7 +707,7 @@ public class AppAccountService : IAppAccountService
         var confirmationUrl = (await GetEmailConfirmationUrl(foundUserRequest.Result.Id, newEmail)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", foundUserRequest.Result.Id,
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, foundUserRequest.Result.Id,
                 new Dictionary<string, string>()
                 {
                     {"UserId", foundUserRequest.Result.Id.ToString()},
@@ -721,7 +723,7 @@ public class AppAccountService : IAppAccountService
             _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
         if (response is null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
-        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, "EmailConfirmation", foundUserRequest.Result.Id,
+        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, foundUserRequest.Result.Id,
             new Dictionary<string, string>()
             {
                 {"UserId", foundUserRequest.Result.Id.ToString()},

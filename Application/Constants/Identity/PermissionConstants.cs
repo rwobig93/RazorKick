@@ -5,7 +5,6 @@ public static class PermissionConstants
     // Built-in Permissions are the following format: Permissions.Group.Name.Access => Permissions.Identity.Users.View
     // Dynamic Permissions are the following format: Dynamic.Group.Id.AccessLevel => Dynamic.ServiceAccounts.<Guid>.Admin
     
-    // TODO: Think about changing permission structure - maybe Type.Group.Name.Access | Need Id in there somewhere for dynamic permissions
     public static class Users
     {
         public const string View = "Permissions.Identity.Users.View";

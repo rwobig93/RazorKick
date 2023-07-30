@@ -1,26 +1,40 @@
 ﻿using Application.Constants.Communication;
+using Application.Helpers.Identity;
+using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Enums.Identity;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Identity;
-using Microsoft.Extensions.FileProviders;
+using Newtonsoft.Json;
 
 namespace Infrastructure.Services.Identity;
 
 public class AppUserService : IAppUserService
 {
     private readonly IAppUserRepository _userRepository;
+    private readonly IAppPermissionRepository _permissionRepository;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly IRunningServerState _serverState;
     private readonly ISerializerService _serializer;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppUserService(IAppUserRepository userRepository, ISerializerService serializer)
+    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, IAuditTrailsRepository auditRepository,
+        IRunningServerState serverState, ISerializerService serializer, IDateTimeService dateTimeService)
     {
         _userRepository = userRepository;
+        _permissionRepository = permissionRepository;
+        _auditRepository = auditRepository;
+        _serverState = serverState;
         _serializer = serializer;
+        _dateTimeService = dateTimeService;
     }
 
     private static async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb? userFullDb)
@@ -232,11 +246,63 @@ public class AppUserService : IAppUserService
     {
         try
         {
+            var foundUser = await GetByIdAsync(updateObject.Id);
+            if (!foundUser.Succeeded || foundUser.Data is null)
+                return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+
             var updateUser = await _userRepository.UpdateAsync(updateObject);
             if (!updateUser.Succeeded)
                 return await Result.FailAsync(updateUser.ErrorMessage);
 
-            return await Result.SuccessAsync();
+            if (foundUser.Data.AccountType != AccountType.Service) return await Result.SuccessAsync();
+            if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
+            
+            // Service Accounts have dynamic permissions so we need to update assigned permissions if the account name changed
+            var claimValue = PermissionHelpers.GetClaimValueFromServiceAccount(
+                foundUser.Data.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin);
+            var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
+            if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
+            {
+                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, _serializer, AuditTableName.Users, foundUser.Data.Id,
+                    new Dictionary<string, string>()
+                    {
+                        {"Username Before", foundUser.Data.Username},
+                        {"Username After", updateObject.Username!},
+                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Error", serviceAccountPermissions.ErrorMessage}
+                    });
+                return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
+            }
+
+            List<string> errorMessages = new();
+            
+            foreach (var permission in serviceAccountPermissions.Result)
+            {
+                var permissionUpdate = permission.ToUpdate();
+                permissionUpdate.Name = updateObject.Username;
+                permissionUpdate.LastModifiedBy = _serverState.SystemUserId;
+                permissionUpdate.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+                
+                var updatePermissionRequest = await _permissionRepository.UpdateAsync(permissionUpdate);
+                if (!updatePermissionRequest.Succeeded)
+                    errorMessages.Add(updatePermissionRequest.ErrorMessage);
+            }
+
+            if (!errorMessages.Any())
+                return await Result.SuccessAsync();
+
+            // For any update requests that failed we'll create a troubleshooting audit trail to troubleshoot easier
+            foreach (var message in errorMessages)
+                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, _serializer, AuditTableName.Users, foundUser.Data.Id,
+                    new Dictionary<string, string>()
+                    {
+                        {"Username Before", foundUser.Data.Username},
+                        {"Username After", updateObject.Username!},
+                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Error", message}
+                    });
+            
+            return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
         }
         catch (Exception ex)
         {
@@ -404,9 +470,9 @@ public class AppUserService : IAppUserService
             if (preferencesFull is null)
                 return await Result<AppUserPreferenceFull?>.FailAsync(preferencesFull);
             
-            preferencesFull.CustomThemeOne = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeOne!);
-            preferencesFull.CustomThemeTwo = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeTwo!);
-            preferencesFull.CustomThemeThree = _serializer.Deserialize<AppThemeCustom>(preferenceRequest.Result!.CustomThemeThree!);
+            preferencesFull.CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeOne!)!;
+            preferencesFull.CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeTwo!)!;
+            preferencesFull.CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeThree!)!;
 
             return await Result<AppUserPreferenceFull?>.SuccessAsync(preferencesFull);
         }

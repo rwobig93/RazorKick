@@ -16,13 +16,13 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
 {
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
-    private readonly IDateTimeService _dateTime;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AuditTrailsRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
+    public AuditTrailsRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
-        _dateTime = dateTime;
+        _dateTimeService = dateTimeService;
     }
     
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllAsync()
@@ -194,7 +194,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
 
         try
         {
-            createObject.Timestamp = _dateTime.NowDatabaseTime;
+            createObject.Timestamp = _dateTimeService.NowDatabaseTime;
             
             var createdId = await _database.SaveDataReturnId(AuditTrailsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
@@ -291,12 +291,12 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         {
             var cleanupTimestamp = olderThan switch
             {
-                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.TenYears => _dateTime.NowDatabaseTime.AddYears(-10).ToString(CultureInfo.CurrentCulture),
-                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
+                CleanupTimeframe.OneMonth => _dateTimeService.NowDatabaseTime.AddMonths(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.ThreeMonths => _dateTimeService.NowDatabaseTime.AddMonths(-3).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.SixMonths => _dateTimeService.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.OneYear => _dateTimeService.NowDatabaseTime.AddYears(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.TenYears => _dateTimeService.NowDatabaseTime.AddYears(-10).ToString(CultureInfo.CurrentCulture),
+                _ => _dateTimeService.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
             };
 
             var rowsDeleted = await _database.SaveData(AuditTrailsTableMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});

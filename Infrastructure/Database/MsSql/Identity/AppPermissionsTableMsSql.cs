@@ -171,6 +171,21 @@ public class AppPermissionsTableMsSql : IAppPermissionsTable
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByClaimValue = new()
+    {
+        Table = Table,
+        Action = "GetByClaimValue",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByClaimValue]
+                @ClaimValue NVARCHAR(1024)
+            AS
+            begin
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.ClaimValue = @ClaimValue;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure GetByRoleId = new()
     {
         Table = Table,

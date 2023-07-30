@@ -1,6 +1,4 @@
 ﻿using Application.Constants.Communication;
-using Application.Constants.Identity;
-using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Role;
@@ -8,7 +6,6 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
@@ -24,13 +21,16 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
     private readonly ILogger _logger;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ISerializerService _serializer;
+    private readonly IDateTimeService _dateTimeService;
 
-    public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository, ISerializerService serializer)
+    public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository,
+        ISerializerService serializer, IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
         _auditRepository = auditRepository;
         _serializer = serializer;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync()
@@ -159,14 +159,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    // TODO: Move modifyingUserId & Administrative validation up to the services, repositories should only contain database interactions
-    // TODO: Refactor repositories - they should only contain database interactions | All business logic should go into the services
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
+            createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
+            
             var createdId = await _database.SaveDataReturnId(AppRolesTableMsSql.Insert, createObject);
 
             var createdRole = await GetByIdAsync(createdId);
@@ -198,6 +198,8 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         {
             // Get role before update for auditing
             var foundRole = await GetByIdAsync(updateObject.Id);
+
+            updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
             
             await _database.SaveData(AppRolesTableMsSql.Update, updateObject);
             

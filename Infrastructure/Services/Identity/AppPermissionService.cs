@@ -1,20 +1,15 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
-using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
-using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
-using Application.Repositories.Lifecycle;
 using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
-using Domain.Enums.Database;
 using Domain.Enums.Identity;
-using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Services.Identity;
 
@@ -294,6 +289,27 @@ public class AppPermissionService : IAppPermissionService
         try
         {
             var foundPermissions = await _permissionRepository.GetAllByAccessAsync(accessName);
+            if (!foundPermissions.Succeeded)
+                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
+            
+            var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access);
+
+            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllByClaimValueAsync(string claimValue)
+    {
+        try
+        {
+            var foundPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
             
