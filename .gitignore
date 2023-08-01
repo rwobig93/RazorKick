@@ -1,6 +1,6 @@
 # Development Resources
 appsettings.Development.json
-/.idea/.idea.RazorKick/.idea/dataSources/*
+/.idea/.idea.RazorKick/.idea/dataSources/
 
 # User-specific files
 *.rsuser

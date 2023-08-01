@@ -10,7 +10,7 @@ public class AppPermissionsTableMsSql : IAppPermissionsTable
     
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsTableMsSql).GetDbScriptsFromClass();
     
-    public static readonly SqlTable Table = new()
+    public static SqlTable Table => new()
     {
         EnforcementOrder = 3,
         TableName = TableName,

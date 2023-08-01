@@ -2,8 +2,8 @@ namespace Application.Database.Identity;
 
 public interface IAppPermissionsTable : ISqlEnforcedEntity
 {
-    // TODO: Find a way to get static properties to auto-generate on inheriting classes for easily creating tables
-    public static readonly SqlTable Table = null!;
+    // TODO: Convert all table interfaces to static abstract members and update the inheriting classes
+    static abstract SqlTable Table { get; }
     public static readonly SqlStoredProcedure Delete = null!;
     public static readonly SqlStoredProcedure DeleteForUser = null!;
     public static readonly SqlStoredProcedure DeleteForRole = null!;

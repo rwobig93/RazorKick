@@ -2,10 +2,10 @@
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>11</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <NoWarn>CS1591</NoWarn>
         <Nullable>enable</Nullable>
-        <LangVersion>10</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DocumentationFile>Application.xml</DocumentationFile>
     </PropertyGroup>
