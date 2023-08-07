@@ -1,6 +1,6 @@
 namespace Application.Database.Identity;
 
-public interface IAppUsersTable : ISqlEnforcedEntity
+public interface IAppUsersTable
 {
     public static readonly SqlTable Table = null!;
     public static readonly SqlStoredProcedure Delete = null!;

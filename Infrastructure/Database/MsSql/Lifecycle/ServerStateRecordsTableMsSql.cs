@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class ServerStateRecordsTableMsSql : IServerStateRecordsTable
+public class ServerStateRecordsTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "ServerStateRecords";
 

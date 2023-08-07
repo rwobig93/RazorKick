@@ -1,6 +1,6 @@
 namespace Application.Database.Identity;
 
-public interface IAppUserRoleJunctionsTable : ISqlEnforcedEntity
+public interface IAppUserRoleJunctionsTable
 {
     public static readonly SqlTable Table = null!;
     public static readonly SqlStoredProcedure Delete = null!;

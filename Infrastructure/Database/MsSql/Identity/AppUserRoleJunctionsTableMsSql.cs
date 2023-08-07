@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserRoleJunctionsTableMsSql : IAppUserRoleJunctionsTable
+public class AppUserRoleJunctionsTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppUserRoleJunctions";
 

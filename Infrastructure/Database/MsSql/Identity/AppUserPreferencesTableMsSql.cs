@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserPreferencesTableMsSql : IAppUserPreferencesTable
+public class AppUserPreferencesTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppUserPreferences";
 

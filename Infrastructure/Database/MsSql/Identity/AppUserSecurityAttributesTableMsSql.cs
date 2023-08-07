@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserSecurityAttributesTableMsSql : IAppUserSecurityAttributesTable
+public class AppUserSecurityAttributesTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppUserSecurityAttributes";
 

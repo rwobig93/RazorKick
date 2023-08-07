@@ -4,13 +4,13 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppPermissionsTableMsSql : IAppPermissionsTable
+public class AppPermissionsTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppPermissions";
     
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsTableMsSql).GetDbScriptsFromClass();
     
-    public static SqlTable Table => new()
+    public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
         TableName = TableName,

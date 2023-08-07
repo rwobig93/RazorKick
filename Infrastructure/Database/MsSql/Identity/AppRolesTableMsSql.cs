@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppRolesTableMsSql : IAppRolesTable
+public class AppRolesTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppRoles";
 

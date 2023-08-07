@@ -5,7 +5,7 @@ using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class AuditTrailsTableMsSql : IAuditTrailsTable
+public class AuditTrailsTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AuditTrails";
 

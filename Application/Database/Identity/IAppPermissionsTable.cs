@@ -1,25 +1,26 @@
 namespace Application.Database.Identity;
 
-public interface IAppPermissionsTable : ISqlEnforcedEntity
+public interface IAppPermissionsTable
 {
+    // Purpose of this interface is to be inherited when creating a new SQL provider, inherit to populate members then write implementation
     // TODO: Convert all table interfaces to static abstract members and update the inheriting classes
     static abstract SqlTable Table { get; }
-    public static readonly SqlStoredProcedure Delete = null!;
-    public static readonly SqlStoredProcedure DeleteForUser = null!;
-    public static readonly SqlStoredProcedure DeleteForRole = null!;
-    public static readonly SqlStoredProcedure GetAll = null!;
-    public static readonly SqlStoredProcedure GetAllPaginated = null!;
-    public static readonly SqlStoredProcedure GetById = null!;
-    public static readonly SqlStoredProcedure GetByName = null!;
-    public static readonly SqlStoredProcedure GetByGroup = null!;
-    public static readonly SqlStoredProcedure GetByAccess = null!;
-    public static readonly SqlStoredProcedure GetByClaimValue = null!;
-    public static readonly SqlStoredProcedure GetByRoleId = null!;
-    public static readonly SqlStoredProcedure GetByRoleIdAndValue = null!;
-    public static readonly SqlStoredProcedure GetByUserId = null!;
-    public static readonly SqlStoredProcedure GetByUserIdAndValue = null!;
-    public static readonly SqlStoredProcedure Insert = null!;
-    public static readonly SqlStoredProcedure Search = null!;
-    public static readonly SqlStoredProcedure SearchPaginated = null!;
-    public static readonly SqlStoredProcedure Update = null!;
+    static abstract SqlStoredProcedure Delete { get; }
+    static abstract SqlStoredProcedure DeleteForUser { get; }
+    static abstract SqlStoredProcedure DeleteForRole { get; }
+    static abstract SqlStoredProcedure GetAll { get; }
+    static abstract SqlStoredProcedure GetAllPaginated { get; }
+    static abstract SqlStoredProcedure GetById { get; }
+    static abstract SqlStoredProcedure GetByName { get; }
+    static abstract SqlStoredProcedure GetByGroup { get; }
+    static abstract SqlStoredProcedure GetByAccess { get; }
+    static abstract SqlStoredProcedure GetByClaimValue { get; }
+    static abstract SqlStoredProcedure GetByRoleId { get; }
+    static abstract SqlStoredProcedure GetByRoleIdAndValue { get; }
+    static abstract SqlStoredProcedure GetByUserId { get; }
+    static abstract SqlStoredProcedure GetByUserIdAndValue { get; }
+    static abstract SqlStoredProcedure Insert { get; }
+    static abstract SqlStoredProcedure Search { get; }
+    static abstract SqlStoredProcedure SearchPaginated { get; }
+    static abstract SqlStoredProcedure Update { get; }
 }

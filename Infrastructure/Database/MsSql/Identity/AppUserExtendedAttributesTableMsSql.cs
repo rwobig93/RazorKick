@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUserExtendedAttributesTableMsSql : IAppUserExtendedAttributesTable
+public class AppUserExtendedAttributesTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "AppUserExtendedAttributes";
 

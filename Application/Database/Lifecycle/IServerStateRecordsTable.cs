@@ -1,6 +1,6 @@
 namespace Application.Database.Lifecycle;
 
-public interface IServerStateRecordsTable : ISqlEnforcedEntity
+public interface IServerStateRecordsTable
 {
     public static readonly SqlTable Table = null!;
     public static readonly SqlStoredProcedure GetAll = null!;

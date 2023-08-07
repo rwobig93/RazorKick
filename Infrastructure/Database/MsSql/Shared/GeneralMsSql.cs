@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Shared;
 
-public class GeneralTableMsSql : IGeneralTable
+public class GeneralTableMsSql : ISqlEnforcedEntity
 {
     private const string TableName = "General";
 

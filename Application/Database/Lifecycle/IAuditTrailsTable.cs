@@ -1,6 +1,6 @@
 namespace Application.Database.Lifecycle;
 
-public interface IAuditTrailsTable : ISqlEnforcedEntity
+public interface IAuditTrailsTable
 {
     public static readonly SqlTable Table = null!;
     public static readonly SqlStoredProcedure GetAll = null!;

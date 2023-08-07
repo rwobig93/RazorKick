@@ -1,6 +1,6 @@
 namespace Application.Database.Identity;
 
-public interface IAppUserSecurityAttributesTable : ISqlEnforcedEntity
+public interface IAppUserSecurityAttributesTable
 {
     public static readonly SqlTable Table = null!;
     public static readonly SqlStoredProcedure Delete = null!;

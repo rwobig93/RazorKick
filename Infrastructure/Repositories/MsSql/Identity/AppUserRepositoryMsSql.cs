@@ -354,13 +354,11 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
             
             var createdId = await _database.SaveDataReturnId(AppUsersTableMsSql.Insert, createObject);
-
-            var foundUser = await GetByIdAsync(createdId);
             
             // All user get database calls also pull from the security attribute AuthState so we at least need one to exist
             await CreateSecurityAsync(new AppUserSecurityAttributeCreate
             {
-                OwnerId = foundUser.Result!.Id,
+                OwnerId = createdId,
                 PasswordHash = "null",
                 PasswordSalt = "null",
                 TwoFactorEnabled = false,
@@ -370,6 +368,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 BadPasswordAttempts = 0,
                 LastBadPassword = null
             });
+
+            var foundUser = await GetByIdAsync(createdId);
             
             await _auditRepository.CreateAsync(new AuditTrailCreate
             {
