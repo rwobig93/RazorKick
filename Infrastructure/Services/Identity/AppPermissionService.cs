@@ -1,15 +1,20 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Identity;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
+using Application.Models.Identity.Role;
+using Application.Models.Identity.User;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Enums.Identity;
+using Domain.Enums.Lifecycle;
+using Hangfire;
 
 namespace Infrastructure.Services.Identity;
 
@@ -20,15 +25,19 @@ public class AppPermissionService : IAppPermissionService
     private readonly IAppRoleRepository _roleRepository;
     private readonly IRunningServerState _serverState;
     private readonly IDateTimeService _dateTimeService;
+    private readonly IAuditTrailService _auditService;
+    private readonly ILogger _logger;
 
     public AppPermissionService(IAppPermissionRepository permissionRepository, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IRunningServerState serverState, IDateTimeService dateTimeService)
+        IRunningServerState serverState, IDateTimeService dateTimeService, IAuditTrailService auditService, ILogger logger)
     {
         _permissionRepository = permissionRepository;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _serverState = serverState;
         _dateTimeService = dateTimeService;
+        _auditService = auditService;
+        _logger = logger;
     }
 
     private async Task<bool> IsUserAdmin(Guid userId)
@@ -191,6 +200,38 @@ public class AppPermissionService : IAppPermissionService
         catch (Exception ex)
         {
             return await Result<int>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppUserSlim>>> GetAllUsersByClaimValueAsync(string claimValue)
+    {
+        try
+        {
+            var foundUsers = await _permissionRepository.GetAllUsersByClaimValueAsync(claimValue);
+            if (!foundUsers.Succeeded)
+                return await Result<IEnumerable<AppUserSlim>>.FailAsync(foundUsers.ErrorMessage);
+
+            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(foundUsers.Result?.ToSlims() ?? new List<AppUserSlim>());
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllRolesByClaimValueAsync(string claimValue)
+    {
+        try
+        {
+            var foundRoles = await _permissionRepository.GetAllRolesByClaimValueAsync(claimValue);
+            if (!foundRoles.Succeeded)
+                return await Result<IEnumerable<AppRoleSlim>>.FailAsync(foundRoles.ErrorMessage);
+
+            return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(foundRoles.Result?.ToSlims() ?? new List<AppRoleSlim>());
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -389,6 +430,46 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
+    private async Task UpdateUserForPermissionChange(Guid userId)
+    {
+        _logger.Debug("Updating clientId's for {UserId} to re-auth for updated permissions", userId);
+
+        // Update user userClientId's with a re-auth description which will be checked to re-auth w/ a refresh token for updated permissions
+        var userClientIds = await _userRepository.GetUserExtendedAttributesByTypeAsync(userId, ExtendedAttributeType.UserClientId);
+        if (!userClientIds.Succeeded || userClientIds.Result is null) return;
+
+        foreach (var clientId in userClientIds.Result)
+            await _userRepository.UpdateExtendedAttributeAsync(clientId.Id, clientId.Value, UserClientIdState.ReAuthNeeded.ToString());
+            
+        _logger.Debug("Updated clientId's for User to force refresh token re-auth: {UserId}", userId);
+    }
+
+    private async Task UpdateRoleUsersForPermissionChange(Guid roleId)
+    {
+        var roleUsers = await _roleRepository.GetUsersForRole(roleId);
+        if (!roleUsers.Succeeded)
+        {
+            _logger.Error("Failure occurred attempting to get users for role for permission update: {Error}", roleUsers.ErrorMessage);
+            return;
+        }
+
+        var usersToUpdate = roleUsers.Result?.ToSlims().ToList() ?? new List<AppUserSlim>();
+        
+        _logger.Debug("Found {UserCount} users for role {RoleId} that need to re-auth for updated permissions", usersToUpdate.Count, roleId);
+
+        // Update each user's userClientId with a re-auth description which will be checked to re-auth w/ a refresh token for updated permissions
+        foreach (var user in usersToUpdate)
+        {
+            var userClientIds = await _userRepository.GetUserExtendedAttributesByTypeAsync(user.Id, ExtendedAttributeType.UserClientId);
+            if (!userClientIds.Succeeded || userClientIds.Result is null) continue;
+
+            foreach (var clientId in userClientIds.Result)
+                await _userRepository.UpdateExtendedAttributeAsync(clientId.Id, clientId.Value, UserClientIdState.ReAuthNeeded.ToString());
+            
+            _logger.Debug("Updated clientId's for User to force refresh token re-auth: [{UserId}]{Username}", user.Id, user.Username);
+        }
+    }
+
     public async Task<IResult<Guid>> CreateAsync(AppPermissionCreate createObject, Guid modifyingUserId)
     {
         try
@@ -423,6 +504,23 @@ public class AppPermissionService : IAppPermissionService
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
+            
+            // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
+            _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
+                createObject.ClaimValue);
+
+            var response = createObject.UserId == GuidHelpers.GetMax() ?
+                BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(createObject.RoleId)) :
+                BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(createObject.UserId));
+            
+            if (response is null)
+                await _auditService.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.TshootPermissions, createRequest.Result,
+                    new Dictionary<string, string>()
+                {
+                    {"Action", "Permission Change - Update Users - Create Permission"},
+                    {"Detail", "Failed to queue permission job to update users w/ new permissions to validate against clientId"},
+                    {"PermissionId", createRequest.Result.ToString()}
+                });
             
             return await Result<Guid>.SuccessAsync(createRequest.Result);
         }
@@ -474,6 +572,23 @@ public class AppPermissionService : IAppPermissionService
             var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id, modifyingUserId);
             if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
+            
+            // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
+            _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
+                foundPermission.Result.ClaimValue);
+
+            var response = foundPermission.Result.UserId == GuidHelpers.GetMax() ?
+                BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(foundPermission.Result.RoleId)) :
+                BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(foundPermission.Result.UserId));
+            
+            if (response is null)
+                await _auditService.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.TshootPermissions, permissionId,
+                    new Dictionary<string, string>()
+                    {
+                        {"Action", "Permission Change - Update Users - Delete Permission"},
+                        {"Detail", "Failed to queue permission job to update users w/ new permissions to validate against clientId"},
+                        {"PermissionId", permissionId.ToString()}
+                    });
 
             return await Result.SuccessAsync();
         }

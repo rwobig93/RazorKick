@@ -1,4 +1,6 @@
 ﻿using Application.Models.Identity.Permission;
+using Application.Models.Identity.Role;
+using Application.Models.Identity.User;
 using Application.Models.Web;
 
 namespace Application.Services.Identity;
@@ -11,6 +13,8 @@ public interface IAppPermissionService
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchAsync(string searchTerm);
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
+    Task<IResult<IEnumerable<AppUserSlim>>> GetAllUsersByClaimValueAsync(string claimValue);
+    Task<IResult<IEnumerable<AppRoleSlim>>> GetAllRolesByClaimValueAsync(string claimValue);
     Task<IResult<AppPermissionSlim?>> GetByIdAsync(Guid permissionId);
     Task<IResult<AppPermissionSlim?>> GetByUserIdAndValueAsync(Guid userId, string claimValue);
     Task<IResult<AppPermissionSlim?>> GetByRoleIdAndValueAsync(Guid roleId, string claimValue);

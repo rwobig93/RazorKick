@@ -10,6 +10,8 @@ public interface IAppPermissionsTable
     static abstract SqlStoredProcedure DeleteForRole { get; }
     static abstract SqlStoredProcedure GetAll { get; }
     static abstract SqlStoredProcedure GetAllPaginated { get; }
+    static abstract SqlStoredProcedure GetAllUsersByClaimValue { get; }
+    static abstract SqlStoredProcedure GetAllRolesByClaimValue { get; }
     static abstract SqlStoredProcedure GetById { get; }
     static abstract SqlStoredProcedure GetByName { get; }
     static abstract SqlStoredProcedure GetByGroup { get; }

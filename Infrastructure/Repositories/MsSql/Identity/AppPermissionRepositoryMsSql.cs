@@ -10,6 +10,7 @@ using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 using Infrastructure.Database.MsSql.Identity;
 using Infrastructure.Database.MsSql.Shared;
 
@@ -118,6 +119,42 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllUsersByClaimValueAsync(string claimValue)
+    {
+        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+
+        try
+        {
+            var foundUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+                AppPermissionsTableMsSql.GetAllUsersByClaimValue, new {ClaimValue = claimValue});
+            actionReturn.Succeed(foundUsers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetAllUsersByClaimValue.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllRolesByClaimValueAsync(string claimValue)
+    {
+        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+
+        try
+        {
+            var foundRoles = await _database.LoadData<AppRoleDb, dynamic>(
+                AppPermissionsTableMsSql.GetAllRolesByClaimValue, new {ClaimValue = claimValue});
+            actionReturn.Succeed(foundRoles);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetAllRolesByClaimValue.Path, ex.Message);
         }
 
         return actionReturn;

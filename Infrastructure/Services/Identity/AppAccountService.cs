@@ -141,20 +141,32 @@ public class AppAccountService : IAppAccountService
         if (!updateSecurity.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
         
-        // Generate and register client id as a successful login with user+pass, only registered client id's can re-auth w/ refresh tokens
-        var clientId = AccountHelpers.GenerateClientId();
-        var newExtendedAttribute = new AppUserExtendedAttributeCreate
+        // Get previous client id or generate a new client id for successful login with user+pass, only registered client id's can re-auth w/ refresh tokens
+        var localStorage = await GetLocalStorage();
+        var clientId = localStorage.Data.ClientId ?? AccountHelpers.GenerateClientId();
+
+        var existingClientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
+            userSecurity.Id, ExtendedAttributeType.UserClientId, clientId);
+        if (!existingClientIdRequest.Succeeded || existingClientIdRequest.Result?.FirstOrDefault() is null)
         {
-            OwnerId = userSecurity.Id,
-            Name = "FullLoginClientId",
-            Type = ExtendedAttributeType.UserClientId,
-            Value = clientId,
-            // TODO: Add indicator to description for permission changes to force a re-authentication w/ a refresh token
-            Description = ""
-        };
-        var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
-        if (!addAttributeRequest.Succeeded)
-            return await Result<UserLoginResponse>.FailAsync(addAttributeRequest.ErrorMessage);
+            var newExtendedAttribute = new AppUserExtendedAttributeCreate
+            {
+                OwnerId = userSecurity.Id,
+                Name = "FullLoginClientId",
+                Type = ExtendedAttributeType.UserClientId,
+                Value = clientId,
+                Description = UserClientIdState.Active.ToString()
+            };
+            var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
+            if (!addAttributeRequest.Succeeded)
+                return await Result<UserLoginResponse>.FailAsync(addAttributeRequest.ErrorMessage);
+        }
+        else
+        {
+            // ClientId already exists, update the description for current state
+            var existingClientId = existingClientIdRequest.Result.FirstOrDefault();
+            await _userRepository.UpdateExtendedAttributeAsync(existingClientId!.Id, existingClientId.Value, UserClientIdState.Active.ToString());
+        }
 
         // Generate the JWT and return
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
@@ -202,7 +214,7 @@ public class AppAccountService : IAppAccountService
         }
         catch
         {
-            tokenRequest.ClientId = "";
+            tokenRequest.ClientId = null;
             tokenRequest.Token = "";
             tokenRequest.RefreshToken = "";
             return await Result<LocalStorageRequest>.FailAsync(tokenRequest, "Failed to load cookie authentication");
@@ -467,6 +479,8 @@ public class AppAccountService : IAppAccountService
         var token = JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user.ToUserDb()), _dateTime, _securityConfig, _appConfig);
         var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, user.Id);
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
+        var clientId = clientIdRequest.Result.FirstOrDefault();
+        await _userRepository.UpdateExtendedAttributeAsync(clientId!.Id, clientId.Value, UserClientIdState.Active.ToString());
 
         var response = new UserLoginResponse { ClientId = localStorage.ClientId, Token = token, RefreshToken = refreshToken,
             RefreshTokenExpiryTime = refreshTokenExpiration };
@@ -1020,14 +1034,31 @@ public class AppAccountService : IAppAccountService
         }
     }
 
-    public async Task<IResult<bool>> IsCurrentSessionValid()
+    public async Task<IResult<bool>> DoesCurrentSessionNeedReAuthenticated()
     {
         try
         {
             var authToken = await GetAuthTokenFromSession();
             var sessionIsValid = JwtHelpers.IsJwtValid(authToken, _securityConfig, _appConfig);
+            if (!sessionIsValid)
+                return await Result<bool>.SuccessAsync(true);
 
-            return await Result<bool>.SuccessAsync(sessionIsValid);
+            var currentUserId = JwtHelpers.GetJwtUserId(authToken);
+            var localStorageRequest = await GetLocalStorage();
+            if (!localStorageRequest.Succeeded)
+                return await Result<bool>.FailAsync(localStorageRequest.Messages);
+        
+            // Validate if the current clientId needs to re-authenticate due to permission changes
+            var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
+                currentUserId, ExtendedAttributeType.UserClientId, localStorageRequest.Data.ClientId);
+            if (!clientIdRequest.Succeeded || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
+                return await Result<bool>.FailAsync(ErrorMessageConstants.TokenInvalidError);
+
+            if (clientIdRequest.Result.FirstOrDefault()!.Description == UserClientIdState.ReAuthNeeded.ToString())
+                return await Result<bool>.SuccessAsync(true);
+
+            // Session doesn't need re-auth
+            return await Result<bool>.SuccessAsync(false);
         }
         catch (Exception ex)
         {

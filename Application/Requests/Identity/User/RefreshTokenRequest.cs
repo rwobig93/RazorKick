@@ -2,7 +2,7 @@
 
 public class LocalStorageRequest
 {
-    public string ClientId { get; set; } = null!;
-    public string Token { get; set; } = null!;
-    public string RefreshToken { get; set; } = null!;
+    public string? ClientId { get; set; }
+    public string? Token { get; set; }
+    public string? RefreshToken { get; set; }
 }

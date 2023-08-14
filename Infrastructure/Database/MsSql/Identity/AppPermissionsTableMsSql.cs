@@ -107,6 +107,37 @@ public class AppPermissionsTableMsSql : ISqlEnforcedEntity
                 ORDER BY p.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
+
+    public static readonly SqlStoredProcedure GetAllUsersByClaimValue = new()
+    {
+        Table = Table,
+        Action = "GetAllUsersByClaimValue",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllUsersByClaimValue]
+            AS
+            begin
+                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                        s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
+                FROM dbo.[{Table.TableName}] p
+                JOIN dbo.[{AppUsersTableMsSql.Table.TableName}] u ON u.Id = p.UserId
+                JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
+                WHERE u.IsDeleted = 0;
+            end"
+    };
+
+    public static readonly SqlStoredProcedure GetAllRolesByClaimValue = new()
+    {
+        Table = Table,
+        Action = "GetAllRolesByClaimValue",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllRolesByClaimValue]
+            AS
+            begin
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] p
+                JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = p.RoleId;
+            end"
+    };
     
     public static readonly SqlStoredProcedure GetById = new()
     {

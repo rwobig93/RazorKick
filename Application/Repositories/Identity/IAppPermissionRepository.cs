@@ -1,6 +1,7 @@
 ﻿using Application.Models.Identity.Permission;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
+using Domain.Models.Identity;
 
 namespace Application.Repositories.Identity;
 
@@ -11,6 +12,8 @@ public interface IAppPermissionRepository
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchAsync(string searchTerm);
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
+    Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllUsersByClaimValueAsync(string claimValue);
+    Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllRolesByClaimValueAsync(string claimValue);
     Task<DatabaseActionResult<AppPermissionDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<AppPermissionDb>> GetByUserIdAndValueAsync(Guid userId, string claimValue);
     Task<DatabaseActionResult<AppPermissionDb>> GetByRoleIdAndValueAsync(Guid roleId, string claimValue);

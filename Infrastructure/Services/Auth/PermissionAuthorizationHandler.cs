@@ -56,7 +56,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
         
         // Validate or re-authenticate active session based on token expiration, this can happen if the token hasn't been validated recently
-        if (!(await _accountService.IsCurrentSessionValid()).Data)
+        if ((await _accountService.DoesCurrentSessionNeedReAuthenticated()).Data)
         {
             var reAuthenticationSuccess = await AttemptReAuthentication();
             if (!reAuthenticationSuccess)
