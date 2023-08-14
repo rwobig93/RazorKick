@@ -2,14 +2,14 @@ namespace Application.Database.Identity;
 
 public interface IAppUserRoleJunctionsTable
 {
-    public static readonly SqlTable Table = null!;
-    public static readonly SqlStoredProcedure Delete = null!;
-    public static readonly SqlStoredProcedure DeleteForUser = null!;
-    public static readonly SqlStoredProcedure DeleteForRole = null!;
-    public static readonly SqlStoredProcedure GetAll = null!;
-    public static readonly SqlStoredProcedure GetByUserRoleId = null!;
-    public static readonly SqlStoredProcedure GetRolesOfUser = null!;
-    public static readonly SqlStoredProcedure GetUsersOfRole = null!;
-    public static readonly SqlStoredProcedure Insert = null!;
-    public static readonly SqlStoredProcedure Search = null!;
+    static abstract SqlTable Table { get; }
+    static abstract SqlStoredProcedure Delete { get; }
+    static abstract SqlStoredProcedure DeleteForUser { get; }
+    static abstract SqlStoredProcedure DeleteForRole { get; }
+    static abstract SqlStoredProcedure GetAll { get; }
+    static abstract SqlStoredProcedure GetByUserRoleId { get; }
+    static abstract SqlStoredProcedure GetRolesOfUser { get; }
+    static abstract SqlStoredProcedure GetUsersOfRole { get; }
+    static abstract SqlStoredProcedure Insert { get; }
+    static abstract SqlStoredProcedure Search { get; }
 }

@@ -9,7 +9,6 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.UserExtensions;
-using Application.Models.Lifecycle;
 using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Requests.Api;
@@ -51,7 +50,6 @@ public class AppAccountService : IAppAccountService
     private readonly HttpClient _httpClient;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
-    private readonly ISerializerService _serializer;
     private readonly IAuditTrailService _auditService;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly SecurityConfiguration _securityConfig;
@@ -61,7 +59,7 @@ public class AppAccountService : IAppAccountService
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
-        IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState, ISerializerService serializer,
+        IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
         ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
     {
@@ -75,7 +73,6 @@ public class AppAccountService : IAppAccountService
         _mailService = mailService;
         _dateTime = dateTime;
         _serverState = serverState;
-        _serializer = serializer;
         _auditService = auditService;
         _contextAccessor = contextAccessor;
         _currentUserService = currentUserService;
@@ -169,16 +166,11 @@ public class AppAccountService : IAppAccountService
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
         {
-            await _auditService.CreateAsync(new AuditTrailCreate
-            {
-                TableName = "AuthState",
-                RecordId = userSecurity.Id,
-                ChangedBy = _serverState.SystemUserId,
-                Action = DatabaseActionType.Login,
-                Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}}),
-                After = _serializer.Serialize(new Dictionary<string, string>() 
-                    {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}})
-            });
+            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
+                _serverState.SystemUserId, DatabaseActionType.Login,
+                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
+                new Dictionary<string, string>() 
+                    {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
         }
         
         return await Result<UserLoginResponse>.SuccessAsync(response);
@@ -268,16 +260,11 @@ public class AppAccountService : IAppAccountService
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
         {
-            await _auditService.CreateAsync(new AuditTrailCreate
-            {
-                TableName = "AuthState",
-                RecordId = userSecurity.Id,
-                ChangedBy = _serverState.SystemUserId,
-                Action = DatabaseActionType.Login,
-                Before = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}}),
-                After = _serializer.Serialize(new Dictionary<string, string>() 
-                    {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}})
-            });
+            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
+                _serverState.SystemUserId, DatabaseActionType.Login,
+                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
+                new Dictionary<string, string>() 
+                    {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
         }
         
         return await Result<UserLoginResponse>.SuccessAsync(response);
@@ -427,17 +414,12 @@ public class AppAccountService : IAppAccountService
                 
             var user = (await _userRepository.GetByIdAsync(userId)).Result ??
                        new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
-
-            await _auditService.CreateAsync(new AuditTrailCreate
-            {
-                TableName = "AuthState",
-                RecordId = userId,
-                ChangedBy = _serverState.SystemUserId,
-                Action = DatabaseActionType.Logout,
-                Before = _serializer.Serialize(new Dictionary<string, string>()
-                    {{"Username", user.Username}, {"AuthState", user.AuthState.ToString()}}),
-                After = _serializer.Serialize(new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}})
-            });
+            
+            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userId,
+                _serverState.SystemUserId, DatabaseActionType.Logout,
+                new Dictionary<string, string>()
+                    {{"Username", user.Username}, {"AuthState", user.AuthState.ToString()}},
+                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}});
 
             return await Result.SuccessAsync();
         }
@@ -635,30 +617,23 @@ public class AppAccountService : IAppAccountService
 
         if (previousConfirmation is null)
         {
-            await _auditService.CreateAsync(new AuditTrailCreate
-            {
-                TableName = "EmailConfirmation",
-                RecordId = userId,
-                ChangedBy = _serverState.SystemUserId,
-                Timestamp = _dateTime.NowDatabaseTime,
-                Action = DatabaseActionType.Troubleshooting,
-                Before = _serializer.Serialize(new Dictionary<string, string>()),
-                After = _serializer.Serialize(new Dictionary<string, string>
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
+                userId, new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
                     {"Email", userSecurity.Email},
                     {"Details", "Email confirmation was attempted when an email confirmation isn't currently pending"}
-                })
-            });
+                });
+            
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         }
         
         if (previousConfirmation.Value != confirmationCode)
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, userSecurity.Id,
-                new Dictionary<string, string>
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
+                userSecurity.Id, new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
@@ -667,6 +642,7 @@ public class AppAccountService : IAppAccountService
                     {"Correct Code ", previousConfirmation.Value},
                     {"Provided Code", confirmationCode}
                 });
+            
             return await Result<string>.FailAsync(
                 $"An error occurred attempting to confirm account: {userSecurity.Id}, please contact the administrator");
         }
@@ -707,8 +683,8 @@ public class AppAccountService : IAppAccountService
         var confirmationUrl = (await GetEmailConfirmationUrl(foundUserRequest.Result.Id, newEmail)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, foundUserRequest.Result.Id,
-                new Dictionary<string, string>()
+            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
+                foundUserRequest.Result.Id, new Dictionary<string, string>()
                 {
                     {"UserId", foundUserRequest.Result.Id.ToString()},
                     {"Username", foundUserRequest.Result.Username},
@@ -723,8 +699,8 @@ public class AppAccountService : IAppAccountService
             _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
         if (response is null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
-        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, _serializer, AuditTableName.TshootConfirmation, foundUserRequest.Result.Id,
-            new Dictionary<string, string>()
+        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
+            foundUserRequest.Result.Id, new Dictionary<string, string>()
             {
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},

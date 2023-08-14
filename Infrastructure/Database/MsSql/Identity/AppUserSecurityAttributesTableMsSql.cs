@@ -1,5 +1,4 @@
 using Application.Database;
-using Application.Database.Identity;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;

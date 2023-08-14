@@ -1,8 +1,8 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
-using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
@@ -10,6 +10,7 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using Infrastructure.Database.MsSql.Identity;
@@ -23,16 +24,14 @@ public class AppUserRepositoryMsSql : IAppUserRepository
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailsRepository _auditRepository;
-    private readonly ISerializerService _serializer;
 
-    public AppUserRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository,
-        ISerializerService serializer)
+    public AppUserRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime,
+        IAuditTrailsRepository auditRepository)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _auditRepository = auditRepository;
-        _serializer = serializer;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync()
@@ -370,15 +369,9 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             });
 
             var foundUser = await GetByIdAsync(createdId);
-            
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppUsersTableMsSql.Table.TableName,
-                RecordId = foundUser.Result!.Id,
-                ChangedBy = createObject.CreatedBy,
-                Action = DatabaseActionType.Create,
-                After = _serializer.Serialize(foundUser.Result!.ToSlim())
-            });
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, foundUser.Result!.Id,
+                createObject.CreatedBy, DatabaseActionType.Create, null, foundUser.Result!.ToSlim());
             
             actionReturn.Succeed(createdId);
         }
@@ -421,16 +414,11 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
             userUpdate.LastModifiedBy = modifyingUser;
             await UpdateAsync(userUpdate);
-            await _database.SaveData(AppUsersTableMsSql.Delete, new { userId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(AppUsersTableMsSql.Delete, 
+                new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppUsersTableMsSql.Table.TableName,
-                RecordId = userId,
-                ChangedBy = ((Guid)userUpdate.LastModifiedBy!),
-                Action = DatabaseActionType.Delete,
-                Before = _serializer.Serialize(userUpdate)
-            });
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userId,
+                userUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, userUpdate);
             
             actionReturn.Succeed();
         }

@@ -2,28 +2,28 @@ namespace Application.Database.Identity;
 
 public interface IAppUsersTable
 {
-    public static readonly SqlTable Table = null!;
-    public static readonly SqlStoredProcedure Delete = null!;
-    public static readonly SqlStoredProcedure GetAll = null!;
-    public static readonly SqlStoredProcedure GetAllServiceAccountsForPermissions = null!;
-    public static readonly SqlStoredProcedure GetAllPaginated = null!;
-    public static readonly SqlStoredProcedure GetAllServiceAccountsPaginated = null!;
-    public static readonly SqlStoredProcedure GetAllDisabledPaginated = null!;
-    public static readonly SqlStoredProcedure GetAllLockedOutPaginated  = null!;
-    public static readonly SqlStoredProcedure GetAllDeleted = null!;
-    public static readonly SqlStoredProcedure GetAllLockedOut = null!;
-    public static readonly SqlStoredProcedure GetByEmail = null!;
-    public static readonly SqlStoredProcedure GetByEmailFull = null!;
-    public static readonly SqlStoredProcedure GetById = null!;
-    public static readonly SqlStoredProcedure GetByIdSecurity = null!;
-    public static readonly SqlStoredProcedure GetByIdFull = null!;
-    public static readonly SqlStoredProcedure GetByUsername = null!;
-    public static readonly SqlStoredProcedure GetByUsernameFull = null!;
-    public static readonly SqlStoredProcedure GetByUsernameSecurity = null!;
-    public static readonly SqlStoredProcedure Insert = null!;
-    public static readonly SqlStoredProcedure Search = null!;
-    public static readonly SqlStoredProcedure SearchPaginated = null!;
-    public static readonly SqlStoredProcedure Update = null!;
-    public static readonly SqlStoredProcedure SetUserId = null!;
-    public static readonly SqlStoredProcedure SetCreatedById = null!;
+    static abstract SqlTable Table { get; }
+    static abstract SqlStoredProcedure Delete { get; }
+    static abstract SqlStoredProcedure GetAll { get; }
+    static abstract SqlStoredProcedure GetAllServiceAccountsForPermissions { get; }
+    static abstract SqlStoredProcedure GetAllPaginated { get; }
+    static abstract SqlStoredProcedure GetAllServiceAccountsPaginated { get; }
+    static abstract SqlStoredProcedure GetAllDisabledPaginated { get; }
+    static abstract SqlStoredProcedure GetAllLockedOutPaginated  { get; }
+    static abstract SqlStoredProcedure GetAllDeleted { get; }
+    static abstract SqlStoredProcedure GetAllLockedOut { get; }
+    static abstract SqlStoredProcedure GetByEmail { get; }
+    static abstract SqlStoredProcedure GetByEmailFull { get; }
+    static abstract SqlStoredProcedure GetById { get; }
+    static abstract SqlStoredProcedure GetByIdSecurity { get; }
+    static abstract SqlStoredProcedure GetByIdFull { get; }
+    static abstract SqlStoredProcedure GetByUsername { get; }
+    static abstract SqlStoredProcedure GetByUsernameFull { get; }
+    static abstract SqlStoredProcedure GetByUsernameSecurity { get; }
+    static abstract SqlStoredProcedure Insert { get; }
+    static abstract SqlStoredProcedure Search { get; }
+    static abstract SqlStoredProcedure SearchPaginated { get; }
+    static abstract SqlStoredProcedure Update { get; }
+    static abstract SqlStoredProcedure SetUserId { get; }
+    static abstract SqlStoredProcedure SetCreatedById { get; }
 }

@@ -14,5 +14,6 @@ public enum AuditTableName
     TshootRegister = 9,
     TshootUsers = 10,
     TshootRoles = 11,
-    TshootPermissions = 12
+    TshootPermissions = 12,
+    AuthState = 13
 }

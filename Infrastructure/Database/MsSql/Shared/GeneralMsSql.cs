@@ -1,5 +1,4 @@
 using Application.Database;
-using Application.Database.Shared;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Shared;

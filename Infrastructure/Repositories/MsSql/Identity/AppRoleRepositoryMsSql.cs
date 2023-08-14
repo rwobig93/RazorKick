@@ -1,14 +1,15 @@
 ﻿using Application.Constants.Communication;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Role;
-using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.Identity;
 using Infrastructure.Database.MsSql.Shared;
@@ -20,16 +21,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IAuditTrailsRepository _auditRepository;
-    private readonly ISerializerService _serializer;
     private readonly IDateTimeService _dateTimeService;
 
     public AppRoleRepositoryMsSql(ISqlDataService database, ILogger logger, IAuditTrailsRepository auditRepository,
-        ISerializerService serializer, IDateTimeService dateTimeService)
+        IDateTimeService dateTimeService)
     {
         _database = database;
         _logger = logger;
         _auditRepository = auditRepository;
-        _serializer = serializer;
         _dateTimeService = dateTimeService;
     }
 
@@ -171,14 +170,8 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
             var createdRole = await GetByIdAsync(createdId);
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppRolesTableMsSql.Table.TableName,
-                RecordId = createdId,
-                ChangedBy = createObject.CreatedBy,
-                Action = DatabaseActionType.Create,
-                After = _serializer.Serialize(createdRole.Result)
-            });
+            await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, createdId,
+                createObject.CreatedBy, DatabaseActionType.Create, null, createdRole.Result);
             
             actionReturn.Succeed(createdId);
         }
@@ -206,15 +199,9 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             // Get role after update for auditing
             var foundRoleAfterUpdate = await GetByIdAsync(updateObject.Id);
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppRolesTableMsSql.Table.TableName,
-                RecordId = updateObject.Id,
-                ChangedBy = updateObject.LastModifiedBy.GetFromNullable(),
-                Action = DatabaseActionType.Update,
-                Before = _serializer.Serialize(foundRole.Result!.ToSlim()),
-                After = _serializer.Serialize(foundRoleAfterUpdate.Result!.ToSlim())
-            });
+            await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, updateObject.Id,
+                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update,
+                foundRole.Result!.ToSlim(), foundRoleAfterUpdate.Result!.ToSlim());
             
             actionReturn.Succeed();
         }
@@ -237,14 +224,8 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             
             await _database.SaveData(AppRolesTableMsSql.Delete, new {Id = id});
 
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppRolesTableMsSql.Table.TableName,
-                RecordId = id,
-                ChangedBy = modifyingUserId,
-                Action = DatabaseActionType.Delete,
-                Before = _serializer.Serialize(foundRole.Result!.ToSlim())
-            });
+            await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, id,
+                modifyingUserId, DatabaseActionType.Delete, foundRole.Result!.ToSlim());
             
             actionReturn.Succeed();
         }
@@ -325,19 +306,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Insert, new {UserId = userId, RoleId = roleId});
-            
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppRolesTableMsSql.Table.TableName,
-                RecordId = roleId,
-                ChangedBy = modifyingUserId,
-                Action = DatabaseActionType.Update,
-                After = _serializer.Serialize(new Dictionary<string, string>()
+            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Insert, 
+                new {UserId = userId, RoleId = roleId});
+
+            await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
+                modifyingUserId, DatabaseActionType.Update, null, new Dictionary<string, string>()
                 {
                     {"User Addition", userId.ToString()}
-                })
-            });
+                });
             
             actionReturn.Succeed();
         }
@@ -355,19 +331,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Delete, new {UserId = userId, RoleId = roleId});
-            
-            await _auditRepository.CreateAsync(new AuditTrailCreate
-            {
-                TableName = AppRolesTableMsSql.Table.TableName,
-                RecordId = roleId,
-                ChangedBy = modifyingUserId,
-                Action = DatabaseActionType.Update,
-                After = _serializer.Serialize(new Dictionary<string, string>()
+            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Delete, 
+                new {UserId = userId, RoleId = roleId});
+
+            await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
+                modifyingUserId, DatabaseActionType.Update, null, new Dictionary<string, string>()
                 {
                     {"User Removal", userId.ToString()}
-                })
-            });
+                });
             
             actionReturn.Succeed();
         }

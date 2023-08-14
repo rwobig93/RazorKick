@@ -23,17 +23,15 @@ public class AppUserService : IAppUserService
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
-    private readonly ISerializerService _serializer;
     private readonly IDateTimeService _dateTimeService;
 
-    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, IAuditTrailsRepository auditRepository,
-        IRunningServerState serverState, ISerializerService serializer, IDateTimeService dateTimeService)
+    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository,
+        IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTimeService)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _auditRepository = auditRepository;
         _serverState = serverState;
-        _serializer = serializer;
         _dateTimeService = dateTimeService;
     }
 
@@ -263,8 +261,8 @@ public class AppUserService : IAppUserService
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, _serializer, AuditTableName.Users, foundUser.Data.Id,
-                    new Dictionary<string, string>()
+                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
+                    foundUser.Data.Id, new Dictionary<string, string>()
                     {
                         {"Username Before", foundUser.Data.Username},
                         {"Username After", updateObject.Username!},
@@ -293,8 +291,8 @@ public class AppUserService : IAppUserService
 
             // For any update requests that failed we'll create a troubleshooting audit trail to troubleshoot easier
             foreach (var message in errorMessages)
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, _serializer, AuditTableName.Users, foundUser.Data.Id,
-                    new Dictionary<string, string>()
+                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
+                    foundUser.Data.Id, new Dictionary<string, string>()
                     {
                         {"Username Before", foundUser.Data.Username},
                         {"Username After", updateObject.Username!},

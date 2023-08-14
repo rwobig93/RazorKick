@@ -2,6 +2,6 @@ namespace Application.Database.Shared;
 
 public interface IGeneralTable
 {
-    public static readonly SqlStoredProcedure GetRowCount = null!;
-    public static readonly SqlStoredProcedure VerifyConnectivity = null!;
+    static abstract SqlStoredProcedure GetRowCount { get; }
+    static abstract SqlStoredProcedure VerifyConnectivity { get; }
 }

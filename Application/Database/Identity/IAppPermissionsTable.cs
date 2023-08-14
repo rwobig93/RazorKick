@@ -2,8 +2,8 @@ namespace Application.Database.Identity;
 
 public interface IAppPermissionsTable
 {
-    // Purpose of this interface is to be inherited when creating a new SQL provider, inherit to populate members then write implementation
-    // TODO: Convert all table interfaces to static abstract members and update the inheriting classes
+    // Purpose of this interface is to be inherited when creating a new SQL provider,
+    //   inherit to populate members then write implementation
     static abstract SqlTable Table { get; }
     static abstract SqlStoredProcedure Delete { get; }
     static abstract SqlStoredProcedure DeleteForUser { get; }

@@ -6,6 +6,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
+using Newtonsoft.Json;
 
 namespace Infrastructure.Services.Lifecycle;
 
@@ -35,7 +36,8 @@ public class AuditTrailService : IAuditTrailService
                 ? new Dictionary<string, string>()
                 : _serializer
                     .Deserialize<Dictionary<string, string>>(auditTrailDb.Before);
-            convertedTrail.After = _serializer.Deserialize<Dictionary<string, string>>(auditTrailDb.After);
+            convertedTrail.After = JsonConvert.DeserializeObject<Dictionary<string, string>>(auditTrailDb.After) ??
+                                   new Dictionary<string, string>();
         }
         catch (Exception ex)
         {
