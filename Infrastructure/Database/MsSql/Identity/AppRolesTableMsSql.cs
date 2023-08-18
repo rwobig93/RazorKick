@@ -1,9 +1,10 @@
 using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppRolesTableMsSql : ISqlEnforcedEntity
+public class AppRolesTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "AppRoles";
 

@@ -1,9 +1,10 @@
 ﻿using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class ServerStateRecordsTableMsSql : ISqlEnforcedEntity
+public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "ServerStateRecords";
 
@@ -17,8 +18,9 @@ public class ServerStateRecordsTableMsSql : ISqlEnforcedEntity
             begin
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Timestamp] DATETIME2 NOT NULL,
                     [AppVersion] NVARCHAR(128) NOT NULL,
-                    [Timestamp] DATETIME2 NOT NULL
+                    [DatabaseVersion] NVARCHAR(128) NOT NULL
                 )
             end"
     };
@@ -85,19 +87,49 @@ public class ServerStateRecordsTableMsSql : ISqlEnforcedEntity
             end"
     };
 
-    public static readonly SqlStoredProcedure GetByVersion = new()
+    public static readonly SqlStoredProcedure GetLatest = new()
     {
         Table = Table,
-        Action = "GetByVersion",
+        Action = "GetLatest",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByVersion]
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetLatest]
+            AS
+            begin
+                SELECT TOP 1 *
+                FROM dbo.[{Table.TableName}]
+                ORDER BY Timestamp DESC;
+            end"
+    };
+
+    public static readonly SqlStoredProcedure GetByAppVersion = new()
+    {
+        Table = Table,
+        Action = "GetByAppVersion",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByAppVersion]
                 @Version NVARCHAR(128)
             AS
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
                 WHERE AppVersion = @Version
-                ORDER BY Id;
+                ORDER BY Timestamp DESC;
+            end"
+    };
+
+    public static readonly SqlStoredProcedure GetByDatabaseVersion = new()
+    {
+        Table = Table,
+        Action = "GetByDatabaseVersion",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByDatabaseVersion]
+                @Version NVARCHAR(128)
+            AS
+            begin
+                SELECT *
+                FROM dbo.[{Table.TableName}]
+                WHERE DatabaseVersion = @Version
+                ORDER BY Timestamp DESC;
             end"
     };
 
@@ -107,13 +139,14 @@ public class ServerStateRecordsTableMsSql : ISqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Timestamp DATETIME2,
                 @AppVersion NVARCHAR(128),
-                @Timestamp DATETIME2
+                @DatabaseVersion NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (AppVersion, Timestamp)
+                INSERT into dbo.[{Table.TableName}] (Timestamp, AppVersion, DatabaseVersion)
                 OUTPUT INSERTED.Id
-                VALUES (@AppVersion, @Timestamp);
+                VALUES (@Timestamp, @AppVersion, @DatabaseVersion);
             end"
     };
 }

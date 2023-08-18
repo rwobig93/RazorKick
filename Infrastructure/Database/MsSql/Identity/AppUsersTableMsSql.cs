@@ -1,15 +1,15 @@
 using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
 
-public class AppUsersTableMsSql : ISqlEnforcedEntity
+public class AppUsersTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "AppUsers";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersTableMsSql).GetDbScriptsFromClass();
     
-    // TODO: Implement database migration framework
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
@@ -36,9 +36,9 @@ public class AppUsersTableMsSql : ISqlEnforcedEntity
                     [AccountType] int NOT NULL,
                     [Notes] NVARCHAR(1024) NULL
                 )
-                CREATE INDEX [IX_User_Id] ON [dbo].[AppUsers] ([Id])
-                CREATE INDEX [IX_User_UserName] ON [dbo].[AppUsers] ([Username])
-                CREATE INDEX [IX_User_Email] ON [dbo].[AppUsers] ([Email])
+                CREATE INDEX [IX_User_Id] ON [dbo].[{TableName}] ([Id])
+                CREATE INDEX [IX_User_UserName] ON [dbo].[{TableName}] ([Username])
+                CREATE INDEX [IX_User_Email] ON [dbo].[{TableName}] ([Email])
             end"
     };
     

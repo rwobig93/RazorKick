@@ -1,10 +1,11 @@
 ﻿using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
 using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class AuditTrailsTableMsSql : ISqlEnforcedEntity
+public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "AuditTrails";
 

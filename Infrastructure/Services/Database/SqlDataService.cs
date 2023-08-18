@@ -1,11 +1,21 @@
+using System.Collections;
 using System.Data;
 using System.Data.SqlClient;
 using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
+using Application.Mappers.Lifecycle;
+using Application.Models.Lifecycle;
+using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.Lifecycle;
+using Application.Services.System;
 using Application.Settings.AppSettings;
 using Dapper;
+using Domain.DatabaseEntities.Lifecycle;
+using Domain.Enums.Database;
 using Microsoft.Extensions.Options;
+using OfficeOpenXml.Style.XmlAccess;
 
 namespace Infrastructure.Services.Database;
 
@@ -69,10 +79,32 @@ public class SqlDataService : ISqlDataService
             script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
+    private void ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
+    {
+        try
+        {
+            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+            connection.Execute(dbEntity.SqlStatement);
+            _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
+                dbEntity.Type, dbEntity.FriendlyName);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Sql Enforce Fail: [Type]{scriptType} [Name]{scriptName} :: {errorMessage}",
+                dbEntity.Type, dbEntity.FriendlyName, ex.Message);
+        }
+    }
+
     private void EnforceDatabaseEntities()
     {
-        // Gather inheriting classes
-        var entitiesToBeEnforced = typeof(ISqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>();
+        // Gather inheriting classes based on configured database provider
+        var entitiesToBeEnforced = _dbConfig.Provider switch
+        {
+            DatabaseProviderType.MsSql => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
+            DatabaseProviderType.Postgresql => typeof(IPostgresqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
+            _ => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>()
+        };
+
         var databaseScripts = new List<ISqlDatabaseScript>();
         
         // Gather static Database Scripts from inheriting classes
@@ -92,21 +124,5 @@ public class SqlDataService : ISqlDataService
 
         foreach (var script in databaseScripts)
             ExecuteSqlScriptObject(script);
-    }
-
-    private void ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
-    {
-        try
-        {
-            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
-            connection.Execute(dbEntity.SqlStatement);
-            _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
-                dbEntity.Type, dbEntity.FriendlyName);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error("Sql Enforce Fail: [Type]{scriptType} [Name]{scriptName} :: {errorMessage}",
-                dbEntity.Type, dbEntity.FriendlyName, ex.Message);
-        }
     }
 }

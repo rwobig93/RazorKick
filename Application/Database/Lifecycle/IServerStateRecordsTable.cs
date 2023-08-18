@@ -7,6 +7,8 @@ public interface IServerStateRecordsTable
     static abstract SqlStoredProcedure GetAllBeforeDate { get; }
     static abstract SqlStoredProcedure GetAllAfterDate { get; }
     static abstract SqlStoredProcedure GetById { get; }
-    static abstract SqlStoredProcedure GetByVersion { get; }
+    static abstract SqlStoredProcedure GetLatest { get; }
+    static abstract SqlStoredProcedure GetByAppVersion { get; }
+    static abstract SqlStoredProcedure GetByDatabaseVersion { get; }
     static abstract SqlStoredProcedure Insert { get; }
 }

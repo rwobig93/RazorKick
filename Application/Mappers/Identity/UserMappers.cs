@@ -726,9 +726,9 @@ public static class UserMappers
     {
         return new UserLoginResponse
         {
-            ClientId = localStorage.ClientId,
-            Token = localStorage.Token,
-            RefreshToken = localStorage.RefreshToken,
+            ClientId = localStorage.ClientId ?? "",
+            Token = localStorage.Token ?? "",
+            RefreshToken = localStorage.RefreshToken ?? "",
             RefreshTokenExpiryTime = DateTime.Now.ToUniversalTime()
         };
     }

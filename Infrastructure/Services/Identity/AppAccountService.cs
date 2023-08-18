@@ -1050,7 +1050,7 @@ public class AppAccountService : IAppAccountService
         
             // Validate if the current clientId needs to re-authenticate due to permission changes
             var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
-                currentUserId, ExtendedAttributeType.UserClientId, localStorageRequest.Data.ClientId);
+                currentUserId, ExtendedAttributeType.UserClientId, localStorageRequest.Data.ClientId ?? "");
             if (!clientIdRequest.Succeeded || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
                 return await Result<bool>.FailAsync(ErrorMessageConstants.TokenInvalidError);
 

@@ -40,7 +40,7 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetAllBeforeDate(DateTime olderThan)
+    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetAllBeforeDateAsync(DateTime olderThan)
     {
         DatabaseActionResult<IEnumerable<ServerStateRecordDb>> actionReturn = new();
 
@@ -58,7 +58,7 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetAllAfterDate(DateTime newerThan)
+    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetAllAfterDateAsync(DateTime newerThan)
     {
         DatabaseActionResult<IEnumerable<ServerStateRecordDb>> actionReturn = new();
 
@@ -94,6 +94,24 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<ServerStateRecordDb>> GetLatestAsync()
+    {
+        DatabaseActionResult<ServerStateRecordDb> actionReturn = new();
+
+        try
+        {
+            var foundServerState = (await _database.LoadData<ServerStateRecordDb, dynamic>(
+                ServerStateRecordsTableMsSql.GetLatest, new {})).FirstOrDefault();
+            actionReturn.Succeed(foundServerState!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetLatest.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<ServerStateRecordDb>> GetByIdAsync(Guid id)
     {
         DatabaseActionResult<ServerStateRecordDb> actionReturn = new();
@@ -112,19 +130,37 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetByVersion(Version version)
+    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetByAppVersionAsync(Version version)
     {
         DatabaseActionResult<IEnumerable<ServerStateRecordDb>> actionReturn = new();
 
         try
         {
             var foundStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
-                ServerStateRecordsTableMsSql.GetByVersion, new {Version = version.ToString()});
+                ServerStateRecordsTableMsSql.GetByAppVersion, new {Version = version.ToString()});
             actionReturn.Succeed(foundStateRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetByVersion.Path, ex.Message);
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetByAppVersion.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<ServerStateRecordDb>>> GetByDatabaseVersionAsync(Version version)
+    {
+        DatabaseActionResult<IEnumerable<ServerStateRecordDb>> actionReturn = new();
+
+        try
+        {
+            var foundStateRecords = await _database.LoadData<ServerStateRecordDb, dynamic>(
+                ServerStateRecordsTableMsSql.GetByDatabaseVersion, new {Version = version.ToString()});
+            actionReturn.Succeed(foundStateRecords);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ServerStateRecordsTableMsSql.GetByDatabaseVersion.Path, ex.Message);
         }
 
         return actionReturn;

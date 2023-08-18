@@ -1,9 +1,10 @@
 using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Shared;
 
-public class GeneralTableMsSql : ISqlEnforcedEntity
+public class GeneralTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "General";
 

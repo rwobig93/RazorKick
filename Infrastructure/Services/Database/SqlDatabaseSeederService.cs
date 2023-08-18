@@ -1,7 +1,13 @@
+using System.Data;
+using System.Data.SqlClient;
 using Application.Constants.Identity;
+using Application.Database;
+using Application.Database.Providers;
 using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
+using Application.Mappers.Lifecycle;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
@@ -9,8 +15,12 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
+using Application.Services.System;
 using Application.Settings.AppSettings;
+using Dapper;
 using Domain.DatabaseEntities.Identity;
+using Domain.DatabaseEntities.Lifecycle;
+using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
@@ -29,12 +39,15 @@ public class SqlDatabaseSeederService : IHostedService
     private readonly IRunningServerState _serverState;
     private readonly SecurityConfiguration _securityConfig;
     private readonly IServerStateRecordsRepository _serverStateRepository;
+    private readonly IDateTimeService _dateTime;
+    private readonly DatabaseConfiguration _dbConfig;
 
     private AppUserSecurityDb _systemUser = new() { Id = Guid.Empty };
 
     public SqlDatabaseSeederService(ILogger logger, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
         IAppPermissionRepository permissionRepository, IOptions<LifecycleConfiguration> lifecycleConfig, IRunningServerState serverState,
-        IOptions<SecurityConfiguration> securityConfig, IServerStateRecordsRepository serverStateRepository)
+        IOptions<SecurityConfiguration> securityConfig, IServerStateRecordsRepository serverStateRepository, IDateTimeService dateTime,
+        IOptions<DatabaseConfiguration> dbConfig)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -43,16 +56,19 @@ public class SqlDatabaseSeederService : IHostedService
         _lifecycleConfig = lifecycleConfig.Value;
         _serverState = serverState;
         _serverStateRepository = serverStateRepository;
+        _dateTime = dateTime;
+        _dbConfig = dbConfig.Value;
         _securityConfig = securityConfig.Value;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.Debug("Starting to seed database");
+        await EnforceServerStateRecords();
+        await ApplyDatabaseMigrations();
         await SeedSystemUser();
         await SeedDatabaseRoles();
         await SeedDatabaseUsers();
-        await SeedServerStateRecords();
         _logger.Information("Finished seeding database");
     }
 
@@ -120,36 +136,6 @@ public class SqlDatabaseSeederService : IHostedService
             UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
         if (anonymousUser.Succeeded)
             await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
-    }
-
-    private async Task SeedServerStateRecords()
-    {
-        var existingStateRecord = await _serverStateRepository.GetByVersion(_serverState.ApplicationVersion);
-        if (!existingStateRecord.Succeeded)
-        {
-            _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
-            return;
-        }
-
-        var existingRecord = existingStateRecord.Result?.FirstOrDefault();
-        if (existingRecord is not null)
-        {
-            _logger.Debug("Existing record for current application version exists => [{Id}]{Version} :: {Timestamp}",
-                existingRecord.Id, existingRecord.AppVersion, existingRecord.Timestamp);
-            return;
-        }
-
-        var createRecordRequest = await _serverStateRepository.CreateAsync(new ServerStateRecordCreate
-        {
-            AppVersion = _serverState.ApplicationVersion.ToString()
-        });
-        if (!createRecordRequest.Succeeded)
-        {
-            _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
-            return;
-        }
-        
-        _logger.Information("Created server state record: {Id} {Version}", createRecordRequest.Result, _serverState.ApplicationVersion);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -285,5 +271,109 @@ public class SqlDatabaseSeederService : IHostedService
         }
         
         _logger.Information("Anon user ID was updated and validated correct: {UserId}", anonUserValidation.Result!.Id);
+    }
+
+    private async Task EnforceServerStateRecords()
+    {
+        var existingStateRecord = await _serverStateRepository.GetLatestAsync();
+        if (!existingStateRecord.Succeeded)
+        {
+            _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
+            return;
+        }
+
+        var latestRecord = existingStateRecord.Result;
+        if (latestRecord is not null)
+        {
+            _logger.Debug("Existing record exists => [{Id}]{Version}/{DatabaseVersion} :: {Timestamp}",
+                latestRecord.Id, latestRecord.AppVersion, latestRecord.DatabaseVersion, latestRecord.Timestamp);
+        
+            if (new Version(latestRecord.AppVersion) == _serverState.ApplicationVersion)
+                return;
+
+            // Update the application version while keeping the database version for database migrations
+            latestRecord.AppVersion = _serverState.ApplicationVersion.ToString();
+        }
+        else
+        {
+            // Create the first record for the database
+            latestRecord = new ServerStateRecordDb()
+            {
+                Timestamp = _dateTime.NowDatabaseTime,
+                AppVersion = _serverState.ApplicationVersion.ToString(),
+                DatabaseVersion = _serverState.ApplicationVersion.ToString()
+            };
+        }
+        
+        var createRecordRequest = await _serverStateRepository.CreateAsync(latestRecord.ToCreate());
+        if (!createRecordRequest.Succeeded)
+        {
+            _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
+            return;
+        }
+            
+        _logger.Information("Created server state record: {Id} {AppVersion}", createRecordRequest.Result, _serverState.ApplicationVersion);
+    }
+
+    private void ExecuteSqlMigration(ISqlMigration migration, bool databaseUpgrade)
+    {
+        try
+        {
+            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+            connection.Execute(databaseUpgrade ? migration.Up : migration.Down);
+            _logger.Debug("Sql Migration Success: [Upgrade]{DatabaseUpgrade} [TargetVersion]{TargetVersion}", databaseUpgrade, migration.VersionTarget);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Sql Migration Failure: [Upgrade]{DatabaseUpgrade} [TargetVersion]{TargetVersion}", databaseUpgrade, migration.VersionTarget);
+        }
+    }
+
+    private async Task ApplyDatabaseMigrations()
+    {
+        var existingStateRecord = await _serverStateRepository.GetLatestAsync();
+        if (!existingStateRecord.Succeeded || existingStateRecord.Result is null)
+        {
+            _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
+            return;
+        }
+        // Gather database migrations and order by newest version first based on the configured database provider
+        var databaseMigrations = _dbConfig.Provider switch
+        {
+            DatabaseProviderType.MsSql => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>(),
+            DatabaseProviderType.Postgresql => typeof(IPostgresqlMigration).GetImplementingTypes<ISqlMigration>(),
+            _ => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>()
+        };
+        var databaseUpgrade = new Version(existingStateRecord.Result.AppVersion) > new Version(existingStateRecord.Result.DatabaseVersion);
+
+        databaseMigrations = databaseUpgrade
+            // Filter migrations in ascending order that are newer than the database version but equal or older than the app version
+            ? databaseMigrations.OrderBy(x => x.VersionTarget)
+                .Where(x => x.VersionTarget > new Version(existingStateRecord.Result.DatabaseVersion)
+                            && x.VersionTarget <= new Version(existingStateRecord.Result.AppVersion)).ToArray()
+            // Filter migrations in descending order that are older than the database version but equal or newer than the app version
+            : databaseMigrations.OrderByDescending(x => x.VersionTarget)
+                .Where(x => x.VersionTarget < new Version(existingStateRecord.Result.DatabaseVersion)
+                            && x.VersionTarget >= new Version(existingStateRecord.Result.AppVersion)).ToArray();
+
+        foreach (var migration in databaseMigrations)
+            ExecuteSqlMigration(migration, databaseUpgrade);
+
+        var newRecord = new ServerStateRecordCreate
+        {
+            Timestamp = _dateTime.NowDatabaseTime,
+            AppVersion = _serverState.ApplicationVersion.ToString(),
+            DatabaseVersion = _serverState.ApplicationVersion.ToString()
+        };
+
+        var createRecordRequest = await _serverStateRepository.CreateAsync(newRecord);
+        if (!createRecordRequest.Succeeded)
+        {
+            _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
+            return;
+        }
+        
+        _logger.Information("Created server state record: {Id} {AppVersion}/{DatabaseVersion}",
+            createRecordRequest.Result, _serverState.ApplicationVersion, _serverState.ApplicationVersion);
     }
 }
