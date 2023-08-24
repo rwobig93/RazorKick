@@ -337,7 +337,7 @@ public class SqlDatabaseSeederService : IHostedService
             _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
             return;
         }
-        // Gather database migrations and order by newest version first based on the configured database provider
+        
         var databaseMigrations = _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>(),

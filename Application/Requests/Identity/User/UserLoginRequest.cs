@@ -1,6 +1,4 @@
-﻿using Application.Helpers.Identity;
-
-namespace Application.Requests.Identity.User;
+﻿namespace Application.Requests.Identity.User;
 
 public class UserLoginRequest
 {
