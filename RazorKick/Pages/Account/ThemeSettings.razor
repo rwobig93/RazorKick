@@ -23,6 +23,34 @@
     </MudButtonGroup>
 </MudContainer>
 
+<MudContainer Fixed="false" MaxWidth="MaxWidth.Medium">
+    <MudAppBar Fixed="false" Style="@($"color: {_editingTheme.ColorPrimary};")">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DemoToggleDrawer" />
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" />
+    </MudAppBar>
+    <MudPaper Height="400px" Style="overflow:scroll; position:relative;">
+        <MudDrawerContainer>
+            <MudDrawer @bind-Open="@_demoOpen" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
+                <MudNavMenu>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Store">Store</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">Library</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Community</MudNavLink>
+                </MudNavMenu>
+            </MudDrawer>
+        </MudDrawerContainer>
+            <MudGrid>
+                <MudItem md="4" xs="12">
+                    <MudAlert Severity="Severity.Normal" Dense="true" Class="my-2">Dense Default</MudAlert>
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="my-2">Dense Info</MudAlert>
+                    <MudAlert Severity="Severity.Success" Dense="true" Class="my-2">Dense Success</MudAlert>
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2">Dense Warning</MudAlert>
+                    <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">Dense Error</MudAlert>
+                </MudItem>
+            </MudGrid>
+    </MudPaper>
+</MudContainer>
+
 <MudContainer MaxWidth="MaxWidth.Medium">
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="px-4">
@@ -41,18 +69,22 @@
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
                 <MudColorPicker Label="Primary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
                                 @bind-Text="_editingTheme.ColorPrimary" Variant="Variant.Outlined" @bind-Value="_editThemePrimaryColor"
-                                Style="@($"color: {_editingTheme.ColorPrimary};")"/>
+                                Style="@($".mud-icon-root.mud-svg-icon fill: {_editingTheme.ColorPrimary} !important;")"/>
+                <MudIcon Icon="@Icons.Material.Rounded.Square" Size="Size.Large" Style="@($"color: {_editingTheme.ColorPrimary};")" Class="align-center justify-center" />
                 <MudColorPicker Label="Secondary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
                                 @bind-Text="_editingTheme.ColorSecondary" Variant="Variant.Outlined" @bind-Value="_editThemeSecondaryColor"
-                                Style="@($"color: {_editingTheme.ColorSecondary};")"/>
-                <MudColorPicker Label="Tertiary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
-                                @bind-Text="_editingTheme.ColorTertiary" Variant="Variant.Outlined" @bind-Value="_editThemeTertiaryColor"
-                                Style="@($"color: {_editingTheme.ColorTertiary};")"/>
+                                Style="@($".mud-icon-root.mud-svg-icon.fill: {_editingTheme.ColorSecondary} !important;")"/>
+                <MudIcon Icon="@Icons.Material.Rounded.Square" Size="Size.Medium" Style="@($"color: {_editingTheme.ColorSecondary};")" Class="align-center" />
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                <MudColorPicker Label="Tertiary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                                @bind-Text="_editingTheme.ColorTertiary" Variant="Variant.Outlined" @bind-Value="_editThemeTertiaryColor"
+                                Style="@($"fill: {_editingTheme.ColorTertiary};")"/>
                 <MudColorPicker Label="Background Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
                                 @bind-Text="_editingTheme.ColorBackground" Variant="Variant.Outlined" @bind-Value="_editThemeBackgroundColor"
-                                Style="@($"color: {_editingTheme.ColorBackground};")"/>
+                                Style="@($"fill: {_editingTheme.ColorBackground} !important;")"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
                 <MudColorPicker Label="TitleBar Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
                                 @bind-Text="_editingTheme.ColorTitleBar" Variant="Variant.Outlined" @bind-Value="_editThemeTitleBarColor"
                                 Style="@($"color: {_editingTheme.ColorTitleBar};")"/>

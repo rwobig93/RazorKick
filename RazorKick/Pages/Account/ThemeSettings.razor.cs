@@ -29,6 +29,8 @@ public partial class ThemeSettings
     private MudColor _editThemeNavBarColor = new("#FFFFFF");
     private MudColor _editThemeSuccessColor = new("#FFFFFF");
     private MudColor _editThemeErrorColor = new("#FFFFFF");
+
+    private bool _demoOpen;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -128,4 +130,9 @@ public partial class ThemeSettings
         
         UpdateEditingThemeValues(_editingThemeId);
     }
+
+    void DemoToggleDrawer()
+    {
+        _demoOpen = !_demoOpen;
+    } 
 }
