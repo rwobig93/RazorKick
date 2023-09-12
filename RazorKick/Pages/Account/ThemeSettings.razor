@@ -11,47 +11,62 @@
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
     <MudButtonGroup Color="Color.Secondary" Variant="Variant.Outlined">
-        <MudButton OnClick="() => UpdateEditingThemeValues()">
+        <MudButton OnClick="@(() => UpdateEditingThemeValues())">
             Custom One
         </MudButton>
-        <MudButton OnClick="() => UpdateEditingThemeValues(AppThemeId.CustomTwo)">
+        <MudButton OnClick="@(() => UpdateEditingThemeValues(AppThemeId.CustomTwo))">
             Custom Two
         </MudButton>
-        <MudButton OnClick="() => UpdateEditingThemeValues(AppThemeId.CustomThree)">
+        <MudButton OnClick="@(() => UpdateEditingThemeValues(AppThemeId.CustomThree))">
             Custom Three
         </MudButton>
     </MudButtonGroup>
 </MudContainer>
 
-<MudContainer Fixed="false" MaxWidth="MaxWidth.Medium">
-    <MudAppBar Fixed="false" Style="@($"color: {_editingTheme.ColorPrimary};")">
+<MudContainer Fixed="false" Class="pa-4 mb-4 z-0" MaxWidth="MaxWidth.Medium" Style="position: relative;">
+    <MudAppBar Class="z-0" Fixed="false" Style="@($"color: {_editingTheme.ColorPrimary}; background-color: {_editingTheme.ColorTitleBar}; max-height: 325px;")">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DemoToggleDrawer" />
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" />
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" />
     </MudAppBar>
-    <MudPaper Height="400px" Style="overflow:scroll; position:relative;">
-        <MudDrawerContainer>
-            <MudDrawer @bind-Open="@_demoOpen" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
-                <MudNavMenu>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Store">Store</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">Library</MudNavLink>
-                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Community</MudNavLink>
-                </MudNavMenu>
-            </MudDrawer>
+    <MudContainer Class="pb-4">
+      <MudDrawerContainer Class="d-flex pb-4">
+        <MudDrawer Class="ml-6" @bind-Open="@_demoOpen" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true">
+            <MudNavMenu>
+                <MudNavLink Icon="@Icons.Material.Filled._1k">Example 1</MudNavLink>
+                <MudNavLink Icon="@Icons.Material.Filled._2k">Example 2</MudNavLink>
+                <MudNavLink Icon="@Icons.Material.Filled._3k">Example 3</MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
         </MudDrawerContainer>
-            <MudGrid>
-                <MudItem md="4" xs="12">
-                    <MudAlert Severity="Severity.Normal" Dense="true" Class="my-2">Dense Default</MudAlert>
-                    <MudAlert Severity="Severity.Info" Dense="true" Class="my-2">Dense Info</MudAlert>
-                    <MudAlert Severity="Severity.Success" Dense="true" Class="my-2">Dense Success</MudAlert>
-                    <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2">Dense Warning</MudAlert>
-                    <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">Dense Error</MudAlert>
-                </MudItem>
-            </MudGrid>
-    </MudPaper>
+        <MudGrid Class="d-flex mx-4 pa-4" Style="max-height: 300px; overflow: scroll;">
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudAlert Severity="Severity.Normal" Dense="true" Class="my-2" Style="@($"color: {_editingTheme.ColorPrimary};")">Normal Message</MudAlert>
+                <MudAlert Severity="Severity.Info" Dense="true" Class="my-2" Style="@($"color: {_editingTheme.ColorSecondary};")">Info Message</MudAlert>
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2" Style="@($"color: {_editingTheme.ColorTertiary};")">Warning Message</MudAlert>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudAlert Severity="Severity.Success" Dense="true" Class="my-2" Style="@($"color: {_editingTheme.ColorSuccess};")">Success Message</MudAlert>
+                <MudAlert Severity="Severity.Error" Dense="true" Class="my-2" Style="@($"color: {_editingTheme.ColorError};")">Error Message</MudAlert>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudButton>I'm a button!</MudButton>
+                <MudCheckBox Label="Check. Box. Gotcha" Checked="true"></MudCheckBox>
+                <MudChip Text="Chip. Off the ol' block"></MudChip>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudExpansionPanel Text="Expand!" MaxHeight="150" Style="@($"background-color: {_editingTheme.ColorBackground};")">
+                    Expanding is 
+                    <MudButton Variant="Variant.Text" DisableElevation="true" Style="@($"color: {_editingTheme.ColorPrimary};")">
+                        Grrrrrrrrrrrrrrrreat!
+                    </MudButton>
+                </MudExpansionPanel>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
 </MudContainer>
 
-<MudContainer MaxWidth="MaxWidth.Medium">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pt-6 mt-6">
     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="px-4">
             <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">

@@ -131,7 +131,7 @@ public partial class ThemeSettings
         UpdateEditingThemeValues(_editingThemeId);
     }
 
-    void DemoToggleDrawer()
+    private void DemoToggleDrawer()
     {
         _demoOpen = !_demoOpen;
     } 
