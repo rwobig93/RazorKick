@@ -22,7 +22,7 @@ public class AppThemeCustom
             ColorPrimary = "#C9E302",
             ColorSecondary = "#EB7003",
             ColorTertiary = "#BCB9B6",
-            ColorBackground = "#000000",
+            ColorBackground = "#09080868",
             ColorTitleBar = "#1f1f1f",
             ColorNavBar = "#2f2f2f",
             ColorSuccess = "#02B802",
@@ -58,8 +58,8 @@ public class AppThemeCustom
             ColorTertiary = "#FFFE00",
             ColorTitleBar = "#00DD74",
             ColorNavBar = "#0069DD",
-            ColorBackground = "#00FF74",
-            ColorSuccess = "#0500FF",
+            ColorBackground = "#ec10a734",
+            ColorSuccess = "#59ff00ff",
             ColorError = "#8400FF"
         };
     }
