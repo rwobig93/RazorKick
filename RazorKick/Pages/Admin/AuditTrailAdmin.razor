@@ -10,19 +10,21 @@
     <MudTable ServerData="@(new Func<TableState, Task<TableData<AuditTrailSlim>>>(ServerReload))"
                Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table">
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Audit Trails</MudText>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudText Typo="Typo.h6" Class="pr-2 my-2">Audit Trails</MudText>  
+                @if (_canExportTrails)
+                {
+                    <MudMenu Label="Export" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Tertiary" Color="Color.Tertiary" AnchorOrigin="Origin.BottomLeft">
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportToExcel" Icon="@Icons.Material.Filled.FileDownload">Current Filtered To xlsx</MudMenuItem>
+                    </MudMenu>
+                }
+            </MudContainer>
             <MudSpacer/>
-            @if (_canExportTrails)
-            {
-                <MudTooltip Text="Export Current Data To An Excel Workbook">
-                    <MudButton Color="Color.Tertiary" OnClick="@(ExportToExcel)" Variant="Variant.Outlined">
-                        <MudIcon Icon="@Icons.Material.Filled.FileDownload"/>
-                    </MudButton>
-                </MudTooltip>
-            }
-            <MudSpacer/>
-            <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </MudContainer>
         </ToolBarContent>
         <HeaderContent>
             <MudTh></MudTh>
