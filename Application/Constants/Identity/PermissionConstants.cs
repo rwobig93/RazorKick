@@ -33,6 +33,7 @@ public static class PermissionConstants
         public const string Delete = "Permissions.Identity.Roles.Delete";
         public const string Add = "Permissions.Identity.Roles.Add";
         public const string Remove = "Permissions.Identity.Roles.Remove";
+        public const string Export = "Permissions.Identity.Roles.Export";
     }
 
     public static class Permissions

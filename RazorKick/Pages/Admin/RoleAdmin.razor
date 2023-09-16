@@ -16,6 +16,13 @@
                 {
                     <MudButton Color="Color.Success" OnClick="@(CreateRole)" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Add" Class="my-2">Create</MudButton>
                 }
+                @if (_canExportRoles)
+                {
+                    <MudMenu Label="Export" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Tertiary" Color="Color.Tertiary" AnchorOrigin="Origin.BottomLeft">
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportSelectedToExcel" Icon="@Icons.Material.Filled.FileDownload">Current Filtered To xlsx</MudMenuItem>
+                    </MudMenu>
+                }
             </MudContainer>
             <MudSpacer/>
             <MudContainer Class="d-flex flex-row gap-3">

@@ -1,6 +1,10 @@
-﻿using Application.Constants.Identity;
+﻿using System.IdentityModel.Tokens.Jwt;
+using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Role;
+using Application.Models.Lifecycle;
+using Application.Services.Integrations;
+using Infrastructure.Services.System;
 using RazorKick.Components.Identity;
 
 namespace RazorKick.Pages.Admin;
@@ -10,9 +14,12 @@ public partial class RoleAdmin
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    [Inject] private IExcelService ExcelService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
     
     private MudTable<AppRoleSlim> _table = new();
     private IEnumerable<AppRoleSlim> _pagedData = new List<AppRoleSlim>();
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private string _searchString = "";
     private int _totalRoles;
     private bool _dense = true;
@@ -21,12 +28,14 @@ public partial class RoleAdmin
     private bool _bordered;
 
     private bool _canCreateRoles;
+    private bool _canExportRoles;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetPermissions();
+            await GetClientTimezone();
             StateHasChanged();
         }
     }
@@ -35,6 +44,7 @@ public partial class RoleAdmin
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Create);
+        _canExportRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Export);
     }
     
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
@@ -83,5 +93,38 @@ public partial class RoleAdmin
         var createdRoleId = (Guid) createRoleDialog.Data;
         var newRoleViewUrl = QueryHelpers.AddQueryString(AppRouteConstants.Admin.RoleView, "roleId", createdRoleId.ToString());
         NavManager.NavigateTo(newRoleViewUrl);
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task ExportSelectedToExcel()
+    {
+        if (!_canExportRoles) return;
+        
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
+            _pagedData, dataMapping: new Dictionary<string, Func<AppRoleSlim, object>>
+            {
+                { "Id", role => role.Id },
+                { "Name", role => role.Name },
+                { "Description", role => role.Description },
+                { "CreatedBy", role => role.CreatedBy.ToString() },
+                { "CreatedOn", role => role.CreatedOn },
+                { "LastModifiedBy", role => role.LastModifiedBy.GetFromNullable() },
+                { "LastModifiedOn", role => role.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "12/31/1999 00:00:00 UTC" }
+            }, sheetName: "Roles");
+
+        var fileName =
+            $"Roles_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+
+        await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
+
+        Snackbar.Add("Successfully exported Roles to Excel Workbook For Download", Severity.Success);
     }
 }

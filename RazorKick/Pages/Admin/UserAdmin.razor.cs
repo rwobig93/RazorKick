@@ -1,6 +1,8 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
+using Application.Services.Integrations;
 using Domain.Enums.Identity;
 using RazorKick.Components.Identity;
 
@@ -12,9 +14,13 @@ public partial class UserAdmin
 
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] private IExcelService ExcelService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    
     private MudTable<AppUserSlim> _table = new();
     private IEnumerable<AppUserSlim> _pagedData = new List<AppUserSlim>();
     private HashSet<AppUserSlim> _selectedItems = new();
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private string _searchString = "";
     private int _totalUsers;
 
@@ -23,6 +29,7 @@ public partial class UserAdmin
     private bool _canResetPasswords;
     private bool _allowUserSelection;
     private bool _canAdminServiceAccounts;
+    private bool _canExportUsers;
 
     private bool _dense = true;
     private bool _hover = true;
@@ -36,6 +43,7 @@ public partial class UserAdmin
         if (firstRender)
         {
             await GetPermissions();
+            await GetClientTimezone();
             StateHasChanged();
         }
     }
@@ -47,6 +55,7 @@ public partial class UserAdmin
         _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Disable);
         _canEnableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Enable);
         _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.ServiceAccounts.Admin);
+        _canExportUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Export);
 
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers;
     }
@@ -207,5 +216,39 @@ public partial class UserAdmin
         };
         await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
         await ReloadSearch();
+    }
+
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task ExportSelectedToExcel()
+    {
+        if (!_canExportUsers) return;
+        
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
+            _pagedData, dataMapping: new Dictionary<string, Func<AppUserSlim, object>>
+            {
+                { "Id", user => user.Id },
+                { "AccountType", user => user.AccountType.ToString() },
+                { "AuthState", user => user.AuthState.ToString() },
+                { "CreatedBy", user => user.CreatedBy.ToString() },
+                { "CreatedOn", user => user.CreatedOn },
+                { "LastModifiedBy", user => user.LastModifiedBy.GetFromNullable() },
+                { "LastModifiedOn", user => user.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "12/31/1999 00:00:00 UTC" },
+                { "Notes", user => user.Notes ?? "" }
+            }, sheetName: "Users");
+
+        var fileName =
+            $"Users_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+
+        await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
+
+        Snackbar.Add("Successfully exported Users to Excel Workbook For Download", Severity.Success);
     }
 }
