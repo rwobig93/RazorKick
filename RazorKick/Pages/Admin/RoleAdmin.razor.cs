@@ -115,16 +115,48 @@ public partial class RoleAdmin
                 { "Name", role => role.Name },
                 { "Description", role => role.Description },
                 { "CreatedBy", role => role.CreatedBy.ToString() },
-                { "CreatedOn", role => role.CreatedOn },
+                { "CreatedOn", role => role.CreatedOn.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
                 { "LastModifiedBy", role => role.LastModifiedBy.GetFromNullable() },
-                { "LastModifiedOn", role => role.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "12/31/1999 00:00:00 UTC" }
+                { "LastModifiedOn", role => role.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "Never" }
             }, sheetName: "Roles");
 
         var fileName =
-            $"Roles_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+            $"SelectedRoles_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
 
         await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
 
-        Snackbar.Add("Successfully exported Roles to Excel Workbook For Download", Severity.Success);
+        Snackbar.Add("Successfully exported selected Roles to Excel Workbook For Download", Severity.Success);
+    }
+
+    private async Task ExportAllToExcel()
+    {
+        if (!_canExportRoles) return;
+
+        var allRoles = await RoleService.GetAllAsync();
+
+        if (!allRoles.Succeeded)
+        {
+            allRoles.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
+        
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
+            allRoles.Data, dataMapping: new Dictionary<string, Func<AppRoleSlim, object>>
+            {
+                { "Id", role => role.Id },
+                { "Name", role => role.Name },
+                { "Description", role => role.Description },
+                { "CreatedBy", role => role.CreatedBy.ToString() },
+                { "CreatedOn", role => role.CreatedOn.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
+                { "LastModifiedBy", role => role.LastModifiedBy.GetFromNullable() },
+                { "LastModifiedOn", role => role.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "Never" }
+            }, sheetName: "Roles");
+
+        var fileName =
+            $"AllRoles_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+
+        await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
+
+        Snackbar.Add("Successfully exported all Roles to Excel Workbook For Download", Severity.Success);
     }
 }

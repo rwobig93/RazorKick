@@ -238,17 +238,50 @@ public partial class UserAdmin
                 { "AccountType", user => user.AccountType.ToString() },
                 { "AuthState", user => user.AuthState.ToString() },
                 { "CreatedBy", user => user.CreatedBy.ToString() },
-                { "CreatedOn", user => user.CreatedOn },
+                { "CreatedOn", user => user.CreatedOn.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
                 { "LastModifiedBy", user => user.LastModifiedBy.GetFromNullable() },
-                { "LastModifiedOn", user => user.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "12/31/1999 00:00:00 UTC" },
+                { "LastModifiedOn", user => user.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "Never" },
                 { "Notes", user => user.Notes ?? "" }
             }, sheetName: "Users");
 
         var fileName =
-            $"Users_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+            $"SelectedUsers_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
 
         await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
 
-        Snackbar.Add("Successfully exported Users to Excel Workbook For Download", Severity.Success);
+        Snackbar.Add("Successfully exported all Users to Excel Workbook For Download", Severity.Success);
+    }
+
+    private async Task ExportAllToExcel()
+    {
+        if (!_canExportUsers) return;
+
+        var allUsers = await UserService.GetAllAsync();
+
+        if (!allUsers.Succeeded)
+        {
+            allUsers.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
+        
+        var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
+            allUsers.Data, dataMapping: new Dictionary<string, Func<AppUserSlim, object>>
+            {
+                { "Id", user => user.Id },
+                { "AccountType", user => user.AccountType.ToString() },
+                { "AuthState", user => user.AuthState.ToString() },
+                { "CreatedBy", user => user.CreatedBy.ToString() },
+                { "CreatedOn", user => user.CreatedOn.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) },
+                { "LastModifiedBy", user => user.LastModifiedBy.GetFromNullable() },
+                { "LastModifiedOn", user => user.LastModifiedOn?.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat) ?? "Never" },
+                { "Notes", user => user.Notes ?? "" }
+            }, sheetName: "Users");
+
+        var fileName =
+            $"AllUsers_{DateTimeService.NowDatabaseTime.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)}.xlsx";
+
+        await WebClientService.InvokeFileDownload(convertedExcelWorkbook, fileName, DataConstants.MimeTypes.OpenXml);
+
+        Snackbar.Add("Successfully exported all Users to Excel Workbook For Download", Severity.Success);
     }
 }
