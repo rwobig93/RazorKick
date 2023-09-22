@@ -17,6 +17,7 @@ public static class PermissionConstants
         public const string ResetPassword = "Permissions.Identity.Users.ResetPassword";
         public const string ViewExtAttrs = "Permissions.Identity.Users.ExtendedAttrView";
         public const string ChangeEmail = "Permissions.Identity.Users.ChangeEmail";
+        public const string AdminEmail = "Permissions.Identity.Users.AdminEmail";
     }
 
     public static class ServiceAccounts

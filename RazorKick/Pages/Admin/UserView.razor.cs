@@ -26,6 +26,7 @@ public partial class UserView
     private string? _modifiedByUsername = "";
     private DateTime? _createdOn;
     private DateTime? _modifiedOn;
+    private bool _processingEmailChange;
 
     private bool _invalidDataProvided;
     private bool _editMode;
@@ -40,6 +41,7 @@ public partial class UserView
     private bool _canRemovePermissions;
     private bool _canViewExtendedAttrs;
     private bool _canAdminServiceAccount;
+    private bool _canAdminEmail;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -104,6 +106,7 @@ public partial class UserView
         _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
         _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
+        _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.AdminEmail);
         if (_viewingUser.AccountType != AccountType.Service) return;
         
         _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
@@ -231,5 +234,36 @@ public partial class UserView
         await GetViewingUser();
         Snackbar.Add("Account successfully updated!", Severity.Success);
         StateHasChanged();
+    }
+
+    private async Task ChangeEmail()
+    {
+        if (!_canAdminEmail) return;
+        
+        var dialogParameters = new DialogParameters()
+        {
+            {"Title", "Confirm New Email Address"},
+            {"FieldLabel", "New Email Address"}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
+        if (newEmailPrompt.Canceled || string.IsNullOrWhiteSpace((string?)newEmailPrompt.Data))
+            return;
+
+        var newEmailAddress = (string)newEmailPrompt.Data;
+        _processingEmailChange = true;
+        StateHasChanged();
+        var emailChangeRequest = await AccountService.InitiateEmailChange(_viewingUser.Id, newEmailAddress);
+        if (!emailChangeRequest.Succeeded)
+        {
+            _processingEmailChange = false;
+            StateHasChanged();
+            emailChangeRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _processingEmailChange = false;
+        StateHasChanged();
+        Snackbar.Add(emailChangeRequest.Messages.First(), Severity.Success);
     }
 }

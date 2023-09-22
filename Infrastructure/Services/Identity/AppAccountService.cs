@@ -711,7 +711,7 @@ public class AppAccountService : IAppAccountService
         
         var response = BackgroundJob.Enqueue(() =>
             _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
-        if (response is null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
+        if (response is not null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
         await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
             foundUserRequest.Result.Id, new Dictionary<string, string>()
@@ -719,7 +719,7 @@ public class AppAccountService : IAppAccountService
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},
                 {"Email", foundUserRequest.Result.Email},
-                {"Details", "Failure occurred sending email confirmation"}
+                {"Details", $"Failure occurred sending email confirmation to {newEmail}"}
             });
         return await Result.FailAsync($"Failed to send confirmation email to {newEmail}, please contact the administrator");
     }

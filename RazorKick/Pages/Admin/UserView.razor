@@ -13,30 +13,36 @@ else
 {
     <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
         <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="GoBack">Go Back
+                   OnClick="@GoBack">Go Back
         </MudButton>
         @if (_canEditUsers && _viewingUser.AccountType == AccountType.User)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
-                       OnClick="ToggleEditMode">@_editButtonText
+                       OnClick="@ToggleEditMode">@_editButtonText
             </MudButton>
         }
         @if (_canAdminServiceAccount && _viewingUser.AccountType == AccountType.Service)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
-                       OnClick="EditServiceAccount">Edit Service Account
+                       OnClick="@EditServiceAccount">Edit Service Account
             </MudButton>
         }
         @if (_canAddRoles || _canRemoveRoles)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.PermContactCalendar"
-                       OnClick="EditRoles">Edit Roles
+                       OnClick="@EditRoles">Edit Roles
             </MudButton>
         }
         @if (_canAddPermissions || _canRemovePermissions)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.PermIdentity"
-                       OnClick="EditPermissions">Edit Permissions
+                       OnClick="@EditPermissions">Edit Permissions
+            </MudButton>
+        }
+        @if (_canAdminEmail)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Email"
+                       OnClick="@ChangeEmail">Change Email
             </MudButton>
         }
         @if (_editMode)
@@ -48,6 +54,13 @@ else
     </MudPaper>
     
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        @if (_processingEmailChange)
+        {
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column gap-4">
+                <MudProgressLinear Color="Color.Info" Indeterminate="true" Rounded="true"/>
+                <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Processing Email Change...</MudText>
+            </MudItem>
+        }
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Account Properties</MudText>
         </MudItem>
@@ -64,8 +77,8 @@ else
             <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudCheckBox @bind-Checked="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)" 
-            Class="pe-4"/>
+            <MudCheckBox @bind-Checked="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)"
+                         Class="pe-4"/>
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
@@ -77,8 +90,8 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_modifiedByUsername" Label="Last Modified By" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_modifiedOn" Format="@DataConstants.DateTime.DisplayFormat" Label="Last Modified" Variant="Variant.Outlined" 
-            Disabled="true"/>
+            <MudTextField @bind-Value="_modifiedOn" Format="@DataConstants.DateTime.DisplayFormat" Label="Last Modified" Variant="Variant.Outlined"
+                          Disabled="true"/>
         </MudItem>
     </MudPaper>
     @if (_canViewRoles)
@@ -133,7 +146,7 @@ else
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">User Extended Attributes</MudText>
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Extended Attributes</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudTable Items="@_viewingUser.ExtendedAttributes" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
