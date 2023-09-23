@@ -41,4 +41,6 @@ public class SecurityConfiguration : IAppSettingsSection
     public int AccountLockoutMinutes { get; init; } = 15;
     
     public bool TrustAllCertificates { get; set; }
+    
+    public bool NewlyRegisteredAccountsDisabled { get; set; }
 }

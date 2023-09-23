@@ -52,7 +52,6 @@ public partial class ConfirmEmail
             return;
         }
         
-        // TODO: Confirmation succeeds but reports failure, need to validate why
         var confirmationResponse = await AccountService.ConfirmEmailAsync(convertedUserId, ConfirmationCode);
         if (!confirmationResponse.Succeeded)
         {

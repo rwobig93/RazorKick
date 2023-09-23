@@ -24,4 +24,11 @@ public partial class ValuePromptDialog
     {
         MudDialog.Cancel();
     }
+
+
+    private void TextFieldKeyDown(KeyboardEventArgs keyArgs)
+    {
+        if (keyArgs.Key == "Enter")
+            Confirm();
+    }
 }

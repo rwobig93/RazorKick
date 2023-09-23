@@ -22,11 +22,11 @@ public class AppThemeCustom
             ColorPrimary = "#C9E302",
             ColorSecondary = "#EB7003",
             ColorTertiary = "#BCB9B6",
-            ColorBackground = "#09080868",
+            ColorBackground = "#000000",
             ColorTitleBar = "#1f1f1f",
             ColorNavBar = "#2f2f2f",
-            ColorSuccess = "#02B802",
-            ColorError = "#A30000"
+            ColorSuccess = "#007E33",
+            ColorError = "#df0808"
         };
     }
     
@@ -40,10 +40,10 @@ public class AppThemeCustom
             ColorSecondary = "#AD00EA",
             ColorTertiary = "#CEEA00",
             ColorBackground = "#000000",
-            ColorTitleBar = "#3E2566",
-            ColorNavBar = "#5F2566",
-            ColorSuccess = "#59EA00",
-            ColorError = "#EA1C00"
+            ColorTitleBar = "#1f1f1f",
+            ColorNavBar = "#2f2f2f",
+            ColorSuccess = "#007E33",
+            ColorError = "#df0808"
         };
     }
     
@@ -56,11 +56,11 @@ public class AppThemeCustom
             ColorPrimary = "#00FFD8",
             ColorSecondary = "#00FF00",
             ColorTertiary = "#FFFE00",
-            ColorTitleBar = "#00DD74",
-            ColorNavBar = "#0069DD",
-            ColorBackground = "#ec10a734",
-            ColorSuccess = "#59ff00ff",
-            ColorError = "#8400FF"
+            ColorTitleBar = "#000000",
+            ColorNavBar = "#1f1f1f",
+            ColorBackground = "#2f2f2f",
+            ColorSuccess = "#007E33",
+            ColorError = "#df0808"
         };
     }
 }

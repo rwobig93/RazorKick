@@ -563,8 +563,15 @@ public class AppAccountService : IAppAccountService
         if (!createUserResult.Succeeded)
             return await Result.FailAsync(createUserResult.ErrorMessage);
 
+        if (_securityConfig.NewlyRegisteredAccountsDisabled)
+        {
+            var currentSecurity = await _userRepository.GetSecurityAsync(createUserResult.Result);
+            var securityUpdate = currentSecurity.Result!.ToUpdate();
+            securityUpdate.AuthState = AuthState.Disabled;
+            await _userRepository.UpdateSecurityAsync(securityUpdate);
+        }
+
         var caveatMessage = "";
-        await _userRepository.GetByUsernameAsync(UserConstants.DefaultUsers.SystemUsername);
         var defaultRole = (await _roleRepository.GetByNameAsync(RoleConstants.DefaultRoles.DefaultName)).Result;
         var addToRoleResult = await _roleRepository.AddUserToRoleAsync(
             createUserResult.Result, defaultRole!.Id, _serverState.SystemUserId);
@@ -662,7 +669,8 @@ public class AppAccountService : IAppAccountService
         }
 
         userSecurity.Email = previousConfirmation.Name;
-        userSecurity.AuthState = AuthState.Enabled;
+        if (!_securityConfig.NewlyRegisteredAccountsDisabled)
+            userSecurity.AuthState = AuthState.Enabled;
         userSecurity.EmailConfirmed = true;
         userSecurity.LastModifiedBy = _serverState.SystemUserId;
         userSecurity.LastModifiedOn = _dateTime.NowDatabaseTime;
